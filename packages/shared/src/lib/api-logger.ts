@@ -36,7 +36,7 @@ export function createApiErrorResponse(
   error: unknown,
   userMessage: string,
   statusCode: number = 500,
-  context?: ApiErrorContext
+  context?: ApiErrorContext,
 ): NextResponse {
   const operation = context?.endpoint || 'API request';
 
@@ -66,11 +66,7 @@ export function createApiErrorResponse(
  * }
  * ```
  */
-export function logApiWarning(
-  error: unknown,
-  operation: string,
-  context?: LogContext
-): void {
+export function logApiWarning(error: unknown, operation: string, context?: LogContext): void {
   apiLogger.warn(`${operation} (non-critical)`, {
     ...context,
     operation,
@@ -113,10 +109,6 @@ export function createApiEndpointLogger(endpoint: string) {
  * });
  * ```
  */
-export async function withApiLogging<T>(
-  operation: string,
-  fn: () => Promise<T>,
-  context?: LogContext
-): Promise<T> {
+export async function withApiLogging<T>(operation: string, fn: () => Promise<T>, context?: LogContext): Promise<T> {
   return apiLogger.time(operation, fn, context);
 }

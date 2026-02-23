@@ -15,10 +15,7 @@ export interface StatsSalesHandlerOptions {
   aspFilter?: string;
 }
 
-export function createStatsSalesHandler(
-  deps: StatsSalesHandlerDeps,
-  options: StatsSalesHandlerOptions = {}
-) {
+export function createStatsSalesHandler(deps: StatsSalesHandlerDeps, options: StatsSalesHandlerOptions = {}) {
   return async function GET() {
     try {
       const stats = await deps.getSaleStats(options.aspFilter);

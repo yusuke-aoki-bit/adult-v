@@ -123,6 +123,33 @@ const translations = {
     cancel: '取消',
     delete: '删除',
   },
+  'zh-TW': {
+    title: '觀看日記',
+    subtitle: '記錄和分析您的觀看歷史',
+    loading: '載入中...',
+    empty: '暫無觀看記錄',
+    emptyDesc: '將作品標記為「已觀看」後會記錄在此',
+    stats: '統計',
+    history: '歷史',
+    yearStats: '年度統計',
+    monthStats: '月度統計',
+    totalViewed: '總觀看數',
+    totalTime: '總時長',
+    avgRating: '平均評分',
+    topPerformers: '常看女優',
+    topTags: '常看類型',
+    monthlyTrend: '月度趨勢',
+    works: '部',
+    hours: '小時',
+    minutes: '分鐘',
+    noData: '無資料',
+    viewDetail: '查看詳情',
+    viewedOn: '觀看日期',
+    deleteEntry: '刪除',
+    confirmDelete: '刪除此記錄？',
+    cancel: '取消',
+    delete: '刪除',
+  },
   ko: {
     title: '시청 일기',
     subtitle: '시청 기록을 기록하고 분석하세요',
@@ -162,27 +189,27 @@ function DiarySkeleton() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <div className="h-8 w-48 bg-gray-700 rounded animate-pulse mb-2" />
-        <div className="h-5 w-64 bg-gray-700 rounded animate-pulse" />
+        <div className="mb-2 h-8 w-48 animate-pulse rounded bg-gray-700" />
+        <div className="h-5 w-64 animate-pulse rounded bg-gray-700" />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="bg-gray-800 rounded-lg p-4 animate-pulse">
+            <div key={i} className="animate-pulse rounded-lg bg-gray-800 p-4">
               <div className="flex gap-4">
-                <div className="w-20 h-28 bg-gray-700 rounded" />
+                <div className="h-28 w-20 rounded bg-gray-700" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-5 bg-gray-700 rounded w-3/4" />
-                  <div className="h-4 bg-gray-700 rounded w-1/2" />
-                  <div className="h-4 bg-gray-700 rounded w-1/4" />
+                  <div className="h-5 w-3/4 rounded bg-gray-700" />
+                  <div className="h-4 w-1/2 rounded bg-gray-700" />
+                  <div className="h-4 w-1/4 rounded bg-gray-700" />
                 </div>
               </div>
             </div>
           ))}
         </div>
         <div className="space-y-4">
-          <div className="bg-gray-800 rounded-lg p-4 h-64 animate-pulse" />
-          <div className="bg-gray-800 rounded-lg p-4 h-48 animate-pulse" />
+          <div className="h-64 animate-pulse rounded-lg bg-gray-800 p-4" />
+          <div className="h-48 animate-pulse rounded-lg bg-gray-800 p-4" />
         </div>
       </div>
     </div>
@@ -194,17 +221,17 @@ function MonthlyTrendChart({ data, max }: { data: Array<{ month: string; count: 
   const monthLabels = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'];
 
   return (
-    <div className="flex items-end gap-1 h-24">
+    <div className="flex h-24 items-end gap-1">
       {data.map((item, index) => {
         const height = max > 0 ? (item.count / max) * 100 : 0;
         return (
-          <div key={item.month} className="flex-1 flex flex-col items-center">
+          <div key={item.month} className="flex flex-1 flex-col items-center">
             <div
-              className="w-full bg-rose-600 rounded-t transition-all"
+              className="w-full rounded-t bg-rose-600 transition-all"
               style={{ height: `${Math.max(height, 4)}%` }}
               title={`${item.count}`}
             />
-            <span className="text-[10px] text-gray-500 mt-1">{monthLabels[index]}</span>
+            <span className="mt-1 text-[10px] text-gray-500">{monthLabels[index]}</span>
           </div>
         );
       })}
@@ -220,7 +247,7 @@ function StarRating({ rating, size = 'sm' }: { rating: number; size?: 'sm' | 'md
       {[1, 2, 3, 4, 5].map((star) => (
         <Star
           key={star}
-          className={`${sizeClass} ${star <= rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'}`}
+          className={`${sizeClass} ${star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600'}`}
         />
       ))}
     </div>
@@ -244,45 +271,38 @@ function DiaryEntryCard({
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';
 
   return (
-    <div className="bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors group">
+    <div className="hover:bg-gray-750 group rounded-lg bg-gray-800 p-4 transition-colors">
       <div className="flex gap-4">
         {/* サムネイル */}
         <Link href={localizedHref(`/products/${entry.productId}`, locale)} className="shrink-0">
-          <div className="relative w-20 h-28 rounded overflow-hidden">
-            <Image
-              src={imageUrl}
-              alt={entry.title}
-              fill
-              sizes="80px"
-              className="object-cover"
-            />
+          <div className="relative h-28 w-20 overflow-hidden rounded">
+            <Image src={imageUrl} alt={entry.title} fill sizes="80px" className="object-cover" />
           </div>
         </Link>
 
         {/* 情報 */}
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <Link href={localizedHref(`/products/${entry.productId}`, locale)}>
-            <h3 className="text-white font-medium line-clamp-2 hover:text-rose-400 transition-colors">
-              {entry.title}
-            </h3>
+            <h3 className="line-clamp-2 font-medium text-white transition-colors hover:text-rose-400">{entry.title}</h3>
           </Link>
 
           {entry.performerName && (
-            <p className="text-sm text-gray-400 mt-1 flex items-center gap-1">
-              <User className="w-3 h-3" />
+            <p className="mt-1 flex items-center gap-1 text-sm text-gray-400">
+              <User className="h-3 w-3" />
               {entry.performerName}
             </p>
           )}
 
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+          <div className="mt-2 flex items-center gap-3 text-xs text-gray-500">
             <span className="flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+              <Calendar className="h-3 w-3" />
               {new Date(entry.viewedAt).toLocaleDateString(dateLocale)}
             </span>
             {entry.duration && (
               <span className="flex items-center gap-1">
-                <Clock className="w-3 h-3" />
-                {entry.duration}{t.minutes}
+                <Clock className="h-3 w-3" />
+                {entry.duration}
+                {t.minutes}
               </span>
             )}
           </div>
@@ -293,30 +313,28 @@ function DiaryEntryCard({
             </div>
           )}
 
-          {entry.note && (
-            <p className="text-sm text-gray-400 mt-2 line-clamp-2">{entry.note}</p>
-          )}
+          {entry.note && <p className="mt-2 line-clamp-2 text-sm text-gray-400">{entry.note}</p>}
         </div>
 
         {/* 削除ボタン */}
         <button
           onClick={() => setShowDeleteConfirm(true)}
-          className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-500 hover:text-red-400 p-1"
+          className="p-1 text-gray-500 opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-400"
           title={t.deleteEntry}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="h-4 w-4" />
         </button>
       </div>
 
       {/* 削除確認ダイアログ */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-lg p-6 max-w-sm w-full">
-            <p className="text-white mb-4">{t.confirmDelete}</p>
-            <div className="flex gap-3 justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-lg bg-gray-800 p-6">
+            <p className="mb-4 text-white">{t.confirmDelete}</p>
+            <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-2 rounded-lg bg-gray-700 text-white hover:bg-gray-600"
+                className="rounded-lg bg-gray-700 px-4 py-2 text-white hover:bg-gray-600"
               >
                 {t.cancel}
               </button>
@@ -325,7 +343,7 @@ function DiaryEntryCard({
                   onDelete(entry.id);
                   setShowDeleteConfirm(false);
                 }}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                className="rounded-lg bg-red-600 px-4 py-2 text-white hover:bg-red-700"
               >
                 {t.delete}
               </button>
@@ -342,13 +360,7 @@ export default function DiaryPage() {
   const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  const {
-    entries,
-    isLoading,
-    removeEntry,
-    getYearlyStats,
-    availableYears,
-  } = useViewingDiary();
+  const { entries, isLoading, removeEntry, getYearlyStats, availableYears } = useViewingDiary();
 
   const [activeTab, setActiveTab] = useState<'history' | 'stats'>('history');
   const [selectedYear, setSelectedYear] = useState<number>(() => new Date().getFullYear());
@@ -359,13 +371,13 @@ export default function DiaryPage() {
 
   useEffect(() => {
     fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
+      .then((res) => res.json())
+      .then((data) => setSaleProducts(data.products || []))
       .catch(() => {});
 
     fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
+      .then((res) => res.json())
+      .then((data) => setUncategorizedCount(data.count || 0))
       .catch(() => {});
   }, []);
 
@@ -406,6 +418,7 @@ export default function DiaryPage() {
     ja: { diary: '視聴日記' },
     en: { diary: 'Viewing Diary' },
     zh: { diary: '观看日记' },
+    'zh-TW': { diary: '觀看日記' },
     ko: { diary: '시청 일기' },
   };
 
@@ -435,253 +448,254 @@ export default function DiaryPage() {
         </div>
       </section>
 
-      <div id="diary" className="container mx-auto px-4 py-8 scroll-mt-20">
-      {/* ヘッダー */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
-          <BookOpen className="h-8 w-8 text-rose-600" />
-          {t.title}
-        </h1>
-        <p className="text-gray-400">{t.subtitle}</p>
-      </div>
-
-      {/* タブ */}
-      <div className="flex gap-2 mb-6">
-        <button
-          onClick={() => setActiveTab('history')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            activeTab === 'history'
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-          }`}
-        >
-          <Film className="w-4 h-4" />
-          {t.history}
-        </button>
-        <button
-          onClick={() => setActiveTab('stats')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            activeTab === 'stats'
-              ? 'bg-rose-600 text-white'
-              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-          }`}
-        >
-          <BarChart3 className="w-4 h-4" />
-          {t.stats}
-        </button>
-      </div>
-
-      {entries.length === 0 ? (
-        /* 空の状態 */
-        <div className="text-center py-16">
-          <BookOpen className="h-16 w-16 text-gray-700 mx-auto mb-4" />
-          <p className="text-gray-400 text-lg mb-2">{t.empty}</p>
-          <p className="text-gray-500 text-sm">{t.emptyDesc}</p>
+      <div id="diary" className="container mx-auto scroll-mt-20 px-4 py-8">
+        {/* ヘッダー */}
+        <div className="mb-8">
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white">
+            <BookOpen className="h-8 w-8 text-rose-600" />
+            {t.title}
+          </h1>
+          <p className="text-gray-400">{t.subtitle}</p>
         </div>
-      ) : activeTab === 'history' ? (
-        /* 履歴タブ */
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* 履歴リスト */}
-          <div className="lg:col-span-2 space-y-3">
-            {entries.map((entry) => (
-              <DiaryEntryCard
-                key={entry.id}
-                entry={entry}
-                locale={locale}
-                t={t}
-                onDelete={removeEntry}
-              />
-            ))}
+
+        {/* タブ */}
+        <div className="mb-6 flex gap-2">
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
+              activeTab === 'history' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <Film className="h-4 w-4" />
+            {t.history}
+          </button>
+          <button
+            onClick={() => setActiveTab('stats')}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
+              activeTab === 'stats' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <BarChart3 className="h-4 w-4" />
+            {t.stats}
+          </button>
+        </div>
+
+        {entries.length === 0 ? (
+          /* 空の状態 */
+          <div className="py-16 text-center">
+            <BookOpen className="mx-auto mb-4 h-16 w-16 text-gray-700" />
+            <p className="mb-2 text-lg text-gray-400">{t.empty}</p>
+            <p className="text-sm text-gray-500">{t.emptyDesc}</p>
           </div>
+        ) : activeTab === 'history' ? (
+          /* 履歴タブ */
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            {/* 履歴リスト */}
+            <div className="space-y-3 lg:col-span-2">
+              {entries.map((entry) => (
+                <DiaryEntryCard key={entry.id} entry={entry} locale={locale} t={t} onDelete={removeEntry} />
+              ))}
+            </div>
 
-          {/* サイドバー統計 */}
-          <div className="space-y-4">
-            {/* あなたの好みプロファイル */}
-            <UserPreferenceProfileWrapper locale={locale} />
+            {/* サイドバー統計 */}
+            <div className="space-y-4">
+              {/* あなたの好みプロファイル */}
+              <UserPreferenceProfileWrapper locale={locale} />
 
-            {/* 概要カード */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-rose-600" />
-                {t.yearStats} {selectedYear}
-              </h3>
+              {/* 概要カード */}
+              <div className="rounded-lg bg-gray-800 p-4">
+                <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
+                  <TrendingUp className="h-4 w-4 text-rose-600" />
+                  {t.yearStats} {selectedYear}
+                </h3>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="text-center p-3 bg-gray-750 rounded-lg">
-                  <div className="text-2xl font-bold text-white">{yearStats.totalCount}</div>
-                  <div className="text-xs text-gray-400">{t.totalViewed}</div>
-                </div>
-                <div className="text-center p-3 bg-gray-750 rounded-lg">
-                  <div className="text-2xl font-bold text-white">
-                    {Math.floor(yearStats.totalDuration / 60)}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-gray-750 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-white">{yearStats.totalCount}</div>
+                    <div className="text-xs text-gray-400">{t.totalViewed}</div>
                   </div>
-                  <div className="text-xs text-gray-400">{t.totalTime} ({t.hours})</div>
+                  <div className="bg-gray-750 rounded-lg p-3 text-center">
+                    <div className="text-2xl font-bold text-white">{Math.floor(yearStats.totalDuration / 60)}</div>
+                    <div className="text-xs text-gray-400">
+                      {t.totalTime} ({t.hours})
+                    </div>
+                  </div>
                 </div>
+
+                {yearStats.averageRating > 0 && (
+                  <div className="mt-4 flex items-center justify-center gap-2">
+                    <span className="text-sm text-gray-400">{t.avgRating}:</span>
+                    <StarRating rating={Math.round(yearStats.averageRating)} size="md" />
+                    <span className="font-medium text-white">{yearStats.averageRating.toFixed(1)}</span>
+                  </div>
+                )}
               </div>
 
-              {yearStats.averageRating > 0 && (
-                <div className="mt-4 flex items-center justify-center gap-2">
-                  <span className="text-sm text-gray-400">{t.avgRating}:</span>
-                  <StarRating rating={Math.round(yearStats.averageRating)} size="md" />
-                  <span className="text-white font-medium">
-                    {yearStats.averageRating.toFixed(1)}
-                  </span>
+              {/* 月別トレンド */}
+              <div className="rounded-lg bg-gray-800 p-4">
+                <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
+                  <BarChart3 className="h-4 w-4 text-rose-600" />
+                  {t.monthlyTrend}
+                </h3>
+                <MonthlyTrendChart data={yearStats.monthlyTrend} max={maxMonthlyCount} />
+              </div>
+
+              {/* よく見た女優 */}
+              {yearStats.topPerformers.length > 0 && (
+                <div className="rounded-lg bg-gray-800 p-4">
+                  <h3 className="mb-3 flex items-center gap-2 font-medium text-white">
+                    <User className="h-4 w-4 text-rose-600" />
+                    {t.topPerformers}
+                  </h3>
+                  <div className="space-y-2">
+                    {yearStats.topPerformers.slice(0, 5).map((performer, index) => (
+                      <div key={performer.name} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-300">
+                          {index + 1}. {performer.name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {performer.count}
+                          {t.works}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               )}
             </div>
-
-            {/* 月別トレンド */}
-            <div className="bg-gray-800 rounded-lg p-4">
-              <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-rose-600" />
-                {t.monthlyTrend}
-              </h3>
-              <MonthlyTrendChart data={yearStats.monthlyTrend} max={maxMonthlyCount} />
+          </div>
+        ) : (
+          /* 統計タブ */
+          <div className="space-y-6">
+            {/* 年選択 */}
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => setSelectedYear((y) => y - 1)}
+                disabled={!availableYears.includes(selectedYear - 1) && selectedYear <= Math.min(...availableYears)}
+                className="rounded-lg bg-gray-800 p-2 text-gray-300 hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <span className="text-xl font-bold text-white">{selectedYear}</span>
+              <button
+                onClick={() => setSelectedYear((y) => y + 1)}
+                disabled={selectedYear >= new Date().getFullYear()}
+                className="rounded-lg bg-gray-800 p-2 text-gray-300 hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
             </div>
 
-            {/* よく見た女優 */}
-            {yearStats.topPerformers.length > 0 && (
-              <div className="bg-gray-800 rounded-lg p-4">
-                <h3 className="text-white font-medium mb-3 flex items-center gap-2">
-                  <User className="w-4 h-4 text-rose-600" />
+            {/* 統計カード */}
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+              <div className="rounded-lg bg-gray-800 p-6 text-center">
+                <Film className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+                <div className="text-3xl font-bold text-white">{yearStats.totalCount}</div>
+                <div className="text-sm text-gray-400">{t.totalViewed}</div>
+              </div>
+              <div className="rounded-lg bg-gray-800 p-6 text-center">
+                <Clock className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+                <div className="text-3xl font-bold text-white">{formatDuration(yearStats.totalDuration)}</div>
+                <div className="text-sm text-gray-400">{t.totalTime}</div>
+              </div>
+              <div className="rounded-lg bg-gray-800 p-6 text-center">
+                <Star className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+                <div className="text-3xl font-bold text-white">
+                  {yearStats.averageRating > 0 ? yearStats.averageRating.toFixed(1) : '-'}
+                </div>
+                <div className="text-sm text-gray-400">{t.avgRating}</div>
+              </div>
+              <div className="rounded-lg bg-gray-800 p-6 text-center">
+                <TrendingUp className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+                <div className="text-3xl font-bold text-white">{Math.round((yearStats.totalCount / 12) * 10) / 10}</div>
+                <div className="text-sm text-gray-400">{t.works}/月</div>
+              </div>
+            </div>
+
+            {/* 月別トレンド（大きめ） */}
+            <div className="rounded-lg bg-gray-800 p-6">
+              <h3 className="mb-6 font-medium text-white">{t.monthlyTrend}</h3>
+              <div className="h-48">
+                <MonthlyTrendChart data={yearStats.monthlyTrend} max={maxMonthlyCount} />
+              </div>
+            </div>
+
+            {/* ランキング */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              {/* よく見た女優 */}
+              <div className="rounded-lg bg-gray-800 p-6">
+                <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
+                  <User className="h-5 w-5 text-rose-600" />
                   {t.topPerformers}
                 </h3>
-                <div className="space-y-2">
-                  {yearStats.topPerformers.slice(0, 5).map((performer, index) => (
-                    <div key={performer.name} className="flex items-center justify-between">
-                      <span className="text-gray-300 text-sm">
-                        {index + 1}. {performer.name}
-                      </span>
-                      <span className="text-gray-500 text-xs">
-                        {performer.count}{t.works}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {yearStats.topPerformers.length > 0 ? (
+                  <div className="space-y-3">
+                    {yearStats.topPerformers.map((performer, index) => (
+                      <div key={performer.name} className="flex items-center gap-3">
+                        <span
+                          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                            index === 0
+                              ? 'bg-yellow-500 text-black'
+                              : index === 1
+                                ? 'bg-gray-400 text-black'
+                                : index === 2
+                                  ? 'bg-amber-700 text-white'
+                                  : 'bg-gray-700 text-gray-300'
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="flex-1 text-gray-300">{performer.name}</span>
+                        <span className="text-gray-500">
+                          {performer.count}
+                          {t.works}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-4 text-center text-gray-500">{t.noData}</p>
+                )}
               </div>
-            )}
-          </div>
-        </div>
-      ) : (
-        /* 統計タブ */
-        <div className="space-y-6">
-          {/* 年選択 */}
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => setSelectedYear((y) => y - 1)}
-              disabled={!availableYears.includes(selectedYear - 1) && selectedYear <= Math.min(...availableYears)}
-              className="p-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="text-xl font-bold text-white">{selectedYear}</span>
-            <button
-              onClick={() => setSelectedYear((y) => y + 1)}
-              disabled={selectedYear >= new Date().getFullYear()}
-              className="p-2 rounded-lg bg-gray-800 text-gray-300 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
 
-          {/* 統計カード */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-800 rounded-lg p-6 text-center">
-              <Film className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-              <div className="text-3xl font-bold text-white">{yearStats.totalCount}</div>
-              <div className="text-sm text-gray-400">{t.totalViewed}</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-6 text-center">
-              <Clock className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-              <div className="text-3xl font-bold text-white">
-                {formatDuration(yearStats.totalDuration)}
+              {/* よく見たジャンル */}
+              <div className="rounded-lg bg-gray-800 p-6">
+                <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
+                  <Film className="h-5 w-5 text-rose-600" />
+                  {t.topTags}
+                </h3>
+                {yearStats.topTags.length > 0 ? (
+                  <div className="space-y-3">
+                    {yearStats.topTags.map((tag, index) => (
+                      <div key={tag.name} className="flex items-center gap-3">
+                        <span
+                          className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                            index === 0
+                              ? 'bg-yellow-500 text-black'
+                              : index === 1
+                                ? 'bg-gray-400 text-black'
+                                : index === 2
+                                  ? 'bg-amber-700 text-white'
+                                  : 'bg-gray-700 text-gray-300'
+                          }`}
+                        >
+                          {index + 1}
+                        </span>
+                        <span className="flex-1 text-gray-300">{tag.name}</span>
+                        <span className="text-gray-500">
+                          {tag.count}
+                          {t.works}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="py-4 text-center text-gray-500">{t.noData}</p>
+                )}
               </div>
-              <div className="text-sm text-gray-400">{t.totalTime}</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-6 text-center">
-              <Star className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-              <div className="text-3xl font-bold text-white">
-                {yearStats.averageRating > 0 ? yearStats.averageRating.toFixed(1) : '-'}
-              </div>
-              <div className="text-sm text-gray-400">{t.avgRating}</div>
-            </div>
-            <div className="bg-gray-800 rounded-lg p-6 text-center">
-              <TrendingUp className="w-8 h-8 text-rose-600 mx-auto mb-2" />
-              <div className="text-3xl font-bold text-white">
-                {Math.round(yearStats.totalCount / 12 * 10) / 10}
-              </div>
-              <div className="text-sm text-gray-400">{t.works}/月</div>
             </div>
           </div>
-
-          {/* 月別トレンド（大きめ） */}
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h3 className="text-white font-medium mb-6">{t.monthlyTrend}</h3>
-            <div className="h-48">
-              <MonthlyTrendChart data={yearStats.monthlyTrend} max={maxMonthlyCount} />
-            </div>
-          </div>
-
-          {/* ランキング */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* よく見た女優 */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                <User className="w-5 h-5 text-rose-600" />
-                {t.topPerformers}
-              </h3>
-              {yearStats.topPerformers.length > 0 ? (
-                <div className="space-y-3">
-                  {yearStats.topPerformers.map((performer, index) => (
-                    <div key={performer.name} className="flex items-center gap-3">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        index === 0 ? 'bg-yellow-500 text-black' :
-                        index === 1 ? 'bg-gray-400 text-black' :
-                        index === 2 ? 'bg-amber-700 text-white' :
-                        'bg-gray-700 text-gray-300'
-                      }`}>
-                        {index + 1}
-                      </span>
-                      <span className="flex-1 text-gray-300">{performer.name}</span>
-                      <span className="text-gray-500">{performer.count}{t.works}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">{t.noData}</p>
-              )}
-            </div>
-
-            {/* よく見たジャンル */}
-            <div className="bg-gray-800 rounded-lg p-6">
-              <h3 className="text-white font-medium mb-4 flex items-center gap-2">
-                <Film className="w-5 h-5 text-rose-600" />
-                {t.topTags}
-              </h3>
-              {yearStats.topTags.length > 0 ? (
-                <div className="space-y-3">
-                  {yearStats.topTags.map((tag, index) => (
-                    <div key={tag.name} className="flex items-center gap-3">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                        index === 0 ? 'bg-yellow-500 text-black' :
-                        index === 1 ? 'bg-gray-400 text-black' :
-                        index === 2 ? 'bg-amber-700 text-white' :
-                        'bg-gray-700 text-gray-300'
-                      }`}>
-                        {index + 1}
-                      </span>
-                      <span className="flex-1 text-gray-300">{tag.name}</span>
-                      <span className="text-gray-500">{tag.count}{t.works}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-gray-500 text-center py-4">{t.noData}</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+        )}
       </div>
 
       {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}

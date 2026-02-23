@@ -22,10 +22,7 @@ interface GroupInfo {
 /**
  * 新しいグループを作成
  */
-export async function createGroup(
-  product: ProductForMatching,
-  matchingMethod: MatchingMethod
-): Promise<number> {
+export async function createGroup(product: ProductForMatching, matchingMethod: MatchingMethod): Promise<number> {
   const db = getDb();
 
   const canonicalCode = extractAndNormalizeCode(product);
@@ -56,7 +53,7 @@ export async function createGroup(
 export async function addToGroup(
   groupId: number,
   product: ProductForMatching,
-  matchResult: MatchResult
+  matchResult: MatchResult,
 ): Promise<void> {
   const db = getDb();
 
@@ -154,7 +151,7 @@ async function updateMasterProduct(groupId: number): Promise<void> {
   }
 
   // スコアを計算してソート
-  const scored = members.rows.map(row => ({
+  const scored = members.rows.map((row) => ({
     productId: row.product_id,
     score: calculateMasterScore(row.asp_name, row.image_count, row.review_count),
     createdAt: new Date(row.created_at),
@@ -181,11 +178,7 @@ async function updateMasterProduct(groupId: number): Promise<void> {
 /**
  * マスター商品スコアを計算
  */
-function calculateMasterScore(
-  aspName: string,
-  imageCount: number,
-  reviewCount: number
-): number {
+function calculateMasterScore(aspName: string, imageCount: number, reviewCount: number): number {
   // ASP優先度（FANZAが最高）
   const aspPriorities: Record<string, number> = {
     FANZA: 100,
@@ -210,10 +203,7 @@ function calculateMasterScore(
 /**
  * グループを統合（2つのグループを1つにマージ）
  */
-export async function mergeGroups(
-  targetGroupId: number,
-  sourceGroupId: number
-): Promise<void> {
+export async function mergeGroups(targetGroupId: number, sourceGroupId: number): Promise<void> {
   const db = getDb();
 
   // ソースグループのメンバーをターゲットに移動
@@ -265,13 +255,15 @@ export async function removeFromGroup(productId: number): Promise<boolean> {
 /**
  * グループのメンバー一覧を取得
  */
-export async function getGroupMembers(groupId: number): Promise<Array<{
-  productId: number;
-  aspName: string;
-  confidenceScore: number;
-  matchingMethod: string;
-  isMaster: boolean;
-}>> {
+export async function getGroupMembers(groupId: number): Promise<
+  Array<{
+    productId: number;
+    aspName: string;
+    confidenceScore: number;
+    matchingMethod: string;
+    isMaster: boolean;
+  }>
+> {
   const db = getDb();
 
   const result = await db.execute<{
@@ -293,7 +285,7 @@ export async function getGroupMembers(groupId: number): Promise<Array<{
     ORDER BY is_master DESC, pigm.confidence_score DESC
   `);
 
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     productId: row.product_id,
     aspName: row.asp_name,
     confidenceScore: row.confidence_score,

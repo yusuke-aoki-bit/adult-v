@@ -55,9 +55,7 @@ export default function CalendarGridWrapper({
     setMonth(newMonth);
 
     try {
-      const response = await fetch(
-        `/api/stats/calendar-detail?year=${newYear}&month=${newMonth}`
-      );
+      const response = await fetch(`/api/stats/calendar-detail?year=${newYear}&month=${newMonth}`);
       if (response.ok) {
         const newData = await response.json();
         startTransition(() => {
@@ -74,8 +72,8 @@ export default function CalendarGridWrapper({
   return (
     <div className={`relative ${isLoading || isPending ? 'opacity-60' : ''}`}>
       {(isLoading || isPending) && (
-        <div className="absolute inset-0 flex items-center justify-center z-10">
-          <div className="w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin" />
+        <div className="absolute inset-0 z-10 flex items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent" />
         </div>
       )}
       <CalendarGrid

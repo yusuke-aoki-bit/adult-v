@@ -302,7 +302,9 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
               `);
               stats.fixed += (deleteResult as { rowCount?: number }).rowCount ?? stats.duplicateProducts;
 
-              console.log(`[cleanup] 重複商品修正完了: migrated sources=${stats.migratedSources}, performers=${stats.migratedPerformers}, videos=${stats.migratedVideos}, images=${stats.migratedImages}, tags=${stats.migratedTags}`);
+              console.log(
+                `[cleanup] 重複商品修正完了: migrated sources=${stats.migratedSources}, performers=${stats.migratedPerformers}, videos=${stats.migratedVideos}, images=${stats.migratedImages}, tags=${stats.migratedTags}`,
+              );
             }
           }
         } catch (error) {
@@ -584,7 +586,9 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
             `);
             stats.saleFlagsUpdated = (flagResult as { rowCount?: number }).rowCount ?? 0;
 
-            console.log(`[cleanup] セール期限切れ処理: expired=${stats.expiredSales}, flags_updated=${stats.saleFlagsUpdated}`);
+            console.log(
+              `[cleanup] セール期限切れ処理: expired=${stats.expiredSales}, flags_updated=${stats.saleFlagsUpdated}`,
+            );
           }
         } catch (error) {
           const msg = `セール期限切れ処理エラー: ${error instanceof Error ? error.message : 'Unknown'}`;
@@ -594,7 +598,6 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
       }
 
       return buildResponse(stats, issues, errors, action, type, startTime);
-
     } catch (error) {
       console.error('[cleanup] Error:', error);
       return NextResponse.json(
@@ -604,7 +607,7 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
           stats,
           errors,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };
@@ -618,15 +621,20 @@ export function createCleanupHandler(deps: CleanupHandlerDeps) {
     startTime: number,
   ) {
     const duration = Math.round((Date.now() - startTime) / 1000);
-    const totalIssues = stats.duplicateProducts + stats.duplicatePerformers +
-                        stats.orphanedProductSources + stats.orphanedProductVideos +
-                        stats.orphanedProductPerformers + stats.emptyProducts;
+    const totalIssues =
+      stats.duplicateProducts +
+      stats.duplicatePerformers +
+      stats.orphanedProductSources +
+      stats.orphanedProductVideos +
+      stats.orphanedProductPerformers +
+      stats.emptyProducts;
 
     return NextResponse.json({
       success: errors.length === 0,
-      message: action === 'fix'
-        ? `Cleanup completed: ${stats.fixed} issues fixed${errors.length > 0 ? ` (${errors.length} errors)` : ''}`
-        : `Check completed: ${totalIssues} issues found`,
+      message:
+        action === 'fix'
+          ? `Cleanup completed: ${stats.fixed} issues fixed${errors.length > 0 ? ` (${errors.length} errors)` : ''}`
+          : `Check completed: ${totalIssues} issues found`,
       params: { action, type },
       issues,
       errors,

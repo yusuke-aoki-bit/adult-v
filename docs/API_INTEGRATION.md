@@ -49,7 +49,7 @@ SOKMIL_API_KEY=70c75ce3a36c1f503f2515ff094d6f60
 import { DugaCredit } from '@/components/credits/DugaCredit';
 
 // フッターまたは適切な場所に配置
-<DugaCredit variant="small" className="my-4" />
+<DugaCredit variant="small" className="my-4" />;
 ```
 
 #### ソクミルAPIクレジット
@@ -116,9 +116,9 @@ const searchResults = await dugaClient.searchProducts({
   keyword: '検索ワード',
   hits: 50,
   offset: 0,
-  sort: 'release',        // 発売日順
-  target: 'hd',           // HD版のみ
-  device: 'smart',        // スマホ対応
+  sort: 'release', // 発売日順
+  target: 'hd', // HD版のみ
+  device: 'smart', // スマホ対応
   releasestt: '20240101', // 2024年1月1日以降
   releaseend: '20241231', // 2024年12月31日まで
 });
@@ -346,8 +346,7 @@ async function crawlDugaProducts() {
       offset += batchSize;
 
       // レート制限対策: 1秒待機
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       console.error('クローラーエラー:', error);
       break;
@@ -385,8 +384,7 @@ async function crawlSokmilProducts() {
       page++;
 
       // API負荷軽減のため待機
-      await new Promise(resolve => setTimeout(resolve, 500));
-
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error('クローラーエラー:', error);
       break;
@@ -419,6 +417,7 @@ async function crawlSokmilProducts() {
 **原因**: 環境変数が設定されていない
 
 **解決策**:
+
 ```bash
 # .env.local に追加
 DUGA_AGENT_ID=あなたの代理店ID
@@ -429,19 +428,22 @@ DUGA_AGENT_ID=あなたの代理店ID
 **原因**: 60秒間に60回以上のリクエスト
 
 **解決策**:
+
 ```typescript
 // リクエスト間に待機時間を追加
-await new Promise(resolve => setTimeout(resolve, 1000));
+await new Promise((resolve) => setTimeout(resolve, 1000));
 ```
 
 #### 3. API レスポンスが空
 
 **原因**:
+
 - APIエンドポイントURLが間違っている
 - APIキーが無効
 - 検索条件が厳しすぎる
 
 **解決策**:
+
 - APIドキュメントで正しいエンドポイントを確認
 - APIキーの有効性を確認
 - より広い検索条件で試す

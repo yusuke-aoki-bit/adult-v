@@ -1,7 +1,26 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Film, Tag, Sparkles, TrendingUp, BarChart3, AlertTriangle, Clock, ExternalLink, Star, Users, Gem, Vote, List, Search, Cake, Trophy, Play, Newspaper } from 'lucide-react';
+import {
+  Film,
+  Tag,
+  Sparkles,
+  TrendingUp,
+  BarChart3,
+  AlertTriangle,
+  Clock,
+  ExternalLink,
+  Star,
+  Users,
+  Gem,
+  Vote,
+  List,
+  Search,
+  Cake,
+  Trophy,
+  Play,
+  Newspaper,
+} from 'lucide-react';
 import Link from 'next/link';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
@@ -44,69 +63,131 @@ const SKELETON_CLASSES = 'animate-pulse bg-gray-700 rounded-lg aspect-[2/3]';
 
 const sectionTexts = {
   ja: {
-    noHistory: '閲覧履歴がありません', recentActresses: '最近見た女優', recentProducts: '最近見た作品',
-    moreRecommendations: 'もっとおすすめを見る', moreNewReleases: '新作をもっと見る',
-    allGenres: '全ジャンルを見る', allActresses: '女優一覧を見る', allNews: 'ニュース一覧を見る',
-    saleSubtitle: '今だけお得！見逃し厳禁', recentlyViewed: '最近見た作品', recentlyViewedSub: '閲覧履歴から',
-    recommendations: 'あなたへのおすすめ', recommendationsSub: '閲覧履歴に基づくレコメンド',
-    weeklyHighlights: '今週の注目', weeklyHighlightsSub: '話題の女優と作品',
-    news: 'ニュース', newsSub: '最新情報・セール・トレンド',
-    trending: 'トレンド分析', trendingSub: '人気ジャンル・女優ランキング',
-    fanzaSite: 'FANZA専門サイト', fanzaSiteSub: 'FANZA作品に特化した姉妹サイト',
+    noHistory: '閲覧履歴がありません',
+    recentActresses: '最近見た女優',
+    recentProducts: '最近見た作品',
+    moreRecommendations: 'もっとおすすめを見る',
+    moreNewReleases: '新作をもっと見る',
+    allGenres: '全ジャンルを見る',
+    allActresses: '女優一覧を見る',
+    allNews: 'ニュース一覧を見る',
+    saleSubtitle: '今だけお得！見逃し厳禁',
+    recentlyViewed: '最近見た作品',
+    recentlyViewedSub: '閲覧履歴から',
+    recommendations: 'あなたへのおすすめ',
+    recommendationsSub: '閲覧履歴に基づくレコメンド',
+    weeklyHighlights: '今週の注目',
+    weeklyHighlightsSub: '話題の女優と作品',
+    news: 'ニュース',
+    newsSub: '最新情報・セール・トレンド',
+    trending: 'トレンド分析',
+    trendingSub: '人気ジャンル・女優ランキング',
+    fanzaSite: 'FANZA専門サイト',
+    fanzaSiteSub: 'FANZA作品に特化した姉妹サイト',
     // sub-component labels
-    saleActresses: 'セール中の女優', saleProducts: 'セール中の作品',
+    saleActresses: 'セール中の女優',
+    saleProducts: 'セール中の作品',
     recommendHint: '閲覧履歴に基づいたおすすめを表示します',
-    recommendedActresses: 'おすすめ女優', recommendedProducts: 'おすすめ作品',
-    featuredActresses: '注目の女優', featuredProducts: '注目の作品',
-    popularGenres: '人気ジャンル', popularActresses: '人気女優',
+    recommendedActresses: 'おすすめ女優',
+    recommendedProducts: 'おすすめ作品',
+    featuredActresses: '注目の女優',
+    featuredProducts: '注目の作品',
+    popularGenres: '人気ジャンル',
+    popularActresses: '人気女優',
     productsCount: (n: number) => `${n}作品`,
     noNews: 'ニュースはまだありません',
     saleTitle: (count: number) => `🔥 セール中 ${count}件`,
     saleCta: '🔥 セール中の全商品を見る',
     saleCtaSub: (count: number) => `${count}件以上のお得な作品をチェック →`,
-    catNew: '新着', catSales: 'セール', catAnalysis: '分析', catIndustry: '業界', catNotice: 'お知らせ',
-    originalContent: 'オリジナルコンテンツ', originalContentSub: '独自の分析・特集ページ',
-    todaysPick: '今日の1本', birthdays: '誕生日', annualBest: '年間ベスト', weeklyTrend: '週間トレンド',
-    rookies: '新人', hiddenGems: '隠れ名作', reviewers: 'レビュアー', lists: 'リスト', vote: '投票', aiSearch: 'AI検索',
+    catNew: '新着',
+    catSales: 'セール',
+    catAnalysis: '分析',
+    catIndustry: '業界',
+    catNotice: 'お知らせ',
+    originalContent: 'オリジナルコンテンツ',
+    originalContentSub: '独自の分析・特集ページ',
+    todaysPick: '今日の1本',
+    birthdays: '誕生日',
+    annualBest: '年間ベスト',
+    weeklyTrend: '週間トレンド',
+    rookies: '新人',
+    hiddenGems: '隠れ名作',
+    reviewers: 'レビュアー',
+    lists: 'リスト',
+    vote: '投票',
+    aiSearch: 'AI検索',
   },
   en: {
-    noHistory: 'No viewing history', recentActresses: 'Recent actresses', recentProducts: 'Recent products',
-    moreRecommendations: 'More recommendations', moreNewReleases: 'More new releases',
-    allGenres: 'All genres', allActresses: 'All actresses', allNews: 'All news',
-    saleSubtitle: 'Limited time deals!', recentlyViewed: 'Recently Viewed', recentlyViewedSub: 'From your history',
-    recommendations: 'Recommended for You', recommendationsSub: 'Based on your viewing history',
-    weeklyHighlights: 'Weekly Highlights', weeklyHighlightsSub: 'Trending actresses & products',
-    news: 'News', newsSub: 'Latest updates, sales & trends',
-    trending: 'Trending', trendingSub: 'Popular genres & actress rankings',
-    fanzaSite: 'FANZA Site', fanzaSiteSub: 'Dedicated FANZA sister site',
+    noHistory: 'No viewing history',
+    recentActresses: 'Recent actresses',
+    recentProducts: 'Recent products',
+    moreRecommendations: 'More recommendations',
+    moreNewReleases: 'More new releases',
+    allGenres: 'All genres',
+    allActresses: 'All actresses',
+    allNews: 'All news',
+    saleSubtitle: 'Limited time deals!',
+    recentlyViewed: 'Recently Viewed',
+    recentlyViewedSub: 'From your history',
+    recommendations: 'Recommended for You',
+    recommendationsSub: 'Based on your viewing history',
+    weeklyHighlights: 'Weekly Highlights',
+    weeklyHighlightsSub: 'Trending actresses & products',
+    news: 'News',
+    newsSub: 'Latest updates, sales & trends',
+    trending: 'Trending',
+    trendingSub: 'Popular genres & actress rankings',
+    fanzaSite: 'FANZA Site',
+    fanzaSiteSub: 'Dedicated FANZA sister site',
     // sub-component labels
-    saleActresses: 'Sale Actresses', saleProducts: 'Sale Products',
+    saleActresses: 'Sale Actresses',
+    saleProducts: 'Sale Products',
     recommendHint: 'Recommendations based on your viewing history',
-    recommendedActresses: 'Recommended Actresses', recommendedProducts: 'Recommended Products',
-    featuredActresses: 'Featured Actresses', featuredProducts: 'Featured Products',
-    popularGenres: 'Popular Genres', popularActresses: 'Popular Actresses',
+    recommendedActresses: 'Recommended Actresses',
+    recommendedProducts: 'Recommended Products',
+    featuredActresses: 'Featured Actresses',
+    featuredProducts: 'Featured Products',
+    popularGenres: 'Popular Genres',
+    popularActresses: 'Popular Actresses',
     productsCount: (n: number) => `${n} titles`,
     noNews: 'No news yet',
     saleTitle: (count: number) => `🔥 ${count} On Sale`,
     saleCta: '🔥 View All Sale Products',
     saleCtaSub: (count: number) => `Check ${count}+ deals →`,
-    catNew: 'New', catSales: 'Sale', catAnalysis: 'Analysis', catIndustry: 'Industry', catNotice: 'Notice',
-    originalContent: 'Original Content', originalContentSub: 'Exclusive analysis and features',
-    todaysPick: "Today's Pick", birthdays: 'Birthdays', annualBest: 'Annual Best', weeklyTrend: 'Weekly',
-    rookies: 'Rookies', hiddenGems: 'Hidden Gems', reviewers: 'Reviewers', lists: 'Lists', vote: 'Vote', aiSearch: 'AI Search',
+    catNew: 'New',
+    catSales: 'Sale',
+    catAnalysis: 'Analysis',
+    catIndustry: 'Industry',
+    catNotice: 'Notice',
+    originalContent: 'Original Content',
+    originalContentSub: 'Exclusive analysis and features',
+    todaysPick: "Today's Pick",
+    birthdays: 'Birthdays',
+    annualBest: 'Annual Best',
+    weeklyTrend: 'Weekly',
+    rookies: 'Rookies',
+    hiddenGems: 'Hidden Gems',
+    reviewers: 'Reviewers',
+    lists: 'Lists',
+    vote: 'Vote',
+    aiSearch: 'AI Search',
   },
 } as const;
-function getSectionText(locale: string) { return sectionTexts[locale as keyof typeof sectionTexts] || sectionTexts.ja; }
+function getSectionText(locale: string) {
+  return sectionTexts[locale as keyof typeof sectionTexts] || sectionTexts.ja;
+}
 
 // 最近見た作品コンテンツ
 function RecentlyViewedContent({ locale }: { locale: string }) {
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
-  const [products, setProducts] = useState<Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    performers?: Array<{ id: number; name: string }>;
-  }>>([]);
+  const [products, setProducts] = useState<
+    Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      performers?: Array<{ id: number; name: string }>;
+    }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
 
@@ -117,14 +198,14 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const ids = recentlyViewed.slice(0, 8).map(item => item.id);
+        const ids = recentlyViewed.slice(0, 8).map((item) => item.id);
         const response = await fetch(`/api/products?ids=${ids.join(',')}`);
         if (response.ok && !cancelled) {
           const data = await response.json();
           const productList = Array.isArray(data.products) ? data.products : [];
           // 閲覧順を維持
           const productMap = new Map(productList.map((p: { id: number }) => [String(p.id), p]));
-          const ordered = ids.map(id => productMap.get(id)).filter(Boolean);
+          const ordered = ids.map((id) => productMap.get(id)).filter(Boolean);
           setProducts(ordered as typeof products);
         }
       } catch (error) {
@@ -137,11 +218,13 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       }
     };
     fetchProducts();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [historyLoading, recentlyViewed, hasFetched]);
 
   if (historyLoading || recentlyViewed.length === 0) {
-    return <p className="text-gray-400 text-sm">{getSectionText(locale).noHistory}</p>;
+    return <p className="text-sm text-gray-400">{getSectionText(locale).noHistory}</p>;
   }
 
   if (loading) {
@@ -156,8 +239,8 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
 
   // 女優を抽出（重複排除）
   const actressMap = new Map<number, { id: number; name: string }>();
-  products.forEach(product => {
-    product.performers?.forEach(performer => {
+  products.forEach((product) => {
+    product.performers?.forEach((performer) => {
       if (!actressMap.has(performer.id)) {
         actressMap.set(performer.id, performer);
       }
@@ -170,7 +253,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-blue-400 mb-2">{getSectionText(locale).recentActresses}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-blue-400">{getSectionText(locale).recentActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -188,7 +271,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).recentProducts}</h4>
+        <h4 className="mb-2 text-xs font-semibold text-gray-400">{getSectionText(locale).recentProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.map((product) => (
             <ProductCardBase
@@ -215,8 +298,8 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
 
   // 女優を抽出（重複排除、画像URLも含む）
   const actressMap = new Map<number, { id: number; name: string; profileImageUrl?: string | null }>();
-  products.forEach(product => {
-    product.performers?.forEach(performer => {
+  products.forEach((product) => {
+    product.performers?.forEach((performer) => {
       if (!actressMap.has(performer.id)) {
         actressMap.set(performer.id, performer);
       }
@@ -225,8 +308,8 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
   // 画像がある女優を優先的に表示
   const allActresses = Array.from(actressMap.values());
   const actresses = [
-    ...allActresses.filter(a => a.profileImageUrl),
-    ...allActresses.filter(a => !a.profileImageUrl),
+    ...allActresses.filter((a) => a.profileImageUrl),
+    ...allActresses.filter((a) => !a.profileImageUrl),
   ].slice(0, 6);
 
   return (
@@ -234,7 +317,7 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-red-400 mb-2">{getSectionText(locale).saleActresses}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-red-400">{getSectionText(locale).saleActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -253,7 +336,7 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).saleProducts}</h4>
+        <h4 className="mb-2 text-xs font-semibold text-gray-400">{getSectionText(locale).saleProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.slice(0, 8).map((product) => (
             <div key={product.productId} className="relative">
@@ -268,7 +351,7 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
                 theme="dark"
               />
               {/* 割引バッジ */}
-              <div className="absolute top-1 left-1 bg-red-600 text-white text-[10px] font-bold px-1 py-0.5 rounded z-10">
+              <div className="absolute top-1 left-1 z-10 rounded bg-red-600 px-1 py-0.5 text-[10px] font-bold text-white">
                 -{product.discountPercent}%
               </div>
             </div>
@@ -282,17 +365,21 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
 // あなたへのおすすめコンテンツ
 function RecommendationsContent({ locale }: { locale: string }) {
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
-  const [products, setProducts] = useState<Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    releaseDate: string | null;
-  }>>([]);
-  const [actresses, setActresses] = useState<Array<{
-    id: number;
-    name: string;
-    thumbnailUrl: string | null;
-  }>>([]);
+  const [products, setProducts] = useState<
+    Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      releaseDate: string | null;
+    }>
+  >([]);
+  const [actresses, setActresses] = useState<
+    Array<{
+      id: number;
+      name: string;
+      thumbnailUrl: string | null;
+    }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
 
@@ -308,7 +395,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          history: recentlyViewed.slice(0, 10).map(item => ({
+          history: recentlyViewed.slice(0, 10).map((item) => ({
             id: item.id,
             title: item.title,
           })),
@@ -338,7 +425,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
   }, [historyLoading, recentlyViewed.length, fetchRecommendations]);
 
   if (historyLoading || recentlyViewed.length < 1) {
-    return <p className="text-gray-400 text-sm">{getSectionText(locale).recommendHint}</p>;
+    return <p className="text-sm text-gray-400">{getSectionText(locale).recommendHint}</p>;
   }
 
   if (loading) {
@@ -356,7 +443,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-purple-400 mb-2">{getSectionText(locale).recommendedActresses}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-purple-400">{getSectionText(locale).recommendedActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -376,7 +463,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       {/* 作品 */}
       {products.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).recommendedProducts}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-gray-400">{getSectionText(locale).recommendedProducts}</h4>
           <div className={GRID_CLASSES}>
             {products.map((product) => (
               <ProductCardBase
@@ -403,17 +490,21 @@ function RecommendationsContent({ locale }: { locale: string }) {
 
 // 今週の注目コンテンツ
 function WeeklyHighlightsContent({ locale }: { locale: string }) {
-  const [actresses, setActresses] = useState<Array<{
-    id: number;
-    name: string;
-    thumbnailUrl: string | null;
-  }>>([]);
-  const [products, setProducts] = useState<Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    releaseDate: string | null;
-  }>>([]);
+  const [actresses, setActresses] = useState<
+    Array<{
+      id: number;
+      name: string;
+      thumbnailUrl: string | null;
+    }>
+  >([]);
+  const [products, setProducts] = useState<
+    Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      releaseDate: string | null;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -423,10 +514,7 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
         if (response.ok) {
           const data = await response.json();
           setActresses(data.trendingActresses?.slice(0, 6) || []);
-          setProducts([
-            ...(data.hotNewReleases?.slice(0, 4) || []),
-            ...(data.rediscoveredClassics?.slice(0, 4) || []),
-          ]);
+          setProducts([...(data.hotNewReleases?.slice(0, 4) || []), ...(data.rediscoveredClassics?.slice(0, 4) || [])]);
         }
       } catch (error) {
         console.error('Failed to fetch weekly highlights:', error);
@@ -452,7 +540,7 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-amber-400 mb-2">{getSectionText(locale).featuredActresses}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-amber-400">{getSectionText(locale).featuredActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -472,7 +560,7 @@ function WeeklyHighlightsContent({ locale }: { locale: string }) {
       {/* 作品 */}
       {products.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-400 mb-2">{getSectionText(locale).featuredProducts}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-gray-400">{getSectionText(locale).featuredProducts}</h4>
           <div className={GRID_CLASSES}>
             {products.map((product) => (
               <ProductCardBase
@@ -503,10 +591,10 @@ function MoreLink({ href, label, locale }: { href: string; label: string; locale
   return (
     <Link
       href={localizedUrl}
-      className="mt-3 flex items-center justify-center gap-1 w-full py-2 text-sm text-blue-400 hover:text-blue-300 hover:bg-gray-700/50 rounded-lg transition-colors"
+      className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg py-2 text-sm text-blue-400 transition-colors hover:bg-gray-700/50 hover:text-blue-300"
     >
       {label}
-      <ExternalLink className="w-4 h-4" />
+      <ExternalLink className="h-4 w-4" />
     </Link>
   );
 }
@@ -539,7 +627,7 @@ function TrendingContent({ locale }: { locale: string }) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 bg-gray-700 rounded animate-pulse" />
+          <div key={i} className="h-8 animate-pulse rounded bg-gray-700" />
         ))}
       </div>
     );
@@ -547,24 +635,26 @@ function TrendingContent({ locale }: { locale: string }) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {/* ジャンル */}
         {tags.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold text-blue-400 mb-2">{getSectionText(locale).popularGenres}</h4>
+            <h4 className="mb-2 text-xs font-semibold text-blue-400">{getSectionText(locale).popularGenres}</h4>
             <div className="space-y-1">
               {tags.map((tag, index) => (
                 <a
                   key={tag.name}
                   href={tag.id ? localizedHref(`/tags/${tag.id}`, locale) : '#'}
-                  className="flex items-center gap-2 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-2 rounded bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
                 >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                    index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
-                  }`}>
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                      index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
+                    }`}
+                  >
                     {index + 1}
                   </span>
-                  <span className="text-sm text-white flex-1">{tag.name}</span>
+                  <span className="flex-1 text-sm text-white">{tag.name}</span>
                   <span className="text-xs text-gray-400">{getSectionText(locale).productsCount(tag.count)}</span>
                 </a>
               ))}
@@ -574,20 +664,22 @@ function TrendingContent({ locale }: { locale: string }) {
         {/* 女優 */}
         {performers.length > 0 && (
           <div>
-            <h4 className="text-xs font-semibold text-pink-400 mb-2">{getSectionText(locale).popularActresses}</h4>
+            <h4 className="mb-2 text-xs font-semibold text-pink-400">{getSectionText(locale).popularActresses}</h4>
             <div className="space-y-1">
               {performers.map((performer, index) => (
                 <a
                   key={performer.name}
                   href={performer.id ? localizedHref(`/actress/${performer.id}`, locale) : '#'}
-                  className="flex items-center gap-2 p-2 rounded bg-gray-700/50 hover:bg-gray-700 transition-colors"
+                  className="flex items-center gap-2 rounded bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
                 >
-                  <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                    index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
-                  }`}>
+                  <span
+                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                      index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
+                    }`}
+                  >
                     {index + 1}
                   </span>
-                  <span className="text-sm text-white flex-1">{performer.name}</span>
+                  <span className="flex-1 text-sm text-white">{performer.name}</span>
                   <span className="text-xs text-gray-400">{getSectionText(locale).productsCount(performer.count)}</span>
                 </a>
               ))}
@@ -618,15 +710,17 @@ function getCategoryStyles(locale: string): Record<string, { bg: string; text: s
 
 // ニュースコンテンツ
 function NewsContent({ locale }: { locale: string }) {
-  const [articles, setArticles] = useState<Array<{
-    id: number;
-    slug: string;
-    category: string;
-    title: string;
-    excerpt: string | null;
-    featured: boolean;
-    published_at: string;
-  }>>([]);
+  const [articles, setArticles] = useState<
+    Array<{
+      id: number;
+      slug: string;
+      category: string;
+      title: string;
+      excerpt: string | null;
+      featured: boolean;
+      published_at: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -650,22 +744,28 @@ function NewsContent({ locale }: { locale: string }) {
     return (
       <div className="space-y-2">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-700 rounded-lg animate-pulse" />
+          <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-700" />
         ))}
       </div>
     );
   }
 
   if (articles.length === 0) {
-    return <p className="text-gray-400 text-sm">{getSectionText(locale).noNews}</p>;
+    return <p className="text-sm text-gray-400">{getSectionText(locale).noNews}</p>;
   }
 
   return (
     <div className="space-y-3">
       {articles.map((article) => {
         const catStyles = getCategoryStyles(locale);
-        const style = catStyles[article.category] || catStyles['site_update'];
-        const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
+        const style = catStyles[article.category] ?? catStyles['site_update']!;
+        const localeMap: Record<string, string> = {
+          ja: 'ja-JP',
+          en: 'en-US',
+          zh: 'zh-CN',
+          ko: 'ko-KR',
+          'zh-TW': 'zh-TW',
+        };
         const publishedDate = new Date(article.published_at).toLocaleDateString(localeMap[locale] || 'ja-JP', {
           month: 'short',
           day: 'numeric',
@@ -675,31 +775,23 @@ function NewsContent({ locale }: { locale: string }) {
           <a
             key={article.id}
             href={localizedHref(`/news/${article.slug}`, locale)}
-            className={`block p-3 rounded-lg transition-colors ${
+            className={`block rounded-lg p-3 transition-colors ${
               article.featured
-                ? 'bg-gradient-to-r from-gray-700/80 to-gray-700/40 border border-yellow-600/30 hover:border-yellow-500/50'
+                ? 'border border-yellow-600/30 bg-gradient-to-r from-gray-700/80 to-gray-700/40 hover:border-yellow-500/50'
                 : 'bg-gray-700/50 hover:bg-gray-700'
             }`}
           >
             <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${style.bg} ${style.text}`}>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${style.bg} ${style.text}`}>
                     {style.label}
                   </span>
                   <span className="text-xs text-gray-400">{publishedDate}</span>
-                  {article.featured && (
-                    <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-                  )}
+                  {article.featured && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                 </div>
-                <h4 className="text-sm font-medium text-white line-clamp-1">
-                  {article.title}
-                </h4>
-                {article.excerpt && (
-                  <p className="text-xs text-gray-400 line-clamp-2 mt-1">
-                    {article.excerpt}
-                  </p>
-                )}
+                <h4 className="line-clamp-1 text-sm font-medium text-white">{article.title}</h4>
+                {article.excerpt && <p className="mt-1 line-clamp-2 text-xs text-gray-400">{article.excerpt}</p>}
               </div>
             </div>
           </a>
@@ -733,7 +825,7 @@ export function TopPageUpperSections({
         <div id="sale" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Tag className="w-5 h-5 text-red-400" />}
+            icon={<Tag className="h-5 w-5 text-red-400" />}
             title={getSectionText(locale).saleTitle(saleProducts.length)}
             subtitle={getSectionText(locale).saleSubtitle}
             theme="dark"
@@ -743,15 +835,13 @@ export function TopPageUpperSections({
             {/* セール一覧ページへの大型CTA */}
             <a
               href={localizedHref('/sales', locale)}
-              className="mt-4 flex flex-col items-center justify-center gap-1 w-full py-4 bg-gradient-to-r from-red-600 via-orange-500 to-red-600 hover:from-red-500 hover:via-orange-400 hover:to-red-500 text-white font-bold rounded-xl shadow-lg shadow-red-600/30 transition-all transform hover:scale-105"
+              className="mt-4 flex w-full transform flex-col items-center justify-center gap-1 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-red-600 py-4 font-bold text-white shadow-lg shadow-red-600/30 transition-all hover:scale-105 hover:from-red-500 hover:via-orange-400 hover:to-red-500"
             >
-              <span className="text-xl flex items-center gap-2">
+              <span className="flex items-center gap-2 text-xl">
                 {getSectionText(locale).saleCta}
-                <ExternalLink className="w-5 h-5" />
+                <ExternalLink className="h-5 w-5" />
               </span>
-              <span className="text-sm opacity-90">
-                {getSectionText(locale).saleCtaSub(saleProducts.length)}
-              </span>
+              <span className="text-sm opacity-90">{getSectionText(locale).saleCtaSub(saleProducts.length)}</span>
             </a>
           </TopPageMenuSection>
         </div>
@@ -762,7 +852,7 @@ export function TopPageUpperSections({
         <div id="recently-viewed" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Clock className="w-5 h-5" />}
+            icon={<Clock className="h-5 w-5" />}
             title={getSectionText(locale).recentlyViewed}
             subtitle={getSectionText(locale).recentlyViewedSub}
             theme="dark"
@@ -802,7 +892,7 @@ export function TopPageLowerSections({
         <div id="recommendations" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Sparkles className="w-5 h-5" />}
+            icon={<Sparkles className="h-5 w-5" />}
             title={getSectionText(locale).recommendations}
             subtitle={getSectionText(locale).recommendationsSub}
             theme="dark"
@@ -818,7 +908,7 @@ export function TopPageLowerSections({
         <div id="weekly-highlights" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<TrendingUp className="w-5 h-5" />}
+            icon={<TrendingUp className="h-5 w-5" />}
             title={getSectionText(locale).weeklyHighlights}
             subtitle={getSectionText(locale).weeklyHighlightsSub}
             theme="dark"
@@ -834,7 +924,7 @@ export function TopPageLowerSections({
         <div id="news" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Newspaper className="w-5 h-5" />}
+            icon={<Newspaper className="h-5 w-5" />}
             title={getSectionText(locale).news}
             subtitle={getSectionText(locale).newsSub}
             theme="dark"
@@ -850,7 +940,7 @@ export function TopPageLowerSections({
         <div id="trending" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<BarChart3 className="w-5 h-5" />}
+            icon={<BarChart3 className="h-5 w-5" />}
             title={getSectionText(locale).trending}
             subtitle={getSectionText(locale).trendingSub}
             theme="dark"
@@ -862,117 +952,98 @@ export function TopPageLowerSections({
       )}
 
       {/* 分割線 */}
-      <div className="border-t border-gray-700/50 my-2" />
+      <div className="my-2 border-t border-gray-700/50" />
 
       {/* オリジナルコンテンツ */}
-      {isSectionVisible('original-content') && (() => {
-        const oc = getSectionText(locale);
-        return (
-        <div id="original-content" className="scroll-mt-20">
-          <TopPageMenuSection
-            type="accordion"
-            icon={<Sparkles className="w-5 h-5" />}
-            title={oc.originalContent}
-            subtitle={oc.originalContentSub}
-            theme="dark"
-            defaultOpen={true}
-          >
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-              <a
-                href={localizedHref('/daily-pick', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
+      {isSectionVisible('original-content') &&
+        (() => {
+          const oc = getSectionText(locale);
+          return (
+            <div id="original-content" className="scroll-mt-20">
+              <TopPageMenuSection
+                type="accordion"
+                icon={<Sparkles className="h-5 w-5" />}
+                title={oc.originalContent}
+                subtitle={oc.originalContentSub}
+                theme="dark"
+                defaultOpen={true}
               >
-                <Play className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.todaysPick}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/birthdays', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <Cake className="w-4 h-4 text-pink-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.birthdays}
-                </span>
-              </a>
-              <a
-                href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <Trophy className="w-4 h-4 text-yellow-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.annualBest}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/weekly-report', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <TrendingUp className="w-4 h-4 text-green-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.weeklyTrend}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/rookies', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <Star className="w-4 h-4 text-rose-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.rookies}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/hidden-gems', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <Gem className="w-4 h-4 text-amber-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.hiddenGems}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/reviewers', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <Users className="w-4 h-4 text-blue-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.reviewers}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/lists/ranking', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <List className="w-4 h-4 text-purple-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.lists}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/vote', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 transition-colors"
-              >
-                <Vote className="w-4 h-4 text-orange-400 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.vote}
-                </span>
-              </a>
-              <a
-                href={localizedHref('/search/semantic', locale)}
-                className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-r from-purple-700/50 to-pink-700/50 hover:from-purple-700 hover:to-pink-700 transition-colors"
-              >
-                <Search className="w-4 h-4 text-purple-300 flex-shrink-0" />
-                <span className="text-xs font-medium text-white truncate">
-                  {oc.aiSearch}
-                </span>
-              </a>
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
+                  <a
+                    href={localizedHref('/daily-pick', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Play className="h-4 w-4 flex-shrink-0 text-cyan-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.todaysPick}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/birthdays', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Cake className="h-4 w-4 flex-shrink-0 text-pink-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.birthdays}</span>
+                  </a>
+                  <a
+                    href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Trophy className="h-4 w-4 flex-shrink-0 text-yellow-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.annualBest}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/weekly-report', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <TrendingUp className="h-4 w-4 flex-shrink-0 text-green-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.weeklyTrend}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/rookies', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Star className="h-4 w-4 flex-shrink-0 text-rose-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.rookies}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/hidden-gems', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Gem className="h-4 w-4 flex-shrink-0 text-amber-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.hiddenGems}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/reviewers', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Users className="h-4 w-4 flex-shrink-0 text-blue-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.reviewers}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/lists/ranking', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <List className="h-4 w-4 flex-shrink-0 text-purple-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.lists}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/vote', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                  >
+                    <Vote className="h-4 w-4 flex-shrink-0 text-orange-400" />
+                    <span className="truncate text-xs font-medium text-white">{oc.vote}</span>
+                  </a>
+                  <a
+                    href={localizedHref('/search/semantic', locale)}
+                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-700/50 to-pink-700/50 p-2 transition-colors hover:from-purple-700 hover:to-pink-700"
+                  >
+                    <Search className="h-4 w-4 flex-shrink-0 text-purple-300" />
+                    <span className="truncate text-xs font-medium text-white">{oc.aiSearch}</span>
+                  </a>
+                </div>
+              </TopPageMenuSection>
             </div>
-          </TopPageMenuSection>
-        </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* 商品一覧へのリンク */}
       {isSectionVisible('all-products') && (
@@ -980,7 +1051,7 @@ export function TopPageLowerSections({
           <TopPageMenuSection
             type="link"
             href={localizedHref('/products', locale)}
-            icon={<Film className="w-5 h-5" />}
+            icon={<Film className="h-5 w-5" />}
             title={t.viewProductList}
             subtitle={t.viewProductListDesc}
             theme="dark"
@@ -993,7 +1064,7 @@ export function TopPageLowerSections({
         <TopPageMenuSection
           type="link"
           href={localizedHref('/products?uncategorized=true', locale)}
-          icon={<AlertTriangle className="w-5 h-5" />}
+          icon={<AlertTriangle className="h-5 w-5" />}
           title={t.uncategorizedDescription}
           badge={t.uncategorizedCount}
           theme="dark"
@@ -1003,11 +1074,11 @@ export function TopPageLowerSections({
       {/* FANZA専門サイトへのバナー */}
       {!isFanzaSite && isSectionVisible('fanza-site') && (
         <>
-          <div className="border-t border-gray-700/50 my-2" />
+          <div className="my-2 border-t border-gray-700/50" />
           <TopPageMenuSection
             type="link"
             href="https://fanza.eroxv.com"
-            icon={<ExternalLink className="w-5 h-5" />}
+            icon={<ExternalLink className="h-5 w-5" />}
             title={getSectionText(locale).fanzaSite}
             subtitle={getSectionText(locale).fanzaSiteSub}
             theme="dark"

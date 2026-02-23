@@ -63,11 +63,11 @@ export async function generateMetadata({
   const alternates = {
     canonical: `${baseUrl}/products`,
     languages: {
-      'ja': `${baseUrl}/products`,
-      'en': `${baseUrl}/products?hl=en`,
-      'zh': `${baseUrl}/products?hl=zh`,
+      ja: `${baseUrl}/products`,
+      en: `${baseUrl}/products?hl=en`,
+      zh: `${baseUrl}/products?hl=zh`,
       'zh-TW': `${baseUrl}/products?hl=zh-TW`,
-      'ko': `${baseUrl}/products?hl=ko`,
+      ko: `${baseUrl}/products?hl=ko`,
       'x-default': `${baseUrl}/products`,
     },
   };
@@ -94,27 +94,27 @@ export const dynamic = 'force-dynamic';
 
 // キャッシュ付きクエリ（DB負荷軽減のため300秒TTL）
 const getCachedAspStats = unstable_cache(
-  async (isFanzaSite: boolean) => isFanzaSite ? [] : getAspStats(),
+  async (isFanzaSite: boolean) => (isFanzaSite ? [] : getAspStats()),
   ['products-asp-stats'],
-  { revalidate: 300, tags: ['products'] }
+  { revalidate: 300, tags: ['products'] },
 );
 
 const getCachedPopularTags = unstable_cache(
   async (limit: number) => getPopularTags({ limit }),
   ['products-popular-tags'],
-  { revalidate: 300, tags: ['products'] }
+  { revalidate: 300, tags: ['products'] },
 );
 
 const getCachedProductsCount = unstable_cache(
   async (filterOptions: Parameters<typeof getProductsCount>[0]) => getProductsCount(filterOptions),
   ['products-count'],
-  { revalidate: 300, tags: ['products'] }
+  { revalidate: 300, tags: ['products'] },
 );
 
 const getCachedProducts = unstable_cache(
   async (options: Parameters<typeof getProducts>[0]) => getProducts(options),
   ['products-list'],
-  { revalidate: 300, tags: ['products'] }
+  { revalidate: 300, tags: ['products'] },
 );
 
 interface PageProps {
@@ -142,23 +142,22 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     isServerFanzaSite(),
   ]);
 
-
-  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
+  const query =
+    typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
 
   // ASPフィルターの決定ロジック:
   // 1. URLパラメータが指定されている場合は、それを優先（サイト許可ASP内でフィルター）
   // 2. URLパラメータがない場合は、サイトデフォルト（FANZAサイト:FANZA, adult-v:全ASP）
-  const urlIncludeAsp = typeof searchParamsData['includeAsp'] === 'string'
-    ? searchParamsData['includeAsp'].split(',').filter(Boolean)
-    : [];
+  const urlIncludeAsp =
+    typeof searchParamsData['includeAsp'] === 'string' ? searchParamsData['includeAsp'].split(',').filter(Boolean) : [];
 
   let includeAsp: string[];
   if (urlIncludeAsp.length > 0) {
     // URLパラメータが指定されている場合
     if (serverAspFilter) {
       // サイトの許可ASPリストがある場合、その中でフィルター
-      includeAsp = urlIncludeAsp.filter(asp =>
-        serverAspFilter.some(allowed => allowed.toUpperCase() === asp.toUpperCase())
+      includeAsp = urlIncludeAsp.filter((asp) =>
+        serverAspFilter.some((allowed) => allowed.toUpperCase() === asp.toUpperCase()),
       );
     } else {
       includeAsp = urlIncludeAsp;
@@ -169,23 +168,21 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
     includeAsp = isFanzaSite && serverAspFilter ? serverAspFilter : [];
   }
   // ASP名を小文字に正規化（DBのCASE式で小文字に変換されるため）
-  includeAsp = includeAsp.map(asp => asp.toLowerCase());
+  includeAsp = includeAsp.map((asp) => asp.toLowerCase());
 
-  const excludeAsp = (typeof searchParamsData['excludeAsp'] === 'string'
-    ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
-    : []).map(asp => asp.toLowerCase());
+  const excludeAsp = (
+    typeof searchParamsData['excludeAsp'] === 'string' ? searchParamsData['excludeAsp'].split(',').filter(Boolean) : []
+  ).map((asp) => asp.toLowerCase());
   const hasVideo = searchParamsData['hasVideo'] === 'true';
   const hasImage = searchParamsData['hasImage'] === 'true';
   const onSale = searchParamsData['onSale'] === 'true';
   const uncategorized = searchParamsData['uncategorized'] === 'true';
   const performerType = searchParamsData['performerType'] as 'solo' | 'multi' | undefined;
   const releaseDate = typeof searchParamsData['releaseDate'] === 'string' ? searchParamsData['releaseDate'] : undefined;
-  const includeTags = typeof searchParamsData['include'] === 'string'
-    ? searchParamsData['include'].split(',').filter(Boolean)
-    : [];
-  const excludeTags = typeof searchParamsData['exclude'] === 'string'
-    ? searchParamsData['exclude'].split(',').filter(Boolean)
-    : [];
+  const includeTags =
+    typeof searchParamsData['include'] === 'string' ? searchParamsData['include'].split(',').filter(Boolean) : [];
+  const excludeTags =
+    typeof searchParamsData['exclude'] === 'string' ? searchParamsData['exclude'].split(',').filter(Boolean) : [];
   const sortBy = typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'releaseDateDesc';
   const offset = (page - 1) * perPage;
 
@@ -213,7 +210,14 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
       ...filterOptions,
       offset,
       limit: perPage,
-      sortBy: sortBy as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'ratingDesc' | 'reviewCountDesc' | 'titleAsc',
+      sortBy: sortBy as
+        | 'releaseDateDesc'
+        | 'releaseDateAsc'
+        | 'priceDesc'
+        | 'priceAsc'
+        | 'ratingDesc'
+        | 'reviewCountDesc'
+        | 'titleAsc',
       locale,
     }),
   ]);
@@ -235,13 +239,13 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
   if (perPage !== DEFAULT_PER_PAGE) queryParams['perPage'] = String(perPage);
 
   // ASP統計をProductListFilter用に変換
-  const aspStatsForFilter = aspStats.map(stat => ({
+  const aspStatsForFilter = aspStats.map((stat) => ({
     aspName: stat.aspName,
     count: stat.productCount,
   }));
 
   // タグをProductListFilter用に変換
-  const genreTagsForFilter = popularTags.map(tag => ({
+  const genreTagsForFilter = popularTags.map((tag) => ({
     id: tag.id,
     name: tag.name,
     count: tag.count,
@@ -256,7 +260,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
       name: product.title,
       url: localizedHref(`/products/${product.id}`, locale),
     })),
-    t('title')
+    t('title'),
   );
 
   // BreadcrumbSchemaを生成（?hl=形式のURL）
@@ -267,34 +271,28 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
   return (
     <div className="theme-body min-h-screen">
-
       {/* 構造化データ */}
       <JsonLD data={itemListSchema} />
       <JsonLD data={breadcrumbSchema} />
 
-      <section id="products" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
+      <section id="products" className="scroll-mt-20 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t('title') },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t('title') }]}
             className="mb-2 sm:mb-3"
           />
 
           <div className="mb-2 sm:mb-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5">
+            <h1 className="mb-0.5 text-xl font-bold text-white sm:text-2xl md:text-3xl">
               {query ? `「${query}」の検索結果` : t('title')}
             </h1>
-            <p className="text-sm sm:text-base text-gray-300">
+            <p className="text-sm text-gray-300 sm:text-base">
               {t('description', { count: totalCount.toLocaleString() })}
             </p>
           </div>
 
           {/* AI検索拡張（検索クエリがある場合のみ） */}
-          {query && (
-            <SearchSuggestionsWrapper query={query} locale={locale} />
-          )}
+          {query && <SearchSuggestionsWrapper query={query} locale={locale} />}
 
           {/* アクティブフィルターチップ */}
           <ActiveFiltersChips />
@@ -315,20 +313,14 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           />
 
           {/* 並び順・表示件数 */}
-          <div className="flex justify-end items-center gap-4 mb-2 sm:mb-4">
-            <PerPageDropdown
-              perPage={perPage}
-              basePath={basePath}
-            />
-            <ProductSortDropdown
-              sortBy={sortBy}
-              basePath={basePath}
-            />
+          <div className="mb-2 flex items-center justify-end gap-4 sm:mb-4">
+            <PerPageDropdown perPage={perPage} basePath={basePath} />
+            <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
           </div>
 
           {products.length === 0 ? (
-            <div className="text-center py-16">
-              <p className="text-gray-400 text-lg">{t('noProducts')}</p>
+            <div className="py-16 text-center">
+              <p className="text-lg text-gray-400">{t('noProducts')}</p>
             </div>
           ) : (
             <>
@@ -344,7 +336,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
               <ProductGridWithComparison
                 products={products}
                 locale={locale}
-                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4"
+                className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6"
               />
 
               <Pagination
@@ -359,19 +351,24 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           )}
 
           {/* 女優一覧へのリンク */}
-          <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t border-gray-800">
+          <div className="mt-8 border-t border-gray-800 pt-6 sm:mt-12 sm:pt-8">
             <Link
               href={localizedHref('/', locale)}
-              className="flex items-center justify-between p-4 bg-gray-800 hover:bg-gray-700 rounded-lg border border-gray-700 hover:border-rose-600 transition-colors group"
+              className="group flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800 p-4 transition-colors hover:border-rose-600 hover:bg-gray-700"
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">👩</span>
                 <div>
-                  <span className="text-white font-medium">{tNav('actressList')}</span>
-                  <p className="text-gray-400 text-sm mt-0.5">{t('viewActressListDesc')}</p>
+                  <span className="font-medium text-white">{tNav('actressList')}</span>
+                  <p className="mt-0.5 text-sm text-gray-400">{t('viewActressListDesc')}</p>
                 </div>
               </div>
-              <svg className="w-5 h-5 text-gray-400 group-hover:text-rose-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="h-5 w-5 text-gray-400 transition-colors group-hover:text-rose-500"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>

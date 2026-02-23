@@ -16,14 +16,16 @@ interface Props {
 const metaTranslations = {
   ja: {
     metaTitle: (year: string) => `${year}年ベスト100 - 年間ランキング`,
-    metaDescription: (year: string) => `${year}年に発売されたAV作品の人気ランキングTOP100。評価・レビュー・閲覧数から総合的にランク付け。`,
+    metaDescription: (year: string) =>
+      `${year}年に発売されたAV作品の人気ランキングTOP100。評価・レビュー・閲覧数から総合的にランク付け。`,
     metaKeywords: (year: string) => [`${year}年`, 'ベスト', 'ランキング', 'AV', '人気作品', '年間ベスト'],
     ogTitle: (year: string) => `${year}年ベスト100`,
     ogDescription: (year: string) => `${year}年の人気作品ランキング`,
   },
   en: {
     metaTitle: (year: string) => `Best of ${year} - Annual Ranking`,
-    metaDescription: (year: string) => `Top 100 AV works released in ${year}. Comprehensive ranking based on ratings, reviews, and views.`,
+    metaDescription: (year: string) =>
+      `Top 100 AV works released in ${year}. Comprehensive ranking based on ratings, reviews, and views.`,
     metaKeywords: (year: string) => [`${year}`, 'best', 'ranking', 'AV', 'popular', 'annual best'],
     ogTitle: (year: string) => `Best of ${year}`,
     ogDescription: (year: string) => `Popular works ranking of ${year}`,
@@ -215,35 +217,36 @@ export default async function YearBestPage({ params }: Props) {
 
   return (
     <main className="theme-body min-h-screen py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
+      <div className="container mx-auto max-w-6xl px-4">
         {/* PR表記 */}
-        <p className="text-xs text-gray-400 mb-4 text-center">
-          <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+        <p className="mb-4 text-center text-xs text-gray-400">
+          <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
           {t.prNotice}
         </p>
 
         {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/20 border border-yellow-500/30 mb-4">
-            <Trophy className="w-5 h-5 text-yellow-400" />
-            <span className="text-yellow-300 font-bold text-2xl">{year}</span>
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/20 px-4 py-2">
+            <Trophy className="h-5 w-5 text-yellow-400" />
+            <span className="text-2xl font-bold text-yellow-300">{year}</span>
           </div>
-          <h1 className="text-3xl font-bold theme-text mb-2">{year}{t.title}</h1>
+          <h1 className="theme-text mb-2 text-3xl font-bold">
+            {year}
+            {t.title}
+          </h1>
           <p className="theme-text-muted">{t.subtitle}</p>
         </div>
 
         {/* 年選択 */}
         <div className="mb-8">
-          <h2 className="text-sm font-medium theme-text-muted mb-2">{t.otherYears}</h2>
+          <h2 className="theme-text-muted mb-2 text-sm font-medium">{t.otherYears}</h2>
           <div className="flex flex-wrap gap-2">
             {availableYears.map((y) => (
               <Link
                 key={y}
                 href={localizedHref(`/best/${y}`, locale)}
-                className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                  y === year
-                    ? 'bg-yellow-500 text-black font-bold'
-                    : 'theme-card hover:bg-gray-700'
+                className={`rounded-lg px-3 py-1 text-sm transition-colors ${
+                  y === year ? 'bg-yellow-500 font-bold text-black' : 'theme-card hover:bg-gray-700'
                 }`}
               >
                 {y}
@@ -252,7 +255,7 @@ export default async function YearBestPage({ params }: Props) {
           </div>
         </div>
 
-        <div className="grid lg:grid-cols-4 gap-8">
+        <div className="grid gap-8 lg:grid-cols-4">
           {/* メインランキング */}
           <div className="lg:col-span-3">
             <div className="space-y-4">
@@ -260,68 +263,70 @@ export default async function YearBestPage({ params }: Props) {
                 <Link
                   key={product.id}
                   href={localizedHref(`/products/${product.normalized_product_id}`, locale)}
-                  className="flex gap-4 p-4 rounded-xl theme-card hover:ring-2 hover:ring-yellow-500/30 transition-all group"
+                  className="theme-card group flex gap-4 rounded-xl p-4 transition-all hover:ring-2 hover:ring-yellow-500/30"
                 >
                   {/* ランク */}
-                  <div className="flex-shrink-0 w-12 flex flex-col items-center justify-center">
-                    <span className={`text-2xl font-bold ${
-                      idx < 3 ? 'text-yellow-400' : idx < 10 ? 'text-gray-300' : 'text-gray-500'
-                    }`}>
+                  <div className="flex w-12 flex-shrink-0 flex-col items-center justify-center">
+                    <span
+                      className={`text-2xl font-bold ${
+                        idx < 3 ? 'text-yellow-400' : idx < 10 ? 'text-gray-300' : 'text-gray-500'
+                      }`}
+                    >
                       {idx + 1}
                     </span>
                     <span className="text-xs text-gray-500">{t.rank}</span>
                   </div>
 
                   {/* サムネイル */}
-                  <div className="flex-shrink-0 w-32 aspect-video rounded-lg overflow-hidden bg-gray-800">
+                  <div className="aspect-video w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800">
                     {product.default_thumbnail_url ? (
                       <img
                         src={product.default_thumbnail_url}
                         alt={product.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600">
-                        No Image
-                      </div>
+                      <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
                     )}
                   </div>
 
                   {/* 情報 */}
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium theme-text line-clamp-2 group-hover:text-yellow-400 transition-colors">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="theme-text line-clamp-2 font-medium transition-colors group-hover:text-yellow-400">
                       {product.title}
                     </h3>
 
                     {/* 出演者 */}
                     {product.performers && product.performers.length > 0 && (
-                      <p className="text-sm text-pink-400 mt-1 truncate">
-                        {product.performers.map(p => p.name).join(', ')}
+                      <p className="mt-1 truncate text-sm text-pink-400">
+                        {product.performers.map((p) => p.name).join(', ')}
                       </p>
                     )}
 
                     {/* メタ情報 */}
-                    <div className="flex items-center gap-4 mt-2 text-xs theme-text-muted">
+                    <div className="theme-text-muted mt-2 flex items-center gap-4 text-xs">
                       {product.avg_rating > 0 && (
                         <span className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-yellow-400" />
+                          <Star className="h-3 w-3 text-yellow-400" />
                           {Number(product.avg_rating).toFixed(1)}
                         </span>
                       )}
                       {product.review_count > 0 && (
-                        <span>{product.review_count} {t.reviews}</span>
+                        <span>
+                          {product.review_count} {t.reviews}
+                        </span>
                       )}
                       {product.release_date && (
                         <span className="flex items-center gap-1">
-                          <Calendar className="w-3 h-3" />
+                          <Calendar className="h-3 w-3" />
                           {product.release_date}
                         </span>
                       )}
                     </div>
                   </div>
 
-                  <ChevronRight className="w-5 h-5 text-gray-500 flex-shrink-0 self-center" />
+                  <ChevronRight className="h-5 w-5 flex-shrink-0 self-center text-gray-500" />
                 </Link>
               ))}
             </div>
@@ -330,9 +335,9 @@ export default async function YearBestPage({ params }: Props) {
           {/* サイドバー */}
           <div className="space-y-6">
             {/* 人気女優 */}
-            <div className="rounded-xl theme-card p-4">
-              <h2 className="font-bold theme-text mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5 text-pink-400" />
+            <div className="theme-card rounded-xl p-4">
+              <h2 className="theme-text mb-4 flex items-center gap-2 font-bold">
+                <Users className="h-5 w-5 text-pink-400" />
                 {t.topActresses}
               </h2>
               <div className="space-y-2">
@@ -340,28 +345,26 @@ export default async function YearBestPage({ params }: Props) {
                   <Link
                     key={actress.id}
                     href={localizedHref(`/actress/${actress.id}`, locale)}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-700/50 transition-colors"
+                    className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-700/50"
                   >
-                    <span className={`w-5 text-center text-sm font-bold ${
-                      idx < 3 ? 'text-yellow-400' : 'text-gray-500'
-                    }`}>
+                    <span
+                      className={`w-5 text-center text-sm font-bold ${idx < 3 ? 'text-yellow-400' : 'text-gray-500'}`}
+                    >
                       {idx + 1}
                     </span>
-                    <div className="w-8 h-8 rounded-full bg-gray-800 overflow-hidden flex-shrink-0">
+                    <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gray-800">
                       {actress.profile_image_url ? (
                         <img
                           src={actress.profile_image_url}
                           alt={actress.name}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
-                          N/A
-                        </div>
+                        <div className="flex h-full w-full items-center justify-center text-xs text-gray-600">N/A</div>
                       )}
                     </div>
-                    <span className="text-sm theme-text truncate flex-1">{actress.name}</span>
+                    <span className="theme-text flex-1 truncate text-sm">{actress.name}</span>
                     <span className="text-xs text-gray-500">{actress.product_count}</span>
                   </Link>
                 ))}
@@ -369,9 +372,9 @@ export default async function YearBestPage({ params }: Props) {
             </div>
 
             {/* 人気ジャンル */}
-            <div className="rounded-xl theme-card p-4">
-              <h2 className="font-bold theme-text mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-400" />
+            <div className="theme-card rounded-xl p-4">
+              <h2 className="theme-text mb-4 flex items-center gap-2 font-bold">
+                <TrendingUp className="h-5 w-5 text-green-400" />
                 {t.topGenres}
               </h2>
               <div className="flex flex-wrap gap-2">
@@ -379,7 +382,7 @@ export default async function YearBestPage({ params }: Props) {
                   <Link
                     key={genre.id}
                     href={localizedHref(`/products?include=${genre.id}`, locale)}
-                    className="px-3 py-1 rounded-full text-xs bg-gray-700 text-gray-300 hover:bg-gray-600 transition-colors"
+                    className="rounded-full bg-gray-700 px-3 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-600"
                   >
                     {genre.name} ({genre.product_count})
                   </Link>

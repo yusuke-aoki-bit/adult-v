@@ -91,7 +91,7 @@ describe('SEO Utilities', () => {
         'https://example.com/image.jpg',
         '/products/1',
         1980,
-        'MOODYZ'
+        'MOODYZ',
       );
 
       expect(schema['@type']).toBe('Product');
@@ -109,7 +109,7 @@ describe('SEO Utilities', () => {
         '/products/1',
         1980,
         undefined,
-        { ratingValue: 4.5, reviewCount: 50 }
+        { ratingValue: 4.5, reviewCount: 50 },
       );
 
       expect(schema['aggregateRating']).toBeDefined();
@@ -127,7 +127,7 @@ describe('SEO Utilities', () => {
         1980,
         undefined,
         undefined,
-        980 // salePrice
+        980, // salePrice
       );
 
       expect(schema['offers']).toBeDefined();
@@ -144,7 +144,7 @@ describe('SEO Utilities', () => {
         undefined,
         undefined,
         'JPY',
-        'SSIS-865' // sku
+        'SSIS-865', // sku
       );
 
       expect(schema['sku']).toBe('SSIS-865');
@@ -154,12 +154,7 @@ describe('SEO Utilities', () => {
   describe('generatePersonSchema', () => {
     it('should generate valid Person schema', () => {
       // generatePersonSchema(name, description, image, url, options?)
-      const schema = generatePersonSchema(
-        '三上悠亜',
-        'AV女優',
-        'https://example.com/profile.jpg',
-        '/actress/1'
-      );
+      const schema = generatePersonSchema('三上悠亜', 'AV女優', 'https://example.com/profile.jpg', '/actress/1');
 
       expect(schema['@type']).toBe('Person');
       expect(schema['name']).toBe('三上悠亜');
@@ -167,25 +162,17 @@ describe('SEO Utilities', () => {
     });
 
     it('should include workCount when provided', () => {
-      const schema = generatePersonSchema(
-        '三上悠亜',
-        'AV女優',
-        'https://example.com/profile.jpg',
-        '/actress/1',
-        { workCount: 100 }
-      );
+      const schema = generatePersonSchema('三上悠亜', 'AV女優', 'https://example.com/profile.jpg', '/actress/1', {
+        workCount: 100,
+      });
 
       expect(schema['knowsAbout']).toBe('100作品以上に出演');
     });
 
     it('should include aliases when provided', () => {
-      const schema = generatePersonSchema(
-        '三上悠亜',
-        'AV女優',
-        'https://example.com/profile.jpg',
-        '/actress/1',
-        { aliases: ['鬼頭桃菜'] }
-      );
+      const schema = generatePersonSchema('三上悠亜', 'AV女優', 'https://example.com/profile.jpg', '/actress/1', {
+        aliases: ['鬼頭桃菜'],
+      });
 
       expect(schema['alternateName']).toContain('鬼頭桃菜');
     });
@@ -260,14 +247,7 @@ describe('SEO Description Length', () => {
       const longActress = '出演者名'.repeat(10);
       const longTags = Array(10).fill('タグ');
 
-      const desc = generateOptimizedDescription(
-        longTitle,
-        longActress,
-        longTags,
-        undefined,
-        undefined,
-        { locale }
-      );
+      const desc = generateOptimizedDescription(longTitle, longActress, longTags, undefined, undefined, { locale });
 
       expect(desc.length).toBeLessThanOrEqual(maxLength);
     });
@@ -276,12 +256,7 @@ describe('SEO Description Length', () => {
 
 describe('generateHowToSchema', () => {
   it('should generate valid HowTo schema for Japanese', () => {
-    const schema = generateHowToSchema(
-      'テスト動画',
-      'FANZA',
-      'https://example.com/buy',
-      'ja'
-    );
+    const schema = generateHowToSchema('テスト動画', 'FANZA', 'https://example.com/buy', 'ja');
 
     expect(schema['@type']).toBe('HowTo');
     expect(schema.name).toContain('テスト動画');
@@ -292,12 +267,7 @@ describe('generateHowToSchema', () => {
   });
 
   it('should generate valid HowTo schema for English', () => {
-    const schema = generateHowToSchema(
-      'Test Video',
-      'FANZA',
-      'https://example.com/buy',
-      'en'
-    );
+    const schema = generateHowToSchema('Test Video', 'FANZA', 'https://example.com/buy', 'en');
 
     expect(schema['@type']).toBe('HowTo');
     expect(schema.name).toContain('How to watch');
@@ -306,12 +276,7 @@ describe('generateHowToSchema', () => {
   });
 
   it('should include affiliate URL in first step', () => {
-    const schema = generateHowToSchema(
-      'Test',
-      'FANZA',
-      'https://example.com/buy',
-      'ja'
-    );
+    const schema = generateHowToSchema('Test', 'FANZA', 'https://example.com/buy', 'ja');
 
     expect(schema.step[0]!.url).toBe('https://example.com/buy');
     expect(schema.step[1]!.url).toBeUndefined();
@@ -354,9 +319,7 @@ describe('generateAggregateOfferSchema', () => {
   });
 
   it('should include seller info in each offer', () => {
-    const offers = [
-      { providerName: 'FANZA', price: 1980, url: 'https://fanza.com/1' },
-    ];
+    const offers = [{ providerName: 'FANZA', price: 1980, url: 'https://fanza.com/1' }];
 
     const schema = generateAggregateOfferSchema(offers);
 
@@ -384,9 +347,7 @@ describe('generateProductItemListSchema', () => {
   });
 
   it('should include offer info when price is provided', () => {
-    const products = [
-      { id: 1, title: '商品1', price: 1980 },
-    ];
+    const products = [{ id: 1, title: '商品1', price: 1980 }];
 
     const schema = generateProductItemListSchema(products, 'テスト');
 
@@ -396,9 +357,7 @@ describe('generateProductItemListSchema', () => {
   });
 
   it('should use sale price when provided', () => {
-    const products = [
-      { id: 1, title: '商品1', price: 1980, salePrice: 980 },
-    ];
+    const products = [{ id: 1, title: '商品1', price: 1980, salePrice: 980 }];
 
     const schema = generateProductItemListSchema(products, 'テスト');
 
@@ -431,9 +390,7 @@ describe('generatePerformerItemListSchema', () => {
   });
 
   it('should include productCount in knowsAbout', () => {
-    const performers = [
-      { id: 1, name: '女優A', productCount: 100 },
-    ];
+    const performers = [{ id: 1, name: '女優A', productCount: 100 }];
 
     const schema = generatePerformerItemListSchema(performers, 'テスト');
 
@@ -450,68 +407,48 @@ describe('generatePerformerItemListSchema', () => {
 
 describe('Multilingual Description Generation', () => {
   it('should generate Japanese description with sale badge', () => {
-    const desc = generateOptimizedDescription(
-      'テスト動画',
-      '三上悠亜',
-      undefined,
-      undefined,
-      'SSIS-865',
-      { discount: 30, locale: 'ja' }
-    );
+    const desc = generateOptimizedDescription('テスト動画', '三上悠亜', undefined, undefined, 'SSIS-865', {
+      discount: 30,
+      locale: 'ja',
+    });
 
     expect(desc).toContain('30%OFF');
   });
 
   it('should generate English description with sale badge', () => {
-    const desc = generateOptimizedDescription(
-      'Test Video',
-      'Yua Mikami',
-      undefined,
-      undefined,
-      'SSIS-865',
-      { discount: 30, locale: 'en' }
-    );
+    const desc = generateOptimizedDescription('Test Video', 'Yua Mikami', undefined, undefined, 'SSIS-865', {
+      discount: 30,
+      locale: 'en',
+    });
 
     expect(desc).toContain('30% OFF');
     expect(desc).toContain('feat.');
   });
 
   it('should generate Chinese description with duration', () => {
-    const desc = generateOptimizedDescription(
-      '测试视频',
-      '三上悠亜',
-      undefined,
-      undefined,
-      undefined,
-      { duration: 120, locale: 'zh' }
-    );
+    const desc = generateOptimizedDescription('测试视频', '三上悠亜', undefined, undefined, undefined, {
+      duration: 120,
+      locale: 'zh',
+    });
 
     expect(desc).toContain('120');
     expect(desc).toContain('分钟');
   });
 
   it('should generate Traditional Chinese description', () => {
-    const desc = generateOptimizedDescription(
-      '測試影片',
-      '三上悠亜',
-      undefined,
-      undefined,
-      undefined,
-      { discount: 30, locale: 'zh-TW' }
-    );
+    const desc = generateOptimizedDescription('測試影片', '三上悠亜', undefined, undefined, undefined, {
+      discount: 30,
+      locale: 'zh-TW',
+    });
 
     expect(desc).toContain('折扣');
   });
 
   it('should generate Korean description with CTA', () => {
-    const desc = generateOptimizedDescription(
-      '테스트 비디오',
-      '미카미 유아',
-      undefined,
-      undefined,
-      undefined,
-      { provider: 'FANZA', locale: 'ko' }
-    );
+    const desc = generateOptimizedDescription('테스트 비디오', '미카미 유아', undefined, undefined, undefined, {
+      provider: 'FANZA',
+      locale: 'ko',
+    });
 
     expect(desc).toContain('FANZA');
     expect(desc).toContain('바로 시청');

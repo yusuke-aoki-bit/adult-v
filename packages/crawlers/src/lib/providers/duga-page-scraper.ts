@@ -67,8 +67,9 @@ export async function scrapeDugaProductPage(productId: string): Promise<DugaPage
   const response = await robustFetch(url, {
     init: {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'ja,en;q=0.9',
       },
     },
@@ -128,7 +129,9 @@ export function parseDugaPageHtml(productId: string, html: string): DugaPageData
   //   <meta itemprop="worstRating" content="1" />
   //   <meta itemprop="bestRating" content="5.0" />
   // </div>
-  const aggregateRatingBlock = html.match(/<div itemprop="aggregateRating"[^>]*itemtype="http:\/\/schema\.org\/AggregateRating">([\s\S]*?)<\/div>/);
+  const aggregateRatingBlock = html.match(
+    /<div itemprop="aggregateRating"[^>]*itemtype="http:\/\/schema\.org\/AggregateRating">([\s\S]*?)<\/div>/,
+  );
   if (aggregateRatingBlock && aggregateRatingBlock[1]) {
     const block = aggregateRatingBlock[1];
     const reviewCountMatch = block.match(/<meta itemprop="reviewCount" content="(\d+)"/);
@@ -225,7 +228,7 @@ export function parseDugaPageHtml(productId: string, html: string): DugaPageData
  */
 export async function scrapeDugaReviewsBatch(
   productIds: string[],
-  delayMs: number = 1000
+  delayMs: number = 1000,
 ): Promise<Map<string, DugaPageData>> {
   const results = new Map<string, DugaPageData>();
 
@@ -236,7 +239,7 @@ export async function scrapeDugaReviewsBatch(
 
       // レート制限対策
       if (delayMs > 0) {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
       }
     } catch (error) {
       console.error(`Failed to scrape ${productId}:`, error);

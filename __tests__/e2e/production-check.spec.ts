@@ -45,7 +45,7 @@ test.describe('Production E2E - Page Status Codes', () => {
   for (const p of pages) {
     test(`${p.name} (${p.path}) - no 5xx`, async ({ request }) => {
       const response = await request.get(url(p.path), {
-        headers: { 'Cookie': 'age-verified=true' },
+        headers: { Cookie: 'age-verified=true' },
         maxRedirects: 5,
       });
       const status = response.status();
@@ -59,7 +59,7 @@ test.describe('Production E2E - Locale Pages', () => {
   for (const locale of locales) {
     test(`Homepage /${locale} - no 5xx`, async ({ request }) => {
       const response = await request.get(url(`/${locale}`), {
-        headers: { 'Cookie': 'age-verified=true' },
+        headers: { Cookie: 'age-verified=true' },
         maxRedirects: 5,
       });
       expect(response.status()).toBeLessThan(500);
@@ -103,7 +103,7 @@ test.describe('Production E2E - Dynamic Pages', () => {
         const productId = products[0].id || products[0].product_id;
         if (productId) {
           const response = await request.get(url(`/products/${productId}`), {
-            headers: { 'Cookie': 'age-verified=true' },
+            headers: { Cookie: 'age-verified=true' },
             maxRedirects: 5,
           });
           expect(response.status()).toBeLessThan(500);
@@ -121,7 +121,7 @@ test.describe('Production E2E - Dynamic Pages', () => {
         const actressId = actresses[0].id || actresses[0].performer_id;
         if (actressId) {
           const response = await request.get(url(`/actress/${actressId}`), {
-            headers: { 'Cookie': 'age-verified=true' },
+            headers: { Cookie: 'age-verified=true' },
             maxRedirects: 5,
           });
           expect(response.status()).toBeLessThan(500);
@@ -132,7 +132,7 @@ test.describe('Production E2E - Dynamic Pages', () => {
 
   test('Invalid product ID returns 404, not 500', async ({ request }) => {
     const response = await request.get(url('/products/999999999'), {
-      headers: { 'Cookie': 'age-verified=true' },
+      headers: { Cookie: 'age-verified=true' },
       maxRedirects: 5,
     });
     expect(response.status()).not.toBe(500);
@@ -140,7 +140,7 @@ test.describe('Production E2E - Dynamic Pages', () => {
 
   test('Invalid actress ID returns 404, not 500', async ({ request }) => {
     const response = await request.get(url('/actress/999999999'), {
-      headers: { 'Cookie': 'age-verified=true' },
+      headers: { Cookie: 'age-verified=true' },
       maxRedirects: 5,
     });
     expect(response.status()).not.toBe(500);
@@ -148,7 +148,7 @@ test.describe('Production E2E - Dynamic Pages', () => {
 
   test('Non-numeric product ID returns 404, not 500', async ({ request }) => {
     const response = await request.get(url('/products/abc-xyz'), {
-      headers: { 'Cookie': 'age-verified=true' },
+      headers: { Cookie: 'age-verified=true' },
       maxRedirects: 5,
     });
     expect(response.status()).not.toBe(500);
@@ -156,7 +156,7 @@ test.describe('Production E2E - Dynamic Pages', () => {
 
   test('Invalid maker ID returns 404, not 500', async ({ request }) => {
     const response = await request.get(url('/makers/999999999'), {
-      headers: { 'Cookie': 'age-verified=true' },
+      headers: { Cookie: 'age-verified=true' },
       maxRedirects: 5,
     });
     expect(response.status()).not.toBe(500);
@@ -192,17 +192,24 @@ test.describe('Production E2E - Console Errors Check', () => {
     const errors: string[] = [];
     page.on('pageerror', (err) => {
       // Ignore known benign errors
-      if (err.message.includes('ResizeObserver') ||
-          err.message.includes('Loading chunk') ||
-          err.message.includes('Firebase') ||
-          err.message.includes('gtag')) return;
+      if (
+        err.message.includes('ResizeObserver') ||
+        err.message.includes('Loading chunk') ||
+        err.message.includes('Firebase') ||
+        err.message.includes('gtag')
+      )
+        return;
       errors.push(err.message);
     });
 
-    await page.context().addCookies([{
-      name: 'age-verified', value: 'true',
-      domain: new URL(BASE).hostname, path: '/',
-    }]);
+    await page.context().addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: new URL(BASE).hostname,
+        path: '/',
+      },
+    ]);
 
     const response = await page.goto(url('/'), { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(500);
@@ -219,17 +226,24 @@ test.describe('Production E2E - Console Errors Check', () => {
   test('Products page renders without JS errors', async ({ page }) => {
     const errors: string[] = [];
     page.on('pageerror', (err) => {
-      if (err.message.includes('ResizeObserver') ||
-          err.message.includes('Loading chunk') ||
-          err.message.includes('Firebase') ||
-          err.message.includes('gtag')) return;
+      if (
+        err.message.includes('ResizeObserver') ||
+        err.message.includes('Loading chunk') ||
+        err.message.includes('Firebase') ||
+        err.message.includes('gtag')
+      )
+        return;
       errors.push(err.message);
     });
 
-    await page.context().addCookies([{
-      name: 'age-verified', value: 'true',
-      domain: new URL(BASE).hostname, path: '/',
-    }]);
+    await page.context().addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: new URL(BASE).hostname,
+        path: '/',
+      },
+    ]);
 
     const response = await page.goto(url('/products'), { waitUntil: 'domcontentloaded' });
     expect(response?.status()).toBeLessThan(500);
@@ -253,10 +267,14 @@ test.describe('Production E2E - Failed Network Requests', () => {
       }
     });
 
-    await page.context().addCookies([{
-      name: 'age-verified', value: 'true',
-      domain: new URL(BASE).hostname, path: '/',
-    }]);
+    await page.context().addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: new URL(BASE).hostname,
+        path: '/',
+      },
+    ]);
 
     await page.goto(url('/'), { waitUntil: 'domcontentloaded' });
 
@@ -275,10 +293,14 @@ test.describe('Production E2E - Failed Network Requests', () => {
       }
     });
 
-    await page.context().addCookies([{
-      name: 'age-verified', value: 'true',
-      domain: new URL(BASE).hostname, path: '/',
-    }]);
+    await page.context().addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: new URL(BASE).hostname,
+        path: '/',
+      },
+    ]);
 
     await page.goto(url('/products'), { waitUntil: 'domcontentloaded' });
 
@@ -297,10 +319,14 @@ test.describe('Production E2E - Failed Network Requests', () => {
       }
     });
 
-    await page.context().addCookies([{
-      name: 'age-verified', value: 'true',
-      domain: new URL(BASE).hostname, path: '/',
-    }]);
+    await page.context().addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: new URL(BASE).hostname,
+        path: '/',
+      },
+    ]);
 
     await page.goto(url('/actresses'), { waitUntil: 'domcontentloaded' });
 

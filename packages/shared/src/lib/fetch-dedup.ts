@@ -21,7 +21,7 @@ const DEFAULT_CACHE_TTL = 30 * 1000;
 export async function dedupedFetch<T>(
   url: string,
   options?: RequestInit,
-  cacheTtl: number = DEFAULT_CACHE_TTL
+  cacheTtl: number = DEFAULT_CACHE_TTL,
 ): Promise<T> {
   // Only deduplicate GET requests
   const method = options?.method?.toUpperCase() || 'GET';
@@ -77,11 +77,10 @@ export function clearFetchCache(): void {
  * @param urls - URLs to prefetch
  */
 export function prefetchUrls(urls: string[]): void {
-  urls.forEach(url => {
+  urls.forEach((url) => {
     // Use requestIdleCallback if available, otherwise setTimeout
-    const schedule = typeof requestIdleCallback !== 'undefined'
-      ? requestIdleCallback
-      : (cb: () => void) => setTimeout(cb, 1);
+    const schedule =
+      typeof requestIdleCallback !== 'undefined' ? requestIdleCallback : (cb: () => void) => setTimeout(cb, 1);
 
     schedule(() => {
       dedupedFetch(url).catch(() => {

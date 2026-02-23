@@ -10,10 +10,7 @@ export async function GET(request: NextRequest) {
 
   // バリデーション
   if (year < 2000 || year > 2100 || month < 1 || month > 12) {
-    return NextResponse.json(
-      { error: 'Invalid year or month' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Invalid year or month' }, { status: 400 });
   }
 
   try {
@@ -24,7 +21,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
         },
-      }
+      },
     );
   } catch (error) {
     console.error('Daily releases API error:', error);
@@ -34,7 +31,7 @@ export async function GET(request: NextRequest) {
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
         },
-      }
+      },
     );
   }
 }

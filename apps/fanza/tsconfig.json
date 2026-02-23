@@ -15,16 +15,6 @@
       "@adult-v/database/*": ["../../packages/database/src/*"]
     }
   },
-  "include": [
-    "next-env.d.ts",
-    "**/*.ts",
-    "**/*.tsx",
-    ".next/types/**/*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    ".next",
-    "lib/browser-utils.ts",
-    "lib/google-indexing.ts"
-  ]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules", ".next", "lib/browser-utils.ts", "lib/google-indexing.ts"]
 }

@@ -279,9 +279,7 @@
         "mgs_raw_pages_product_url_unique": {
           "name": "mgs_raw_pages_product_url_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "product_url"
-          ]
+          "columns": ["product_url"]
         }
       },
       "policies": {},
@@ -389,12 +387,8 @@
           "name": "performer_aliases_performer_id_performers_id_fk",
           "tableFrom": "performer_aliases",
           "tableTo": "performers",
-          "columnsFrom": [
-            "performer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -533,12 +527,8 @@
           "name": "performer_external_ids_performer_id_performers_id_fk",
           "tableFrom": "performer_external_ids",
           "tableTo": "performers",
-          "columnsFrom": [
-            "performer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -668,12 +658,8 @@
           "name": "performer_images_performer_id_performers_id_fk",
           "tableFrom": "performer_images",
           "tableTo": "performers",
-          "columnsFrom": [
-            "performer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1048,9 +1034,7 @@
         "performers_name_unique": {
           "name": "performers_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1157,12 +1141,8 @@
           "name": "price_history_product_source_id_product_sources_id_fk",
           "tableFrom": "price_history",
           "tableTo": "product_sources",
-          "columnsFrom": [
-            "product_source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_source_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1307,12 +1287,8 @@
           "name": "product_images_product_id_products_id_fk",
           "tableFrom": "product_images",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1377,12 +1353,8 @@
           "name": "product_performers_product_id_products_id_fk",
           "tableFrom": "product_performers",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1390,12 +1362,8 @@
           "name": "product_performers_performer_id_performers_id_fk",
           "tableFrom": "product_performers",
           "tableTo": "performers",
-          "columnsFrom": [
-            "performer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1403,10 +1371,7 @@
       "compositePrimaryKeys": {
         "product_performers_product_id_performer_id_pk": {
           "name": "product_performers_product_id_performer_id_pk",
-          "columns": [
-            "product_id",
-            "performer_id"
-          ]
+          "columns": ["product_id", "performer_id"]
         }
       },
       "uniqueConstraints": {},
@@ -1536,12 +1501,8 @@
           "name": "product_prices_product_source_id_product_sources_id_fk",
           "tableFrom": "product_prices",
           "tableTo": "product_sources",
-          "columnsFrom": [
-            "product_source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_source_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1666,12 +1627,8 @@
           "name": "product_rating_summary_product_id_products_id_fk",
           "tableFrom": "product_rating_summary",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1800,12 +1757,8 @@
           "name": "product_raw_data_links_product_id_products_id_fk",
           "tableFrom": "product_raw_data_links",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2033,12 +1986,8 @@
           "name": "product_reviews_product_id_products_id_fk",
           "tableFrom": "product_reviews",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2203,12 +2152,8 @@
           "name": "product_sales_product_source_id_product_sources_id_fk",
           "tableFrom": "product_sales",
           "tableTo": "product_sources",
-          "columnsFrom": [
-            "product_source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_source_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2381,12 +2326,8 @@
           "name": "product_sources_product_id_products_id_fk",
           "tableFrom": "product_sources",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2451,12 +2392,8 @@
           "name": "product_tags_product_id_products_id_fk",
           "tableFrom": "product_tags",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -2464,12 +2401,8 @@
           "name": "product_tags_tag_id_tags_id_fk",
           "tableFrom": "product_tags",
           "tableTo": "tags",
-          "columnsFrom": [
-            "tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2477,10 +2410,7 @@
       "compositePrimaryKeys": {
         "product_tags_product_id_tag_id_pk": {
           "name": "product_tags_product_id_tag_id_pk",
-          "columns": [
-            "product_id",
-            "tag_id"
-          ]
+          "columns": ["product_id", "tag_id"]
         }
       },
       "uniqueConstraints": {},
@@ -2595,12 +2525,8 @@
           "name": "product_translations_product_id_products_id_fk",
           "tableFrom": "product_translations",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -2773,12 +2699,8 @@
           "name": "product_videos_product_id_products_id_fk",
           "tableFrom": "product_videos",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3086,9 +3008,7 @@
         "products_normalized_product_id_unique": {
           "name": "products_normalized_product_id_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "normalized_product_id"
-          ]
+          "columns": ["normalized_product_id"]
         }
       },
       "policies": {},
@@ -3190,12 +3110,8 @@
           "name": "public_favorite_list_items_list_id_public_favorite_lists_id_fk",
           "tableFrom": "public_favorite_list_items",
           "tableTo": "public_favorite_lists",
-          "columnsFrom": [
-            "list_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["list_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3203,12 +3119,8 @@
           "name": "public_favorite_list_items_product_id_products_id_fk",
           "tableFrom": "public_favorite_list_items",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3216,10 +3128,7 @@
       "compositePrimaryKeys": {
         "public_favorite_list_items_list_id_product_id_pk": {
           "name": "public_favorite_list_items_list_id_product_id_pk",
-          "columns": [
-            "list_id",
-            "product_id"
-          ]
+          "columns": ["list_id", "product_id"]
         }
       },
       "uniqueConstraints": {},
@@ -3421,12 +3330,8 @@
           "name": "public_list_likes_list_id_public_favorite_lists_id_fk",
           "tableFrom": "public_list_likes",
           "tableTo": "public_favorite_lists",
-          "columnsFrom": [
-            "list_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["list_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -3434,10 +3339,7 @@
       "compositePrimaryKeys": {
         "public_list_likes_list_id_user_id_pk": {
           "name": "public_list_likes_list_id_user_id_pk",
-          "columns": [
-            "list_id",
-            "user_id"
-          ]
+          "columns": ["list_id", "user_id"]
         }
       },
       "uniqueConstraints": {},
@@ -3883,12 +3785,8 @@
           "name": "sale_patterns_product_source_id_product_sources_id_fk",
           "tableFrom": "sale_patterns",
           "tableTo": "product_sources",
-          "columnsFrom": [
-            "product_source_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_source_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3896,12 +3794,8 @@
           "name": "sale_patterns_performer_id_performers_id_fk",
           "tableFrom": "sale_patterns",
           "tableTo": "performers",
-          "columnsFrom": [
-            "performer_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["performer_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -3909,12 +3803,8 @@
           "name": "sale_patterns_maker_id_tags_id_fk",
           "tableFrom": "sale_patterns",
           "tableTo": "tags",
-          "columnsFrom": [
-            "maker_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["maker_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4259,9 +4149,7 @@
         "tags_name_unique": {
           "name": "tags_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -4495,12 +4383,8 @@
           "name": "user_review_votes_review_id_user_reviews_id_fk",
           "tableFrom": "user_review_votes",
           "tableTo": "user_reviews",
-          "columnsFrom": [
-            "review_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["review_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4508,10 +4392,7 @@
       "compositePrimaryKeys": {
         "user_review_votes_review_id_voter_id_pk": {
           "name": "user_review_votes_review_id_voter_id_pk",
-          "columns": [
-            "review_id",
-            "voter_id"
-          ]
+          "columns": ["review_id", "voter_id"]
         }
       },
       "uniqueConstraints": {},
@@ -4709,12 +4590,8 @@
           "name": "user_reviews_product_id_products_id_fk",
           "tableFrom": "user_reviews",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -4894,12 +4771,8 @@
           "name": "user_tag_suggestions_product_id_products_id_fk",
           "tableFrom": "user_tag_suggestions",
           "tableTo": "products",
-          "columnsFrom": [
-            "product_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -4907,12 +4780,8 @@
           "name": "user_tag_suggestions_existing_tag_id_tags_id_fk",
           "tableFrom": "user_tag_suggestions",
           "tableTo": "tags",
-          "columnsFrom": [
-            "existing_tag_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["existing_tag_id"],
+          "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -4990,12 +4859,8 @@
           "name": "user_tag_votes_suggestion_id_user_tag_suggestions_id_fk",
           "tableFrom": "user_tag_votes",
           "tableTo": "user_tag_suggestions",
-          "columnsFrom": [
-            "suggestion_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["suggestion_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -5003,10 +4868,7 @@
       "compositePrimaryKeys": {
         "user_tag_votes_suggestion_id_voter_id_pk": {
           "name": "user_tag_votes_suggestion_id_voter_id_pk",
-          "columns": [
-            "suggestion_id",
-            "voter_id"
-          ]
+          "columns": ["suggestion_id", "voter_id"]
         }
       },
       "uniqueConstraints": {},
@@ -5094,12 +4956,8 @@
           "name": "video_timestamps_product_video_id_product_videos_id_fk",
           "tableFrom": "video_timestamps",
           "tableTo": "product_videos",
-          "columnsFrom": [
-            "product_video_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["product_video_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }

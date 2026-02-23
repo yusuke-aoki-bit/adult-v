@@ -34,9 +34,7 @@ describe('BulkActionBar', () => {
 
   describe('表示', () => {
     it('選択件数が0の場合は表示しない', () => {
-      const { container } = render(
-        <BulkActionBar {...defaultProps} selectedCount={0} selectedIds={[]} />
-      );
+      const { container } = render(<BulkActionBar {...defaultProps} selectedCount={0} selectedIds={[]} />);
 
       expect(container.firstChild).toBeNull();
     });
@@ -111,9 +109,7 @@ describe('BulkActionBar', () => {
 
     it('アクションボタンクリックでonClickが呼ばれる', async () => {
       const onClick = vi.fn().mockResolvedValue(undefined);
-      const actions: BulkAction[] = [
-        { id: 'test', label: 'テスト', onClick },
-      ];
+      const actions: BulkAction[] = [{ id: 'test', label: 'テスト', onClick }];
 
       render(<BulkActionBar {...defaultProps} actions={actions} />);
 
@@ -127,13 +123,7 @@ describe('BulkActionBar', () => {
 
   describe('すべて選択', () => {
     it('onSelectAllがある場合にボタン表示', () => {
-      render(
-        <BulkActionBar
-          {...defaultProps}
-          onSelectAll={vi.fn()}
-          totalCount={10}
-        />
-      );
+      render(<BulkActionBar {...defaultProps} onSelectAll={vi.fn()} totalCount={10} />);
 
       expect(screen.getByText('すべて選択')).toBeInTheDocument();
     });
@@ -146,7 +136,7 @@ describe('BulkActionBar', () => {
           selectedIds={['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']}
           onSelectAll={vi.fn()}
           totalCount={10}
-        />
+        />,
       );
 
       expect(screen.queryByText('すべて選択')).not.toBeInTheDocument();
@@ -154,13 +144,7 @@ describe('BulkActionBar', () => {
 
     it('すべて選択クリックでonSelectAllが呼ばれる', () => {
       const onSelectAll = vi.fn();
-      render(
-        <BulkActionBar
-          {...defaultProps}
-          onSelectAll={onSelectAll}
-          totalCount={10}
-        />
-      );
+      render(<BulkActionBar {...defaultProps} onSelectAll={onSelectAll} totalCount={10} />);
 
       fireEvent.click(screen.getByText('すべて選択'));
 
@@ -170,10 +154,8 @@ describe('BulkActionBar', () => {
 
   describe('ローディング状態', () => {
     it('アクション実行中はローディング表示', async () => {
-      const onClick = vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
-      const actions: BulkAction[] = [
-        { id: 'test', label: 'テスト', onClick },
-      ];
+      const onClick = vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
+      const actions: BulkAction[] = [{ id: 'test', label: 'テスト', onClick }];
 
       render(<BulkActionBar {...defaultProps} actions={actions} />);
 
@@ -185,7 +167,7 @@ describe('BulkActionBar', () => {
     });
 
     it('ローディング中は他のアクションボタンが無効', async () => {
-      const slowAction = vi.fn().mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+      const slowAction = vi.fn().mockImplementation(() => new Promise((resolve) => setTimeout(resolve, 100)));
       const fastAction = vi.fn();
       const actions: BulkAction[] = [
         { id: 'slow', label: 'スロー', onClick: slowAction },
@@ -206,9 +188,7 @@ describe('BulkActionBar', () => {
 
   describe('アクションバリアント', () => {
     it('dangerバリアントのスタイル適用', () => {
-      const actions: BulkAction[] = [
-        { id: 'delete', label: '削除', variant: 'danger', onClick: vi.fn() },
-      ];
+      const actions: BulkAction[] = [{ id: 'delete', label: '削除', variant: 'danger', onClick: vi.fn() }];
 
       render(<BulkActionBar {...defaultProps} actions={actions} theme="dark" />);
 
@@ -217,9 +197,7 @@ describe('BulkActionBar', () => {
     });
 
     it('defaultバリアントのスタイル適用', () => {
-      const actions: BulkAction[] = [
-        { id: 'add', label: '追加', onClick: vi.fn() },
-      ];
+      const actions: BulkAction[] = [{ id: 'add', label: '追加', onClick: vi.fn() }];
 
       render(<BulkActionBar {...defaultProps} actions={actions} theme="dark" />);
 

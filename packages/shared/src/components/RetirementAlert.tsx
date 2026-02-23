@@ -2,6 +2,7 @@
 
 import { AlertTriangle, Clock, TrendingDown, Calendar } from 'lucide-react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, retirementAlertTranslations } from '../lib/translations';
 
 interface CareerProduct {
   id: number;
@@ -35,63 +36,6 @@ interface RetirementAlertProps {
   locale: string;
   theme?: 'dark' | 'light';
 }
-
-const translations = {
-  ja: {
-    retirementAlert: '活動休止の可能性',
-    lastRelease: '最終リリース',
-    monthsAgo: 'ヶ月前',
-    noNewRelease: '新作リリースなし',
-    warning3Months: '3ヶ月以上新作がありません',
-    warning6Months: '6ヶ月以上新作がありません',
-    warning12Months: '1年以上新作がありません',
-    checkNow: '未視聴作品をチェック',
-    activityDecline: 'リリース頻度が低下',
-    peakComparison: '全盛期（{year}年）と比較して',
-    decline: '減少',
-  },
-  en: {
-    retirementAlert: 'Possible Retirement',
-    lastRelease: 'Last Release',
-    monthsAgo: 'months ago',
-    noNewRelease: 'No new releases',
-    warning3Months: 'No new releases for 3+ months',
-    warning6Months: 'No new releases for 6+ months',
-    warning12Months: 'No new releases for 1+ year',
-    checkNow: 'Check unwatched products',
-    activityDecline: 'Release frequency declining',
-    peakComparison: 'Compared to peak ({year})',
-    decline: 'decline',
-  },
-  zh: {
-    retirementAlert: '可能已引退',
-    lastRelease: '最后发布',
-    monthsAgo: '个月前',
-    noNewRelease: '无新作',
-    warning3Months: '3个月以上无新作',
-    warning6Months: '6个月以上无新作',
-    warning12Months: '1年以上无新作',
-    checkNow: '查看未观看的作品',
-    activityDecline: '发布频率下降',
-    peakComparison: '与巅峰期（{year}年）相比',
-    decline: '减少',
-  },
-  ko: {
-    retirementAlert: '은퇴 가능성',
-    lastRelease: '마지막 발매',
-    monthsAgo: '개월 전',
-    noNewRelease: '신작 없음',
-    warning3Months: '3개월 이상 신작이 없습니다',
-    warning6Months: '6개월 이상 신작이 없습니다',
-    warning12Months: '1년 이상 신작이 없습니다',
-    checkNow: '미시청 작품 확인',
-    activityDecline: '발매 빈도 감소',
-    peakComparison: '전성기({year}년)와 비교하여',
-    decline: '감소',
-  },
-} as const;
-
-type TranslationKey = keyof typeof translations;
 
 const themes = {
   dark: {
@@ -134,15 +78,10 @@ const themes = {
   },
 };
 
-export function RetirementAlert({
-  career,
-  actressName: _actressName,
-  locale,
-  theme: themeProp,
-}: RetirementAlertProps) {
+export function RetirementAlert({ career, actressName: _actressName, locale, theme: themeProp }: RetirementAlertProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const t = translations[locale as TranslationKey] || translations.ja;
+  const t = getTranslation(retirementAlertTranslations, locale);
   const s = themes[theme];
 
   if (career.isActive) return null;
@@ -160,9 +99,10 @@ export function RetirementAlert({
   const { level, message } = getAlertLevel();
 
   const currentYearStats = career.yearlyStats[career.yearlyStats.length - 1];
-  const declinePercent = career.peakYearCount > 0 && currentYearStats
-    ? Math.round((1 - currentYearStats.count / career.peakYearCount) * 100)
-    : null;
+  const declinePercent =
+    career.peakYearCount > 0 && currentYearStats
+      ? Math.round((1 - currentYearStats.count / career.peakYearCount) * 100)
+      : null;
 
   const bgColor = s.bgColor[level];
   const iconColor = s.iconColor[level];
@@ -171,24 +111,23 @@ export function RetirementAlert({
   return (
     <div className={`rounded-lg border p-4 ${bgColor}`}>
       <div className="flex items-start gap-3">
-        <AlertTriangle className={`w-5 h-5 ${iconColor} shrink-0 mt-0.5`} />
+        <AlertTriangle className={`h-5 w-5 ${iconColor} mt-0.5 shrink-0`} />
         <div className="flex-1">
-          <h4 className={`font-bold ${textColor}`}>
-            {t.retirementAlert}
-          </h4>
-          <p className={s.description}>
-            {message}
-          </p>
+          <h4 className={`font-bold ${textColor}`}>{t.retirementAlert}</h4>
+          <p className={s.description}>{message}</p>
 
           <div className="mt-3 space-y-2 text-sm">
             <div className={`flex items-center gap-2 ${s.detail}`}>
-              <Clock className="w-4 h-4" />
-              <span>{t.lastRelease}: {career.monthsSinceLastRelease}{t.monthsAgo}</span>
+              <Clock className="h-4 w-4" />
+              <span>
+                {t.lastRelease}: {career.monthsSinceLastRelease}
+                {t.monthsAgo}
+              </span>
             </div>
 
             {declinePercent !== null && declinePercent > 50 && career.peakYear && (
               <div className={`flex items-center gap-2 ${s.detail}`}>
-                <TrendingDown className="w-4 h-4" />
+                <TrendingDown className="h-4 w-4" />
                 <span>
                   {t.peakComparison.replace('{year}', String(career.peakYear))} {declinePercent}% {t.decline}
                 </span>
@@ -197,10 +136,8 @@ export function RetirementAlert({
 
             {career.latestProduct && (
               <div className={`flex items-center gap-2 ${s.detail}`}>
-                <Calendar className="w-4 h-4" />
-                <span className="truncate">
-                  {career.latestProduct.releaseDate?.split('T')[0]}
-                </span>
+                <Calendar className="h-4 w-4" />
+                <span className="truncate">{career.latestProduct.releaseDate?.split('T')[0]}</span>
               </div>
             )}
           </div>

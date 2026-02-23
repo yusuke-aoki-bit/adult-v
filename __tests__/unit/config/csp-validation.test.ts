@@ -26,7 +26,8 @@ const fanzaRemotePatterns = [
   { protocol: 'https', hostname: '*.fc2.com' },
 ];
 
-const fanzaCspImgSrc = "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com https://*.mgstage.com https://image.mgstage.com https://*.duga.jp https://pic.duga.jp https://img.duga.jp https://*.sokmil.com https://img.sokmil.com https://*.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.1pondo.tv https://*.b10f.jp https://b10f.jp https://*.fc2.com https://*.japanska-xxx.com";
+const fanzaCspImgSrc =
+  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com https://*.mgstage.com https://image.mgstage.com https://*.duga.jp https://pic.duga.jp https://img.duga.jp https://*.sokmil.com https://img.sokmil.com https://*.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.1pondo.tv https://*.b10f.jp https://b10f.jp https://*.fc2.com https://*.japanska-xxx.com";
 
 // Web CSP設定
 const webRemotePatterns = [
@@ -69,7 +70,8 @@ const webRemotePatterns = [
   { protocol: 'http', hostname: 'x1x.com' },
 ];
 
-const webCspImgSrc = "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://*.b10f.jp https://*.heyzo.com https://www.heyzo.com https://*.caribbeancompr.com https://*.caribbeancom.com https://*.1pondo.tv https://www.nyoshin.com https://*.nyoshin.com https://www.unkotare.com https://*.unkotare.com https://www.10musume.com https://*.10musume.com https://www.pacopacomama.com https://*.pacopacomama.com https://www.hitozuma-giri.com https://*.hitozuma-giri.com https://www.av-e-body.com https://*.av-e-body.com https://www.av-4610.com https://*.av-4610.com https://www.av-0230.com https://*.av-0230.com https://www.kin8tengoku.com https://*.kin8tengoku.com https://www.nozox.com https://*.nozox.com https://www.3d-eros.net https://*.3d-eros.net https://www.pikkur.com https://*.pikkur.com https://www.javholic.com https://*.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com https://*.heydouga.com http://heydouga.com https://*.x1x.com http://x1x.com";
+const webCspImgSrc =
+  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://*.b10f.jp https://*.heyzo.com https://www.heyzo.com https://*.caribbeancompr.com https://*.caribbeancom.com https://*.1pondo.tv https://www.nyoshin.com https://*.nyoshin.com https://www.unkotare.com https://*.unkotare.com https://www.10musume.com https://*.10musume.com https://www.pacopacomama.com https://*.pacopacomama.com https://www.hitozuma-giri.com https://*.hitozuma-giri.com https://www.av-e-body.com https://*.av-e-body.com https://www.av-4610.com https://*.av-4610.com https://www.av-0230.com https://*.av-0230.com https://www.kin8tengoku.com https://*.kin8tengoku.com https://www.nozox.com https://*.nozox.com https://www.3d-eros.net https://*.3d-eros.net https://www.pikkur.com https://*.pikkur.com https://www.javholic.com https://*.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com https://*.heydouga.com http://heydouga.com https://*.x1x.com http://x1x.com";
 
 /**
  * CSP img-src ディレクティブからドメインパターンを抽出
@@ -77,8 +79,8 @@ const webCspImgSrc = "img-src 'self' data: blob: https://*.dmm.co.jp https://*.d
 function extractDomainsFromCsp(cspImgSrc: string): string[] {
   const parts = cspImgSrc.split(' ');
   return parts
-    .filter(part => part.startsWith('https://') || part.startsWith('http://'))
-    .map(url => url.replace(/^https?:\/\//, ''));
+    .filter((part) => part.startsWith('https://') || part.startsWith('http://'))
+    .map((url) => url.replace(/^https?:\/\//, ''));
 }
 
 /**
@@ -99,7 +101,7 @@ function isHostnameInCsp(hostname: string, cspDomains: string[]): boolean {
       return true;
     }
     // または具体的なサブドメインがあるか
-    if (cspDomains.some(d => d.endsWith('.' + baseDomain) || d === baseDomain)) {
+    if (cspDomains.some((d) => d.endsWith('.' + baseDomain) || d === baseDomain)) {
       return true;
     }
   } else {
@@ -128,7 +130,7 @@ describe('CSP Configuration Validation', () => {
     const cspDomains = extractDomainsFromCsp(fanzaCspImgSrc);
 
     it('should have img-src directive', () => {
-      expect(fanzaCspImgSrc).toContain("img-src");
+      expect(fanzaCspImgSrc).toContain('img-src');
     });
 
     it('should allow self, data, and blob', () => {
@@ -189,7 +191,7 @@ describe('CSP Configuration Validation', () => {
     const cspDomains = extractDomainsFromCsp(webCspImgSrc);
 
     it('should have img-src directive', () => {
-      expect(webCspImgSrc).toContain("img-src");
+      expect(webCspImgSrc).toContain('img-src');
     });
 
     it('should allow self, data, and blob', () => {
@@ -251,7 +253,7 @@ describe('CSP Configuration Validation', () => {
     });
 
     it('should handle both http and https', () => {
-      const testCsp = "img-src https://secure.com http://insecure.com";
+      const testCsp = 'img-src https://secure.com http://insecure.com';
       const domains = extractDomainsFromCsp(testCsp);
 
       expect(domains).toContain('secure.com');
@@ -294,7 +296,7 @@ describe('CSP Security Best Practices', () => {
     const webParts = webCspImgSrc.split(' ');
 
     // A standalone * would be just "*" not "*.domain.com"
-    expect(fanzaParts.some(p => p === '*')).toBe(false);
-    expect(webParts.some(p => p === '*')).toBe(false);
+    expect(fanzaParts.some((p) => p === '*')).toBe(false);
+    expect(webParts.some((p) => p === '*')).toBe(false);
   });
 });

@@ -18,18 +18,20 @@ export async function GET() {
     `${BASE_URL}/sitemap-products-1.xml`,
     `${BASE_URL}/sitemap-products-2.xml`,
     // 女優チャンク（sitemap-actresses-0.xml ~ sitemap-actresses-7.xml）
-    ...Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) =>
-      `${BASE_URL}/sitemap-actresses-${i}.xml`
-    ),
+    ...Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) => `${BASE_URL}/sitemap-actresses-${i}.xml`),
     `${BASE_URL}/sitemap-tags.xml`,
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${sitemaps.map(url => `  <sitemap>
+${sitemaps
+  .map(
+    (url) => `  <sitemap>
     <loc>${url}</loc>
     <lastmod>${new Date().toISOString()}</lastmod>
-  </sitemap>`).join('\n')}
+  </sitemap>`,
+  )
+  .join('\n')}
 </sitemapindex>`;
 
   return new NextResponse(xml, {

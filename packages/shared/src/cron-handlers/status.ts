@@ -192,7 +192,6 @@ export function createStatusHandler(deps: StatusHandlerDeps) {
           },
         },
       });
-
     } catch (error) {
       console.error('Status check error:', error);
       return NextResponse.json(
@@ -200,7 +199,7 @@ export function createStatusHandler(deps: StatusHandlerDeps) {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

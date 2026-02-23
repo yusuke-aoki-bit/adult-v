@@ -12,17 +12,14 @@ const getDb = _getDb as any;
 import { createRunMigrationHandler } from '../cron-handlers';
 
 export async function cronRunMigration(request: NextRequest) {
-  if (!await verifyCronRequest(request)) {
+  if (!(await verifyCronRequest(request))) {
     return unauthorizedResponse();
   }
 
   const migrationName = request.nextUrl.searchParams.get('migration');
 
   if (!migrationName) {
-    return NextResponse.json(
-      { error: 'Missing migration parameter. Use ?migration=<name>' },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: 'Missing migration parameter. Use ?migration=<name>' }, { status: 400 });
   }
 
   const handler = createRunMigrationHandler({ getDb });

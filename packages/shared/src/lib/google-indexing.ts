@@ -54,7 +54,7 @@ async function getAuthClient() {
  */
 export async function requestIndexing(
   url: string,
-  type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
+  type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED',
 ): Promise<IndexingResult> {
   try {
     const auth = await getAuthClient();
@@ -82,7 +82,7 @@ export async function requestIndexing(
 export async function requestBatchIndexing(
   urls: string[],
   type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED',
-  delayMs: number = 100
+  delayMs: number = 100,
 ): Promise<IndexingResult[]> {
   const results: IndexingResult[] = [];
 

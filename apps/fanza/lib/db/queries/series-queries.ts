@@ -12,9 +12,4 @@
  */
 
 // 現在は queries.ts から re-export
-export {
-  getSeriesByTagId,
-  getSeriesInfo,
-  getSeriesProducts,
-  getPopularSeries,
-} from '../queries';
+export { getSeriesByTagId, getSeriesInfo, getSeriesProducts, getPopularSeries } from '../queries';

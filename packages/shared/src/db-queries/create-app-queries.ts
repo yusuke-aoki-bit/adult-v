@@ -21,15 +21,9 @@ import {
   mapPerformerToActressTypeSync as mapPerformerToActressTypeSyncBase,
   mapProductToType as mapProductToTypeBase,
 } from './mappers';
-import type {
-  ProductMapperDeps,
-  SourceData,
-} from './mappers';
+import type { ProductMapperDeps, SourceData } from './mappers';
 import { getFromMemoryCache, setToMemoryCache, CACHE_REVALIDATE_SECONDS } from '../lib/cache-utils';
-import type {
-  GetProductsOptions as SharedGetProductsOptions,
-  ProductSortOption,
-} from './types';
+import type { GetProductsOptions as SharedGetProductsOptions, ProductSortOption } from './types';
 import type {
   BatchRelatedDataResult,
   CategoryWithCount,
@@ -41,16 +35,9 @@ import type {
   MakerPreference,
   MakerInfo as SharedMakerInfo,
 } from './core-queries';
-import type {
-  UncategorizedProductsOptions,
-  UncategorizedProductsCountOptions,
-} from './uncategorized-queries';
-import type {
-  SaleProduct,
-} from './sale-helper';
-import type {
-  CareerAnalysis,
-} from './actress-queries';
+import type { UncategorizedProductsOptions, UncategorizedProductsCountOptions } from './uncategorized-queries';
+import type { SaleProduct } from './sale-helper';
+import type { CareerAnalysis } from './actress-queries';
 import type {
   ActressSortOption,
   GetActressesOptions as SharedGetActressesOptions,
@@ -196,13 +183,30 @@ export interface AppQueries<TProduct, TActress> {
 
   // Tags
   getTags: (category?: string) => Promise<Array<{ id: number; name: string; category: string | null }>>;
-  getTagsForActress: (actressId: string, category?: string) => Promise<Array<{ id: number; name: string; category: string | null }>>;
-  getPopularTags: (options?: { category?: string; limit?: number }) => Promise<Array<{ id: number; name: string; category: string | null; count: number }>>;
-  getTagById: (tagId: number) => Promise<{ id: number; name: string; nameEn: string | null; nameZh: string | null; nameKo: string | null; category: string | null } | null>;
+  getTagsForActress: (
+    actressId: string,
+    category?: string,
+  ) => Promise<Array<{ id: number; name: string; category: string | null }>>;
+  getPopularTags: (options?: {
+    category?: string;
+    limit?: number;
+  }) => Promise<Array<{ id: number; name: string; category: string | null; count: number }>>;
+  getTagById: (tagId: number) => Promise<{
+    id: number;
+    name: string;
+    nameEn: string | null;
+    nameZh: string | null;
+    nameKo: string | null;
+    category: string | null;
+  } | null>;
 
   // Actress detail
   getActressById: (id: string, locale?: string) => Promise<TActress | null>;
-  getPerformerAliases: (performerId: number) => Promise<Array<{ id: number; aliasName: string; source: string | null; isPrimary: boolean | null; createdAt: Date }>>;
+  getPerformerAliases: (
+    performerId: number,
+  ) => Promise<
+    Array<{ id: number; aliasName: string; source: string | null; isPrimary: boolean | null; createdAt: Date }>
+  >;
   getActressProductCountBySite: (actressId: string) => Promise<Array<{ siteName: string; count: number }>>;
   getActressProductCountByAsp: (actressId: string) => Promise<Array<{ aspName: string; count: number }>>;
   getActressAvgPricePerMin: (actressId: string) => Promise<any>;
@@ -230,7 +234,11 @@ export interface AppQueries<TProduct, TActress> {
   getProductSourcesByTitle: (productId: number, title: string) => Promise<any[]>;
   getSampleImagesByMakerCode: (makerProductCode: string) => Promise<any>;
   getProductMakerCode: (productId: number) => Promise<string | null>;
-  getAllProductSources: (productId: number, title: string, makerProductCode: string | null) => Promise<ProductSourceWithSales[]>;
+  getAllProductSources: (
+    productId: number,
+    title: string,
+    makerProductCode: string | null,
+  ) => Promise<ProductSourceWithSales[]>;
 
   // Search
   fuzzySearchProducts: (query: string, limit?: number) => Promise<TProduct[]>;
@@ -250,7 +258,11 @@ export interface AppQueries<TProduct, TActress> {
   getAspStats: () => Promise<Array<{ aspName: string; productCount: number; actressCount: number }>>;
 
   // Categories
-  getCategories: (options?: { category?: string; sortBy?: 'productCount' | 'name'; limit?: number }) => Promise<CategoryWithCount[]>;
+  getCategories: (options?: {
+    category?: string;
+    sortBy?: 'productCount' | 'name';
+    limit?: number;
+  }) => Promise<CategoryWithCount[]>;
   getProductsByCategory: (tagId: number, options?: any) => Promise<TProduct[]>;
   getProductCountByCategory: (tagId: number, options?: any) => Promise<number>;
   getAspStatsByCategory: (tagId: number) => Promise<Array<{ aspName: string; count: number }>>;
@@ -264,17 +276,29 @@ export interface AppQueries<TProduct, TActress> {
   getSaleStats: () => Promise<any>;
 
   // Random
-  getRandomProduct: (options?: { excludeIds?: number[]; tags?: string[]; providers?: string[]; locale?: string }) => Promise<RandomProduct | null>;
+  getRandomProduct: (options?: {
+    excludeIds?: number[];
+    tags?: string[];
+    providers?: string[];
+    locale?: string;
+  }) => Promise<RandomProduct | null>;
 
   // Series
   getSeriesByTagId: (tagId: number, locale?: string) => Promise<any>;
   getSeriesInfo: (seriesTagId: number) => Promise<SeriesInfo | null>;
-  getSeriesProducts: (seriesTagId: number, options?: { sortBy?: 'releaseDateAsc' | 'releaseDateDesc' | 'ratingDesc'; locale?: string }) => Promise<any>;
+  getSeriesProducts: (
+    seriesTagId: number,
+    options?: { sortBy?: 'releaseDateAsc' | 'releaseDateDesc' | 'ratingDesc'; locale?: string },
+  ) => Promise<any>;
   getPopularSeries: (limit?: number) => Promise<PopularSeries[]>;
 
   // Maker
   getMakerById: (makerId: number, locale?: string) => Promise<MakerInfo | null>;
-  getPopularMakers: (options?: { category?: 'maker' | 'label' | 'both'; limit?: number; locale?: string }) => Promise<PopularMaker[]>;
+  getPopularMakers: (options?: {
+    category?: 'maker' | 'label' | 'both';
+    limit?: number;
+    locale?: string;
+  }) => Promise<PopularMaker[]>;
   analyzeMakerPreference: (productIds: number[], locale?: string) => Promise<MakerPreference[]>;
 
   // ----- Access to underlying shared queries for overrides -----
@@ -296,9 +320,7 @@ export interface AppQueries<TProduct, TActress> {
 // Factory Implementation
 // ============================================================
 
-export function createAppQueries<TProduct, TActress>(
-  deps: CreateAppQueriesDeps,
-): AppQueries<TProduct, TActress> {
+export function createAppQueries<TProduct, TActress>(deps: CreateAppQueriesDeps): AppQueries<TProduct, TActress> {
   const {
     getDb,
     products,
@@ -383,8 +405,22 @@ export function createAppQueries<TProduct, TActress>(
 
   function mapProductToType(
     product: DbProduct,
-    performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-    tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
+    performerData: Array<{
+      id: number;
+      name: string;
+      nameKana: string | null;
+      nameEn?: string | null;
+      nameZh?: string | null;
+      nameKo?: string | null;
+    }> = [],
+    tagData: Array<{
+      id: number;
+      name: string;
+      category: string | null;
+      nameEn?: string | null;
+      nameZh?: string | null;
+      nameKo?: string | null;
+    }> = [],
     source?: SourceData | null,
     cache?: CacheData | null,
     imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
@@ -453,10 +489,7 @@ export function createAppQueries<TProduct, TActress>(
             )`,
           ),
         )
-        .orderBy(
-          sql`CASE WHEN ${productSources.aspName} != 'DTI' THEN 0 ELSE 1 END`,
-          desc(products.createdAt),
-        )
+        .orderBy(sql`CASE WHEN ${productSources.aspName} != 'DTI' THEN 0 ELSE 1 END`, desc(products.createdAt))
         .limit(1),
       db.execute(sql`
         SELECT DISTINCT
@@ -475,7 +508,14 @@ export function createAppQueries<TProduct, TActress>(
       .map((r: { asp_name: string }) => r.asp_name)
       .filter((s: string | null): s is string => s !== null && s !== '');
 
-    return mapPerformerToActressTypeSync(performer, Number(releaseCount), thumbnailUrl ?? undefined, services, undefined, locale);
+    return mapPerformerToActressTypeSync(
+      performer,
+      Number(releaseCount),
+      thumbnailUrl ?? undefined,
+      services,
+      undefined,
+      locale,
+    );
   }
 
   // ============================================================
@@ -563,8 +603,22 @@ export function createAppQueries<TProduct, TActress>(
         batchGetPerformerThumbnails,
         batchGetPerformerServices,
         batchGetPerformerAliases,
-        mapPerformerWithBatchData: (performer: any, thumbnailUrl: any, services: any, aliases: any, productCount: any, locale: any) =>
-          mapPerformerToActressTypeSync(performer as DbPerformer, productCount, thumbnailUrl, services, aliases, locale),
+        mapPerformerWithBatchData: (
+          performer: any,
+          thumbnailUrl: any,
+          services: any,
+          aliases: any,
+          productCount: any,
+          locale: any,
+        ) =>
+          mapPerformerToActressTypeSync(
+            performer as DbPerformer,
+            productCount,
+            thumbnailUrl,
+            services,
+            aliases,
+            locale,
+          ),
       });
     }
     return _actressQueries;
@@ -610,7 +664,16 @@ export function createAppQueries<TProduct, TActress>(
       isValidPerformer: (performer: { name: string }) => isValidPerformerName(performer.name),
     },
     fetchProductRelatedData: fetchProductRelatedDataShared,
-    mapProductToType: (product: any, perfData: any, tagsData: any, source: any, cache: any, images: any, videos: any, locale: any) =>
+    mapProductToType: (
+      product: any,
+      perfData: any,
+      tagsData: any,
+      source: any,
+      cache: any,
+      images: any,
+      videos: any,
+      locale: any,
+    ) =>
       mapProductToType(
         product as DbProduct,
         perfData as { id: number; name: string; nameKana: string | null }[],
@@ -641,8 +704,14 @@ export function createAppQueries<TProduct, TActress>(
     productVideos,
     siteMode,
     enableActressFeatureFilter,
-    mapPerformerToActress: (performer: any, productCount: any, thumbnail: any, services: any, aliases: any, locale: any) =>
-      mapPerformerToActressTypeSync(performer as DbPerformer, productCount, thumbnail, services, aliases, locale),
+    mapPerformerToActress: (
+      performer: any,
+      productCount: any,
+      thumbnail: any,
+      services: any,
+      aliases: any,
+      locale: any,
+    ) => mapPerformerToActressTypeSync(performer as DbPerformer, productCount, thumbnail, services, aliases, locale),
     batchGetPerformerThumbnails,
     batchGetPerformerServices,
     batchGetPerformerAliases,
@@ -650,10 +719,7 @@ export function createAppQueries<TProduct, TActress>(
     setToMemoryCache,
   });
 
-  const {
-    getActresses: getActressesShared,
-    getActressesCount: getActressesCountShared,
-  } = actressListQueries;
+  const { getActresses: getActressesShared, getActressesCount: getActressesCountShared } = actressListQueries;
 
   // Uncategorized queries
   const uncategorizedQueries = createUncategorizedQueries({
@@ -682,7 +748,17 @@ export function createAppQueries<TProduct, TActress>(
     productVideos,
     productSales,
     siteMode,
-    mapProductToType: (product: any, perfData: any, tagsData: any, source: any, cache: any, images: any, videos: any, locale: any, saleData: any) =>
+    mapProductToType: (
+      product: any,
+      perfData: any,
+      tagsData: any,
+      source: any,
+      cache: any,
+      images: any,
+      videos: any,
+      locale: any,
+      saleData: any,
+    ) =>
       mapProductToType(
         product as DbProduct,
         perfData as { id: number; name: string; nameKana: string | null }[],
@@ -729,7 +805,9 @@ export function createAppQueries<TProduct, TActress>(
   }
 
   // getProductsCount - base version (no app-specific caching)
-  async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
+  async function getProductsCount(
+    options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>,
+  ): Promise<number> {
     return getProductsCountShared(options);
   }
 
@@ -753,7 +831,9 @@ export function createAppQueries<TProduct, TActress>(
   }
 
   // Tags
-  async function getTagsInternal(category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
+  async function getTagsInternal(
+    category?: string,
+  ): Promise<Array<{ id: number; name: string; category: string | null }>> {
     try {
       const db = getDb();
       const results = await db
@@ -773,18 +853,16 @@ export function createAppQueries<TProduct, TActress>(
     }
   }
 
-  const getCachedTags = createCachedFunction(
-    getTagsInternal,
-    ['tags'],
-    ['tags'],
-    CACHE_REVALIDATE_SECONDS,
-  );
+  const getCachedTags = createCachedFunction(getTagsInternal, ['tags'], ['tags'], CACHE_REVALIDATE_SECONDS);
 
   async function getTags(category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
     return getCachedTags(category);
   }
 
-  async function getTagsForActressInternal(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
+  async function getTagsForActressInternal(
+    actressId: string,
+    category?: string,
+  ): Promise<Array<{ id: number; name: string; category: string | null }>> {
     try {
       const db = getDb();
       const performerId = parseInt(actressId);
@@ -812,12 +890,7 @@ export function createAppQueries<TProduct, TActress>(
         })
         .from(tags)
         .innerJoin(productTags, eq(tags.id, productTags.tagId))
-        .where(
-          and(
-            category ? eq(tags.category, category) : undefined,
-            inArray(productTags.productId, productIdList),
-          ),
-        )
+        .where(and(category ? eq(tags.category, category) : undefined, inArray(productTags.productId, productIdList)))
         .orderBy(tags.name);
 
       return results;
@@ -827,7 +900,10 @@ export function createAppQueries<TProduct, TActress>(
     }
   }
 
-  async function getTagsForActress(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null }>> {
+  async function getTagsForActress(
+    actressId: string,
+    category?: string,
+  ): Promise<Array<{ id: number; name: string; category: string | null }>> {
     const cached = unstable_cache(
       () => getTagsForActressInternal(actressId, category),
       [`actress-tags-${actressId}-${category || 'all'}`],
@@ -840,13 +916,15 @@ export function createAppQueries<TProduct, TActress>(
     return getActressQueries().getActressById(id, locale) as Promise<TActress | null>;
   }
 
-  async function getPerformerAliasesInternal(performerId: number): Promise<Array<{
-    id: number;
-    aliasName: string;
-    source: string | null;
-    isPrimary: boolean | null;
-    createdAt: Date;
-  }>> {
+  async function getPerformerAliasesInternal(performerId: number): Promise<
+    Array<{
+      id: number;
+      aliasName: string;
+      source: string | null;
+      isPrimary: boolean | null;
+      createdAt: Date;
+    }>
+  > {
     try {
       const db = getDb();
       const aliases = await db
@@ -862,13 +940,15 @@ export function createAppQueries<TProduct, TActress>(
     }
   }
 
-  async function getPerformerAliases(performerId: number): Promise<Array<{
-    id: number;
-    aliasName: string;
-    source: string | null;
-    isPrimary: boolean | null;
-    createdAt: Date;
-  }>> {
+  async function getPerformerAliases(performerId: number): Promise<
+    Array<{
+      id: number;
+      aliasName: string;
+      source: string | null;
+      isPrimary: boolean | null;
+      createdAt: Date;
+    }>
+  > {
     const cached = unstable_cache(
       () => getPerformerAliasesInternal(performerId),
       [`performer-aliases-${performerId}`],
@@ -877,10 +957,12 @@ export function createAppQueries<TProduct, TActress>(
     return cached();
   }
 
-  async function getActressProductCountBySite(actressId: string): Promise<Array<{
-    siteName: string;
-    count: number;
-  }>> {
+  async function getActressProductCountBySite(actressId: string): Promise<
+    Array<{
+      siteName: string;
+      count: number;
+    }>
+  > {
     try {
       const db = getDb();
       const performerId = parseInt(actressId);
@@ -898,12 +980,7 @@ export function createAppQueries<TProduct, TActress>(
         .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
         .innerJoin(productTags, eq(products.id, productTags.productId))
         .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(
-          and(
-            eq(productPerformers.performerId, performerId),
-            eq(tags.category, 'site'),
-          ),
-        )
+        .where(and(eq(productPerformers.performerId, performerId), eq(tags.category, 'site')))
         .groupBy(tags.name)
         .orderBy(desc(sql<number>`COUNT(DISTINCT ${products.id})`));
 
@@ -917,10 +994,12 @@ export function createAppQueries<TProduct, TActress>(
     }
   }
 
-  async function getActressProductCountByAspInternal(actressId: string): Promise<Array<{
-    aspName: string;
-    count: number;
-  }>> {
+  async function getActressProductCountByAspInternal(actressId: string): Promise<
+    Array<{
+      aspName: string;
+      count: number;
+    }>
+  > {
     try {
       const db = getDb();
       const performerId = parseInt(actressId);
@@ -955,10 +1034,12 @@ export function createAppQueries<TProduct, TActress>(
     }
   }
 
-  async function getActressProductCountByAsp(actressId: string): Promise<Array<{
-    aspName: string;
-    count: number;
-  }>> {
+  async function getActressProductCountByAsp(actressId: string): Promise<
+    Array<{
+      aspName: string;
+      count: number;
+    }>
+  > {
     const cached = unstable_cache(
       () => getActressProductCountByAspInternal(actressId),
       [`actress-asp-count-${actressId}`],
@@ -1021,12 +1102,7 @@ export function createAppQueries<TProduct, TActress>(
           productType: productSources.productType,
         })
         .from(productSources)
-        .where(
-          and(
-            eq(productSources.productId, productId),
-            sql`LOWER(${productSources.aspName}) != 'fanza'`,
-          ),
-        );
+        .where(and(eq(productSources.productId, productId), sql`LOWER(${productSources.aspName}) != 'fanza'`));
 
       if (sources.length === 0) {
         return [];
@@ -1043,12 +1119,7 @@ export function createAppQueries<TProduct, TActress>(
           isActive: productSales.isActive,
         })
         .from(productSales)
-        .where(
-          and(
-            inArray(productSales.productSourceId, sourceIds),
-            eq(productSales.isActive, true),
-          ),
-        );
+        .where(and(inArray(productSales.productSourceId, sourceIds), eq(productSales.isActive, true)));
 
       const saleMap = new Map(sales.map((s: any) => [s.productSourceId, s]));
 
@@ -1152,9 +1223,7 @@ export function createAppQueries<TProduct, TActress>(
     return getUncategorizedProductsCountShared(options);
   }
 
-  async function getMultiAspActresses(
-    options: { limit?: number; minAspCount?: number } = {},
-  ): Promise<TActress[]> {
+  async function getMultiAspActresses(options: { limit?: number; minAspCount?: number } = {}): Promise<TActress[]> {
     return getMultiAspActressesShared(options) as Promise<TActress[]>;
   }
 
@@ -1169,7 +1238,9 @@ export function createAppQueries<TProduct, TActress>(
   }
 
   // ASP stats
-  async function getAspStatsInternal(): Promise<Array<{ aspName: string; productCount: number; actressCount: number }>> {
+  async function getAspStatsInternal(): Promise<
+    Array<{ aspName: string; productCount: number; actressCount: number }>
+  > {
     const db = getDb();
 
     const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
@@ -1270,9 +1341,7 @@ export function createAppQueries<TProduct, TActress>(
     return getProductCountByCategoryShared(tagId, options);
   }
 
-  async function getAspStatsByCategory(
-    tagId: number,
-  ): Promise<Array<{ aspName: string; count: number }>> {
+  async function getAspStatsByCategory(tagId: number): Promise<Array<{ aspName: string; count: number }>> {
     return getAspStatsByCategoryShared(tagId);
   }
 
@@ -1286,11 +1355,7 @@ export function createAppQueries<TProduct, TActress>(
   } | null> {
     try {
       const db = getDb();
-      const result = await db
-        .select()
-        .from(tags)
-        .where(eq(tags.id, tagId))
-        .limit(1);
+      const result = await db.select().from(tags).where(eq(tags.id, tagId)).limit(1);
 
       if (result.length === 0) return null;
 
@@ -1312,15 +1377,21 @@ export function createAppQueries<TProduct, TActress>(
     return getUncategorizedStatsShared();
   }
 
-  async function getCandidatePerformers(productCode: string): Promise<Array<{
-    name: string;
-    source: string;
-  }>> {
+  async function getCandidatePerformers(productCode: string): Promise<
+    Array<{
+      name: string;
+      source: string;
+    }>
+  > {
     return getCandidatePerformersShared(productCode);
   }
 
   // getSaleProducts - base version (no app-specific caching)
-  async function getSaleProducts(options?: { limit?: number; aspName?: string; minDiscount?: number }): Promise<SaleProduct[]> {
+  async function getSaleProducts(options?: {
+    limit?: number;
+    aspName?: string;
+    minDiscount?: number;
+  }): Promise<SaleProduct[]> {
     return getSaleProductsShared(options);
   }
 
@@ -1347,7 +1418,7 @@ export function createAppQueries<TProduct, TActress>(
         conditions.push(sql`EXISTS (
           SELECT 1 FROM product_tags pt
           JOIN tags t ON pt.tag_id = t.id
-          WHERE pt.product_id = p.id AND t.id IN ${options.tags.map(t => parseInt(t))}
+          WHERE pt.product_id = p.id AND t.id IN ${options.tags.map((t) => parseInt(t))}
         )`);
       }
 
@@ -1361,9 +1432,7 @@ export function createAppQueries<TProduct, TActress>(
       conditions.push(sql`p.sample_images IS NOT NULL AND jsonb_array_length(p.sample_images) > 0`);
 
       const whereClause =
-        conditions.length > 0
-          ? sql`WHERE ${sql.join(conditions, sql` AND `)}`
-          : sql`WHERE p.sample_images IS NOT NULL`;
+        conditions.length > 0 ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql`WHERE p.sample_images IS NOT NULL`;
 
       const result = await db.execute(sql`
         SELECT
@@ -1504,7 +1573,10 @@ export function createAppQueries<TProduct, TActress>(
 
       const normalizedTitle = title
         .replace(/[\s\u3000]+/g, '')
-        .replace(/[\uff01!?\uff1f\u300c\u300d\u300e\u300f\u3010\u3011\uff08\uff09()\uff06&\uff5e~\u30fb:\uff1a,\uff0c\u3002.\u3001]/g, '');
+        .replace(
+          /[\uff01!?\uff1f\u300c\u300d\u300e\u300f\u3010\u3011\uff08\uff09()\uff06&\uff5e~\u30fb:\uff1a,\uff0c\u3002.\u3001]/g,
+          '',
+        );
 
       const result = await db.execute(sql`
         SELECT DISTINCT ON (ps.asp_name)

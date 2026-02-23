@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ChevronDown, ChevronUp, RefreshCw, AlertCircle, TrendingUp } from 'lucide-react';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, trendAnalysisTranslations } from '../../lib/translations';
 
 interface TrendItem {
   name: string;
@@ -26,43 +27,11 @@ interface TrendAnalysisProps {
   onPerformerClick?: (performer: string) => void;
 }
 
-const trendTexts = {
-  ja: {
-    fetchError: 'トレンドデータの取得に失敗しました',
-    retrying: '再読み込み中...',
-    retry: '再読み込み',
-    loading: '読み込み中...',
-    week: '週間',
-    month: '月間',
-    genres: 'ジャンル',
-    actresses: '女優',
-    releases: '作品',
-    trendAnalysis: 'トレンド分析',
-  },
-  en: {
-    fetchError: 'Failed to load trend data',
-    retrying: 'Retrying...',
-    retry: 'Try again',
-    loading: 'Loading...',
-    week: 'Week',
-    month: 'Month',
-    genres: 'Genres',
-    actresses: 'Actresses',
-    releases: 'releases',
-    trendAnalysis: 'Trend Analysis',
-  },
-} as const;
-function getTrendText(locale: string) { return trendTexts[locale as keyof typeof trendTexts] || trendTexts.ja; }
 
-export function TrendAnalysis({
-  locale,
-  theme: themeProp,
-  onTagClick,
-  onPerformerClick,
-}: TrendAnalysisProps) {
+export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerformerClick }: TrendAnalysisProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const tt = getTrendText(locale);
+  const tt = getTranslation(trendAnalysisTranslations, locale);
   const [data, setData] = useState<TrendsData | null>(null);
   const [loading, setLoading] = useState(false);
   const [period, setPeriod] = useState<'week' | 'month'>('week');
@@ -80,7 +49,7 @@ export function TrendAnalysis({
     setIsRetrying(true);
     setError(null);
     setHasFetched(false);
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
   }, []);
 
   // 遅延フェッチ: 展開されたときのみデータを取得
@@ -112,32 +81,32 @@ export function TrendAnalysis({
   }, [period, locale, isExpanded, retryCount]);
 
   const handleToggle = useCallback(() => {
-    setIsExpanded(prev => !prev);
+    setIsExpanded((prev) => !prev);
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      setIsExpanded(prev => !prev);
+      setIsExpanded((prev) => !prev);
     }
   }, []);
 
   const TrendIcon = ({ trend }: { trend: 'up' | 'down' | 'stable' }) => {
     if (trend === 'up') {
       return (
-        <svg className="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
         </svg>
       );
     }
     if (trend === 'down') {
       return (
-        <svg className="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
         </svg>
       );
     }
     return (
-      <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg className="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 12h14" />
       </svg>
     );
@@ -152,27 +121,23 @@ export function TrendAnalysis({
     // エラー時はリトライボタンを表示
     if (error) {
       return (
-        <div className={`flex flex-col items-center justify-center py-8 px-4 rounded-lg ${
-          isDark ? 'bg-gray-800/50' : 'bg-gray-100'
-        }`}>
-          <AlertCircle className={`w-8 h-8 mb-3 ${
-            isDark ? 'text-red-400' : 'text-red-500'
-          }`} />
-          <p className={`text-sm mb-4 text-center ${
-            isDark ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {error}
-          </p>
+        <div
+          className={`flex flex-col items-center justify-center rounded-lg px-4 py-8 ${
+            isDark ? 'bg-gray-800/50' : 'bg-gray-100'
+          }`}
+        >
+          <AlertCircle className={`mb-3 h-8 w-8 ${isDark ? 'text-red-400' : 'text-red-500'}`} />
+          <p className={`mb-4 text-center text-sm ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{error}</p>
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               isDark
-                ? 'bg-rose-600 hover:bg-rose-700 text-white disabled:bg-gray-600'
-                : 'bg-rose-500 hover:bg-rose-600 text-white disabled:bg-gray-400'
+                ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
+                : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
             } disabled:cursor-not-allowed`}
           >
-            <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
             {isRetrying ? tt.retrying : tt.retry}
           </button>
         </div>
@@ -183,13 +148,15 @@ export function TrendAnalysis({
     if (loading || !data) {
       return (
         <div className="flex items-center justify-center gap-2 py-8">
-          <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            <path
+              className="opacity-75"
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+            />
           </svg>
-          <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-            {tt.loading}
-          </span>
+          <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>{tt.loading}</span>
         </div>
       );
     }
@@ -198,23 +165,37 @@ export function TrendAnalysis({
       <>
         {/* Period selector and Insights */}
         <div className={`mb-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          <div className="flex items-center justify-end gap-1 mb-3">
+          <div className="mb-3 flex items-center justify-end gap-1">
             <button
-              onClick={(e) => { e.stopPropagation(); setPeriod('week'); }}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+              onClick={(e) => {
+                e.stopPropagation();
+                setPeriod('week');
+              }}
+              className={`rounded-lg px-3 py-1 text-sm transition-colors ${
                 period === 'week'
-                  ? isDark ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'
-                  : isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                  ? isDark
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-pink-600 text-white'
+                  : isDark
+                    ? 'bg-gray-700 text-gray-300'
+                    : 'bg-gray-100 text-gray-700'
               }`}
             >
               {tt.week}
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); setPeriod('month'); }}
-              className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+              onClick={(e) => {
+                e.stopPropagation();
+                setPeriod('month');
+              }}
+              className={`rounded-lg px-3 py-1 text-sm transition-colors ${
                 period === 'month'
-                  ? isDark ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'
-                  : isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-700'
+                  ? isDark
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-pink-600 text-white'
+                  : isDark
+                    ? 'bg-gray-700 text-gray-300'
+                    : 'bg-gray-100 text-gray-700'
               }`}
             >
               {tt.month}
@@ -223,10 +204,13 @@ export function TrendAnalysis({
 
           {/* Insights */}
           {data.insights.length > 0 && (
-            <div className={`p-3 rounded-lg ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
+            <div className={`rounded-lg p-3 ${isDark ? 'bg-gray-700/50' : 'bg-gray-50'}`}>
               <ul className="space-y-1">
                 {data.insights.map((insight, index) => (
-                  <li key={index} className={`text-sm flex items-start gap-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
+                  <li
+                    key={index}
+                    className={`flex items-start gap-2 text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                  >
                     <span className={isDark ? 'text-yellow-400' : 'text-yellow-600'}>•</span>
                     {insight}
                   </li>
@@ -237,23 +221,37 @@ export function TrendAnalysis({
         </div>
 
         {/* Tabs */}
-        <div className={`flex border-b mb-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className={`mb-4 flex border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           <button
-            onClick={(e) => { e.stopPropagation(); setActiveTab('tags'); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('tags');
+            }}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               activeTab === 'tags'
-                ? isDark ? 'text-blue-400 border-b-2 border-blue-400' : 'text-pink-600 border-b-2 border-pink-600'
-                : isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
+                ? isDark
+                  ? 'border-b-2 border-blue-400 text-blue-400'
+                  : 'border-b-2 border-pink-600 text-pink-600'
+                : isDark
+                  ? 'text-gray-400 hover:text-gray-300'
+                  : 'text-gray-600 hover:text-gray-800'
             }`}
           >
             {tt.genres}
           </button>
           <button
-            onClick={(e) => { e.stopPropagation(); setActiveTab('performers'); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              setActiveTab('performers');
+            }}
             className={`flex-1 py-3 text-sm font-medium transition-colors ${
               activeTab === 'performers'
-                ? isDark ? 'text-blue-400 border-b-2 border-blue-400' : 'text-pink-600 border-b-2 border-pink-600'
-                : isDark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-600 hover:text-gray-800'
+                ? isDark
+                  ? 'border-b-2 border-blue-400 text-blue-400'
+                  : 'border-b-2 border-pink-600 text-pink-600'
+                : isDark
+                  ? 'text-gray-400 hover:text-gray-300'
+                  : 'text-gray-600 hover:text-gray-800'
             }`}
           >
             {tt.actresses}
@@ -265,25 +263,29 @@ export function TrendAnalysis({
           {(activeTab === 'tags' ? data.tags : data.performers).map((item, index) => (
             <div
               key={item['name']}
-              className={`flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-colors ${
+              className={`flex cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors ${
                 isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-50'
               }`}
-              onClick={() => activeTab === 'tags' ? onTagClick?.(item['name']) : onPerformerClick?.(item['name'])}
+              onClick={() => (activeTab === 'tags' ? onTagClick?.(item['name']) : onPerformerClick?.(item['name']))}
             >
               {/* Rank */}
-              <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                index < 3
-                  ? isDark ? 'bg-yellow-600 text-white' : 'bg-yellow-500 text-white'
-                  : isDark ? 'bg-gray-700 text-gray-400' : 'bg-gray-200 text-gray-600'
-              }`}>
+              <div
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                  index < 3
+                    ? isDark
+                      ? 'bg-yellow-600 text-white'
+                      : 'bg-yellow-500 text-white'
+                    : isDark
+                      ? 'bg-gray-700 text-gray-400'
+                      : 'bg-gray-200 text-gray-600'
+                }`}
+              >
                 {index + 1}
               </div>
 
               {/* Name */}
-              <div className="flex-1 min-w-0">
-                <p className={`font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                  {item['name']}
-                </p>
+              <div className="min-w-0 flex-1">
+                <p className={`truncate font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{item['name']}</p>
                 <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                   {item['count']} {tt.releases}
                 </p>
@@ -292,12 +294,13 @@ export function TrendAnalysis({
               {/* Trend */}
               <div className="flex items-center gap-1">
                 <TrendIcon trend={item.trend} />
-                <span className={`text-sm font-medium ${
-                  item.trend === 'up' ? 'text-green-500' :
-                  item.trend === 'down' ? 'text-red-500' :
-                  'text-gray-400'
-                }`}>
-                  {item.change > 0 ? '+' : ''}{item.change}%
+                <span
+                  className={`text-sm font-medium ${
+                    item.trend === 'up' ? 'text-green-500' : item.trend === 'down' ? 'text-red-500' : 'text-gray-400'
+                  }`}
+                >
+                  {item.change > 0 ? '+' : ''}
+                  {item.change}%
                 </span>
               </div>
             </div>
@@ -308,33 +311,31 @@ export function TrendAnalysis({
   };
 
   return (
-    <div className={`rounded-lg overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+    <div className={`overflow-hidden rounded-lg ${isDark ? 'bg-gray-800' : 'border border-gray-200 bg-white'}`}>
       {/* Collapsible Header */}
       <div
         role="button"
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        className={`w-full flex items-center justify-between p-4 cursor-pointer transition-colors ${
+        className={`flex w-full cursor-pointer items-center justify-between p-4 transition-colors ${
           isDark ? 'hover:bg-gray-700/50' : 'hover:bg-gray-50'
         }`}
       >
-        <h3 className={`font-semibold flex items-center gap-2 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          <TrendingUp className="w-5 h-5" />
+        <h3 className={`flex items-center gap-2 font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+          <TrendingUp className="h-5 w-5" />
           {tt.trendAnalysis}
         </h3>
         {isExpanded ? (
-          <ChevronUp className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+          <ChevronUp className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
         ) : (
-          <ChevronDown className={`w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
+          <ChevronDown className={`h-5 w-5 ${isDark ? 'text-gray-400' : 'text-gray-600'}`} />
         )}
       </div>
 
       {/* Expandable Content */}
       {isExpanded && (
-        <div className={`p-4 pt-0 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-          {renderContent()}
-        </div>
+        <div className={`border-t p-4 pt-0 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>{renderContent()}</div>
       )}
     </div>
   );

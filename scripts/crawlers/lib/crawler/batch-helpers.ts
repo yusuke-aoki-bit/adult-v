@@ -5,19 +5,9 @@
  */
 
 import { db } from '../db';
-import {
-  performers,
-  productPerformers,
-  tags,
-  productTags,
-  productImages,
-} from '../db/schema';
+import { performers, productPerformers, tags, productTags, productImages } from '../db/schema';
 import { eq, inArray, and } from 'drizzle-orm';
-import {
-  isValidPerformerName,
-  normalizePerformerName,
-  isValidPerformerForProduct,
-} from '../performer-validation';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../performer-validation';
 
 // ============================================================
 // Performer Batch Operations
@@ -26,10 +16,7 @@ import {
 /**
  * 出演者名を正規化・検証してフィルタリング
  */
-export function normalizeAndValidatePerformers(
-  names: string[],
-  productTitle?: string
-): string[] {
+export function normalizeAndValidatePerformers(names: string[], productTitle?: string): string[] {
   return names
     .map((name) => normalizePerformerName(name))
     .filter((name): name is string => name !== null)
@@ -44,9 +31,7 @@ export function normalizeAndValidatePerformers(
  *
  * @returns name -> id のマッピング
  */
-export async function ensurePerformers(
-  names: string[]
-): Promise<Map<string, number>> {
+export async function ensurePerformers(names: string[]): Promise<Map<string, number>> {
   if (names.length === 0) {
     return new Map();
   }
@@ -100,10 +85,7 @@ export async function ensurePerformers(
 /**
  * 商品と出演者の関連をバッチで作成
  */
-export async function linkProductToPerformers(
-  productId: number,
-  performerIds: number[]
-): Promise<void> {
+export async function linkProductToPerformers(productId: number, performerIds: number[]): Promise<void> {
   if (performerIds.length === 0) {
     return;
   }
@@ -133,7 +115,7 @@ export async function linkProductToPerformers(
 export async function processProductPerformers(
   productId: number,
   performerNames: string[],
-  productTitle?: string
+  productTitle?: string,
 ): Promise<{ added: number; total: number }> {
   // 1. 正規化・検証
   const validNames = normalizeAndValidatePerformers(performerNames, productTitle);
@@ -146,9 +128,7 @@ export async function processProductPerformers(
   const nameToId = await ensurePerformers(validNames);
 
   // 3. 商品との関連を作成
-  const performerIds = validNames
-    .map((name) => nameToId.get(name))
-    .filter((id): id is number => id !== undefined);
+  const performerIds = validNames.map((name) => nameToId.get(name)).filter((id): id is number => id !== undefined);
 
   // 既存の関連数を取得
   const existingCount = await db
@@ -171,10 +151,7 @@ export async function processProductPerformers(
 /**
  * タグをバッチで取得または作成
  */
-export async function ensureTags(
-  tagNames: string[],
-  category?: string
-): Promise<Map<string, number>> {
+export async function ensureTags(tagNames: string[], category?: string): Promise<Map<string, number>> {
   if (tagNames.length === 0) {
     return new Map();
   }
@@ -182,10 +159,7 @@ export async function ensureTags(
   const uniqueNames = [...new Set(tagNames)];
 
   // 1. 既存のタグを一括取得
-  const existing = await db
-    .select({ id: tags.id, name: tags.name })
-    .from(tags)
-    .where(inArray(tags.name, uniqueNames));
+  const existing = await db.select({ id: tags.id, name: tags.name }).from(tags).where(inArray(tags.name, uniqueNames));
 
   const nameToId = new Map<string, number>();
   for (const t of existing) {
@@ -226,10 +200,7 @@ export async function ensureTags(
 /**
  * 商品とタグの関連をバッチで作成
  */
-export async function linkProductToTags(
-  productId: number,
-  tagIds: number[]
-): Promise<void> {
+export async function linkProductToTags(productId: number, tagIds: number[]): Promise<void> {
   if (tagIds.length === 0) {
     return;
   }
@@ -261,7 +232,7 @@ export async function saveProductImages(
   productId: number,
   imageUrls: string[],
   aspName: string,
-  imageType: string = 'sample'
+  imageType: string = 'sample',
 ): Promise<{ added: number; skipped: number }> {
   if (imageUrls.length === 0) {
     return { added: 0, skipped: 0 };
@@ -275,8 +246,8 @@ export async function saveProductImages(
       and(
         eq(productImages.productId, productId),
         eq(productImages.aspName, aspName),
-        eq(productImages.imageType, imageType)
-      )
+        eq(productImages.imageType, imageType),
+      ),
     );
 
   const existingUrls = new Set(existing.map((e) => e.imageUrl));
@@ -296,7 +267,7 @@ export async function saveProductImages(
         imageType,
         aspName,
         displayOrder: maxOrder + index + 1,
-      }))
+      })),
     );
   }
 
@@ -313,7 +284,7 @@ export async function replaceProductImages(
   productId: number,
   imageUrls: string[],
   aspName: string,
-  imageType: string = 'sample'
+  imageType: string = 'sample',
 ): Promise<number> {
   // 既存の画像を削除
   await db
@@ -322,8 +293,8 @@ export async function replaceProductImages(
       and(
         eq(productImages.productId, productId),
         eq(productImages.aspName, aspName),
-        eq(productImages.imageType, imageType)
-      )
+        eq(productImages.imageType, imageType),
+      ),
     );
 
   if (imageUrls.length === 0) {
@@ -341,7 +312,7 @@ export async function replaceProductImages(
       imageType,
       aspName,
       displayOrder: index + 1,
-    }))
+    })),
   );
 
   return uniqueUrls.length;

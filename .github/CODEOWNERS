@@ -1,0 +1,14 @@
+# デフォルトオーナー
+* @yuuku
+
+# データベース
+packages/database/ @yuuku
+drizzle/ @yuuku
+
+# 共有パッケージ
+packages/shared/ @yuuku
+
+# インフラ・CI
+.github/ @yuuku
+docker/ @yuuku
+scripts/ @yuuku

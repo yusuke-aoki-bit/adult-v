@@ -14,7 +14,6 @@ async function main() {
 
     console.log('✅ Constraint added successfully');
     console.log('   UNIQUE(item_id, api_type) on sokmil_raw_responses\n');
-
   } catch (error: any) {
     if (error.message && error.message.includes('already exists')) {
       console.log('⚠️  Constraint already exists (skipped)');

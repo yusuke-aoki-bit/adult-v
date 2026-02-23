@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, productCompareTranslations } from '../../lib/translations';
 
 // レーダーチャート用ヘルパー関数
 function getRadarPoints(cx: number, cy: number, r: number, sides: number): string {
@@ -29,68 +30,6 @@ function getRadarDataPoints(cx: number, cy: number, values: number[]): string {
 
 const localeMap: Record<string, string> = { ja: 'ja-JP', en: 'en-US', zh: 'zh-CN', ko: 'ko-KR', 'zh-TW': 'zh-TW' };
 
-const compareTexts = {
-  ja: {
-    compareProducts: '作品を比較しましょう',
-    selectAtLeast2: '2作品以上を選択すると比較できます',
-    loadingComparison: '比較データを読み込み中...',
-    bestPrice: '最安値',
-    onSale: 'セール中',
-    topRated: '高評価',
-    longest: '長尺',
-    video: '動画',
-    images: '画像',
-    price: '価格',
-    duration: '再生時間',
-    rating: '評価',
-    releaseDate: '発売日',
-    reviews: 'レビュー',
-    performers: '出演者',
-    genres: 'ジャンル',
-    availableOn: '配信サイト',
-    comparisonChart: '比較グラフ',
-    radarChart: 'レーダーチャート',
-    durationShort: '時間',
-    barComparison: '棒グラフ比較',
-    priceLowerBetter: '価格（安いほど高評価）',
-    commonFeatures: '共通点',
-    hours: '時間',
-    minutes: '分',
-    reviewCount: '件',
-  },
-  en: {
-    compareProducts: 'Compare Products',
-    selectAtLeast2: 'Select at least 2 products to compare',
-    loadingComparison: 'Loading comparison...',
-    bestPrice: 'Best Price',
-    onSale: 'On Sale',
-    topRated: 'Top Rated',
-    longest: 'Longest',
-    video: 'Video',
-    images: 'Images',
-    price: 'Price',
-    duration: 'Duration',
-    rating: 'Rating',
-    releaseDate: 'Release',
-    reviews: 'Reviews',
-    performers: 'Performers',
-    genres: 'Genres',
-    availableOn: 'Available on',
-    comparisonChart: 'Comparison Chart',
-    radarChart: 'Radar Chart',
-    durationShort: 'Duration',
-    barComparison: 'Bar Comparison',
-    priceLowerBetter: 'Price (lower is better)',
-    commonFeatures: 'Common Features',
-    hours: 'h ',
-    minutes: 'min',
-    reviewCount: '',
-  },
-} as const;
-
-function getCompareText(locale: string) {
-  return compareTexts[locale as keyof typeof compareTexts] || compareTexts.ja;
-}
 
 interface CompareProduct {
   id: number;
@@ -157,7 +96,7 @@ export function ProductCompare({
   productsRef.current = products;
 
   const isDark = theme === 'dark';
-  const ct = getCompareText(locale);
+  const ct = getTranslation(productCompareTranslations, locale);
 
   // productIdsを文字列化して比較（配列の参照変更による再実行を防ぐ）
   const idsKey = useMemo(() => [...productIds].sort().join(','), [productIds]);
@@ -177,12 +116,12 @@ export function ProductCompare({
 
     // 削除の場合（現在のIDが全て既存データに含まれている）は再フェッチせずフィルタリング
     const currentProducts = productsRef.current;
-    const currentProductIds = new Set(currentProducts.map(p => p.normalizedProductId));
-    const allIdsExist = productIds.every(id => currentProductIds.has(id));
+    const currentProductIds = new Set(currentProducts.map((p) => p.normalizedProductId));
+    const allIdsExist = productIds.every((id) => currentProductIds.has(id));
 
     if (allIdsExist && currentProducts.length > 0) {
       // 削除されたアイテムを除外
-      const filteredProducts = currentProducts.filter(p => productIds.includes(p.normalizedProductId));
+      const filteredProducts = currentProducts.filter((p) => productIds.includes(p.normalizedProductId));
       setProducts(filteredProducts);
       lastFetchedIdsRef.current = idsKey;
       return;
@@ -235,25 +174,21 @@ export function ProductCompare({
   };
 
   const getBestPrice = (product: CompareProduct) => {
-    const prices = product.sources
-      .map(s => s.salePrice || s.price)
-      .filter((p): p is number => p !== null);
+    const prices = product.sources.map((s) => s.salePrice || s.price).filter((p): p is number => p !== null);
     return prices.length > 0 ? Math.min(...prices) : null;
   };
 
   const getMaxDuration = () => {
-    const durations = products.map(p => p.duration).filter((d): d is number => d !== null);
+    const durations = products.map((p) => p.duration).filter((d): d is number => d !== null);
     return durations.length > 0 ? Math.max(...durations) : 0;
   };
 
   const getMaxRating = () => {
-    const ratings = products.map(p => p.rating.average).filter((r): r is number => r !== null);
+    const ratings = products.map((p) => p.rating.average).filter((r): r is number => r !== null);
     return ratings.length > 0 ? Math.max(...ratings) : 0;
   };
 
-  const lowestPrice = products.length > 0
-    ? Math.min(...products.map(p => getBestPrice(p) || Infinity))
-    : null;
+  const lowestPrice = products.length > 0 ? Math.min(...products.map((p) => getBestPrice(p) || Infinity)) : null;
 
   const maxDuration = getMaxDuration();
   const maxRating = getMaxRating();
@@ -261,22 +196,32 @@ export function ProductCompare({
   // 空の状態
   if (productIds.length < 2) {
     return (
-      <div className={`rounded-2xl border-2 border-dashed p-12 text-center ${
-        isDark ? 'border-gray-600 bg-gray-800/50' : 'border-gray-300 bg-gray-50'
-      }`}>
-        <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${
-          isDark ? 'bg-gray-700' : 'bg-gray-200'
-        }`}>
-          <svg className={`w-8 h-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      <div
+        className={`rounded-2xl border-2 border-dashed p-12 text-center ${
+          isDark ? 'border-gray-600 bg-gray-800/50' : 'border-gray-300 bg-gray-50'
+        }`}
+      >
+        <div
+          className={`mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full ${
+            isDark ? 'bg-gray-700' : 'bg-gray-200'
+          }`}
+        >
+          <svg
+            className={`h-8 w-8 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+            />
           </svg>
         </div>
-        <p className={`text-lg font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-          {ct.compareProducts}
-        </p>
-        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {ct.selectAtLeast2}
-        </p>
+        <p className={`mb-2 text-lg font-medium ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>{ct.compareProducts}</p>
+        <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.selectAtLeast2}</p>
       </div>
     );
   }
@@ -284,16 +229,16 @@ export function ProductCompare({
   // ローディング
   if (isLoading) {
     return (
-      <div className={`rounded-2xl border p-8 ${isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}>
+      <div className={`rounded-2xl border p-8 ${isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'}`}>
         <div className="flex flex-col items-center justify-center gap-4">
-          <div className="relative w-12 h-12">
-            <div className={`absolute inset-0 rounded-full border-4 border-t-transparent animate-spin ${
-              isDark ? 'border-blue-500' : 'border-blue-600'
-            }`} />
+          <div className="relative h-12 w-12">
+            <div
+              className={`absolute inset-0 animate-spin rounded-full border-4 border-t-transparent ${
+                isDark ? 'border-blue-500' : 'border-blue-600'
+              }`}
+            />
           </div>
-          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>
-            {ct.loadingComparison}
-          </p>
+          <p className={isDark ? 'text-gray-300' : 'text-gray-600'}>{ct.loadingComparison}</p>
         </div>
       </div>
     );
@@ -302,13 +247,20 @@ export function ProductCompare({
   // エラー
   if (error) {
     return (
-      <div className={`rounded-2xl border p-8 ${isDark ? 'bg-red-900/20 border-red-800' : 'bg-red-50 border-red-200'}`}>
+      <div className={`rounded-2xl border p-8 ${isDark ? 'border-red-800 bg-red-900/20' : 'border-red-200 bg-red-50'}`}>
         <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-            isDark ? 'bg-red-800' : 'bg-red-100'
-          }`}>
-            <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div
+            className={`flex h-10 w-10 items-center justify-center rounded-full ${
+              isDark ? 'bg-red-800' : 'bg-red-100'
+            }`}
+          >
+            <svg className="h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
           </div>
           <p className={isDark ? 'text-red-400' : 'text-red-600'}>{error}</p>
@@ -324,17 +276,17 @@ export function ProductCompare({
         {products.map((product) => {
           const bestPrice = getBestPrice(product);
           const isLowestPrice = bestPrice !== null && bestPrice === lowestPrice;
-          const hasSale = product.sources.some(s => s.salePrice !== null);
+          const hasSale = product.sources.some((s) => s.salePrice !== null);
           const isLongest = product['duration'] === maxDuration && maxDuration > 0;
           const isHighestRated = product['rating'].average === maxRating && maxRating > 0;
 
           return (
             <div
               key={product['id']}
-              className={`relative rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] ${
+              className={`relative overflow-hidden rounded-2xl transition-all duration-300 hover:scale-[1.02] ${
                 isDark
-                  ? 'bg-gradient-to-b from-gray-800 to-gray-900 border border-gray-700 hover:border-gray-600'
-                  : 'bg-white border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md'
+                  ? 'border border-gray-700 bg-gradient-to-b from-gray-800 to-gray-900 hover:border-gray-600'
+                  : 'border border-gray-200 bg-white shadow-sm hover:border-gray-300 hover:shadow-md'
               }`}
             >
               {/* 削除ボタン */}
@@ -346,13 +298,13 @@ export function ProductCompare({
                     e.stopPropagation();
                     onRemoveProduct(product.normalizedProductId);
                   }}
-                  className={`absolute top-3 right-3 z-10 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  className={`absolute top-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full transition-all ${
                     isDark
-                      ? 'bg-gray-900/80 hover:bg-red-600 text-gray-400 hover:text-white'
-                      : 'bg-white/90 hover:bg-red-500 text-gray-500 hover:text-white shadow-sm'
+                      ? 'bg-gray-900/80 text-gray-400 hover:bg-red-600 hover:text-white'
+                      : 'bg-white/90 text-gray-500 shadow-sm hover:bg-red-500 hover:text-white'
                   }`}
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -361,22 +313,22 @@ export function ProductCompare({
               {/* バッジ */}
               <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
                 {isLowestPrice && (
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg">
+                  <span className="rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
                     {ct.bestPrice}
                   </span>
                 )}
                 {hasSale && !isLowestPrice && (
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-red-500 to-pink-500 text-white shadow-lg">
+                  <span className="rounded-full bg-gradient-to-r from-red-500 to-pink-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
                     {ct.onSale}
                   </span>
                 )}
                 {isHighestRated && (
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white shadow-lg">
+                  <span className="rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
                     {ct.topRated}
                   </span>
                 )}
                 {isLongest && (
-                  <span className="px-2.5 py-1 text-xs font-bold rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 text-white shadow-lg">
+                  <span className="rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
                     {ct.longest}
                   </span>
                 )}
@@ -384,46 +336,69 @@ export function ProductCompare({
 
               {/* 画像 */}
               <div
-                className="cursor-pointer aspect-square relative overflow-hidden"
+                className="relative aspect-square cursor-pointer overflow-hidden"
                 onClick={() => onProductClick?.(product.normalizedProductId)}
               >
                 {product.imageUrl ? (
                   <img
                     src={product.imageUrl}
                     alt={product['title']}
-                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
                   />
                 ) : (
-                  <div className={`w-full h-full flex items-center justify-center ${
-                    isDark ? 'bg-gray-700' : 'bg-gray-100'
-                  }`}>
-                    <svg className={`w-16 h-16 ${isDark ? 'text-gray-600' : 'text-gray-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <div
+                    className={`flex h-full w-full items-center justify-center ${
+                      isDark ? 'bg-gray-700' : 'bg-gray-100'
+                    }`}
+                  >
+                    <svg
+                      className={`h-16 w-16 ${isDark ? 'text-gray-600' : 'text-gray-300'}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1}
+                        d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
                     </svg>
                   </div>
                 )}
                 {/* グラデーションオーバーレイ */}
-                <div className={`absolute inset-0 bg-gradient-to-t ${
-                  isDark ? 'from-gray-900 via-transparent' : 'from-black/30 via-transparent'
-                }`} />
+                <div
+                  className={`absolute inset-0 bg-gradient-to-t ${
+                    isDark ? 'from-gray-900 via-transparent' : 'from-black/30 via-transparent'
+                  }`}
+                />
                 {/* サンプル動画・画像バッジ */}
                 <div className="absolute bottom-2 left-2 flex gap-1">
                   {product.hasSampleVideo && (
-                    <span className={`px-2 py-0.5 text-xs rounded flex items-center gap-1 ${
-                      isDark ? 'bg-gray-900/80 text-white' : 'bg-white/90 text-gray-800'
-                    }`}>
-                      <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
+                    <span
+                      className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs ${
+                        isDark ? 'bg-gray-900/80 text-white' : 'bg-white/90 text-gray-800'
+                      }`}
+                    >
+                      <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z" />
                       </svg>
                       {ct.video}
                     </span>
                   )}
                   {product.hasSampleImages && (
-                    <span className={`px-2 py-0.5 text-xs rounded flex items-center gap-1 ${
-                      isDark ? 'bg-gray-900/80 text-white' : 'bg-white/90 text-gray-800'
-                    }`}>
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <span
+                      className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs ${
+                        isDark ? 'bg-gray-900/80 text-white' : 'bg-white/90 text-gray-800'
+                      }`}
+                    >
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                       {ct.images}
                     </span>
@@ -432,10 +407,10 @@ export function ProductCompare({
               </div>
 
               {/* 情報 */}
-              <div className="p-4 space-y-4">
+              <div className="space-y-4 p-4">
                 {/* タイトル */}
                 <h3
-                  className={`font-semibold text-sm line-clamp-2 cursor-pointer hover:underline ${
+                  className={`line-clamp-2 cursor-pointer text-sm font-semibold hover:underline ${
                     isDark ? 'text-white' : 'text-gray-900'
                   }`}
                   onClick={() => onProductClick?.(product.normalizedProductId)}
@@ -444,48 +419,44 @@ export function ProductCompare({
                 </h3>
 
                 {/* 価格 */}
-                <div className={`p-3 rounded-xl ${
-                  isDark ? 'bg-gray-800' : 'bg-gray-50'
-                }`}>
-                  <div className={`text-xs mb-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                    {ct.price}
-                  </div>
-                  <div className={`text-2xl font-bold ${
-                    isLowestPrice ? 'text-green-500' : isDark ? 'text-white' : 'text-gray-900'
-                  }`}>
+                <div className={`rounded-xl p-3 ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                  <div className={`mb-1 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.price}</div>
+                  <div
+                    className={`text-2xl font-bold ${
+                      isLowestPrice ? 'text-green-500' : isDark ? 'text-white' : 'text-gray-900'
+                    }`}
+                  >
                     {formatPrice(bestPrice)}
                   </div>
                 </div>
 
                 {/* スペック */}
                 <div className="grid grid-cols-2 gap-2">
-                  <div className={`p-2.5 rounded-lg text-center ${
-                    isDark ? 'bg-gray-800' : 'bg-gray-50'
-                  }`}>
-                    <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {ct.duration}
-                    </div>
-                    <div className={`text-sm font-semibold ${
-                      isLongest ? 'text-purple-500' : isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                  <div className={`rounded-lg p-2.5 text-center ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <div className={`mb-0.5 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.duration}</div>
+                    <div
+                      className={`text-sm font-semibold ${
+                        isLongest ? 'text-purple-500' : isDark ? 'text-white' : 'text-gray-900'
+                      }`}
+                    >
                       {formatDuration(product['duration'])}
                     </div>
                   </div>
-                  <div className={`p-2.5 rounded-lg text-center ${
-                    isDark ? 'bg-gray-800' : 'bg-gray-50'
-                  }`}>
-                    <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {ct.rating}
-                    </div>
-                    <div className={`text-sm font-semibold flex items-center justify-center gap-1 ${
-                      isHighestRated ? 'text-yellow-500' : isDark ? 'text-white' : 'text-gray-900'
-                    }`}>
+                  <div className={`rounded-lg p-2.5 text-center ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <div className={`mb-0.5 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.rating}</div>
+                    <div
+                      className={`flex items-center justify-center gap-1 text-sm font-semibold ${
+                        isHighestRated ? 'text-yellow-500' : isDark ? 'text-white' : 'text-gray-900'
+                      }`}
+                    >
                       {product['rating'].average !== null ? (
                         <>
                           <span className="text-yellow-500">★</span>
                           {product['rating'].average.toFixed(1)}
                         </>
-                      ) : '-'}
+                      ) : (
+                        '-'
+                      )}
                     </div>
                   </div>
                 </div>
@@ -493,8 +464,8 @@ export function ProductCompare({
                 {/* 追加情報 */}
                 <div className="grid grid-cols-2 gap-2">
                   {/* 発売日 */}
-                  <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                    <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                  <div className={`rounded-lg p-2.5 ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <div className={`mb-0.5 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
                       {ct.releaseDate}
                     </div>
                     <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
@@ -502,10 +473,8 @@ export function ProductCompare({
                     </div>
                   </div>
                   {/* レビュー件数 */}
-                  <div className={`p-2.5 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
-                    <div className={`text-xs mb-0.5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {ct.reviews}
-                    </div>
+                  <div className={`rounded-lg p-2.5 ${isDark ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                    <div className={`mb-0.5 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.reviews}</div>
                     <div className={`text-xs font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                       {product['rating'].count > 0 ? `${product['rating'].count}${ct.reviewCount}` : '-'}
                     </div>
@@ -516,17 +485,27 @@ export function ProductCompare({
                 {(product.maker || product.series) && (
                   <div className="space-y-2">
                     {product.maker && (
-                      <div className={`text-xs flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                          />
                         </svg>
                         <span className="truncate">{product.maker}</span>
                       </div>
                     )}
                     {product.series && (
-                      <div className={`text-xs flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                        <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                      <div className={`flex items-center gap-2 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                        <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                          />
                         </svg>
                         <span className="truncate">{product.series}</span>
                       </div>
@@ -537,18 +516,16 @@ export function ProductCompare({
                 {/* 出演者 */}
                 {product.performers.length > 0 && (
                   <div>
-                    <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {ct.performers}
-                    </div>
+                    <div className={`mb-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.performers}</div>
                     <div className="flex flex-wrap gap-1.5">
                       {product.performers.slice(0, 4).map((performer, i) => (
                         <span
                           key={i}
-                          className={`px-2 py-1 text-xs rounded-full ${
+                          className={`rounded-full px-2 py-1 text-xs ${
                             comparison?.commonPerformers.includes(performer)
                               ? isDark
-                                ? 'bg-green-900/50 text-green-400 border border-green-700'
-                                : 'bg-green-100 text-green-700 border border-green-200'
+                                ? 'border border-green-700 bg-green-900/50 text-green-400'
+                                : 'border border-green-200 bg-green-100 text-green-700'
                               : isDark
                                 ? 'bg-gray-700 text-gray-300'
                                 : 'bg-gray-100 text-gray-600'
@@ -569,18 +546,16 @@ export function ProductCompare({
                 {/* ジャンル */}
                 {product.tags.length > 0 && (
                   <div>
-                    <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {ct.genres}
-                    </div>
+                    <div className={`mb-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.genres}</div>
                     <div className="flex flex-wrap gap-1.5">
                       {product.tags.slice(0, 5).map((tag, i) => (
                         <span
                           key={i}
-                          className={`px-2 py-1 text-xs rounded-full ${
+                          className={`rounded-full px-2 py-1 text-xs ${
                             comparison?.commonTags.includes(tag)
                               ? isDark
-                                ? 'bg-blue-900/50 text-blue-400 border border-blue-700'
-                                : 'bg-blue-100 text-blue-700 border border-blue-200'
+                                ? 'border border-blue-700 bg-blue-900/50 text-blue-400'
+                                : 'border border-blue-200 bg-blue-100 text-blue-700'
                               : isDark
                                 ? 'bg-gray-700 text-gray-300'
                                 : 'bg-gray-100 text-gray-600'
@@ -600,10 +575,8 @@ export function ProductCompare({
 
                 {/* 配信サイト */}
                 {product.sources.length > 0 && (
-                  <div className={`pt-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-                    <div className={`text-xs mb-2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {ct.availableOn}
-                    </div>
+                  <div className={`border-t pt-3 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+                    <div className={`mb-2 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.availableOn}</div>
                     <div className="flex flex-wrap gap-1.5">
                       {product.sources.map((source, i) => (
                         <a
@@ -611,7 +584,7 @@ export function ProductCompare({
                           href={source.affiliateUrl}
                           target="_blank"
                           rel="noopener noreferrer sponsored"
-                          className={`px-2.5 py-1.5 text-xs rounded-lg flex items-center gap-1.5 transition-colors ${
+                          className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs transition-colors ${
                             isDark
                               ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -619,9 +592,7 @@ export function ProductCompare({
                         >
                           {source.aspName}
                           {source.salePrice && (
-                            <span className="text-red-500 font-semibold">
-                              -{source.discountPercent}%
-                            </span>
+                            <span className="font-semibold text-red-500">-{source.discountPercent}%</span>
                           )}
                         </a>
                       ))}
@@ -636,28 +607,33 @@ export function ProductCompare({
 
       {/* 比較グラフセクション */}
       {products.length >= 2 && (
-        <div className={`rounded-2xl p-5 ${
-          isDark
-            ? 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700'
-            : 'bg-gradient-to-r from-gray-50 to-white border border-gray-200'
-        }`}>
-          <h3 className={`text-sm font-semibold mb-4 flex items-center gap-2 ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            <svg className="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        <div
+          className={`rounded-2xl p-5 ${
+            isDark
+              ? 'border border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900'
+              : 'border border-gray-200 bg-gradient-to-r from-gray-50 to-white'
+          }`}
+        >
+          <h3
+            className={`mb-4 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
+          >
+            <svg className="h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+              />
             </svg>
             {ct.comparisonChart}
           </h3>
 
-          <div className="flex flex-col lg:flex-row gap-6">
+          <div className="flex flex-col gap-6 lg:flex-row">
             {/* レーダーチャート */}
             <div className="flex-1">
-              <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {ct.radarChart}
-              </p>
-              <div className="relative aspect-square max-w-[300px] mx-auto">
-                <svg viewBox="0 0 200 200" className="w-full h-full">
+              <p className={`mb-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.radarChart}</p>
+              <div className="relative mx-auto aspect-square max-w-[300px]">
+                <svg viewBox="0 0 200 200" className="h-full w-full">
                   {/* 背景グリッド（4軸） */}
                   {[100, 75, 50, 25].map((r) => (
                     <polygon
@@ -686,23 +662,43 @@ export function ProductCompare({
                     );
                   })}
                   {/* ラベル */}
-                  <text x="100" y="10" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
+                  <text
+                    x="100"
+                    y="10"
+                    textAnchor="middle"
+                    className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}
+                  >
                     {ct.price}
                   </text>
-                  <text x="190" y="105" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
+                  <text
+                    x="190"
+                    y="105"
+                    textAnchor="middle"
+                    className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}
+                  >
                     {ct.durationShort}
                   </text>
-                  <text x="100" y="195" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
+                  <text
+                    x="100"
+                    y="195"
+                    textAnchor="middle"
+                    className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}
+                  >
                     {ct.rating}
                   </text>
-                  <text x="10" y="105" textAnchor="middle" className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}>
+                  <text
+                    x="10"
+                    y="105"
+                    textAnchor="middle"
+                    className={`text-[9px] ${isDark ? 'fill-gray-400' : 'fill-gray-500'}`}
+                  >
                     {ct.reviews}
                   </text>
                   {/* 各作品のデータ */}
                   {products.map((product, idx) => {
                     const colors = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981'];
-                    const maxPrice = Math.max(...products.map(p => getBestPrice(p) || 0));
-                    const maxReviewCount = Math.max(...products.map(p => p.rating.count));
+                    const maxPrice = Math.max(...products.map((p) => getBestPrice(p) || 0));
+                    const maxReviewCount = Math.max(...products.map((p) => p.rating.count));
 
                     // 価格は逆転（安いほど高スコア）
                     const priceScore = maxPrice > 0 ? (1 - (getBestPrice(product) || maxPrice) / maxPrice) * 80 : 40;
@@ -722,15 +718,7 @@ export function ProductCompare({
                         />
                         {points.split(' ').map((point, pi) => {
                           const [px, py] = point.split(',').map(Number);
-                          return (
-                            <circle
-                              key={pi}
-                              cx={px}
-                              cy={py}
-                              r="4"
-                              fill={colors[idx % colors.length]}
-                            />
-                          );
+                          return <circle key={pi} cx={px} cy={py} r="4" fill={colors[idx % colors.length]} />;
                         })}
                       </g>
                     );
@@ -738,17 +726,15 @@ export function ProductCompare({
                 </svg>
               </div>
               {/* 凡例 */}
-              <div className="flex flex-wrap justify-center gap-3 mt-3">
+              <div className="mt-3 flex flex-wrap justify-center gap-3">
                 {products.map((product, idx) => {
                   const colors = ['#3b82f6', '#ec4899', '#8b5cf6', '#10b981'];
                   return (
                     <div key={product['id']} className="flex items-center gap-1.5">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{ backgroundColor: colors[idx % colors.length] }}
-                      />
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors[idx % colors.length] }} />
                       <span className={`text-[10px] ${isDark ? 'text-gray-300' : 'text-gray-600'}`}>
-                        {product['title'].slice(0, 12)}{product['title'].length > 12 ? '…' : ''}
+                        {product['title'].slice(0, 12)}
+                        {product['title'].length > 12 ? '…' : ''}
                       </span>
                     </div>
                   );
@@ -758,33 +744,33 @@ export function ProductCompare({
 
             {/* バーチャート */}
             <div className="flex-1">
-              <p className={`text-xs mb-3 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {ct.barComparison}
-              </p>
+              <p className={`mb-3 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.barComparison}</p>
               <div className="space-y-4">
                 {/* 価格（安いほど長いバー） */}
                 <div>
-                  <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                     {ct.priceLowerBetter}
                   </p>
                   <div className="space-y-1.5">
                     {(() => {
-                      const maxPrice = Math.max(...products.map(p => getBestPrice(p) || 0));
+                      const maxPrice = Math.max(...products.map((p) => getBestPrice(p) || 0));
                       return products.map((product, idx) => {
                         const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
                         const price = getBestPrice(product) || maxPrice;
                         const percent = maxPrice > 0 ? ((maxPrice - price) / maxPrice) * 100 : 0;
                         return (
                           <div key={product['id']} className="flex items-center gap-2">
-                            <span className={`text-[10px] w-20 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <span className={`w-20 truncate text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                               {product['title'].slice(0, 8)}
                             </span>
-                            <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                            <div
+                              className={`h-5 flex-1 overflow-hidden rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}
+                            >
                               <div
-                                className={`h-full ${colors[idx % colors.length]} transition-all duration-500 rounded-full flex items-center justify-end pr-2`}
+                                className={`h-full ${colors[idx % colors.length]} flex items-center justify-end rounded-full pr-2 transition-all duration-500`}
                                 style={{ width: `${Math.max(percent, 5)}%` }}
                               >
-                                <span className="text-[10px] text-white font-semibold">
+                                <span className="text-[10px] font-semibold text-white">
                                   ¥{(price || 0).toLocaleString()}
                                 </span>
                               </div>
@@ -797,24 +783,24 @@ export function ProductCompare({
                 </div>
                 {/* 再生時間 */}
                 <div>
-                  <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {ct.duration}
-                  </p>
+                  <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.duration}</p>
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
                       const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
                       const percent = maxDuration > 0 ? ((product['duration'] || 0) / maxDuration) * 100 : 0;
                       return (
                         <div key={product['id']} className="flex items-center gap-2">
-                          <span className={`text-[10px] w-20 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <span className={`w-20 truncate text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {product['title'].slice(0, 8)}
                           </span>
-                          <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                          <div
+                            className={`h-5 flex-1 overflow-hidden rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}
+                          >
                             <div
-                              className={`h-full ${colors[idx % colors.length]} transition-all duration-500 rounded-full flex items-center justify-end pr-2`}
+                              className={`h-full ${colors[idx % colors.length]} flex items-center justify-end rounded-full pr-2 transition-all duration-500`}
                               style={{ width: `${Math.max(percent, 5)}%` }}
                             >
-                              <span className="text-[10px] text-white font-semibold">
+                              <span className="text-[10px] font-semibold text-white">
                                 {formatDuration(product['duration'])}
                               </span>
                             </div>
@@ -826,24 +812,24 @@ export function ProductCompare({
                 </div>
                 {/* 評価 */}
                 <div>
-                  <p className={`text-xs mb-1.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                    {ct.rating}
-                  </p>
+                  <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.rating}</p>
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
                       const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
                       const percent = ((product['rating'].average || 0) / 5) * 100;
                       return (
                         <div key={product['id']} className="flex items-center gap-2">
-                          <span className={`text-[10px] w-20 truncate ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                          <span className={`w-20 truncate text-[10px] ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                             {product['title'].slice(0, 8)}
                           </span>
-                          <div className={`flex-1 h-5 rounded-full overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                          <div
+                            className={`h-5 flex-1 overflow-hidden rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}
+                          >
                             <div
-                              className={`h-full ${colors[idx % colors.length]} transition-all duration-500 rounded-full flex items-center justify-end pr-2`}
+                              className={`h-full ${colors[idx % colors.length]} flex items-center justify-end rounded-full pr-2 transition-all duration-500`}
                               style={{ width: `${Math.max(percent, 5)}%` }}
                             >
-                              <span className="text-[10px] text-white font-semibold">
+                              <span className="text-[10px] font-semibold text-white">
                                 ★{(product['rating'].average || 0).toFixed(1)}
                               </span>
                             </div>
@@ -861,16 +847,23 @@ export function ProductCompare({
 
       {/* 共通点サマリー */}
       {comparison && (comparison.commonTags.length > 0 || comparison.commonPerformers.length > 0) && (
-        <div className={`rounded-2xl p-5 ${
-          isDark
-            ? 'bg-gradient-to-r from-gray-800 to-gray-900 border border-gray-700'
-            : 'bg-gradient-to-r from-gray-50 to-white border border-gray-200'
-        }`}>
-          <h3 className={`text-sm font-semibold mb-3 flex items-center gap-2 ${
-            isDark ? 'text-white' : 'text-gray-900'
-          }`}>
-            <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div
+          className={`rounded-2xl p-5 ${
+            isDark
+              ? 'border border-gray-700 bg-gradient-to-r from-gray-800 to-gray-900'
+              : 'border border-gray-200 bg-gradient-to-r from-gray-50 to-white'
+          }`}
+        >
+          <h3
+            className={`mb-3 flex items-center gap-2 text-sm font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}
+          >
+            <svg className="h-5 w-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
             </svg>
             {ct.commonFeatures}
           </h3>
@@ -878,14 +871,19 @@ export function ProductCompare({
             {comparison.commonPerformers.map((performer, i) => (
               <span
                 key={`p-${i}`}
-                className={`px-3 py-1.5 text-sm rounded-full flex items-center gap-1.5 ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${
                   isDark
-                    ? 'bg-green-900/50 text-green-400 border border-green-700'
-                    : 'bg-green-100 text-green-700 border border-green-200'
+                    ? 'border border-green-700 bg-green-900/50 text-green-400'
+                    : 'border border-green-200 bg-green-100 text-green-700'
                 }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
                 {performer}
               </span>
@@ -893,14 +891,19 @@ export function ProductCompare({
             {comparison.commonTags.map((tag, i) => (
               <span
                 key={`t-${i}`}
-                className={`px-3 py-1.5 text-sm rounded-full flex items-center gap-1.5 ${
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm ${
                   isDark
-                    ? 'bg-blue-900/50 text-blue-400 border border-blue-700'
-                    : 'bg-blue-100 text-blue-700 border border-blue-200'
+                    ? 'border border-blue-700 bg-blue-900/50 text-blue-400'
+                    : 'border border-blue-200 bg-blue-100 text-blue-700'
                 }`}
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                  />
                 </svg>
                 {tag}
               </span>

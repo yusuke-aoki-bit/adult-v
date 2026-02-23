@@ -110,10 +110,7 @@ export function createNewsQueries(deps: NewsQueryDeps) {
           `;
         }
 
-        const [articlesResult, countResult] = await Promise.all([
-          db.execute(articlesQuery),
-          db.execute(countQuery),
-        ]);
+        const [articlesResult, countResult] = await Promise.all([db.execute(articlesQuery), db.execute(countQuery)]);
 
         return {
           articles: articlesResult.rows as unknown as NewsArticleRow[],
@@ -142,9 +139,11 @@ export function createNewsQueries(deps: NewsQueryDeps) {
         if (result.rows.length === 0) return null;
 
         // view_count を更新（fire and forget）
-        db.execute(sql`
+        db.execute(
+          sql`
           UPDATE news_articles SET view_count = view_count + 1 WHERE slug = ${slug}
-        `).catch(() => {});
+        `,
+        ).catch(() => {});
 
         return result.rows[0] as unknown as NewsArticleRow;
       } catch (error) {

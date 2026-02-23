@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, type ReactNode } from 'react';
 import { TrendingUp, Sparkles, Clock, ChevronDown, ChevronUp, RefreshCw, AlertCircle } from 'lucide-react';
 import { getThemeConfig, type SectionTheme } from './theme';
-import { weeklyHighlightsTranslations, getTranslation } from './translations';
+import { weeklyHighlightsTranslations, getTranslation } from '../../lib/translations';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { ActressCardBase } from '../ActressCard';
 import { ProductCardBase } from '../ProductCard';
@@ -79,7 +79,7 @@ export function WeeklyHighlightsSection({
     setIsRetrying(true);
     setError(null);
     setHasFetched(false);
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
   }, []);
 
   // 遅延フェッチ: 展開されたときのみデータを取得（パフォーマンス優先）
@@ -116,11 +116,9 @@ export function WeeklyHighlightsSection({
     doFetch();
   }, [isExpanded, hasFetched, fetchHighlights, retryCount, locale]);
 
-  const hasData = data && (
-    data.trendingActresses.length > 0 ||
-    data.hotNewReleases.length > 0 ||
-    data.rediscoveredClassics.length > 0
-  );
+  const hasData =
+    data &&
+    (data.trendingActresses.length > 0 || data.hotNewReleases.length > 0 || data.rediscoveredClassics.length > 0);
 
   // 初期状態（閉じている & 未フェッチ）では常に表示
   // フェッチ後にデータがなければ非表示（ただしエラー時はリトライUIを表示）
@@ -133,12 +131,12 @@ export function WeeklyHighlightsSection({
 
   // Toggle handler memoized with useCallback
   const handleToggle = useCallback(() => {
-    setIsExpanded(prev => !prev);
+    setIsExpanded((prev) => !prev);
   }, []);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === 'Enter' || e.key === ' ') {
-      setIsExpanded(prev => !prev);
+      setIsExpanded((prev) => !prev);
     }
   }, []);
 
@@ -152,7 +150,7 @@ export function WeeklyHighlightsSection({
             tabIndex={0}
             onClick={handleToggle}
             onKeyDown={handleKeyDown}
-            className="w-full flex items-center justify-between mb-4 cursor-pointer"
+            className="mb-4 flex w-full cursor-pointer items-center justify-between"
           >
             <div className="flex items-center gap-3">
               <div className={`p-2 ${styles.iconBgClass} rounded-lg`}>
@@ -174,41 +172,39 @@ export function WeeklyHighlightsSection({
             <>
               {/* エラー時はリトライボタンを表示 */}
               {error ? (
-                <div className={`flex flex-col items-center justify-center py-8 px-4 rounded-lg ${
-                  theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
-                }`}>
-                  <AlertCircle className={`w-8 h-8 mb-3 ${
-                    theme === 'dark' ? 'text-red-400' : 'text-red-500'
-                  }`} />
-                  <p className={`text-sm mb-4 text-center ${
-                    theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-                  }`}>
+                <div
+                  className={`flex flex-col items-center justify-center rounded-lg px-4 py-8 ${
+                    theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
+                  }`}
+                >
+                  <AlertCircle className={`mb-3 h-8 w-8 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`} />
+                  <p className={`mb-4 text-center text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
                     {error}
                   </p>
                   <button
                     onClick={handleRetry}
                     disabled={isRetrying}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                       theme === 'dark'
-                        ? 'bg-rose-600 hover:bg-rose-700 text-white disabled:bg-gray-600'
-                        : 'bg-rose-500 hover:bg-rose-600 text-white disabled:bg-gray-400'
+                        ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
+                        : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
                     } disabled:cursor-not-allowed`}
                   >
-                    <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
+                    <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
                     {isRetrying ? t.retrying : t.retry}
                   </button>
                 </div>
-              ) : (isLoading || !hasData) ? (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              ) : isLoading || !hasData ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="space-y-3">
-                      <div className={`h-6 w-32 ${styles.skeletonBgClass} rounded animate-pulse`} />
+                      <div className={`h-6 w-32 ${styles.skeletonBgClass} animate-pulse rounded`} />
                       <div className="grid grid-cols-3 gap-2">
                         {[1, 2, 3].map((j) => (
-                          <div key={j} className={`${styles.cardBgClass} rounded-lg overflow-hidden animate-pulse`}>
+                          <div key={j} className={`${styles.cardBgClass} animate-pulse overflow-hidden rounded-lg`}>
                             <div className={styles.skeletonBgClass} style={{ aspectRatio: '2/3' }} />
-                            <div className="p-1.5 space-y-1">
-                              <div className={`h-2.5 ${styles.skeletonBgClass} rounded w-3/4`} />
+                            <div className="space-y-1 p-1.5">
+                              <div className={`h-2.5 ${styles.skeletonBgClass} w-3/4 rounded`} />
                             </div>
                           </div>
                         ))}
@@ -217,7 +213,7 @@ export function WeeklyHighlightsSection({
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                   {/* Trending Actresses */}
                   {data?.trendingActresses && data.trendingActresses.length > 0 && (
                     <div>
@@ -264,7 +260,8 @@ export function WeeklyHighlightsSection({
                               title: product['title'],
                               ...(product.imageUrl && { imageUrl: product.imageUrl }),
                               ...(product['releaseDate'] && { releaseDate: product['releaseDate'] }),
-                              ...(product['rating'] !== undefined && product['rating'] !== null && { rating: product['rating'] }),
+                              ...(product['rating'] !== undefined &&
+                                product['rating'] !== null && { rating: product['rating'] }),
                               price: 0,
                             }}
                             size="mini"
@@ -297,8 +294,9 @@ export function WeeklyHighlightsSection({
                               theme={cardTheme}
                             />
                             {/* Years ago badge overlay */}
-                            <div className="absolute top-1 left-1 bg-rose-600 text-white text-[10px] font-bold px-1 py-0.5 rounded z-10">
-                              {Math.floor(product.daysSinceRelease / 365)}{t.yearsAgo}
+                            <div className="absolute top-1 left-1 z-10 rounded bg-rose-600 px-1 py-0.5 text-[10px] font-bold text-white">
+                              {Math.floor(product.daysSinceRelease / 365)}
+                              {t.yearsAgo}
                             </div>
                           </div>
                         ))}

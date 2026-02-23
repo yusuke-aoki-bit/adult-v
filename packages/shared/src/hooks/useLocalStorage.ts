@@ -12,10 +12,7 @@ const LOCAL_STORAGE_UPDATE_EVENT = 'local-storage-update';
  * - SSR安全（getServerSnapshot で defaultValue）
  * - useState互換 [value, setValue] API
  */
-export function useLocalStorage<T>(
-  key: string,
-  defaultValue: T,
-): [T, (value: T | ((prev: T) => T)) => void] {
+export function useLocalStorage<T>(key: string, defaultValue: T): [T, (value: T | ((prev: T) => T)) => void] {
   const serializedDefault = useMemo(
     () => JSON.stringify(defaultValue),
     // defaultValue は呼び出し元で安定させる前提（既存hookの慣例と同じ）
@@ -44,10 +41,7 @@ export function useLocalStorage<T>(
     return localStorage.getItem(key) ?? serializedDefault;
   }, [key, serializedDefault]);
 
-  const getServerSnapshot = useCallback(
-    () => serializedDefault,
-    [serializedDefault],
-  );
+  const getServerSnapshot = useCallback(() => serializedDefault, [serializedDefault]);
 
   const raw = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 

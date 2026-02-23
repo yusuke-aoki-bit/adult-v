@@ -56,7 +56,7 @@ export async function getMonthlyReleaseStats(months: number = 24): Promise<Month
     ORDER BY month ASC
   `);
 
-  return (result.rows as any[]).map(row => ({
+  return (result.rows as any[]).map((row) => ({
     month: row.month,
     releaseCount: parseInt(row.release_count, 10),
   }));
@@ -78,7 +78,7 @@ export async function getTopPerformersByProductCount(limit: number = 20): Promis
     .orderBy(desc(count(productPerformers.productId)))
     .limit(limit);
 
-  return result.map(row => ({
+  return result.map((row) => ({
     id: row['id'],
     name: row['name'],
     productCount: Number(row.productCount),
@@ -102,7 +102,7 @@ export async function getTopGenres(limit: number = 20): Promise<GenreStats[]> {
     .orderBy(desc(count(productTags.productId)))
     .limit(limit);
 
-  return result.map(row => ({
+  return result.map((row) => ({
     id: row['id'],
     name: row['name'],
     productCount: Number(row.productCount),
@@ -122,7 +122,7 @@ export async function getAspDistribution(): Promise<AspStats[]> {
     .groupBy(productSources.aspName)
     .orderBy(desc(count(productSources.productId)));
 
-  return result.map(row => ({
+  return result.map((row) => ({
     aspName: row['aspName'],
     productCount: Number(row.productCount),
   }));
@@ -146,7 +146,7 @@ export async function getYearlyStats(): Promise<YearlyStats[]> {
     ORDER BY year DESC
   `);
 
-  return (result.rows as any[]).map(row => ({
+  return (result.rows as any[]).map((row) => ({
     year: parseInt(row.year, 10),
     totalProducts: parseInt(row.total_products, 10),
     totalPerformers: parseInt(row.total_performers, 10),
@@ -177,12 +177,7 @@ export async function getCurrentMonthReleases(): Promise<number> {
   const result = await db
     .select({ count: count() })
     .from(products)
-    .where(
-      and(
-        isNotNull(products['releaseDate']),
-        gte(products['releaseDate'], sql`DATE_TRUNC('month', NOW())`)
-      )
-    );
+    .where(and(isNotNull(products['releaseDate']), gte(products['releaseDate'], sql`DATE_TRUNC('month', NOW())`)));
 
   return Number(result[0]?.count || 0);
 }
@@ -192,10 +187,7 @@ export async function getCurrentMonthReleases(): Promise<number> {
  */
 export async function getNewPerformersThisYear(): Promise<number> {
   const currentYear = new Date().getFullYear();
-  const result = await db
-    .select({ count: count() })
-    .from(performers)
-    .where(eq(performers['debutYear'], currentYear));
+  const result = await db.select({ count: count() }).from(performers).where(eq(performers['debutYear'], currentYear));
 
   return Number(result[0]?.count || 0);
 }
@@ -278,7 +270,7 @@ export async function getMakerShareStats(limit: number = 20): Promise<MakerStats
     LIMIT ${limit}
   `);
 
-  return (result.rows as any[]).map(row => ({
+  return (result.rows as any[]).map((row) => ({
     makerId: parseInt(row.maker_id, 10),
     makerName: row.maker_name,
     productCount: parseInt(row.product_count, 10),
@@ -367,7 +359,7 @@ export async function getDebutTrends(years: number = 10): Promise<DebutStats[]> 
     ORDER BY debut_year ASC
   `);
 
-  return (result.rows as any[]).map(row => ({
+  return (result.rows as any[]).map((row) => ({
     year: parseInt(row.year, 10),
     debutCount: parseInt(row.debut_count, 10),
   }));
@@ -378,9 +370,7 @@ export async function getDebutTrends(years: number = 10): Promise<DebutStats[]> 
  */
 export async function getDailyReleases(year: number, month: number): Promise<DailyRelease[]> {
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endDate = month === 12
-    ? `${year + 1}-01-01`
-    : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const endDate = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
   const result = await db.execute(sql`
     SELECT
@@ -401,7 +391,7 @@ export async function getDailyReleases(year: number, month: number): Promise<Dai
     ORDER BY date
   `);
 
-  return (result.rows as any[]).map(row => ({
+  return (result.rows as any[]).map((row) => ({
     date: row.date,
     releaseCount: parseInt(row.release_count, 10),
     products: (row.products || []).slice(0, 10), // 最大10件
@@ -416,12 +406,10 @@ export async function getCalendarDetailData(
   year: number,
   month: number,
   productsPerDay: number = 4,
-  performersPerDay: number = 2
+  performersPerDay: number = 2,
 ): Promise<CalendarDayData[]> {
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endDate = month === 12
-    ? `${year + 1}-01-01`
-    : `${year}-${String(month + 1).padStart(2, '0')}-01`;
+  const endDate = month === 12 ? `${year + 1}-01-01` : `${year}-${String(month + 1).padStart(2, '0')}-01`;
 
   // 日別の実際のリリース数を取得（全商品を対象）
   const dailyCountsResult = await db.execute(sql`

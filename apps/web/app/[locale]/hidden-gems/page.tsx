@@ -139,10 +139,10 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       `);
     }
 
-  // 1年以上前の名作（クラシック）
-  let underratedClassicsResult;
-  if (hasProductViews) {
-    underratedClassicsResult = await db.execute(sql`
+    // 1年以上前の名作（クラシック）
+    let underratedClassicsResult;
+    if (hasProductViews) {
+      underratedClassicsResult = await db.execute(sql`
       WITH product_views_count AS (
         SELECT product_id, COUNT(*) as view_count
         FROM product_views
@@ -177,8 +177,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       ORDER BY p.rating DESC, p.review_count DESC
       LIMIT 10
     `);
-  } else {
-    underratedClassicsResult = await db.execute(sql`
+    } else {
+      underratedClassicsResult = await db.execute(sql`
       SELECT
         p.id,
         p.title,
@@ -207,12 +207,12 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       ORDER BY p.rating DESC, p.review_count DESC
       LIMIT 10
     `);
-  }
+    }
 
-  // レビューが熱い隠れた作品
-  let sleepersWithReviewsResult;
-  if (hasProductViews) {
-    sleepersWithReviewsResult = await db.execute(sql`
+    // レビューが熱い隠れた作品
+    let sleepersWithReviewsResult;
+    if (hasProductViews) {
+      sleepersWithReviewsResult = await db.execute(sql`
       WITH product_views_count AS (
         SELECT product_id, COUNT(*) as view_count
         FROM product_views
@@ -256,8 +256,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       ORDER BY ra.review_count DESC, p.rating DESC
       LIMIT 10
     `);
-  } else {
-    sleepersWithReviewsResult = await db.execute(sql`
+    } else {
+      sleepersWithReviewsResult = await db.execute(sql`
       WITH review_activity AS (
         SELECT
           product_id,
@@ -295,13 +295,13 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       ORDER BY ra.review_count DESC, p.rating DESC
       LIMIT 10
     `);
-  }
+    }
 
-  // 最近発見された名作（最近視聴数が増えている古い作品）
-  // product_viewsがない場合は空の結果を返す
-  let recentDiscoveriesResult = { rows: [] };
-  if (hasProductViews) {
-    recentDiscoveriesResult = await db.execute(sql`
+    // 最近発見された名作（最近視聴数が増えている古い作品）
+    // product_viewsがない場合は空の結果を返す
+    let recentDiscoveriesResult = { rows: [] };
+    if (hasProductViews) {
+      recentDiscoveriesResult = await db.execute(sql`
       WITH recent_views AS (
         SELECT product_id, COUNT(*) as recent_count
         FROM product_views
@@ -345,12 +345,12 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       ORDER BY (COALESCE(rv.recent_count, 0) - COALESCE(ov.older_count, 0)) DESC
       LIMIT 10
     `);
-  }
+    }
 
-  // 統計
-  let statsResult;
-  if (hasProductViews) {
-    statsResult = await db.execute(sql`
+    // 統計
+    let statsResult;
+    if (hasProductViews) {
+      statsResult = await db.execute(sql`
       SELECT
         COUNT(*)::int as total,
         AVG(rating)::float as avg_rating,
@@ -363,8 +363,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       ) sub ON p.id = sub.product_id
       WHERE p.rating >= 4.0 AND p.review_count >= 3
     `);
-  } else {
-    statsResult = await db.execute(sql`
+    } else {
+      statsResult = await db.execute(sql`
       SELECT
         COUNT(*)::int as total,
         AVG(rating)::float as avg_rating,
@@ -372,46 +372,44 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       FROM products p
       WHERE p.rating >= 4.0 AND p.review_count >= 3
     `);
-  }
+    }
 
-  const whyHiddenReasons = {
-    ja: [
-      '高評価だが視聴数が少ない',
-      '1年以上前の隠れた名作',
-      '最近レビューが増加中',
-      '最近再発見された作品',
-    ],
-    en: [
-      'High rated but few views',
-      'Classic underrated gem',
-      'Recent review surge',
-      'Recently rediscovered',
-    ],
-  };
+    const whyHiddenReasons = {
+      ja: ['高評価だが視聴数が少ない', '1年以上前の隠れた名作', '最近レビューが増加中', '最近再発見された作品'],
+      en: ['High rated but few views', 'Classic underrated gem', 'Recent review surge', 'Recently rediscovered'],
+    };
 
-  const reasons = whyHiddenReasons[locale as keyof typeof whyHiddenReasons] || whyHiddenReasons.ja;
+    const reasons = whyHiddenReasons[locale as keyof typeof whyHiddenReasons] || whyHiddenReasons.ja;
 
-  const mapGem = (row: Record<string, unknown>, reason: string): HiddenGem => ({
-    id: row.id as number,
-    title: row.title as string,
-    imageUrl: row.imageUrl as string | null,
-    rating: Number(row.rating),
-    reviewCount: Number(row.reviewCount),
-    viewCount: Number(row.viewCount),
-    releaseDate: row.releaseDate as string,
-    performers: (row.performers as string[]) || [],
-    genres: (row.genres as string[]) || [],
-    aiDescription: row.aiDescription as string | null,
-    whyHidden: reason,
-  });
+    const mapGem = (row: Record<string, unknown>, reason: string): HiddenGem => ({
+      id: row.id as number,
+      title: row.title as string,
+      imageUrl: row.imageUrl as string | null,
+      rating: Number(row.rating),
+      reviewCount: Number(row.reviewCount),
+      viewCount: Number(row.viewCount),
+      releaseDate: row.releaseDate as string,
+      performers: (row.performers as string[]) || [],
+      genres: (row.genres as string[]) || [],
+      aiDescription: row.aiDescription as string | null,
+      whyHidden: reason,
+    });
 
-  const stats = statsResult.rows[0] as { total: number; avg_rating: number; avg_views: number };
+    const stats = statsResult.rows[0] as { total: number; avg_rating: number; avg_views: number };
 
     return {
-      highRatedLowViews: (highRatedLowViewsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[0])),
-      underratedClassics: (underratedClassicsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[1])),
-      sleepersWithReviews: (sleepersWithReviewsResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[2])),
-      recentDiscoveries: (recentDiscoveriesResult.rows as Array<Record<string, unknown>>).map(row => mapGem(row, reasons[3])),
+      highRatedLowViews: (highRatedLowViewsResult.rows as Array<Record<string, unknown>>).map((row) =>
+        mapGem(row, reasons[0]!),
+      ),
+      underratedClassics: (underratedClassicsResult.rows as Array<Record<string, unknown>>).map((row) =>
+        mapGem(row, reasons[1]!),
+      ),
+      sleepersWithReviews: (sleepersWithReviewsResult.rows as Array<Record<string, unknown>>).map((row) =>
+        mapGem(row, reasons[2]!),
+      ),
+      recentDiscoveries: (recentDiscoveriesResult.rows as Array<Record<string, unknown>>).map((row) =>
+        mapGem(row, reasons[3]!),
+      ),
       stats: {
         totalHiddenGems: stats?.total || 0,
         avgRating: stats?.avg_rating || 0,
@@ -453,7 +451,7 @@ const translations = {
     reviews: 'reviews',
     views: 'views',
     released: 'Released',
-    whyGem: 'Why it\'s a gem',
+    whyGem: "Why it's a gem",
     totalGems: 'Hidden Gems',
     avgRating: 'Avg Rating',
     discoverMore: 'Discover More',
@@ -465,14 +463,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  return generateBaseMetadata(
-    t.title,
-    t.subtitle,
-    undefined,
-    '/hidden-gems',
-    undefined,
-    locale,
-  );
+  return generateBaseMetadata(t.title, t.subtitle, undefined, '/hidden-gems', undefined, locale);
 }
 
 export default async function HiddenGemsPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -493,61 +484,57 @@ export default async function HiddenGemsPage({ params }: { params: Promise<{ loc
     return (
       <Link
         href={localizedHref(`/products/${gem.id}`, locale)}
-        className="group theme-card rounded-lg overflow-hidden hover:ring-2 hover:ring-yellow-500/50 transition-all"
+        className="group theme-card overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-yellow-500/50"
       >
         <div className="relative">
-          <div className="aspect-[2/3] bg-gray-700 overflow-hidden">
+          <div className="aspect-[2/3] overflow-hidden bg-gray-700">
             {gem.imageUrl ? (
               <img
                 src={gem.imageUrl}
                 alt={gem.title}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500">
-                No Image
-              </div>
+              <div className="flex h-full w-full items-center justify-center text-gray-500">No Image</div>
             )}
           </div>
-          <div className="absolute top-2 left-2 bg-gradient-to-r from-yellow-600 to-amber-600 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-            <Gem className="w-3 h-3" />
+          <div className="absolute top-2 left-2 flex items-center gap-1 rounded bg-gradient-to-r from-yellow-600 to-amber-600 px-2 py-1 text-xs text-white">
+            <Gem className="h-3 w-3" />
             <span>GEM</span>
           </div>
-          <div className="absolute bottom-2 right-2 bg-black/80 text-white text-xs px-2 py-1 rounded flex items-center gap-1">
-            <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+          <div className="absolute right-2 bottom-2 flex items-center gap-1 rounded bg-black/80 px-2 py-1 text-xs text-white">
+            <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
             <span>{gem.rating.toFixed(1)}</span>
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bold theme-text group-hover:text-yellow-400 transition-colors line-clamp-2 mb-2">
+          <h3 className="theme-text mb-2 line-clamp-2 font-bold transition-colors group-hover:text-yellow-400">
             {gem.title}
           </h3>
           {gem.performers.length > 0 && (
-            <p className="text-sm theme-text-muted line-clamp-1 mb-2">
-              {gem.performers.slice(0, 3).join(', ')}
-            </p>
+            <p className="theme-text-muted mb-2 line-clamp-1 text-sm">{gem.performers.slice(0, 3).join(', ')}</p>
           )}
-          <div className="flex items-center gap-3 text-xs theme-text-muted mb-2">
+          <div className="theme-text-muted mb-2 flex items-center gap-3 text-xs">
             <span className="flex items-center gap-1">
-              <MessageCircle className="w-3 h-3" />
+              <MessageCircle className="h-3 w-3" />
               {gem.reviewCount}
             </span>
             <span className="flex items-center gap-1">
-              <Eye className="w-3 h-3" />
+              <Eye className="h-3 w-3" />
               {gem.viewCount}
             </span>
           </div>
-          <div className="flex flex-wrap gap-1 mb-2">
-            {gem.genres.slice(0, 2).map(genre => (
-              <span key={genre} className="text-xs bg-gray-700/50 px-2 py-0.5 rounded text-gray-300">
+          <div className="mb-2 flex flex-wrap gap-1">
+            {gem.genres.slice(0, 2).map((genre) => (
+              <span key={genre} className="rounded bg-gray-700/50 px-2 py-0.5 text-xs text-gray-300">
                 {genre}
               </span>
             ))}
           </div>
-          <div className="pt-2 border-t border-gray-700">
+          <div className="border-t border-gray-700 pt-2">
             <div className="flex items-center gap-1 text-xs text-yellow-400">
-              <ThumbsUp className="w-3 h-3" />
+              <ThumbsUp className="h-3 w-3" />
               <span>{gem.whyHidden}</span>
             </div>
           </div>
@@ -560,12 +547,12 @@ export default async function HiddenGemsPage({ params }: { params: Promise<{ loc
     if (gems.length === 0) return null;
     return (
       <section className="mb-12">
-        <h2 className="text-xl font-bold theme-text mb-6 flex items-center gap-2">
+        <h2 className="theme-text mb-6 flex items-center gap-2 text-xl font-bold">
           {icon}
           {title}
         </h2>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-          {gems.map(gem => (
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+          {gems.map((gem) => (
             <GemCard key={gem.id} gem={gem} />
           ))}
         </div>
@@ -579,77 +566,72 @@ export default async function HiddenGemsPage({ params }: { params: Promise<{ loc
       <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t.title },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t.title }]}
             className="mb-4"
           />
 
           {/* PR表記 */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-yellow-600 to-amber-600 text-white px-4 py-2 rounded-full mb-4">
-              <Gem className="w-5 h-5" />
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-yellow-600 to-amber-600 px-4 py-2 text-white">
+              <Gem className="h-5 w-5" />
               <span className="font-bold">HIDDEN GEMS</span>
             </div>
-            <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+            <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
             <p className="theme-text-muted">{t.subtitle}</p>
           </div>
 
           {/* 統計カード */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="theme-card rounded-lg p-6 text-center">
-              <Gem className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.totalHiddenGems}</div>
-              <div className="text-sm theme-text-muted">{t.totalGems}</div>
+              <Gem className="mx-auto mb-2 h-8 w-8 text-yellow-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.totalHiddenGems}</div>
+              <div className="theme-text-muted text-sm">{t.totalGems}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <Star className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.avgRating.toFixed(1)}</div>
-              <div className="text-sm theme-text-muted">{t.avgRating}</div>
+              <Star className="mx-auto mb-2 h-8 w-8 text-yellow-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.avgRating.toFixed(1)}</div>
+              <div className="theme-text-muted text-sm">{t.avgRating}</div>
             </div>
           </div>
 
           {/* 各セクション */}
           <Section
             title={t.highRatedLowViews}
-            icon={<EyeOff className="w-5 h-5 text-blue-400" />}
+            icon={<EyeOff className="h-5 w-5 text-blue-400" />}
             gems={data.highRatedLowViews}
           />
 
           <Section
             title={t.underratedClassics}
-            icon={<Sparkles className="w-5 h-5 text-purple-400" />}
+            icon={<Sparkles className="h-5 w-5 text-purple-400" />}
             gems={data.underratedClassics}
           />
 
           <Section
             title={t.sleepersWithReviews}
-            icon={<MessageCircle className="w-5 h-5 text-green-400" />}
+            icon={<MessageCircle className="h-5 w-5 text-green-400" />}
             gems={data.sleepersWithReviews}
           />
 
           <Section
             title={t.recentDiscoveries}
-            icon={<TrendingUp className="w-5 h-5 text-rose-400" />}
+            icon={<TrendingUp className="h-5 w-5 text-rose-400" />}
             gems={data.recentDiscoveries}
           />
 
           {/* データがない場合 */}
           {data.highRatedLowViews.length === 0 &&
-           data.underratedClassics.length === 0 &&
-           data.sleepersWithReviews.length === 0 &&
-           data.recentDiscoveries.length === 0 && (
-            <div className="theme-card rounded-lg p-8 text-center theme-text-muted">
-              {t.noData}
-            </div>
-          )}
+            data.underratedClassics.length === 0 &&
+            data.sleepersWithReviews.length === 0 &&
+            data.recentDiscoveries.length === 0 && (
+              <div className="theme-card theme-text-muted rounded-lg p-8 text-center">{t.noData}</div>
+            )}
         </div>
       </div>
     </>

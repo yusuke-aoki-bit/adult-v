@@ -362,9 +362,8 @@ function getInitialSections(locale: string, pageId: string, customSections?: Hom
 
 export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions = 'ja') {
   // 後方互換性: 文字列の場合はlocaleとして扱う
-  const options: UseHomeSectionsOptions = typeof localeOrOptions === 'string'
-    ? { locale: localeOrOptions }
-    : localeOrOptions;
+  const options: UseHomeSectionsOptions =
+    typeof localeOrOptions === 'string' ? { locale: localeOrOptions } : localeOrOptions;
 
   const { locale = 'ja', pageId = 'home', customSections } = options;
   const storageKey = `${STORAGE_KEY_PREFIX}_${pageId}`;
@@ -379,50 +378,58 @@ export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions
   const sections = useMemo(() => {
     const defaults = getDefaultSections();
     if (!stored) return defaults;
-    const merged = defaults.map(defaultSection => {
-      const saved = stored.find(s => s.id === defaultSection.id);
-      return saved
-        ? { ...defaultSection, visible: saved.visible, order: saved.order }
-        : defaultSection;
+    const merged = defaults.map((defaultSection) => {
+      const saved = stored.find((s) => s.id === defaultSection.id);
+      return saved ? { ...defaultSection, visible: saved.visible, order: saved.order } : defaultSection;
     });
     return merged.sort((a, b) => a.order - b.order);
   }, [stored, getDefaultSections]);
 
-  const toggleVisibility = useCallback((sectionId: string) => {
-    const updated = sections.map(section =>
-      section.id === sectionId
-        ? { ...section, visible: !section.visible }
-        : section
-    );
-    setStored(updated);
-  }, [sections, setStored]);
+  const toggleVisibility = useCallback(
+    (sectionId: string) => {
+      const updated = sections.map((section) =>
+        section.id === sectionId ? { ...section, visible: !section.visible } : section,
+      );
+      setStored(updated);
+    },
+    [sections, setStored],
+  );
 
-  const reorderSections = useCallback((fromIndex: number, toIndex: number) => {
-    const updated = [...sections];
-    const [removed] = updated.splice(fromIndex, 1);
-    if (removed === undefined) return;
-    updated.splice(toIndex, 0, removed);
+  const reorderSections = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      const updated = [...sections];
+      const [removed] = updated.splice(fromIndex, 1);
+      if (removed === undefined) return;
+      updated.splice(toIndex, 0, removed);
 
-    const reordered = updated.map((section, index) => ({
-      ...section,
-      order: index,
-    }));
-    setStored(reordered);
-  }, [sections, setStored]);
+      const reordered = updated.map((section, index) => ({
+        ...section,
+        order: index,
+      }));
+      setStored(reordered);
+    },
+    [sections, setStored],
+  );
 
   const resetToDefault = useCallback(() => {
     setStored(null);
   }, [setStored]);
 
-  const isSectionVisible = useCallback((sectionId: string) => {
-    const section = sections.find(s => s.id === sectionId);
-    return section?.visible ?? true;
-  }, [sections]);
+  const isSectionVisible = useCallback(
+    (sectionId: string) => {
+      const section = sections.find((s) => s.id === sectionId);
+      return section?.visible ?? true;
+    },
+    [sections],
+  );
 
-  const getSectionOrder = useCallback((sectionId: string) => {
-    const section = sections.find(s => s.id === sectionId);
-    return section?.order ?? 0;
-  }, [sections]);
+  const getSectionOrder = useCallback(
+    (sectionId: string) => {
+      const section = sections.find((s) => s.id === sectionId);
+      return section?.order ?? 0;
+    },
+    [sections],
+  );
 
   return {
     sections,
@@ -432,7 +439,7 @@ export function useHomeSections(localeOrOptions: string | UseHomeSectionsOptions
     resetToDefault,
     isSectionVisible,
     getSectionOrder,
-    visibleSections: sections.filter(s => s.visible).sort((a, b) => a.order - b.order),
+    visibleSections: sections.filter((s) => s.visible).sort((a, b) => a.order - b.order),
   };
 }
 

@@ -15,14 +15,6 @@ interface ClientProvidersProps {
  * Client-side providers wrapper
  * Wraps children with FirebaseAuthProvider for cloud sync features
  */
-export function ClientProviders({
-  children,
-  autoSignInDelay = 1000,
-  disableAutoSignIn = false,
-}: ClientProvidersProps) {
-  return (
-    <FirebaseAuthProvider autoSignIn={!disableAutoSignIn}>
-      {children}
-    </FirebaseAuthProvider>
-  );
+export function ClientProviders({ children, autoSignInDelay = 1000, disableAutoSignIn = false }: ClientProvidersProps) {
+  return <FirebaseAuthProvider autoSignIn={!disableAutoSignIn}>{children}</FirebaseAuthProvider>;
 }

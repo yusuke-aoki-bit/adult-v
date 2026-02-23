@@ -150,9 +150,7 @@ async function generateProductEmbeddings() {
 
     try {
       // バッチでembedding生成
-      const embeddingResult = await generateEmbeddingBatch(
-        toProcess.map((t) => t.text)
-      );
+      const embeddingResult = await generateEmbeddingBatch(toProcess.map((t) => t.text));
 
       // DBに保存
       for (let j = 0; j < toProcess.length; j++) {
@@ -175,7 +173,7 @@ async function generateProductEmbeddings() {
 
       console.log(
         `[embedding] Batch ${Math.floor(i / BATCH_SIZE) + 1}: processed ${toProcess.length}, ` +
-          `tokens used: ${embeddingResult.usage.totalTokens}`
+          `tokens used: ${embeddingResult.usage.totalTokens}`,
       );
     } catch (error) {
       console.error(`[embedding] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, error);
@@ -294,9 +292,7 @@ async function generatePerformerEmbeddings() {
     }
 
     try {
-      const embeddingResult = await generateEmbeddingBatch(
-        toProcess.map((t) => t.text)
-      );
+      const embeddingResult = await generateEmbeddingBatch(toProcess.map((t) => t.text));
 
       for (let j = 0; j < toProcess.length; j++) {
         const item = toProcess[j];
@@ -318,7 +314,7 @@ async function generatePerformerEmbeddings() {
 
       console.log(
         `[embedding] Batch ${Math.floor(i / BATCH_SIZE) + 1}: processed ${toProcess.length}, ` +
-          `tokens used: ${embeddingResult.usage.totalTokens}`
+          `tokens used: ${embeddingResult.usage.totalTokens}`,
       );
     } catch (error) {
       console.error(`[embedding] Batch ${Math.floor(i / BATCH_SIZE) + 1} error:`, error);

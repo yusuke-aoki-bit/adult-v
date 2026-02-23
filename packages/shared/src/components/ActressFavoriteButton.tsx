@@ -9,11 +9,7 @@ interface ActressFavoriteButtonProps {
   thumbnail?: string;
 }
 
-export default function ActressFavoriteButton({
-  id,
-  name,
-  thumbnail,
-}: ActressFavoriteButtonProps) {
+export default function ActressFavoriteButton({ id, name, thumbnail }: ActressFavoriteButtonProps) {
   const t = useTranslations('favoriteButton');
 
   return (

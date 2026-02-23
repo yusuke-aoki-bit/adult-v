@@ -145,7 +145,7 @@ describe('Push Notification Service', () => {
         'https://wns.windows.com/abc123',
       ];
 
-      validEndpoints.forEach(endpoint => {
+      validEndpoints.forEach((endpoint) => {
         expect(endpoint.startsWith('https://')).toBe(true);
       });
     });
@@ -184,7 +184,7 @@ describe('Push Notification Service', () => {
       }));
 
       const concurrency = 10;
-      const batches: typeof subscriptions[] = [];
+      const batches: (typeof subscriptions)[] = [];
 
       for (let i = 0; i < subscriptions.length; i += concurrency) {
         batches.push(subscriptions.slice(i, i + concurrency));
@@ -205,7 +205,7 @@ describe('Push Notification Service', () => {
         { success: false, endpoint: 'ep5', statusCode: 500 },
       ];
 
-      const successCount = results.filter(r => r.success).length;
+      const successCount = results.filter((r) => r.success).length;
       const failureCount = results.length - successCount;
 
       expect(successCount).toBe(3);
@@ -221,8 +221,8 @@ describe('Push Notification Service', () => {
       ];
 
       const expiredEndpoints = results
-        .filter(r => r.statusCode === 410 || r.statusCode === 404)
-        .map(r => r.endpoint);
+        .filter((r) => r.statusCode === 410 || r.statusCode === 404)
+        .map((r) => r.endpoint);
 
       expect(expiredEndpoints).toEqual(['ep2', 'ep3']);
     });
@@ -232,7 +232,7 @@ describe('Push Notification Service', () => {
       const total = 25;
       const completed = [10, 20, 25];
 
-      completed.forEach(n => {
+      completed.forEach((n) => {
         onProgress(n, total);
       });
 
@@ -255,22 +255,15 @@ describe('Push Notification Service', () => {
     });
 
     it('should require mailto: subject format', () => {
-      const validSubjects = [
-        'mailto:admin@example.com',
-        'mailto:support@domain.co.jp',
-      ];
+      const validSubjects = ['mailto:admin@example.com', 'mailto:support@domain.co.jp'];
 
-      const invalidSubjects = [
-        'admin@example.com',
-        'https://example.com',
-        '',
-      ];
+      const invalidSubjects = ['admin@example.com', 'https://example.com', ''];
 
-      validSubjects.forEach(subject => {
+      validSubjects.forEach((subject) => {
         expect(subject.startsWith('mailto:')).toBe(true);
       });
 
-      invalidSubjects.forEach(subject => {
+      invalidSubjects.forEach((subject) => {
         expect(subject.startsWith('mailto:')).toBe(false);
       });
     });

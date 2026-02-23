@@ -30,7 +30,9 @@ export const userReviews = pgTable(
   'user_reviews',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
     rating: decimal('rating', { precision: 3, scale: 1 }).notNull(), // 1.0-5.0
     title: varchar('title', { length: 200 }),
@@ -63,7 +65,9 @@ export const userTagSuggestions = pgTable(
   'user_tag_suggestions',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
     suggestedTagName: varchar('suggested_tag_name', { length: 100 }).notNull(),
     existingTagId: integer('existing_tag_id').references(() => tags.id, { onDelete: 'set null' }), // 既存タグへの紐付け（あれば）
@@ -149,8 +153,12 @@ export const publicFavoriteLists = pgTable(
 export const publicFavoriteListItems = pgTable(
   'public_favorite_list_items',
   {
-    listId: integer('list_id').notNull().references(() => publicFavoriteLists.id, { onDelete: 'cascade' }),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    listId: integer('list_id')
+      .notNull()
+      .references(() => publicFavoriteLists.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     displayOrder: integer('display_order').default(0),
     note: text('note'), // ユーザーメモ（任意）
     addedAt: timestamp('added_at').defaultNow().notNull(),
@@ -170,7 +178,9 @@ export const publicFavoriteListItems = pgTable(
 export const userReviewVotes = pgTable(
   'user_review_votes',
   {
-    reviewId: integer('review_id').notNull().references(() => userReviews.id, { onDelete: 'cascade' }),
+    reviewId: integer('review_id')
+      .notNull()
+      .references(() => userReviews.id, { onDelete: 'cascade' }),
     voterId: varchar('voter_id', { length: 255 }).notNull(), // Firebase UID
     voteType: varchar('vote_type', { length: 20 }).notNull(), // 'helpful', 'not_helpful'
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -189,7 +199,9 @@ export const userReviewVotes = pgTable(
 export const userTagVotes = pgTable(
   'user_tag_votes',
   {
-    suggestionId: integer('suggestion_id').notNull().references(() => userTagSuggestions.id, { onDelete: 'cascade' }),
+    suggestionId: integer('suggestion_id')
+      .notNull()
+      .references(() => userTagSuggestions.id, { onDelete: 'cascade' }),
     voterId: varchar('voter_id', { length: 255 }).notNull(), // Firebase UID
     voteType: varchar('vote_type', { length: 20 }).notNull(), // 'up', 'down'
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -207,7 +219,9 @@ export const userTagVotes = pgTable(
 export const publicListLikes = pgTable(
   'public_list_likes',
   {
-    listId: integer('list_id').notNull().references(() => publicFavoriteLists.id, { onDelete: 'cascade' }),
+    listId: integer('list_id')
+      .notNull()
+      .references(() => publicFavoriteLists.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },
@@ -226,7 +240,9 @@ export const userPerformerSuggestions = pgTable(
   'user_performer_suggestions',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
     performerName: varchar('performer_name', { length: 200 }).notNull(),
     existingPerformerId: integer('existing_performer_id').references(() => performers.id, { onDelete: 'set null' }),
@@ -245,7 +261,10 @@ export const userPerformerSuggestions = pgTable(
     userIdx: index('idx_user_performer_suggestions_user').on(table.userId),
     statusIdx: index('idx_user_performer_suggestions_status').on(table.status),
     performerNameIdx: index('idx_user_performer_suggestions_name').on(table.performerName),
-    productPerformerUnique: uniqueIndex('idx_user_performer_suggestions_product_name').on(table.productId, table.performerName),
+    productPerformerUnique: uniqueIndex('idx_user_performer_suggestions_product_name').on(
+      table.productId,
+      table.performerName,
+    ),
   }),
 );
 
@@ -255,7 +274,9 @@ export const userPerformerSuggestions = pgTable(
 export const userPerformerVotes = pgTable(
   'user_performer_votes',
   {
-    suggestionId: integer('suggestion_id').notNull().references(() => userPerformerSuggestions.id, { onDelete: 'cascade' }),
+    suggestionId: integer('suggestion_id')
+      .notNull()
+      .references(() => userPerformerSuggestions.id, { onDelete: 'cascade' }),
     voterId: varchar('voter_id', { length: 255 }).notNull(), // Firebase UID
     voteType: varchar('vote_type', { length: 20 }).notNull(), // 'up', 'down'
     createdAt: timestamp('created_at').defaultNow().notNull(),
@@ -275,7 +296,9 @@ export const productRankingVotes = pgTable(
   'product_ranking_votes',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     userId: varchar('user_id', { length: 255 }).notNull(), // Firebase UID
     category: varchar('category', { length: 50 }).notNull(), // 'best', 'trending', 'classic'
     createdAt: timestamp('created_at').defaultNow().notNull(),

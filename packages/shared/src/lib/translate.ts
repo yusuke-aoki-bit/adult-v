@@ -38,7 +38,7 @@ async function translateWithDeepL(
   texts: string[],
   sourceLang: string,
   targetLang: string,
-  retries = 3
+  retries = 3,
 ): Promise<string[]> {
   const apiKey = process.env['DEEPL_API_KEY'];
   if (!apiKey) {
@@ -53,7 +53,7 @@ async function translateWithDeepL(
       const response = await fetch(getDeepLApiUrl(), {
         method: 'POST',
         headers: {
-          'Authorization': `DeepL-Auth-Key ${apiKey}`,
+          Authorization: `DeepL-Auth-Key ${apiKey}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -67,7 +67,7 @@ async function translateWithDeepL(
         // レート制限の場合、指数バックオフで待機してリトライ
         const waitTime = Math.pow(2, attempt) * 2000; // 2秒、4秒、8秒
         console.warn(`[DeepL] Rate limited. Waiting ${waitTime}ms before retry...`);
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
         continue;
       }
 
@@ -100,7 +100,7 @@ async function translateWithDeepL(
 export async function translateText(
   text: string,
   targetLang: 'en' | 'zh' | 'ko',
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string> {
   if (!text || text.trim() === '') {
     return '';
@@ -121,7 +121,7 @@ export async function translateText(
 export async function translateBatch(
   texts: string[],
   targetLang: 'en' | 'zh' | 'ko',
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string[]> {
   if (texts.length === 0) {
     return [];
@@ -183,7 +183,7 @@ export async function translateBatch(
  */
 export async function translateToAll(
   text: string,
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<{
   en: string;
   zh: string;

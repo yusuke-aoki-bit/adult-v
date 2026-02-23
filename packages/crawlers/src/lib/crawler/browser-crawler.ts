@@ -87,7 +87,8 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
       maxDelay: 5000,
       viewportWidth: 1920,
       viewportHeight: 1080,
-      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       ...options,
     };
   }
@@ -204,10 +205,7 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
     const headless = this.browserOptions.headless ?? true;
     const launchOptions: LaunchOptions = {
       headless,
-      args: [
-        ...defaultArgs,
-        ...(this.browserOptions.launchOptions?.args || []),
-      ],
+      args: [...defaultArgs, ...(this.browserOptions.launchOptions?.args || [])],
       ...filteredLaunchOptions,
     };
 
@@ -418,7 +416,7 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
   protected async getAllTextContents(page: Page, selector: string): Promise<string[]> {
     try {
       return await page.$$eval(selector, (els) =>
-        els.map((el) => el.textContent?.trim()).filter((t): t is string => !!t)
+        els.map((el) => el.textContent?.trim()).filter((t): t is string => !!t),
       );
     } catch {
       return [];
@@ -433,7 +431,7 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
       return await page.$$eval(
         selector,
         (els, attr) => els.map((el) => el.getAttribute(attr)).filter((a): a is string => !!a),
-        attribute
+        attribute,
       );
     } catch {
       return [];
@@ -470,7 +468,7 @@ export abstract class BrowserCrawler<TRawItem = unknown> extends BaseCrawler<TRa
    */
   protected async evaluateScript<T>(page: Page, script: string): Promise<T | null> {
     try {
-      return await page.evaluate(script) as T | null;
+      return (await page.evaluate(script)) as T | null;
     } catch {
       return null;
     }

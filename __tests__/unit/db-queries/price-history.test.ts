@@ -86,9 +86,7 @@ describe('createPriceHistoryQueries', () => {
   describe('getPriceHistoryByProductId', () => {
     it('normalized_product_idで価格履歴を取得', async () => {
       mockExecute.mockResolvedValueOnce({
-        rows: [
-          { date: '2024-12-01', price: 1980, sale_price: 980, discount_percent: 50, asp_name: 'DMM' },
-        ],
+        rows: [{ date: '2024-12-01', price: 1980, sale_price: 980, discount_percent: 50, asp_name: 'DMM' }],
       });
 
       const result = await queries.getPriceHistoryByProductId('abc-123');
@@ -115,22 +113,24 @@ describe('createPriceHistoryQueries', () => {
   describe('getPriceStats', () => {
     it('価格統計を取得', async () => {
       mockExecute.mockResolvedValueOnce({
-        rows: [{
-          min_price: 980,
-          max_price: 2980,
-          avg_price: 1500.5,
-          min_sale_price: 500,
-          max_discount: 75,
-          record_count: 30,
-          first_recorded: '2024-01-01',
-          last_recorded: '2024-12-31',
-        }],
+        rows: [
+          {
+            min_price: 980,
+            max_price: 2980,
+            avg_price: 1500.5,
+            min_sale_price: 500,
+            max_discount: 75,
+            record_count: 30,
+            first_recorded: '2024-01-01',
+            last_recorded: '2024-12-31',
+          },
+        ],
       });
 
       const result = await queries.getPriceStats('abc-123');
 
       expect(result).toEqual({
-        lowestPrice: 500,  // min_sale_priceが優先
+        lowestPrice: 500, // min_sale_priceが優先
         highestPrice: 2980,
         averagePrice: 1501, // 四捨五入
         maxDiscountPercent: 75,
@@ -142,16 +142,18 @@ describe('createPriceHistoryQueries', () => {
 
     it('sale_priceがない場合はmin_priceを使用', async () => {
       mockExecute.mockResolvedValueOnce({
-        rows: [{
-          min_price: 980,
-          max_price: 2980,
-          avg_price: 1500,
-          min_sale_price: null,
-          max_discount: null,
-          record_count: 10,
-          first_recorded: '2024-01-01',
-          last_recorded: '2024-12-31',
-        }],
+        rows: [
+          {
+            min_price: 980,
+            max_price: 2980,
+            avg_price: 1500,
+            min_sale_price: null,
+            max_discount: null,
+            record_count: 10,
+            first_recorded: '2024-01-01',
+            last_recorded: '2024-12-31',
+          },
+        ],
       });
 
       const result = await queries.getPriceStats('abc-123');
@@ -197,9 +199,7 @@ describe('createPriceHistoryQueries', () => {
     });
 
     it('一部失敗時の集計', async () => {
-      mockExecute
-        .mockResolvedValueOnce({ rows: [] })
-        .mockRejectedValueOnce(new Error('DB error'));
+      mockExecute.mockResolvedValueOnce({ rows: [] }).mockRejectedValueOnce(new Error('DB error'));
 
       const records = [
         { productSourceId: 1, price: 1980 },

@@ -94,13 +94,11 @@ interface ConsoleError {
 }
 
 function shouldIgnore(text: string): boolean {
-  return IGNORED_PATTERNS.some(pattern =>
-    text.toLowerCase().includes(pattern.toLowerCase())
-  );
+  return IGNORED_PATTERNS.some((pattern) => text.toLowerCase().includes(pattern.toLowerCase()));
 }
 
 function isCriticalError(text: string): boolean {
-  return CRITICAL_ERROR_PATTERNS.some(pattern => text.includes(pattern));
+  return CRITICAL_ERROR_PATTERNS.some((pattern) => text.includes(pattern));
 }
 
 function classifyError(text: string): 'critical' | 'warning' | 'error' {
@@ -114,18 +112,20 @@ function classifyError(text: string): 'critical' | 'warning' | 'error' {
 // ========================================
 
 async function setupPage(context: BrowserContext): Promise<void> {
-  await context.addCookies([{
-    name: 'age-verified',
-    value: 'true',
-    domain: 'localhost',
-    path: '/',
-  }]);
+  await context.addCookies([
+    {
+      name: 'age-verified',
+      value: 'true',
+      domain: 'localhost',
+      path: '/',
+    },
+  ]);
 }
 
 async function collectConsoleErrors(
   page: Page,
   navigateFn: () => Promise<void>,
-  waitTime = 3000
+  waitTime = 3000,
 ): Promise<ConsoleError[]> {
   const errors: ConsoleError[] = [];
 
@@ -212,9 +212,9 @@ test.describe('包括的E2Eテスト - 全ページナビゲーション', () =>
         await page.waitForLoadState('networkidle').catch(() => {});
       });
 
-      const criticalErrors = errors.filter(e => e.type === 'critical');
-      const warnings = errors.filter(e => e.type === 'warning');
-      const generalErrors = errors.filter(e => e.type === 'error');
+      const criticalErrors = errors.filter((e) => e.type === 'critical');
+      const warnings = errors.filter((e) => e.type === 'warning');
+      const generalErrors = errors.filter((e) => e.type === 'error');
 
       // 警告を出力
       if (warnings.length > 0) {
@@ -255,18 +255,22 @@ test.describe('包括的E2Eテスト - 動的ページ', () => {
     await page.waitForLoadState('networkidle').catch(() => {});
 
     const productLink = page.locator('a[href*="/products/"]').first();
-    if (await productLink.count() === 0) {
+    if ((await productLink.count()) === 0) {
       test.skip();
       return;
     }
 
-    const errors = await collectConsoleErrors(page, async () => {
-      await productLink.click();
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForLoadState('networkidle').catch(() => {});
-    }, 5000);
+    const errors = await collectConsoleErrors(
+      page,
+      async () => {
+        await productLink.click();
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForLoadState('networkidle').catch(() => {});
+      },
+      5000,
+    );
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     if (criticalErrors.length > 0) {
       console.error('❌ Critical errors on product detail:');
       criticalErrors.forEach((e, i) => {
@@ -281,18 +285,22 @@ test.describe('包括的E2Eテスト - 動的ページ', () => {
     await page.waitForLoadState('networkidle').catch(() => {});
 
     const actressLink = page.locator('a[href*="/actress/"]').first();
-    if (await actressLink.count() === 0) {
+    if ((await actressLink.count()) === 0) {
       test.skip();
       return;
     }
 
-    const errors = await collectConsoleErrors(page, async () => {
-      await actressLink.click();
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForLoadState('networkidle').catch(() => {});
-    }, 5000);
+    const errors = await collectConsoleErrors(
+      page,
+      async () => {
+        await actressLink.click();
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForLoadState('networkidle').catch(() => {});
+      },
+      5000,
+    );
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     if (criticalErrors.length > 0) {
       console.error('❌ Critical errors on actress detail:');
       criticalErrors.forEach((e, i) => {
@@ -307,18 +315,22 @@ test.describe('包括的E2Eテスト - 動的ページ', () => {
     await page.waitForLoadState('networkidle').catch(() => {});
 
     const seriesLink = page.locator('a[href*="/series/"]').first();
-    if (await seriesLink.count() === 0) {
+    if ((await seriesLink.count()) === 0) {
       test.skip();
       return;
     }
 
-    const errors = await collectConsoleErrors(page, async () => {
-      await seriesLink.click();
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForLoadState('networkidle').catch(() => {});
-    }, 5000);
+    const errors = await collectConsoleErrors(
+      page,
+      async () => {
+        await seriesLink.click();
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForLoadState('networkidle').catch(() => {});
+      },
+      5000,
+    );
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -327,18 +339,22 @@ test.describe('包括的E2Eテスト - 動的ページ', () => {
     await page.waitForLoadState('networkidle').catch(() => {});
 
     const makerLink = page.locator('a[href*="/makers/"]').first();
-    if (await makerLink.count() === 0) {
+    if ((await makerLink.count()) === 0) {
       test.skip();
       return;
     }
 
-    const errors = await collectConsoleErrors(page, async () => {
-      await makerLink.click();
-      await page.waitForLoadState('domcontentloaded');
-      await page.waitForLoadState('networkidle').catch(() => {});
-    }, 5000);
+    const errors = await collectConsoleErrors(
+      page,
+      async () => {
+        await makerLink.click();
+        await page.waitForLoadState('domcontentloaded');
+        await page.waitForLoadState('networkidle').catch(() => {});
+      },
+      5000,
+    );
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 });
@@ -363,7 +379,7 @@ test.describe('包括的E2Eテスト - UI操作', () => {
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -390,7 +406,7 @@ test.describe('包括的E2Eテスト - UI操作', () => {
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -408,7 +424,7 @@ test.describe('包括的E2Eテスト - UI操作', () => {
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -418,7 +434,7 @@ test.describe('包括的E2Eテスト - UI操作', () => {
 
     // 商品詳細に移動
     const productLink = page.locator('a[href*="/products/"]').first();
-    if (await productLink.count() === 0) {
+    if ((await productLink.count()) === 0) {
       test.skip();
       return;
     }
@@ -428,7 +444,9 @@ test.describe('包括的E2Eテスト - UI操作', () => {
 
     const errors = await collectConsoleErrors(page, async () => {
       // お気に入りボタンを探す
-      const favoriteButton = page.locator('button[aria-label*="お気に入り"], button[aria-label*="favorite"], [data-testid="favorite-button"]').first();
+      const favoriteButton = page
+        .locator('button[aria-label*="お気に入り"], button[aria-label*="favorite"], [data-testid="favorite-button"]')
+        .first();
       if (await favoriteButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await favoriteButton.click();
         await page.waitForTimeout(500);
@@ -437,7 +455,7 @@ test.describe('包括的E2Eテスト - UI操作', () => {
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -448,14 +466,16 @@ test.describe('包括的E2Eテスト - UI操作', () => {
 
     const errors = await collectConsoleErrors(page, async () => {
       // ハンバーガーメニューを探す
-      const menuButton = page.locator('button[aria-label*="menu"], button[aria-label*="メニュー"], [data-testid="mobile-menu"]').first();
+      const menuButton = page
+        .locator('button[aria-label*="menu"], button[aria-label*="メニュー"], [data-testid="mobile-menu"]')
+        .first();
       if (await menuButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await menuButton.click();
         await page.waitForTimeout(500);
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -465,14 +485,16 @@ test.describe('包括的E2Eテスト - UI操作', () => {
 
     const errors = await collectConsoleErrors(page, async () => {
       // 設定ボタンを探す
-      const settingsButton = page.locator('button[aria-label*="設定"], button[aria-label*="settings"], [data-testid="settings-button"]').first();
+      const settingsButton = page
+        .locator('button[aria-label*="設定"], button[aria-label*="settings"], [data-testid="settings-button"]')
+        .first();
       if (await settingsButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await settingsButton.click();
         await page.waitForTimeout(1000);
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 });
@@ -594,7 +616,7 @@ test.describe('包括的E2Eテスト - イベントカバレッジ', () => {
 
     if (unfiredEvents.length > 0) {
       console.log('\n未発火イベント:');
-      unfiredEvents.forEach(name => console.log(`  - ${name}`));
+      unfiredEvents.forEach((name) => console.log(`  - ${name}`));
     }
   });
 });
@@ -630,14 +652,18 @@ test.describe('包括的E2Eテスト - サマリーレポート', () => {
       }
 
       try {
-        const errors = await collectConsoleErrors(page, async () => {
-          await page.goto(pagePath, { waitUntil: 'domcontentloaded', timeout: 60000 });
-          await page.waitForLoadState('networkidle').catch(() => {});
-        }, 2000);
+        const errors = await collectConsoleErrors(
+          page,
+          async () => {
+            await page.goto(pagePath, { waitUntil: 'domcontentloaded', timeout: 60000 });
+            await page.waitForLoadState('networkidle').catch(() => {});
+          },
+          2000,
+        );
 
-        const critical = errors.filter(e => e.type === 'critical');
-        const warnings = errors.filter(e => e.type === 'warning');
-        const general = errors.filter(e => e.type === 'error');
+        const critical = errors.filter((e) => e.type === 'critical');
+        const warnings = errors.filter((e) => e.type === 'warning');
+        const general = errors.filter((e) => e.type === 'error');
 
         pageResults.push({
           page: pagePath,
@@ -646,7 +672,7 @@ test.describe('包括的E2Eテスト - サマリーレポート', () => {
           errors: general.length,
         });
 
-        critical.forEach(e => {
+        critical.forEach((e) => {
           allCriticalErrors.push({ page: pagePath, error: e.text });
         });
       } catch (error) {

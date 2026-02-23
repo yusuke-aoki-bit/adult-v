@@ -14,6 +14,7 @@
     "typecheck": "turbo run typecheck",
     "db:generate": "pnpm --filter=@adult-v/database db:generate",
     "db:push": "pnpm --filter=@adult-v/database db:push",
+    "db:seed": "tsx scripts/db-seed.ts",
     "crawl:duga": "pnpm --filter=@adult-v/crawlers crawl:duga",
     "crawl:sokmil": "pnpm --filter=@adult-v/crawlers crawl:sokmil",
     "crawl:japanska": "pnpm --filter=@adult-v/crawlers crawl:japanska",
@@ -37,14 +38,42 @@
     "test:visual:update": "playwright test __tests__/e2e/visual-regression.spec.ts --update-snapshots",
     "test:api": "playwright test __tests__/e2e/api-routes.spec.ts",
     "test:perf": "playwright test __tests__/e2e/performance.spec.ts",
-    "test:all": "npm run test:unit && npm run test:e2e"
+    "test:all": "npm run test:unit && npm run test:e2e",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip",
+    "syncpack:check": "syncpack lint",
+    "syncpack:fix": "syncpack fix-mismatches",
+    "analyze:web": "cross-env ANALYZE=true turbo run build --filter=@adult-v/web",
+    "analyze:fanza": "cross-env ANALYZE=true turbo run build --filter=@adult-v/fanza",
+    "openapi:generate": "pnpm exec tsx scripts/generate-openapi.ts",
+    "db:rollback": "tsx scripts/db-rollback.ts",
+    "prepare": "husky",
+    "size": "size-limit",
+    "size:check": "size-limit --limit",
+    "lighthouse": "lhci autorun",
+    "changeset": "changeset",
+    "version-packages": "changeset version"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs,cjs}": [
+      "prettier --write",
+      "eslint --fix --no-warn-ignored"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@sentry/nextjs": "^10.32.1",
     "turbo": "^2.7.2"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.28.0",
     "@axe-core/playwright": "^4.11.0",
+    "@lhci/cli": "^0.14.0",
+    "@commitlint/cli": "^20.4.2",
+    "@commitlint/config-conventional": "^20.4.2",
     "@eslint/eslintrc": "^3.0.0",
     "@playwright/test": "^1.57.0",
     "@testing-library/jest-dom": "^6.9.1",
@@ -56,8 +85,18 @@
     "cross-env": "^10.1.0",
     "eslint": "^9.0.0",
     "eslint-config-next": "^15.0.0",
+    "eslint-plugin-drizzle": "^0.2.3",
+    "husky": "^9.1.7",
     "jsdom": "^27.3.0",
+    "knip": "^5.85.0",
+    "lint-staged": "^16.2.7",
+    "@size-limit/file": "^11.0.0",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
+    "size-limit": "^11.0.0",
+    "syncpack": "^14.0.0",
     "typescript": "^5.7.3",
+    "@vitest/coverage-v8": "^3.0.0",
     "vitest": "^3.0.0"
   },
   "pnpm": {

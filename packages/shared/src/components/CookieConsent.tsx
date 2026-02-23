@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
+import { getTranslation, cookieConsentTranslations } from '../lib/translations';
 
 const COOKIE_CONSENT_KEY = 'cookie_consent';
 
@@ -10,38 +11,11 @@ interface CookieConsentProps {
   locale?: string;
 }
 
-const translations = {
-  ja: {
-    message: '当サイトでは、サイトの利用状況を把握するためにGoogle Analyticsを使用しています。',
-    accept: '同意する',
-    decline: '拒否する',
-    learnMore: '詳細',
-  },
-  en: {
-    message: 'This site uses Google Analytics to understand how the site is used.',
-    accept: 'Accept',
-    decline: 'Decline',
-    learnMore: 'Learn more',
-  },
-  zh: {
-    message: '本站使用Google Analytics来了解网站的使用情况。',
-    accept: '同意',
-    decline: '拒绝',
-    learnMore: '了解更多',
-  },
-  ko: {
-    message: '이 사이트는 Google Analytics를 사용하여 사이트 이용 현황을 파악합니다.',
-    accept: '동의',
-    decline: '거부',
-    learnMore: '자세히',
-  },
-};
-
 export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProps) {
   const [showBanner, setShowBanner] = useState(false);
   const [consentInitialized, setConsentInitialized] = useState(false);
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(cookieConsentTranslations, locale);
 
   useEffect(() => {
     // Check if consent was already given
@@ -146,10 +120,7 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
       />
 
       {/* Google Analytics Tag */}
-      <Script
-        strategy="afterInteractive"
-        src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-      />
+      <Script strategy="afterInteractive" src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
       <Script
         id="google-analytics"
         strategy="afterInteractive"
@@ -167,27 +138,24 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
 
       {/* Cookie Consent Banner */}
       {showBanner && (
-        <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-gray-900 border-t border-gray-700 shadow-lg">
-          <div className="container mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-4">
-            <p className="text-sm text-gray-300 text-center sm:text-left">
+        <div className="fixed right-0 bottom-0 left-0 z-50 border-t border-gray-700 bg-gray-900 p-4 shadow-lg">
+          <div className="container mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 sm:flex-row">
+            <p className="text-center text-sm text-gray-300 sm:text-left">
               {t.message}{' '}
-              <a
-                href={`/${locale}/privacy`}
-                className="text-rose-400 hover:text-rose-300 underline"
-              >
+              <a href={`/${locale}/privacy`} className="text-rose-400 underline hover:text-rose-300">
                 {t.learnMore}
               </a>
             </p>
-            <div className="flex gap-3 shrink-0">
+            <div className="flex shrink-0 gap-3">
               <button
                 onClick={handleDecline}
-                className="px-4 py-2 text-sm text-gray-300 hover:text-white transition-colors"
+                className="px-4 py-2 text-sm text-gray-300 transition-colors hover:text-white"
               >
                 {t.decline}
               </button>
               <button
                 onClick={handleAccept}
-                className="px-4 py-2 text-sm bg-rose-600 hover:bg-rose-500 text-white rounded transition-colors"
+                className="rounded bg-rose-600 px-4 py-2 text-sm text-white transition-colors hover:bg-rose-500"
               >
                 {t.accept}
               </button>

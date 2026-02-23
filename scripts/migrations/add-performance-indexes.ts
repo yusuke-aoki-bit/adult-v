@@ -65,7 +65,15 @@ async function main() {
 
   // ANALYZE実行
   console.log('\n=== ANALYZE実行 ===\n');
-  const tables = ['products', 'performers', 'product_performers', 'product_tags', 'product_sources', 'product_cache', 'tags'];
+  const tables = [
+    'products',
+    'performers',
+    'product_performers',
+    'product_tags',
+    'product_sources',
+    'product_cache',
+    'tags',
+  ];
   for (const table of tables) {
     try {
       await pool.query(`ANALYZE ${table}`);

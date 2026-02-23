@@ -43,49 +43,49 @@ bash scripts/deploy/cleanup-old-schedulers.sh
 
 ### クローラー（毎日）
 
-| 時刻(JST) | ジョブ名 | エンドポイント | 説明 |
-|---|---|---|---|
-| 01:00 | crawl-dti-caribbeancom | `/api/cron/crawl-dti?site=caribbeancom` | カリビアンコム |
-| 01:10 | crawl-dti-caribbeancompr | `/api/cron/crawl-dti?site=caribbeancompr` | カリビアンコムPR |
-| 01:20 | crawl-dti-1pondo | `/api/cron/crawl-dti?site=1pondo` | 一本道 |
-| 01:30 | crawl-dti-heyzo | `/api/cron/crawl-dti?site=heyzo` | HEYZO |
-| 01:40 | crawl-dti-10musume | `/api/cron/crawl-dti?site=10musume` | 天然むすめ |
-| 01:50 | crawl-dti-pacopacomama | `/api/cron/crawl-dti?site=pacopacomama` | パコパコママ |
-| 03:00 | crawl-mgs-scheduler | `/api/cron/crawl-mgs` | MGS |
-| 05:00 | crawl-duga-scheduler | `/api/cron/crawl-duga` | DUGA |
-| 07:00 | crawl-sokmil-scheduler | `/api/cron/crawl-sokmil` | SOKMIL |
-| 09:00 | crawl-japanska-scheduler | `/api/cron/crawl-japanska` | Japanska |
-| 11:00 | crawl-b10f-scheduler | `/api/cron/crawl-b10f` | b10f |
-| 13:00 | crawl-fc2-scheduler | `/api/cron/crawl-fc2` | FC2 |
+| 時刻(JST) | ジョブ名                 | エンドポイント                            | 説明             |
+| --------- | ------------------------ | ----------------------------------------- | ---------------- |
+| 01:00     | crawl-dti-caribbeancom   | `/api/cron/crawl-dti?site=caribbeancom`   | カリビアンコム   |
+| 01:10     | crawl-dti-caribbeancompr | `/api/cron/crawl-dti?site=caribbeancompr` | カリビアンコムPR |
+| 01:20     | crawl-dti-1pondo         | `/api/cron/crawl-dti?site=1pondo`         | 一本道           |
+| 01:30     | crawl-dti-heyzo          | `/api/cron/crawl-dti?site=heyzo`          | HEYZO            |
+| 01:40     | crawl-dti-10musume       | `/api/cron/crawl-dti?site=10musume`       | 天然むすめ       |
+| 01:50     | crawl-dti-pacopacomama   | `/api/cron/crawl-dti?site=pacopacomama`   | パコパコママ     |
+| 03:00     | crawl-mgs-scheduler      | `/api/cron/crawl-mgs`                     | MGS              |
+| 05:00     | crawl-duga-scheduler     | `/api/cron/crawl-duga`                    | DUGA             |
+| 07:00     | crawl-sokmil-scheduler   | `/api/cron/crawl-sokmil`                  | SOKMIL           |
+| 09:00     | crawl-japanska-scheduler | `/api/cron/crawl-japanska`                | Japanska         |
+| 11:00     | crawl-b10f-scheduler     | `/api/cron/crawl-b10f`                    | b10f             |
+| 13:00     | crawl-fc2-scheduler      | `/api/cron/crawl-fc2`                     | FC2              |
 
 ### エンリッチメント（毎日）
 
-| 時刻(JST) | ジョブ名 | エンドポイント | タイムアウト |
-|---|---|---|---|
-| 02,08,14,20:00 | process-raw-data-scheduler | `/api/cron/process-raw-data` | 5分 |
-| 15:00 | performer-pipeline-scheduler | `/api/cron/performer-pipeline` | 30分 |
-| 16:00 | content-enrichment-scheduler | `/api/cron/content-enrichment-pipeline` | 5分 |
-| 17:00 | normalize-performers-scheduler | `/api/cron/normalize-performers` | 5分 |
-| 18:00 | enhance-content-scheduler | `/api/cron/enhance-content` | 5分 |
-| 19:00 | seo-enhance-scheduler | `/api/cron/seo-enhance` | 5分 |
+| 時刻(JST)      | ジョブ名                       | エンドポイント                          | タイムアウト |
+| -------------- | ------------------------------ | --------------------------------------- | ------------ |
+| 02,08,14,20:00 | process-raw-data-scheduler     | `/api/cron/process-raw-data`            | 5分          |
+| 15:00          | performer-pipeline-scheduler   | `/api/cron/performer-pipeline`          | 30分         |
+| 16:00          | content-enrichment-scheduler   | `/api/cron/content-enrichment-pipeline` | 5分          |
+| 17:00          | normalize-performers-scheduler | `/api/cron/normalize-performers`        | 5分          |
+| 18:00          | enhance-content-scheduler      | `/api/cron/enhance-content`             | 5分          |
+| 19:00          | seo-enhance-scheduler          | `/api/cron/seo-enhance`                 | 5分          |
 
 ### バックフィル
 
-| スケジュール | ジョブ名 | エンドポイント |
-|---|---|---|
-| 毎日 20:00 | backfill-videos-scheduler | `/api/cron/backfill-videos` |
-| 毎日 21:00 | backfill-images-scheduler | `/api/cron/backfill-images` |
+| スケジュール     | ジョブ名                           | エンドポイント                          |
+| ---------------- | ---------------------------------- | --------------------------------------- |
+| 毎日 20:00       | backfill-videos-scheduler          | `/api/cron/backfill-videos`             |
+| 毎日 21:00       | backfill-images-scheduler          | `/api/cron/backfill-images`             |
 | 週1回 日曜 03:00 | backfill-performer-profiles-weekly | `/api/cron/backfill-performer-profiles` |
-| 週1回 日曜 05:00 | backfill-reviews-weekly | `/api/cron/backfill-reviews` |
-| 週1回 日曜 07:00 | crawl-performer-lookup-weekly | `/api/cron/crawl-performer-lookup` |
+| 週1回 日曜 05:00 | backfill-reviews-weekly            | `/api/cron/backfill-reviews`            |
+| 週1回 日曜 07:00 | crawl-performer-lookup-weekly      | `/api/cron/crawl-performer-lookup`      |
 
 ### メンテナンス・通知
 
-| スケジュール | ジョブ名 | エンドポイント | メソッド |
-|---|---|---|---|
-| 毎日 23:00 | cleanup-scheduler | `/api/cron/cleanup` | GET |
-| 3時間ごと | indexnow-notify-scheduler | `/api/cron/indexnow-notify` | POST |
-| 週1回 月曜 04:00 | data-quality-report-weekly | `/api/cron/data-quality-report` | GET |
+| スケジュール     | ジョブ名                   | エンドポイント                  | メソッド |
+| ---------------- | -------------------------- | ------------------------------- | -------- |
+| 毎日 23:00       | cleanup-scheduler          | `/api/cron/cleanup`             | GET      |
+| 3時間ごと        | indexnow-notify-scheduler  | `/api/cron/indexnow-notify`     | POST     |
+| 週1回 月曜 04:00 | data-quality-report-weekly | `/api/cron/data-quality-report` | GET      |
 
 ## 認証
 
@@ -138,9 +138,9 @@ gcloud logging read 'resource.type="cloud_scheduler_job"' --limit=20
 
 ## トラブルシューティング
 
-| 症状 | 原因 | 対処 |
-|---|---|---|
-| 401 Unauthorized | OIDC設定ミス | サービスアカウント権限確認 |
-| 504 Timeout | 処理時間超過 | `limit`パラメータを減らす |
-| 500 Error | DB接続エラー | VPCコネクタ設定確認 |
-| ジョブがFAILED | Web Appがダウン | `gcloud run services describe` で確認 |
+| 症状             | 原因            | 対処                                  |
+| ---------------- | --------------- | ------------------------------------- |
+| 401 Unauthorized | OIDC設定ミス    | サービスアカウント権限確認            |
+| 504 Timeout      | 処理時間超過    | `limit`パラメータを減らす             |
+| 500 Error        | DB接続エラー    | VPCコネクタ設定確認                   |
+| ジョブがFAILED   | Web Appがダウン | `gcloud run services describe` で確認 |

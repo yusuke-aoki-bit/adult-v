@@ -8,10 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -36,8 +33,9 @@ const AFFILIATE_ID = '9512-1-001';
 const LIST_PAGE_URL = 'https://www.japanska-xxx.com/category/list_0.html';
 
 const COMMON_HEADERS = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
 };
 
@@ -47,8 +45,7 @@ function generateAffiliateUrl(movieId: string): string {
 }
 
 function isHomePage(html: string): boolean {
-  return html.includes('<!--home.html-->') ||
-         (html.includes('幅広いジャンル') && html.includes('30日'));
+  return html.includes('<!--home.html-->') || (html.includes('幅広いジャンル') && html.includes('30日'));
 }
 
 function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
@@ -73,7 +70,9 @@ async function acquireSessionCookie(): Promise<string | null> {
     }
     const body = await response.text();
     void body;
-    console.warn(`[crawl-japanska] Strategy 1 failed: status=${response.status}, set-cookie=${setCookie ? 'present' : 'empty'}`);
+    console.warn(
+      `[crawl-japanska] Strategy 1 failed: status=${response.status}, set-cookie=${setCookie ? 'present' : 'empty'}`,
+    );
   } catch (error) {
     console.warn(`[crawl-japanska] Strategy 1 error: ${error instanceof Error ? error.message : 'unknown'}`);
   }
@@ -124,7 +123,7 @@ async function parseDetailPage(movieId: string, cookie?: string): Promise<Japans
   try {
     const headers: Record<string, string> = {
       ...COMMON_HEADERS,
-      'Referer': LIST_PAGE_URL,
+      Referer: LIST_PAGE_URL,
     };
     if (cookie) headers['Cookie'] = cookie;
 
@@ -156,9 +155,15 @@ async function parseDetailPage(movieId: string, cookie?: string): Promise<Japans
       title = `Japanska-${movieId}`;
     }
 
-    const descMatch = html.match(/<div[^>]*class="[^"]*comment[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
-                      html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
-    const description = descMatch?.[1] ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
+    const descMatch =
+      html.match(/<div[^>]*class="[^"]*comment[^"]*"[^>]*>([\s\S]*?)<\/div>/i) ||
+      html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i);
+    const description = descMatch?.[1]
+      ? descMatch[1]
+          .replace(/<[^>]+>/g, '')
+          .trim()
+          .substring(0, 1000)
+      : undefined;
 
     const performers: string[] = [];
     const actressLinkMatches = html.matchAll(/<a[^>]*href="[^"]*actress[^"]*"[^>]*>([^<]+)<\/a>/gi);
@@ -250,11 +255,14 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
       // セッションcookieを取得（termid必須）
       const cookie = await acquireSessionCookie();
       if (!cookie) {
-        return NextResponse.json({
-          success: false,
-          error: 'Failed to acquire Japanska session cookie',
-          stats,
-        }, { status: 502 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Failed to acquire Japanska session cookie',
+            stats,
+          },
+          { status: 502 },
+        );
       }
       console.log(`[crawl-japanska] Session cookie acquired`);
 
@@ -289,8 +297,8 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
           const htmlResponse = await fetchWithTimeout(detailUrl, {
             headers: {
               ...COMMON_HEADERS,
-              'Referer': LIST_PAGE_URL,
-              'Cookie': cookie,
+              Referer: LIST_PAGE_URL,
+              Cookie: cookie,
             },
           });
           const html = await htmlResponse.text();
@@ -315,7 +323,8 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
 
           const row = productResult.rows[0] as { id: number; is_new: boolean };
           const productId = row.id;
-          if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
+          if (row.is_new) stats.newProducts++;
+          else stats.updatedProducts++;
 
           const affiliateUrl = generateAffiliateUrl(product.movieId);
           await db.execute(sql`
@@ -345,8 +354,7 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
             }
           }
 
-          await new Promise(resolve => setTimeout(resolve, 500));
-
+          await new Promise((resolve) => setTimeout(resolve, 500));
         } catch (error) {
           stats.errors++;
           console.error(`Error processing Japanska product ${product.movieId}:`, error);
@@ -356,9 +364,9 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
         try {
-          const performerData = [...allPerformerNames].map(name => ({ name }));
+          const performerData = [...allPerformerNames].map((name) => ({ name }));
           const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-          const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+          const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
           const links: { productId: number; performerId: number }[] = [];
           for (const { productId, performerNames } of pendingPerformerLinks) {
@@ -386,12 +394,11 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('Japanska crawl error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

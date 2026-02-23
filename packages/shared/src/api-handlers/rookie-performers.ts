@@ -56,18 +56,23 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
         .from(performers)
         .leftJoin(
           productPerformers,
-          eq((productPerformers as Record<string, unknown>)['performerId'], (performers as Record<string, unknown>)['id'])
+          eq(
+            (productPerformers as Record<string, unknown>)['performerId'],
+            (performers as Record<string, unknown>)['id'],
+          ),
         )
-        .where(
-          gte((performers as Record<string, unknown>)['debutYear'], rookieYear)
-        )
+        .where(gte((performers as Record<string, unknown>)['debutYear'], rookieYear))
         .groupBy(
           (performers as Record<string, unknown>)['id'],
           (performers as Record<string, unknown>)['name'],
           (performers as Record<string, unknown>)['profileImageUrl'],
-          (performers as Record<string, unknown>)['debutYear']
+          (performers as Record<string, unknown>)['debutYear'],
         )
-        .orderBy(desc((sql as CallableFunction)`COUNT(DISTINCT ${(productPerformers as Record<string, unknown>)['productId']})`))
+        .orderBy(
+          desc(
+            (sql as CallableFunction)`COUNT(DISTINCT ${(productPerformers as Record<string, unknown>)['productId']})`,
+          ),
+        )
         .limit(limit)
         .offset(offset);
 
@@ -86,10 +91,18 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
           .from(productPerformers)
           .innerJoin(
             products,
-            eq((productPerformers as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id'])
+            eq(
+              (productPerformers as Record<string, unknown>)['productId'],
+              (products as Record<string, unknown>)['id'],
+            ),
           )
           .where(
-            (sql as CallableFunction)`${(productPerformers as Record<string, unknown>)['performerId']} = ANY(ARRAY[${(sql as any).join(rookieIds.map((id: number) => (sql as CallableFunction)`${id}`), (sql as CallableFunction)`, `)}]::integer[])`
+            (sql as CallableFunction)`${(productPerformers as Record<string, unknown>)['performerId']} = ANY(ARRAY[${(
+              sql as any
+            ).join(
+              rookieIds.map((id: number) => (sql as CallableFunction)`${id}`),
+              (sql as CallableFunction)`, `,
+            )}]::integer[])`,
           )
           .orderBy(desc((products as Record<string, unknown>)['releaseDate']));
 
@@ -105,30 +118,24 @@ export function createRookiePerformersHandler(deps: RookiePerformersHandlerDeps)
       }
 
       // 結果を整形
-      const result: RookiePerformer[] = rookiePerformersQuery.map((p: {
-        id: number;
-        name: string;
-        imageUrl: string | null;
-        debutYear: number;
-        productCount: number;
-      }) => ({
-        id: p.id,
-        name: p.name,
-        imageUrl: p.imageUrl,
-        debutYear: p.debutYear,
-        productCount: p.productCount,
-        latestProductTitle: latestProductsMap[p.id]?.title || null,
-        latestProductDate: latestProductsMap[p.id]?.releaseDate || null,
-      }));
+      const result: RookiePerformer[] = rookiePerformersQuery.map(
+        (p: { id: number; name: string; imageUrl: string | null; debutYear: number; productCount: number }) => ({
+          id: p.id,
+          name: p.name,
+          imageUrl: p.imageUrl,
+          debutYear: p.debutYear,
+          productCount: p.productCount,
+          latestProductTitle: latestProductsMap[p.id]?.title || null,
+          latestProductDate: latestProductsMap[p.id]?.releaseDate || null,
+        }),
+      );
 
       // 総数を取得
       const totalCountResult = await (db['select'] as CallableFunction)({
         count: (sql as CallableFunction)`COUNT(*)`,
       })
         .from(performers)
-        .where(
-          gte((performers as Record<string, unknown>)['debutYear'], rookieYear)
-        );
+        .where(gte((performers as Record<string, unknown>)['debutYear'], rookieYear));
 
       const totalCount = Number(totalCountResult[0]?.count || 0);
 

@@ -11,9 +11,15 @@ const mockLocalStorage = (() => {
   let store: Record<string, string> = {};
   return {
     getItem: vi.fn((key: string) => store[key] || null),
-    setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
-    removeItem: vi.fn((key: string) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
+    setItem: vi.fn((key: string, value: string) => {
+      store[key] = value;
+    }),
+    removeItem: vi.fn((key: string) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
   };
 })();
 
@@ -55,11 +61,7 @@ describe('useBudgetTracker', () => {
 
   describe('Budget Statistics Calculation', () => {
     it('should calculate spent amount correctly', () => {
-      const purchases = [
-        { price: 1000 },
-        { price: 2500 },
-        { price: 500 },
-      ];
+      const purchases = [{ price: 1000 }, { price: 2500 }, { price: 500 }];
 
       const spent = purchases.reduce((sum, p) => sum + p.price, 0);
       expect(spent).toBe(4000);
@@ -94,9 +96,7 @@ describe('useBudgetTracker', () => {
     it('should handle zero budget', () => {
       const monthlyBudget = 0;
       const spent = 1000;
-      const percentUsed = monthlyBudget > 0
-        ? Math.round((spent / monthlyBudget) * 100)
-        : 0;
+      const percentUsed = monthlyBudget > 0 ? Math.round((spent / monthlyBudget) * 100) : 0;
 
       expect(percentUsed).toBe(0);
     });
@@ -152,7 +152,7 @@ describe('useBudgetTracker', () => {
       ];
 
       const removePurchase = (purchaseId: string) => {
-        return purchases.filter(p => p.id !== purchaseId);
+        return purchases.filter((p) => p.id !== purchaseId);
       };
 
       const result = removePurchase('purchase-1');
@@ -177,7 +177,8 @@ describe('useBudgetTracker', () => {
 
   describe('Purchase History Import', () => {
     it('should import multiple purchases', () => {
-      const existingPurchases: Array<{ id: string; productId: string; title: string; price: number; date: string }> = [];
+      const existingPurchases: Array<{ id: string; productId: string; title: string; price: number; date: string }> =
+        [];
 
       const purchasesToImport = [
         { productId: 'product-1', title: 'Product 1', price: 1000, date: '2025-01-01' },
@@ -210,13 +211,9 @@ describe('useBudgetTracker', () => {
       ];
 
       const importPurchases = (toImport: typeof purchasesToImport) => {
-        const existingKeys = new Set(
-          existingPurchases.map(p => `${p.productId}-${p.date.split('T')[0]}`)
-        );
+        const existingKeys = new Set(existingPurchases.map((p) => `${p.productId}-${p.date.split('T')[0]}`));
 
-        const uniqueNew = toImport.filter(
-          p => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`)
-        );
+        const uniqueNew = toImport.filter((p) => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`));
 
         return uniqueNew.length;
       };
@@ -233,7 +230,10 @@ describe('useBudgetTracker', () => {
       `;
 
       const parseDmmHistory = (text: string) => {
-        const lines = text.trim().split('\n').filter(line => line.trim());
+        const lines = text
+          .trim()
+          .split('\n')
+          .filter((line) => line.trim());
         const purchases = [];
 
         for (const line of lines) {
@@ -241,10 +241,7 @@ describe('useBudgetTracker', () => {
           const priceMatch = line.match(/¥([\d,]+)/);
 
           if (dateMatch && priceMatch) {
-            const title = line
-              .replace(dateMatch[0], '')
-              .replace(`¥${priceMatch[1]}`, '')
-              .trim();
+            const title = line.replace(dateMatch[0], '').replace(`¥${priceMatch[1]}`, '').trim();
             purchases.push({
               date: dateMatch[1]!.replace(/\//g, '-'),
               title,
@@ -274,9 +271,7 @@ describe('useBudgetTracker', () => {
         { id: '3', date: '2024-01-01T00:00:00Z' }, // Last year
       ];
 
-      const currentMonthPurchases = allPurchases.filter(p =>
-        p.date.startsWith(currentMonth)
-      );
+      const currentMonthPurchases = allPurchases.filter((p) => p.date.startsWith(currentMonth));
 
       expect(currentMonthPurchases).toHaveLength(2);
     });
@@ -286,18 +281,13 @@ describe('useBudgetTracker', () => {
     it('should save data to localStorage', () => {
       const budgetData = {
         monthlyBudget: 15000,
-        purchases: [
-          { id: '1', productId: 'p1', title: 'Product', price: 1000, date: '2025-01-01' },
-        ],
+        purchases: [{ id: '1', productId: 'p1', title: 'Product', price: 1000, date: '2025-01-01' }],
         currency: 'JPY',
       };
 
       mockLocalStorage.setItem(STORAGE_KEY, JSON.stringify(budgetData));
 
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-        STORAGE_KEY,
-        JSON.stringify(budgetData)
-      );
+      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(STORAGE_KEY, JSON.stringify(budgetData));
     });
 
     it('should load data from localStorage', () => {

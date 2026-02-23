@@ -43,7 +43,12 @@ export function createDiscoverHandler(deps: DiscoverHandlerDeps) {
       const { searchParams } = new URL(request['url']);
 
       const excludeIdsParam = searchParams.get('excludeIds');
-      const excludeIds = excludeIdsParam ? excludeIdsParam.split(',').map(id => parseInt(id)).filter(id => !isNaN(id)) : [];
+      const excludeIds = excludeIdsParam
+        ? excludeIdsParam
+            .split(',')
+            .map((id) => parseInt(id))
+            .filter((id) => !isNaN(id))
+        : [];
       const locale = searchParams.get('locale') || 'ja';
 
       // Parse filters
@@ -65,7 +70,11 @@ export function createDiscoverHandler(deps: DiscoverHandlerDeps) {
       if (genres) filters.genres = genres.split(',');
 
       const performerIds = searchParams.get('performerIds');
-      if (performerIds) filters.performerIds = performerIds.split(',').map(id => parseInt(id)).filter(id => !isNaN(id));
+      if (performerIds)
+        filters.performerIds = performerIds
+          .split(',')
+          .map((id) => parseInt(id))
+          .filter((id) => !isNaN(id));
 
       const hasPerformer = searchParams.get('hasPerformer');
       if (hasPerformer !== null) filters.hasPerformer = hasPerformer === 'true';
@@ -78,10 +87,7 @@ export function createDiscoverHandler(deps: DiscoverHandlerDeps) {
 
       const products = await deps.getRandomProducts({ excludeIds, locale, filters, limit });
 
-      return NextResponse.json(
-        { products },
-        { headers: { 'Cache-Control': CACHE.ONE_MIN } }
-      );
+      return NextResponse.json({ products }, { headers: { 'Cache-Control': CACHE.ONE_MIN } });
     } catch (error) {
       return createApiErrorResponse(error, 'Failed to fetch product', 500, {
         endpoint: '/api/discover',

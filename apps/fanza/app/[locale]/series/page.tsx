@@ -52,21 +52,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://example.com';
 
   return {
-    ...generateBaseMetadata(
-      t.title,
-      t.description,
-      undefined,
-      localizedHref('/series', locale),
-      undefined,
-      locale
-    ),
+    ...generateBaseMetadata(t.title, t.description, undefined, localizedHref('/series', locale), undefined, locale),
     alternates: {
       canonical: `${baseUrl}/series`,
       languages: {
-        'ja': `${baseUrl}/series`,
-        'en': `${baseUrl}/series?hl=en`,
-        'zh': `${baseUrl}/series?hl=zh`,
-        'ko': `${baseUrl}/series?hl=ko`,
+        ja: `${baseUrl}/series`,
+        en: `${baseUrl}/series?hl=en`,
+        zh: `${baseUrl}/series?hl=zh`,
+        ko: `${baseUrl}/series?hl=ko`,
         'x-default': `${baseUrl}/series`,
       },
     },
@@ -80,7 +73,7 @@ export default async function SeriesListPage({ params }: PageProps) {
 
   const series = await getPopularSeries(50);
 
-  const getLocalizedName = (s: typeof series[0]) => {
+  const getLocalizedName = (s: (typeof series)[0]) => {
     if (locale === 'en' && s.nameEn) return s.nameEn;
     if (locale === 'zh' && s.nameZh) return s.nameZh;
     if (locale === 'ko' && s.nameKo) return s.nameKo;
@@ -101,66 +94,54 @@ export default async function SeriesListPage({ params }: PageProps) {
 
   return (
     <>
-      <JsonLD
-        data={[
-          generateBreadcrumbSchema(breadcrumbItems),
-          generateItemListSchema(itemListData, t.title),
-        ]}
-      />
-      <div className="bg-gray-50 min-h-screen">
-      <div className="container mx-auto px-4 py-8">
-        <Breadcrumb
-          items={[
-            { label: tNav('home'), href: localizedHref('/', locale) },
-            { label: t.title },
-          ]}
-          className="mb-6"
-        />
+      <JsonLD data={[generateBreadcrumbSchema(breadcrumbItems), generateItemListSchema(itemListData, t.title)]} />
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <Breadcrumb
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t.title }]}
+            className="mb-6"
+          />
 
-        <div className="flex items-center gap-3 mb-8">
-          <Library className="w-8 h-8 text-purple-500" />
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">{t.title}</h1>
-            <p className="text-sm text-gray-500">{t.description}</p>
+          <div className="mb-8 flex items-center gap-3">
+            <Library className="h-8 w-8 text-purple-500" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">{t.title}</h1>
+              <p className="text-sm text-gray-500">{t.description}</p>
+            </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {series.map((s) => (
-            <Link
-              key={s.id}
-              href={localizedHref(`/series/${s.id}`, locale)}
-              className="bg-white rounded-lg p-4 shadow hover:shadow-lg transition-shadow group"
-            >
-              <h2 className="text-lg font-bold text-gray-900 group-hover:text-purple-600 transition-colors line-clamp-2">
-                {getLocalizedName(s)}
-              </h2>
-              <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
-                <span className="flex items-center gap-1">
-                  <Film className="w-4 h-4" />
-                  {s.productCount} {t.products}
-                </span>
-                {s.latestReleaseDate && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {series.map((s) => (
+              <Link
+                key={s.id}
+                href={localizedHref(`/series/${s.id}`, locale)}
+                className="group rounded-lg bg-white p-4 shadow transition-shadow hover:shadow-lg"
+              >
+                <h2 className="line-clamp-2 text-lg font-bold text-gray-900 transition-colors group-hover:text-purple-600">
+                  {getLocalizedName(s)}
+                </h2>
+                <div className="mt-3 flex items-center gap-4 text-sm text-gray-500">
                   <span className="flex items-center gap-1">
-                    <Calendar className="w-4 h-4" />
-                    {t.latestRelease}: {s.latestReleaseDate.split('T')[0]}
+                    <Film className="h-4 w-4" />
+                    {s.productCount} {t.products}
                   </span>
-                )}
-              </div>
-              <div className="mt-3 text-sm text-purple-600 group-hover:text-purple-500 transition-colors">
-                {t.viewSeries} &rarr;
-              </div>
-            </Link>
-          ))}
-        </div>
+                  {s.latestReleaseDate && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-4 w-4" />
+                      {t.latestRelease}: {s.latestReleaseDate.split('T')[0]}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-3 text-sm text-purple-600 transition-colors group-hover:text-purple-500">
+                  {t.viewSeries} &rarr;
+                </div>
+              </Link>
+            ))}
+          </div>
 
-        {series.length === 0 && (
-          <p className="text-center text-gray-500 py-12">
-            No series found
-          </p>
-        )}
+          {series.length === 0 && <p className="py-12 text-center text-gray-500">No series found</p>}
+        </div>
       </div>
-    </div>
     </>
   );
 }

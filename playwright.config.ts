@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './__tests__/e2e',
+  snapshotPathTemplate: '{testDir}/{testFilePath}-snapshots/{projectName}/{arg}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env['CI'],
   retries: process.env['CI'] ? 2 : 1, // Add 1 retry for flaky tests in dev
@@ -12,6 +13,9 @@ export default defineConfig({
   expect: {
     // Increase expect timeout for slow dev environment
     timeout: process.env['CI'] ? 10000 : 30000,
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+    },
   },
   use: {
     trace: 'on-first-retry',

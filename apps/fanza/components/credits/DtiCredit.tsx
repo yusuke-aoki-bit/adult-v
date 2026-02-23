@@ -15,14 +15,14 @@ export function DtiCredit({ className = '' }: DtiCreditProps) {
       className={`inline-block ${className}`}
       aria-label="カリビアンコム"
     >
-      { }
+      {}
       <img
         src="https://pixelarchivenow.com/image/carib/3day_900_250.jpg"
         alt="カリビアンコム"
         width={900}
         height={250}
         loading="lazy"
-        className="block w-auto h-[50px] max-w-[180px] object-contain"
+        className="block h-[50px] w-auto max-w-[180px] object-contain"
         style={{ aspectRatio: '900/250' }}
       />
     </a>

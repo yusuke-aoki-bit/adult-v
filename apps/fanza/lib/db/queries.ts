@@ -3,11 +3,30 @@
  * 共通ファクトリ (createAppQueries) を使用し、fanza固有のオーバーライドはなし
  */
 import { getDb } from './index';
-import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales, productRatingSummary } from './schema';
+import {
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productSources,
+  performerAliases,
+  productImages,
+  productVideos,
+  productSales,
+  productRatingSummary,
+} from './schema';
 import type { Product as ProductType, Actress as ActressType } from '@/types/product';
 import { mapLegacyProvider } from '@adult-v/shared/lib/provider-utils';
 import { getDtiServiceFromUrl } from '@adult-v/shared/lib/image-utils';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@adult-v/shared/lib/localization';
+import {
+  getLocalizedTitle,
+  getLocalizedDescription,
+  getLocalizedPerformerName,
+  getLocalizedPerformerBio,
+  getLocalizedTagName,
+  getLocalizedAiReview,
+} from '@adult-v/shared/lib/localization';
 import { unstable_cache } from 'next/cache';
 import {
   generateProductIdVariations,
@@ -36,11 +55,7 @@ import type {
   MakerInfo as SharedMakerInfo,
   SeriesBasicInfo,
 } from '@adult-v/shared';
-import type {
-  RandomProduct,
-  ProductSourceWithSales,
-  SeriesInfo,
-} from '@adult-v/shared/db-queries/create-app-queries';
+import type { RandomProduct, ProductSourceWithSales, SeriesInfo } from '@adult-v/shared/db-queries/create-app-queries';
 
 // Re-export types
 export type { SaleProduct, CareerAnalysis };

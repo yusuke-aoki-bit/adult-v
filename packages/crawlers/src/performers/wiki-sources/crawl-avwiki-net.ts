@@ -59,8 +59,7 @@ async function fetchPage(url: string): Promise<string | null> {
     const response = await fetch(url, {
       headers: {
         'User-Agent': USER_AGENT,
-        Accept:
-          'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
         Referer: BASE_URL,
       },
@@ -144,10 +143,7 @@ function getTotalPages(html: string): number {
  * シリーズを検索してクロール
  * 検索結果から記事URLを抽出し、各記事ページから演者情報を取得
  */
-async function crawlSeriesSearch(
-  seriesCode: string,
-  maxPages: number
-): Promise<ProductPerformerEntry[]> {
+async function crawlSeriesSearch(seriesCode: string, maxPages: number): Promise<ProductPerformerEntry[]> {
   const entries: ProductPerformerEntry[] = [];
   const allArticleUrls: string[] = [];
 
@@ -208,9 +204,7 @@ async function crawlSeriesSearch(
     entries.push(...productEntries);
 
     if (productEntries.length > 0) {
-      console.log(
-        `    ${productCode}: ${productEntries.map((e) => e.performerName).join(', ')}`
-      );
+      console.log(`    ${productCode}: ${productEntries.map((e) => e.performerName).join(', ')}`);
     }
   }
 
@@ -278,16 +272,10 @@ async function crawlProductPage(productCode: string): Promise<ProductPerformerEn
 
   // 本文からも抽出（「出演してるAV女優の名前は、XXXさんです。」パターン）
   const bodyText = $('.entry-content, .post-content, article').text();
-  const actressMatch = bodyText.match(
-    /(?:出演|出てる)(?:してる)?(?:AV)?女優(?:の名前)?(?:は[、,]?)?([^さ。]+)さん/
-  );
+  const actressMatch = bodyText.match(/(?:出演|出てる)(?:してる)?(?:AV)?女優(?:の名前)?(?:は[、,]?)?([^さ。]+)さん/);
   if (actressMatch?.[1]) {
     const name = actressMatch[1].trim();
-    if (
-      name.length >= 2 &&
-      name.length <= 20 &&
-      /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(name)
-    ) {
+    if (name.length >= 2 && name.length <= 20 && /[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF]/.test(name)) {
       if (!entries.some((e) => e.performerName === name)) {
         entries.push({
           productCode: productCode.toUpperCase(),
@@ -319,17 +307,19 @@ async function saveEntries(entries: ProductPerformerEntry[]): Promise<number> {
       const values = batch
         .map(
           (e) =>
-            `('${e.source}', '${e.productCode.replace(/'/g, "''")}', '${e.performerName.replace(/'/g, "''")}', '${e.sourceUrl}', NOW())`
+            `('${e.source}', '${e.productCode.replace(/'/g, "''")}', '${e.performerName.replace(/'/g, "''")}', '${e.sourceUrl}', NOW())`,
         )
         .join(',\n');
 
-      await db.execute(sql.raw(`
+      await db.execute(
+        sql.raw(`
         INSERT INTO wiki_crawl_data (source, product_code, performer_name, source_url, crawled_at)
         VALUES ${values}
         ON CONFLICT (source, product_code, performer_name) DO UPDATE SET
           source_url = EXCLUDED.source_url,
           crawled_at = NOW()
-      `));
+      `),
+      );
       saved += batch.length;
     } catch (error) {
       // バッチ失敗時は個別に保存を試行

@@ -34,15 +34,11 @@ interface ConsoleError {
 }
 
 function isHydrationError(text: string): boolean {
-  return HYDRATION_ERROR_PATTERNS.some(pattern =>
-    text.toLowerCase().includes(pattern.toLowerCase())
-  );
+  return HYDRATION_ERROR_PATTERNS.some((pattern) => text.toLowerCase().includes(pattern.toLowerCase()));
 }
 
 function shouldIgnoreError(text: string): boolean {
-  return IGNORED_ERRORS.some(pattern =>
-    text.toLowerCase().includes(pattern.toLowerCase())
-  );
+  return IGNORED_ERRORS.some((pattern) => text.toLowerCase().includes(pattern.toLowerCase()));
 }
 
 test.describe('Hydration Error Detection', () => {
@@ -139,7 +135,7 @@ test.describe('Hydration Error Detection', () => {
     // 商品カードのリンクを取得
     const productLink = page.locator('a[href*="/products/"]').first();
 
-    if (await productLink.count() > 0) {
+    if ((await productLink.count()) > 0) {
       await productLink.click();
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
@@ -170,7 +166,7 @@ test.describe('Hydration Error Detection', () => {
     // 女優カードのリンクを取得
     const actressLink = page.locator('a[href*="/actress/"]').first();
 
-    if (await actressLink.count() > 0) {
+    if ((await actressLink.count()) > 0) {
       await actressLink.click();
       await page.waitForLoadState('networkidle');
       await page.waitForTimeout(2000);
@@ -219,9 +215,7 @@ test.describe('Console Error Summary', () => {
     }
 
     // Hydrationエラーがあればテスト失敗
-    const hasHydrationErrors = allErrors.some(({ errors }) =>
-      errors.some(e => isHydrationError(e))
-    );
+    const hasHydrationErrors = allErrors.some(({ errors }) => errors.some((e) => isHydrationError(e)));
 
     expect(hasHydrationErrors, 'Hydrationエラーが検出されました').toBe(false);
   });

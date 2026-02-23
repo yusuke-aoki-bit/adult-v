@@ -33,7 +33,7 @@ async function fetchVideoFromMgs(productId: string): Promise<string | null> {
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': 'adc=1',
+        Cookie: 'adc=1',
       },
     });
     if (!response.ok) return null;
@@ -183,42 +183,40 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
       const concurrencyLimit = pLimit(CONCURRENCY);
       const videoInserts: { productId: number; aspName: string; videoUrl: string; normalizedId: string }[] = [];
 
-      await Promise.all(products.map(product => concurrencyLimit(async () => {
-        if (Date.now() - startTime > TIME_LIMIT) return;
-        stats.checked++;
+      await Promise.all(
+        products.map((product) =>
+          concurrencyLimit(async () => {
+            if (Date.now() - startTime > TIME_LIMIT) return;
+            stats.checked++;
 
-        try {
-          const videoUrl = await fetchVideoForProduct(
-            product.asp_name,
-            product.original_product_id
-          );
+            try {
+              const videoUrl = await fetchVideoForProduct(product.asp_name, product.original_product_id);
 
-          if (videoUrl) {
-            videoInserts.push({
-              productId: product['id'] as number,
-              aspName: product.asp_name,
-              videoUrl,
-              normalizedId: product.normalized_product_id,
-            });
-            stats.updated++;
-          } else {
-            stats.skipped++;
-          }
+              if (videoUrl) {
+                videoInserts.push({
+                  productId: product['id'] as number,
+                  aspName: product.asp_name,
+                  videoUrl,
+                  normalizedId: product.normalized_product_id,
+                });
+                stats.updated++;
+              } else {
+                stats.skipped++;
+              }
 
-          // レート制限（並列スロット内で待機）
-          await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
-
-        } catch (error) {
-          stats.failed++;
-          console.error(`[backfill-videos] Error for ${product.normalized_product_id}:`, error);
-        }
-      })));
+              // レート制限（並列スロット内で待機）
+              await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
+            } catch (error) {
+              stats.failed++;
+              console.error(`[backfill-videos] Error for ${product.normalized_product_id}:`, error);
+            }
+          }),
+        ),
+      );
 
       // バッチINSERT（収集した動画URLを一括挿入）
       if (videoInserts.length > 0) {
-        const valuesClauses = videoInserts.map(
-          (v) => sql`(${v.productId}, ${v.aspName}, ${v.videoUrl}, 'sample', 0)`
-        );
+        const valuesClauses = videoInserts.map((v) => sql`(${v.productId}, ${v.aspName}, ${v.videoUrl}, 'sample', 0)`);
         const valuesJoined = sql.join(valuesClauses, sql`, `);
 
         await db.execute(sql`
@@ -241,7 +239,6 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('[backfill-videos] Error:', error);
       return NextResponse.json(
@@ -250,7 +247,7 @@ export function createBackfillVideosHandler(deps: BackfillVideosHandlerDeps) {
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

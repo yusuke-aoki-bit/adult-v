@@ -46,91 +46,101 @@ export function useBudgetTracker() {
 
   // Filter purchases to current month
   const currentMonthPurchases = useMemo(
-    () => budgetData.purchases.filter(p => p.date.startsWith(currentMonth)),
+    () => budgetData.purchases.filter((p) => p.date.startsWith(currentMonth)),
     [budgetData.purchases, currentMonth],
   );
 
   // Set monthly budget
-  const setMonthlyBudget = useCallback((amount: number) => {
-    setBudgetData(prev => ({
-      ...prev,
-      monthlyBudget: Math.max(0, amount),
-    }));
-  }, [setBudgetData]);
+  const setMonthlyBudget = useCallback(
+    (amount: number) => {
+      setBudgetData((prev) => ({
+        ...prev,
+        monthlyBudget: Math.max(0, amount),
+      }));
+    },
+    [setBudgetData],
+  );
 
   // Add purchase
-  const addPurchase = useCallback((productId: string, title: string, price: number, date?: string) => {
-    const purchase: Purchase = {
-      id: `${productId}-${Date.now()}`,
-      productId,
-      title,
-      price,
-      date: date || new Date().toISOString(),
-    };
+  const addPurchase = useCallback(
+    (productId: string, title: string, price: number, date?: string) => {
+      const purchase: Purchase = {
+        id: `${productId}-${Date.now()}`,
+        productId,
+        title,
+        price,
+        date: date || new Date().toISOString(),
+      };
 
-    setBudgetData(prev => ({
-      ...prev,
-      purchases: [...prev.purchases, purchase],
-    }));
-  }, [setBudgetData]);
+      setBudgetData((prev) => ({
+        ...prev,
+        purchases: [...prev.purchases, purchase],
+      }));
+    },
+    [setBudgetData],
+  );
 
   // Import multiple purchases (for bulk import from DMM/FANZA)
-  const importPurchases = useCallback((purchasesToImport: Array<{
-    productId: string;
-    title: string;
-    price: number;
-    date: string;
-  }>) => {
-    const newPurchases: Purchase[] = purchasesToImport.map((p) => ({
-      id: `${p.productId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      productId: p.productId,
-      title: p.title,
-      price: p.price,
-      date: p.date,
-    }));
+  const importPurchases = useCallback(
+    (
+      purchasesToImport: Array<{
+        productId: string;
+        title: string;
+        price: number;
+        date: string;
+      }>,
+    ) => {
+      const newPurchases: Purchase[] = purchasesToImport.map((p) => ({
+        id: `${p.productId}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        productId: p.productId,
+        title: p.title,
+        price: p.price,
+        date: p.date,
+      }));
 
-    let addedCount = 0;
+      let addedCount = 0;
 
-    setBudgetData(prev => {
-      const existingKeys = new Set(
-        prev.purchases.map(p => `${p.productId}-${p.date.split('T')[0]}`)
-      );
-      const uniqueNewPurchases = newPurchases.filter(
-        p => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`)
-      );
-      addedCount = uniqueNewPurchases.length;
+      setBudgetData((prev) => {
+        const existingKeys = new Set(prev.purchases.map((p) => `${p.productId}-${p.date.split('T')[0]}`));
+        const uniqueNewPurchases = newPurchases.filter(
+          (p) => !existingKeys.has(`${p.productId}-${p.date.split('T')[0]}`),
+        );
+        addedCount = uniqueNewPurchases.length;
 
-      return {
-        ...prev,
-        purchases: [...prev.purchases, ...uniqueNewPurchases],
-      };
-    });
+        return {
+          ...prev,
+          purchases: [...prev.purchases, ...uniqueNewPurchases],
+        };
+      });
 
-    return addedCount;
-  }, [setBudgetData]);
+      return addedCount;
+    },
+    [setBudgetData],
+  );
 
   // Remove purchase
-  const removePurchase = useCallback((purchaseId: string) => {
-    setBudgetData(prev => ({
-      ...prev,
-      purchases: prev.purchases.filter(p => p.id !== purchaseId),
-    }));
-  }, [setBudgetData]);
+  const removePurchase = useCallback(
+    (purchaseId: string) => {
+      setBudgetData((prev) => ({
+        ...prev,
+        purchases: prev.purchases.filter((p) => p.id !== purchaseId),
+      }));
+    },
+    [setBudgetData],
+  );
 
   // Clear all purchases for current month
   const clearPurchases = useCallback(() => {
-    setBudgetData(prev => ({
+    setBudgetData((prev) => ({
       ...prev,
-      purchases: prev.purchases.filter(p => !p.date.startsWith(currentMonth)),
+      purchases: prev.purchases.filter((p) => !p.date.startsWith(currentMonth)),
     }));
   }, [setBudgetData, currentMonth]);
 
   // Calculate stats from current month purchases
   const spent = currentMonthPurchases.reduce((sum, p) => sum + p.price, 0);
   const remaining = budgetData.monthlyBudget - spent;
-  const percentUsed = budgetData.monthlyBudget > 0
-    ? Math.round((spent / budgetData.monthlyBudget) * 100)
-    : 0;
+  const percentUsed = budgetData.monthlyBudget > 0 ? Math.round((spent / budgetData.monthlyBudget) * 100) : 0;
 
   const stats: BudgetStats = {
     monthlyBudget: budgetData.monthlyBudget,

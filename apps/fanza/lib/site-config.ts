@@ -53,7 +53,7 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
     crossLinkSite: 'fanza',
     crossLinkUrl: 'https://www.f.adult-v.com',
   },
-  'fanza': {
+  fanza: {
     mode: 'fanza',
     name: 'AV Viewer Lab',
     description: 'AV作品レビューサイト',
@@ -64,7 +64,8 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
     logo: '/av-logo.svg',
     brandText: 'AV Viewer Lab',
     seoTitle: 'AV Viewer Lab - 作品レビュー',
-    seoDescription: '新作・人気作品をレビュー。出演女優別・ジャンル別で探せます。当サイトはFANZA/DMMの公式サービスではありません。',
+    seoDescription:
+      '新作・人気作品をレビュー。出演女優別・ジャンル別で探せます。当サイトはFANZA/DMMの公式サービスではありません。',
     crossLinkEnabled: false,
     crossLinkSite: null,
     crossLinkUrl: null,
@@ -122,10 +123,7 @@ export function getAspFilter(mode: SiteMode): string[] | null {
 /**
  * 相互リンク用のURLを生成
  */
-export function getCrossLinkUrl(
-  currentMode: SiteMode,
-  path: string
-): string | null {
+export function getCrossLinkUrl(currentMode: SiteMode, path: string): string | null {
   const config = siteConfigs[currentMode];
   if (!config.crossLinkEnabled || !config.crossLinkUrl) {
     return null;

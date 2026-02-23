@@ -65,7 +65,7 @@ async function fetchWikipediaPage(title: string): Promise<string | null> {
     const response = await fetch(`${WIKI_API_URL}?${params}`, {
       headers: {
         'User-Agent': 'AdultViewerLab/1.0 (Actress info crawler)',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -107,14 +107,21 @@ function extractAliasesFromWikipedia(html: string, actressName: string): string[
 
       const parts = textContent
         .split(/[,、/／\n]/)
-        .map(a => a.replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim())
-        .filter(a => {
-          return a.length >= 2 &&
-                 a.length < 20 &&
-                 a !== actressName &&
-                 !a.includes('など') &&
-                 !a.includes('→') &&
-                 !a.includes('の');
+        .map((a) =>
+          a
+            .replace(/（[^）]*）/g, '')
+            .replace(/\([^)]*\)/g, '')
+            .trim(),
+        )
+        .filter((a) => {
+          return (
+            a.length >= 2 &&
+            a.length < 20 &&
+            a !== actressName &&
+            !a.includes('など') &&
+            !a.includes('→') &&
+            !a.includes('の')
+          );
         });
 
       aliases.push(...parts);
@@ -123,11 +130,7 @@ function extractAliasesFromWikipedia(html: string, actressName: string): string[
 
   // ページ冒頭の括弧内の別名も抽出
   const leadText = $('div.mw-parser-output > p').first().text();
-  const namePatterns = [
-    /旧芸名[：:]\s*([^、,。）]+)/g,
-    /別名[：:]\s*([^、,。）]+)/g,
-    /旧名[：:]\s*([^、,。）]+)/g,
-  ];
+  const namePatterns = [/旧芸名[：:]\s*([^、,。）]+)/g, /別名[：:]\s*([^、,。）]+)/g, /旧名[：:]\s*([^、,。）]+)/g];
 
   for (const pattern of namePatterns) {
     let match;
@@ -217,14 +220,14 @@ function extractProductIdsFromWikipedia(html: string): string[] {
 
     if (tagName === 'h2' || tagName === 'h3') {
       const headlineText = $elem.find('.mw-headline').text().trim();
-      inWorksSection = worksSections.some(s => headlineText.includes(s));
+      inWorksSection = worksSections.some((s) => headlineText.includes(s));
     }
 
     if (inWorksSection && (tagName === 'table' || tagName === 'ul' || tagName === 'ol')) {
       const text = $elem.text();
       const matches = text.match(productPattern);
       if (matches) {
-        matches.forEach(m => foundProducts.add(m.toUpperCase()));
+        matches.forEach((m) => foundProducts.add(m.toUpperCase()));
       }
     }
   });
@@ -314,7 +317,10 @@ async function fetchFromAvWikiNet(actressName: string): Promise<ActressData | nu
         const valueMatch = text.match(/別名[：:]\s*(.+)|旧芸名[：:]\s*(.+)/);
         if (valueMatch) {
           const value = valueMatch[1] || valueMatch[2];
-          const parts = value.split(/[,、/]/).map(a => a.trim()).filter(a => a && a !== actressName);
+          const parts = value
+            .split(/[,、/]/)
+            .map((a) => a.trim())
+            .filter((a) => a && a !== actressName);
           aliases.push(...parts);
         }
       }
@@ -325,7 +331,7 @@ async function fetchFromAvWikiNet(actressName: string): Promise<ActressData | nu
     const fullText = $page('.entry-content').text();
     const matches = fullText.match(productPattern);
     if (matches) {
-      matches.forEach(m => productIds.push(m.toUpperCase()));
+      matches.forEach((m) => productIds.push(m.toUpperCase()));
     }
 
     console.log(`  [av-wiki.net] Found: ${aliases.length} alias(es), ${productIds.length} product(s)`);
@@ -347,7 +353,7 @@ async function saveActressData(
   db: ReturnType<typeof getDb>,
   performerId: number,
   data: ActressData,
-  source: WikiSource
+  source: WikiSource,
 ): Promise<CrawlResult> {
   const result: CrawlResult = {
     source,
@@ -361,12 +367,15 @@ async function saveActressData(
   for (const alias of data.aliases) {
     if (!alias || alias === data.name || alias.length < 2) continue;
     try {
-      await db.insert(performerAliases).values({
-        performerId,
-        aliasName: alias,
-        source,
-        isPrimary: false,
-      }).onConflictDoNothing();
+      await db
+        .insert(performerAliases)
+        .values({
+          performerId,
+          aliasName: alias,
+          source,
+          isPrimary: false,
+        })
+        .onConflictDoNothing();
       result.aliasesAdded++;
     } catch {
       // 重複は無視
@@ -378,16 +387,20 @@ async function saveActressData(
     try {
       const normalizedCode = productId.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
-      const existingProduct = await db.select()
+      const existingProduct = await db
+        .select()
         .from(products)
         .where(eq(products.normalizedProductId, normalizedCode))
         .limit(1);
 
       if (existingProduct.length > 0) {
-        await db.insert(productPerformers).values({
-          productId: existingProduct[0].id,
-          performerId,
-        }).onConflictDoNothing();
+        await db
+          .insert(productPerformers)
+          .values({
+            productId: existingProduct[0].id,
+            performerId,
+          })
+          .onConflictDoNothing();
         result.productsLinked++;
       }
     } catch {
@@ -411,9 +424,7 @@ async function saveActressData(
       if (data.profile.debutYear) updateData.debutYear = data.profile.debutYear;
 
       if (Object.keys(updateData).length > 0) {
-        await db.update(performers)
-          .set(updateData)
-          .where(eq(performers.id, performerId));
+        await db.update(performers).set(updateData).where(eq(performers.id, performerId));
         result.profileUpdated = true;
       }
     } catch (error) {
@@ -430,13 +441,13 @@ async function main() {
   const db = getDb();
   const args = process.argv.slice(2);
 
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
 
-  const sourceArg = args.find(a => a.startsWith('--source='));
+  const sourceArg = args.find((a) => a.startsWith('--source='));
   const sourceFilter = sourceArg ? sourceArg.split('=')[1] : null;
 
-  const nameArg = args.find(a => a.startsWith('--name='));
+  const nameArg = args.find((a) => a.startsWith('--name='));
   const specificName = nameArg ? nameArg.split('=')[1] : null;
 
   console.log('=== 統合女優情報クローラー ===\n');
@@ -448,10 +459,7 @@ async function main() {
 
   if (specificName) {
     // 特定の女優を検索
-    const found = await db.select()
-      .from(performers)
-      .where(eq(performers.name, specificName))
-      .limit(1);
+    const found = await db.select().from(performers).where(eq(performers.name, specificName)).limit(1);
 
     if (found.length > 0) {
       actressesToProcess = [{ id: found[0].id, name: found[0].name }];
@@ -495,9 +503,11 @@ async function main() {
         totalAliases += result.aliasesAdded;
         totalProducts += result.productsLinked;
         if (result.profileUpdated) totalProfiles++;
-        console.log(`    Saved: +${result.aliasesAdded} aliases, +${result.productsLinked} products, profile: ${result.profileUpdated}`);
+        console.log(
+          `    Saved: +${result.aliasesAdded} aliases, +${result.productsLinked} products, profile: ${result.profileUpdated}`,
+        );
       }
-      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
     }
 
     // av-wiki.net (オプション)
@@ -509,7 +519,7 @@ async function main() {
         totalProducts += result.productsLinked;
         console.log(`    Saved: +${result.aliasesAdded} aliases, +${result.productsLinked} products`);
       }
-      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
     }
 
     console.log('');
@@ -524,7 +534,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

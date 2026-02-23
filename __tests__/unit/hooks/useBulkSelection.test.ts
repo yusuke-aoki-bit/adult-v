@@ -235,9 +235,7 @@ describe('useBulkSelection', () => {
   describe('onSelectionChange callback', () => {
     it('選択変更時にコールバックが呼ばれる', () => {
       const onSelectionChange = vi.fn();
-      const { result } = renderHook(() =>
-        useBulkSelection({ onSelectionChange })
-      );
+      const { result } = renderHook(() => useBulkSelection({ onSelectionChange }));
 
       act(() => {
         result.current.selectItem('item-1');
@@ -248,9 +246,7 @@ describe('useBulkSelection', () => {
 
     it('解除時もコールバックが呼ばれる', () => {
       const onSelectionChange = vi.fn();
-      const { result } = renderHook(() =>
-        useBulkSelection({ onSelectionChange })
-      );
+      const { result } = renderHook(() => useBulkSelection({ onSelectionChange }));
 
       act(() => {
         result.current.selectItem('item-1');

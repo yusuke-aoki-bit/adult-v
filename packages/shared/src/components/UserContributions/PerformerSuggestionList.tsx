@@ -85,8 +85,8 @@ export function PerformerSuggestionList({
           prev.map((s) =>
             s.id === suggestionId
               ? { ...s, upvotes: data.upvotes, downvotes: data.downvotes, userVote: data.userVote }
-              : s
-          )
+              : s,
+          ),
         );
       }
     } catch {
@@ -99,7 +99,7 @@ export function PerformerSuggestionList({
   if (isLoading) {
     return (
       <div className="flex justify-center py-4">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -111,7 +111,7 @@ export function PerformerSuggestionList({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <User className="w-5 h-5 text-gray-500" />
+        <User className="h-5 w-5 text-gray-500" />
         <h4 className="font-medium text-gray-900 dark:text-white">{t.title}</h4>
       </div>
 
@@ -119,35 +119,33 @@ export function PerformerSuggestionList({
         {suggestions.map((suggestion) => (
           <div
             key={suggestion['id']}
-            className={`flex items-center justify-between p-3 rounded-lg ${
+            className={`flex items-center justify-between rounded-lg p-3 ${
               suggestion['status'] === 'approved'
-                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                : 'bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700'
+                ? 'border border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20'
+                : 'border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800'
             }`}
           >
             <div className="flex items-center gap-3">
               <div
-                className={`p-1.5 rounded-full ${
+                className={`rounded-full p-1.5 ${
                   suggestion['status'] === 'approved'
                     ? 'bg-green-100 dark:bg-green-900'
                     : 'bg-gray-200 dark:bg-gray-700'
                 }`}
               >
                 {suggestion['status'] === 'approved' ? (
-                  <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
+                  <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
                 ) : (
-                  <Clock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                  <Clock className="h-4 w-4 text-gray-500 dark:text-gray-400" />
                 )}
               </div>
 
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-gray-900 dark:text-white">
-                    {suggestion['performerName']}
-                  </span>
+                  <span className="font-medium text-gray-900 dark:text-white">{suggestion['performerName']}</span>
                   {suggestion.existingPerformerId && (
                     <span className="inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400">
-                      <Link className="w-3 h-3" />
+                      <Link className="h-3 w-3" />
                       {t.linkedToExisting}
                     </span>
                   )}
@@ -168,13 +166,13 @@ export function PerformerSuggestionList({
               <button
                 onClick={() => handleVote(suggestion['id'], 'up')}
                 disabled={votingId === suggestion['id']}
-                className={`p-1.5 rounded transition-colors ${
+                className={`rounded p-1.5 transition-colors ${
                   suggestion.userVote === 'up'
-                    ? 'bg-green-100 dark:bg-green-900 text-green-600 dark:text-green-400'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-green-600 dark:hover:text-green-400'
+                    ? 'bg-green-100 text-green-600 dark:bg-green-900 dark:text-green-400'
+                    : 'text-gray-400 hover:bg-gray-200 hover:text-green-600 dark:hover:bg-gray-700 dark:hover:text-green-400'
                 }`}
               >
-                <ThumbsUp className="w-4 h-4" />
+                <ThumbsUp className="h-4 w-4" />
               </button>
 
               <span className="min-w-[2rem] text-center text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -184,13 +182,13 @@ export function PerformerSuggestionList({
               <button
                 onClick={() => handleVote(suggestion['id'], 'down')}
                 disabled={votingId === suggestion['id']}
-                className={`p-1.5 rounded transition-colors ${
+                className={`rounded p-1.5 transition-colors ${
                   suggestion.userVote === 'down'
-                    ? 'bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-400'
-                    : 'hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-400 hover:text-red-600 dark:hover:text-red-400'
+                    ? 'bg-red-100 text-red-600 dark:bg-red-900 dark:text-red-400'
+                    : 'text-gray-400 hover:bg-gray-200 hover:text-red-600 dark:hover:bg-gray-700 dark:hover:text-red-400'
                 }`}
               >
-                <ThumbsDown className="w-4 h-4" />
+                <ThumbsDown className="h-4 w-4" />
               </button>
             </div>
           </div>

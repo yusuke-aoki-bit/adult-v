@@ -67,10 +67,7 @@ describe('Cron Auth', () => {
 
     it('should not accept query parameter auth', async () => {
       const { verifyCronRequest } = await import('@adult-v/shared/lib/cron-auth');
-      const request = createMockRequest(
-        {},
-        'http://localhost/api/cron/test?secret=my-secret'
-      );
+      const request = createMockRequest({}, 'http://localhost/api/cron/test?secret=my-secret');
 
       expect(verifyCronRequest(request)).toBe(false);
     });

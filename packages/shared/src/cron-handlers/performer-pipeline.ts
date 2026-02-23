@@ -189,7 +189,9 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
           stats.crossAspPhase = crossAspResult;
           for (const id of crossAspResult.affectedPerformerIds) changedPerformerIds.add(id);
           for (const id of crossAspResult.affectedProductIds) changedProductIds.add(id);
-          console.log(`  Groups: ${crossAspResult.groupsProcessed}, Products linked: ${crossAspResult.productsLinked}, New links: ${crossAspResult.newLinks}`);
+          console.log(
+            `  Groups: ${crossAspResult.groupsProcessed}, Products linked: ${crossAspResult.productsLinked}, New links: ${crossAspResult.newLinks}`,
+          );
         } catch (e) {
           console.error('[Phase 3] Error:', e);
         }
@@ -205,7 +207,9 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
           const dedupResult = await deduplicatePerformers(db, limit);
           stats.dedupPhase = dedupResult;
           for (const id of dedupResult.affectedPerformerIds) changedPerformerIds.add(id);
-          console.log(`  Candidates: ${dedupResult.candidatesFound}, Merged: ${dedupResult.performersMerged}, Fuzzy: ${dedupResult.fuzzyMerged}`);
+          console.log(
+            `  Candidates: ${dedupResult.candidatesFound}, Merged: ${dedupResult.performersMerged}, Fuzzy: ${dedupResult.fuzzyMerged}`,
+          );
         } catch (e) {
           console.error('[Phase 4] Error:', e);
         }
@@ -250,7 +254,9 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       // Phase 7: 演者統計更新（latestReleaseDate, releaseCount）
       // 変更があった演者のみ更新（変更なしの場合は全件更新にフォールバック）
       if (Date.now() - startTime < TIME_LIMIT) {
-        console.log(`\n[Phase 7] Updating performer stats (scope: ${changedPerformerIds.size > 0 ? changedPerformerIds.size + ' performers' : 'all'})...`);
+        console.log(
+          `\n[Phase 7] Updating performer stats (scope: ${changedPerformerIds.size > 0 ? changedPerformerIds.size + ' performers' : 'all'})...`,
+        );
         try {
           const statsResult = await updatePerformerStats(db, changedPerformerIds);
           stats.statsPhase = statsResult;
@@ -265,7 +271,9 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       // Phase 8: 商品統計更新（非正規化カラム同期）
       // 変更があった商品のみ更新（変更なしの場合は全件更新にフォールバック）
       if (Date.now() - startTime < TIME_LIMIT) {
-        console.log(`\n[Phase 8] Updating product stats (scope: ${changedProductIds.size > 0 ? changedProductIds.size + ' products' : 'all'})...`);
+        console.log(
+          `\n[Phase 8] Updating product stats (scope: ${changedProductIds.size > 0 ? changedProductIds.size + ' products' : 'all'})...`,
+        );
         try {
           const productStatsResult = await updateProductStats(db, changedProductIds);
           stats.productStatsPhase = productStatsResult;
@@ -304,11 +312,14 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
       console.error('[performer-pipeline] Error:', error);
       stats['totalDuration'] = Date.now() - startTime;
 
-      return NextResponse.json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stats,
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stats,
+        },
+        { status: 500 },
+      );
     }
   };
 }
@@ -318,7 +329,7 @@ export function createPerformerPipelineHandler(deps: PipelineDeps) {
  */
 async function crawlSource(
   db: any,
-  source: string
+  source: string,
 ): Promise<{ source: string; entriesFound: number; entriesSaved: number }> {
   // 簡易的なクロール（詳細は各専用クローラーに委譲）
   // ここではlookupテーブルの既存データを活用
@@ -341,8 +352,13 @@ async function crawlSource(
 async function linkPerformersFromLookup(
   db: any,
   asp: string | undefined,
-  limit: number
-): Promise<{ productsProcessed: number; newLinks: number; affectedPerformerIds: number[]; affectedProductIds: number[] }> {
+  limit: number,
+): Promise<{
+  productsProcessed: number;
+  newLinks: number;
+  affectedPerformerIds: number[];
+  affectedProductIds: number[];
+}> {
   let productsProcessed = 0;
   let newLinks = 0;
   const affectedPerformerIds: number[] = [];
@@ -387,7 +403,10 @@ async function linkPerformersFromLookup(
 
   // 2. lookupテーブルを一括検索
   const codes = [...codeToProducts.keys()];
-  const codeValues = sql.join(codes.map(c => sql`${c}`), sql`, `);
+  const codeValues = sql.join(
+    codes.map((c) => sql`${c}`),
+    sql`, `,
+  );
 
   const lookupResult = await db.execute(sql`
     SELECT product_code_normalized, performer_names
@@ -424,7 +443,10 @@ async function linkPerformersFromLookup(
 
   // 正規化名で既存の演者を検索（エイリアスも含む）
   const normalizedNames = [...normalizedPerformerNames];
-  const nameValues = sql.join(normalizedNames.map(n => sql`${n}`), sql`, `);
+  const nameValues = sql.join(
+    normalizedNames.map((n) => sql`${n}`),
+    sql`, `,
+  );
 
   // 直接名前マッチ + エイリアスマッチを一括検索
   const existingPerformers = await db.execute(sql`
@@ -443,9 +465,9 @@ async function linkPerformersFromLookup(
   }
 
   // 未発見の演者を新規作成
-  const newPerformerNames = normalizedNames.filter(n => !nameToId.has(n));
+  const newPerformerNames = normalizedNames.filter((n) => !nameToId.has(n));
   if (newPerformerNames.length > 0) {
-    const performerData = newPerformerNames.map(name => ({ name }));
+    const performerData = newPerformerNames.map((name) => ({ name }));
     const upsertedPerformers = await batchUpsertPerformers(db, performerData);
     for (const p of upsertedPerformers) {
       nameToId.set(p.name, p.id);
@@ -454,7 +476,10 @@ async function linkPerformersFromLookup(
 
   // codeToPerformerNames の名前を正規化名にマッピング
   for (const [code, names] of codeToPerformerNames) {
-    codeToPerformerNames.set(code, names.map(n => rawToNormalized.get(n) || n));
+    codeToPerformerNames.set(
+      code,
+      names.map((n) => rawToNormalized.get(n) || n),
+    );
   }
 
   // 5. product_performersリンクを一括INSERT
@@ -543,7 +568,7 @@ async function mergePerformerIntoCorrect(
   wrongPerformerName: string,
   correctPerformerId: number,
   correctPerformerName: string,
-  source: string = 'performer-pipeline'
+  source: string = 'performer-pipeline',
 ): Promise<{ productsMoved: number; aliasAdded: boolean }> {
   if (db.transaction) {
     return db.transaction(async (tx: any) => {
@@ -616,7 +641,7 @@ async function _doMerge(
  */
 async function mergeFakePerformers(
   db: any,
-  limit: number
+  limit: number,
 ): Promise<{
   fakePerformersFound: number;
   performersMerged: number;
@@ -655,8 +680,11 @@ async function mergeFakePerformers(
   }
 
   // バッチプリフェッチ: 全仮名演者の商品リンクを一括取得
-  const fakeIds = fakePerformerRows.map(f => f.id);
-  const fakeIdValues = sql.join(fakeIds.map(id => sql`${id}`), sql`, `);
+  const fakeIds = fakePerformerRows.map((f) => f.id);
+  const fakeIdValues = sql.join(
+    fakeIds.map((id) => sql`${id}`),
+    sql`, `,
+  );
 
   const allProductLinks = await db.execute(sql`
     SELECT DISTINCT ON (pp.performer_id)
@@ -710,7 +738,8 @@ async function mergeFakePerformers(
   const wikiCodeToPerformers = new Map<string, string[]>();
   if (allSearchCodes.size > 0) {
     const searchCodeValues = sql.join(
-      [...allSearchCodes].map(c => sql`${c}`), sql`, `
+      [...allSearchCodes].map((c) => sql`${c}`),
+      sql`, `,
     );
     const wikiResult = await db.execute(sql`
       SELECT UPPER(product_code) as product_code, performer_name
@@ -731,9 +760,7 @@ async function mergeFakePerformers(
   // 3. FANZA商品から一括検索（1クエリ）
   const fanzaCodeToPerformers = new Map<string, { id: number; name: string }[]>();
   if (allSearchCodes.size > 0) {
-    const likeClauses = [...allSearchCodes].map(code =>
-      sql`UPPER(p.normalized_product_id) LIKE ${'%' + code + '%'}`
-    );
+    const likeClauses = [...allSearchCodes].map((code) => sql`UPPER(p.normalized_product_id) LIKE ${'%' + code + '%'}`);
     const fanzaResult = await db.execute(sql`
       SELECT
         UPPER(p.normalized_product_id) as npid,
@@ -752,7 +779,7 @@ async function mergeFakePerformers(
       for (const code of allSearchCodes) {
         if (row.npid.includes(code)) {
           const existing = fanzaCodeToPerformers.get(code) || [];
-          if (!existing.some(e => e.id === row.id)) {
+          if (!existing.some((e) => e.id === row.id)) {
             existing.push({ id: row.id, name: row.name });
           }
           fanzaCodeToPerformers.set(code, existing);
@@ -805,7 +832,7 @@ async function mergeFakePerformers(
 
   // Step 4b: ID未解決の演者名を一括UPSERT（N回のSELECT/INSERT → 1回に集約）
   if (namesNeedingLookup.size > 0) {
-    const performerData = [...namesNeedingLookup].map(name => ({ name }));
+    const performerData = [...namesNeedingLookup].map((name) => ({ name }));
     const upserted = await batchUpsertPerformers(db, performerData);
     const nameToIdMap = new Map<string, number>();
     for (const p of upserted) {
@@ -824,7 +851,9 @@ async function mergeFakePerformers(
   const MERGE_TIME_LIMIT = 60_000; // 60秒（メインTIME_LIMIT 150秒に収める）
   for (const fakePerformer of fakePerformerRows) {
     if (Date.now() - mergeStartTime > MERGE_TIME_LIMIT) {
-      console.log(`    [mergeFakePerformers] Time limit reached, processed ${performersMerged}/${fakePerformerRows.length}`);
+      console.log(
+        `    [mergeFakePerformers] Time limit reached, processed ${performersMerged}/${fakePerformerRows.length}`,
+      );
       break;
     }
 
@@ -836,7 +865,7 @@ async function mergeFakePerformers(
       fakePerformer.id,
       fakePerformer.name,
       correct.id,
-      correct.name
+      correct.name,
     );
 
     performersMerged++;
@@ -861,7 +890,7 @@ async function mergeFakePerformers(
  */
 async function deduplicatePerformers(
   db: any,
-  limit: number
+  limit: number,
 ): Promise<{
   candidatesFound: number;
   performersMerged: number;
@@ -929,7 +958,7 @@ async function deduplicatePerformers(
         duplicate.name,
         primary.id,
         primary.name,
-        'dedup-normalization'
+        'dedup-normalization',
       );
 
       performersMerged++;
@@ -963,8 +992,12 @@ async function deduplicatePerformers(
     `);
 
     const fuzzyRows = fuzzyDuplicates.rows as Array<{
-      id1: number; name1: string; rc1: number;
-      id2: number; name2: string; rc2: number;
+      id1: number;
+      name1: string;
+      rc1: number;
+      id2: number;
+      name2: string;
+      rc2: number;
       sim: number;
     }>;
 
@@ -977,9 +1010,7 @@ async function deduplicatePerformers(
 
       // release_countが多い方を残す
       const [primaryId, primaryName, duplicateId, duplicateName] =
-        row.rc1 >= row.rc2
-          ? [row.id1, row.name1, row.id2, row.name2]
-          : [row.id2, row.name2, row.id1, row.name1];
+        row.rc1 >= row.rc2 ? [row.id1, row.name1, row.id2, row.name2] : [row.id2, row.name2, row.id1, row.name1];
 
       const result = await mergePerformerIntoCorrect(
         db,
@@ -987,7 +1018,7 @@ async function deduplicatePerformers(
         duplicateName,
         primaryId,
         primaryName,
-        'dedup-fuzzy'
+        'dedup-fuzzy',
       );
 
       mergedIds.add(duplicateId);
@@ -1013,8 +1044,14 @@ async function deduplicatePerformers(
  */
 async function propagatePerformersAcrossAsps(
   db: any,
-  limit: number
-): Promise<{ groupsProcessed: number; productsLinked: number; newLinks: number; affectedPerformerIds: number[]; affectedProductIds: number[] }> {
+  limit: number,
+): Promise<{
+  groupsProcessed: number;
+  productsLinked: number;
+  newLinks: number;
+  affectedPerformerIds: number[];
+  affectedProductIds: number[];
+}> {
   let groupsProcessed = 0;
   let productsLinked = 0;
   let newLinks = 0;
@@ -1065,7 +1102,8 @@ async function propagatePerformersAcrossAsps(
   }
 
   const sourceIdValues = sql.join(
-    [...allSourceProductIds].map(id => sql`${id}`), sql`, `
+    [...allSourceProductIds].map((id) => sql`${id}`),
+    sql`, `,
   );
   const performerLinks = await db.execute(sql`
     SELECT product_id, performer_id
@@ -1171,14 +1209,15 @@ async function propagatePerformersAcrossAsps(
  * 演者統計を更新（latestReleaseDate, releaseCount）
  * トップページのソート順を正しく反映するために必要
  */
-async function updatePerformerStats(
-  db: any,
-  scopedPerformerIds?: Set<number>
-): Promise<{ performersUpdated: number }> {
+async function updatePerformerStats(db: any, scopedPerformerIds?: Set<number>): Promise<{ performersUpdated: number }> {
   // スコープ限定: 変更があった演者のみ更新（大幅な高速化）
-  const scopeFilter = scopedPerformerIds && scopedPerformerIds.size > 0
-    ? sql`AND pp.performer_id IN (${sql.join([...scopedPerformerIds].map(id => sql`${id}`), sql`, `)})`
-    : sql``;
+  const scopeFilter =
+    scopedPerformerIds && scopedPerformerIds.size > 0
+      ? sql`AND pp.performer_id IN (${sql.join(
+          [...scopedPerformerIds].map((id) => sql`${id}`),
+          sql`, `,
+        )})`
+      : sql``;
 
   const result = await db.execute(sql`
     UPDATE performers p
@@ -1213,14 +1252,15 @@ async function updatePerformerStats(
  * performer_count, has_video, has_active_sale, min_price, best_rating, total_reviews
  * updatePerformerStatsと同じパターンで、変更があった行のみ更新
  */
-async function updateProductStats(
-  db: any,
-  scopedProductIds?: Set<number>
-): Promise<{ productsUpdated: number }> {
+async function updateProductStats(db: any, scopedProductIds?: Set<number>): Promise<{ productsUpdated: number }> {
   // スコープ限定: 変更があった商品のみ更新（大幅な高速化）
-  const scopeFilter = scopedProductIds && scopedProductIds.size > 0
-    ? sql`WHERE p2.id IN (${sql.join([...scopedProductIds].map(id => sql`${id}`), sql`, `)})`
-    : sql``;
+  const scopeFilter =
+    scopedProductIds && scopedProductIds.size > 0
+      ? sql`WHERE p2.id IN (${sql.join(
+          [...scopedProductIds].map((id) => sql`${id}`),
+          sql`, `,
+        )})`
+      : sql``;
 
   const result = await db.execute(sql`
     UPDATE products p
@@ -1290,7 +1330,7 @@ async function updateProductStats(
  */
 async function backfillDebutYears(
   db: any,
-  limit: number
+  limit: number,
 ): Promise<{ performersChecked: number; debutYearsUpdated: number }> {
   let performersChecked = 0;
   let debutYearsUpdated = 0;
@@ -1325,7 +1365,7 @@ async function backfillDebutYears(
 
   // バッチUPDATE: 全件を1クエリで更新
   if (rows.length > 0) {
-    const updates = rows.map(row => ({ id: row['id'], value: row.earliest_year }));
+    const updates = rows.map((row) => ({ id: row['id'], value: row.earliest_year }));
     debutYearsUpdated = await batchUpdateColumn(db, 'performers', 'id', 'debut_year', updates);
     console.log(`    Batch updated ${debutYearsUpdated} performers' debut years`);
   }
@@ -1343,7 +1383,7 @@ async function backfillDebutYears(
 async function derivePerformerTagsFromProducts(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   db: any,
-  limit: number
+  limit: number,
 ): Promise<{ performersProcessed: number; tagsAssigned: number }> {
   // Step 1: product-derivationタグがまだない演者を取得（作品数≥3）
   const result = await db.execute(sql`
@@ -1380,8 +1420,11 @@ async function derivePerformerTagsFromProducts(
   console.log(`    Found ${performers.length} performers without product-derivation tags`);
 
   // Step 2: 全対象演者のタグ集計を一括で実行（N+1回避）
-  const performerIds = performers.map(p => p.performer_id);
-  const idValues = sql.join(performerIds.map(id => sql`${id}`), sql`, `);
+  const performerIds = performers.map((p) => p.performer_id);
+  const idValues = sql.join(
+    performerIds.map((id) => sql`${id}`),
+    sql`, `,
+  );
 
   const tagAggResult = await db.execute(sql`
     SELECT
@@ -1418,7 +1461,7 @@ async function derivePerformerTagsFromProducts(
   for (const row of tagRows) {
     const ratio = parseFloat(row.tag_ratio);
     const count = parseInt(row.tag_count as string, 10);
-    if (ratio >= 0.20 || count >= 3) {
+    if (ratio >= 0.2 || count >= 3) {
       links.push({
         performerId: row.performer_id,
         tagId: row.tag_id,

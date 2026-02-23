@@ -15,20 +15,14 @@ export interface ProductGenerateDescriptionHandlerDeps {
 }
 
 export function createProductGenerateDescriptionHandler(deps: ProductGenerateDescriptionHandlerDeps) {
-  return async function GET(
-    _request: NextRequest,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
 
       const product = await deps.getProductById(id, 'ja');
 
       if (!product) {
-        return NextResponse.json(
-          { error: '商品が見つかりません' },
-          { status: 404 },
-        );
+        return NextResponse.json({ error: '商品が見つかりません' }, { status: 404 });
       }
 
       const description = await deps.generateProductDescription({
@@ -43,19 +37,13 @@ export function createProductGenerateDescriptionHandler(deps: ProductGenerateDes
       });
 
       if (!description) {
-        return NextResponse.json(
-          { error: '説明文の生成に失敗しました' },
-          { status: 500 },
-        );
+        return NextResponse.json({ error: '説明文の生成に失敗しました' }, { status: 500 });
       }
 
       return NextResponse.json(description);
     } catch (error) {
       console.error('[Generate Description API] Error:', error);
-      return NextResponse.json(
-        { error: 'サーバーエラーが発生しました' },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: 'サーバーエラーが発生しました' }, { status: 500 });
     }
   };
 }

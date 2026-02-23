@@ -226,21 +226,12 @@ describe('type-guards', () => {
 
   describe('extractPerformerIds', () => {
     it('有効なperformerIdを抽出', () => {
-      const rows = [
-        { performerId: 1 },
-        { performerId: 2 },
-        { performerId: 3 },
-      ];
+      const rows = [{ performerId: 1 }, { performerId: 2 }, { performerId: 3 }];
       expect(extractPerformerIds(rows)).toEqual([1, 2, 3]);
     });
 
     it('無効な値をフィルタリング', () => {
-      const rows = [
-        { performerId: 1 },
-        { performerId: '2' },
-        { performerId: null },
-        { performerId: 4 },
-      ];
+      const rows = [{ performerId: 1 }, { performerId: '2' }, { performerId: null }, { performerId: 4 }];
       expect(extractPerformerIds(rows)).toEqual([1, 4]);
     });
   });
@@ -492,9 +483,7 @@ describe('type-guards', () => {
 
   describe('toImageRows', () => {
     it('ImageRow配列に変換', () => {
-      const rows = [
-        { productId: 1, imageUrl: 'url1', imageType: 'thumbnail', displayOrder: 1 },
-      ];
+      const rows = [{ productId: 1, imageUrl: 'url1', imageType: 'thumbnail', displayOrder: 1 }];
       const result = toImageRows(rows);
       expect(result[0]!).toEqual({
         productId: 1,
@@ -507,9 +496,7 @@ describe('type-guards', () => {
 
   describe('toVideoRows', () => {
     it('VideoRow配列に変換', () => {
-      const rows = [
-        { productId: 1, videoUrl: 'url1', videoType: 'sample', quality: 'HD', duration: 120 },
-      ];
+      const rows = [{ productId: 1, videoUrl: 'url1', videoType: 'sample', quality: 'HD', duration: 120 }];
       const result = toVideoRows(rows);
       expect(result[0]!).toEqual({
         productId: 1,

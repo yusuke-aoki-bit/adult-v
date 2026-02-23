@@ -15,7 +15,11 @@
 import { getDb } from '../../lib/db';
 import { products, performers, productPerformers, performerAliases } from '../../lib/db/schema';
 import { eq, sql, and, inArray } from 'drizzle-orm';
-import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
+import {
+  isValidPerformerName,
+  normalizePerformerName,
+  isValidPerformerForProduct,
+} from '../../lib/performer-validation';
 import { extractProductCodes, getPerformersFromWikiCrawlData } from '../../lib/crawler-utils';
 
 const db = getDb();
@@ -42,11 +46,7 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
   }
 
   // 既存の演者を検索
-  let [performer] = await db
-    .select()
-    .from(performers)
-    .where(eq(performers['name'], normalizedName))
-    .limit(1);
+  let [performer] = await db.select().from(performers).where(eq(performers['name'], normalizedName)).limit(1);
 
   // 存在しなければエイリアスで検索
   if (!performer) {
@@ -64,18 +64,11 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
   // 存在しなければ作成
   if (!performer) {
     try {
-      const [inserted] = await db
-        .insert(performers)
-        .values({ name: normalizedName })
-        .returning();
+      const [inserted] = await db.insert(performers).values({ name: normalizedName }).returning();
       return inserted!.id;
     } catch {
       // 競合の場合は再取得
-      const [existing] = await db
-        .select()
-        .from(performers)
-        .where(eq(performers['name'], normalizedName))
-        .limit(1);
+      const [existing] = await db.select().from(performers).where(eq(performers['name'], normalizedName)).limit(1);
       if (existing) {
         return existing.id;
       }
@@ -110,18 +103,18 @@ async function replacePerformers(productId: number, newPerformerIds: number[]): 
   const uniquePerformerIds = [...new Set(newPerformerIds)];
 
   // 既存の紐付けを削除
-  await db
-    .delete(productPerformers)
-    .where(eq(productPerformers.productId, productId));
+  await db.delete(productPerformers).where(eq(productPerformers.productId, productId));
 
   // 新しい紐付けを作成
   if (uniquePerformerIds.length > 0) {
-    await db['insert'](productPerformers).values(
-      uniquePerformerIds.map(performerId => ({
-        productId,
-        performerId,
-      }))
-    ).onConflictDoNothing();
+    await db['insert'](productPerformers)
+      .values(
+        uniquePerformerIds.map((performerId) => ({
+          productId,
+          performerId,
+        })),
+      )
+      .onConflictDoNothing();
   }
 }
 
@@ -168,7 +161,12 @@ async function main() {
         title: products['title'],
       })
       .from(products)
-      .where(sql`UPPER(${products.normalizedProductId}) = ANY(ARRAY[${sql.join(searchCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])`)
+      .where(
+        sql`UPPER(${products.normalizedProductId}) = ANY(ARRAY[${sql.join(
+          searchCodes.map((c) => sql`${c.toUpperCase()}`),
+          sql`, `,
+        )}]::text[])`,
+      )
       .limit(limit);
   } else {
     // 演者が紐付けられている商品を取得
@@ -207,11 +205,11 @@ async function main() {
 
     // 現在の演者を取得
     const currentPerformers = await getCurrentPerformers(product.id);
-    const currentNames = currentPerformers.map(p => p.name);
+    const currentNames = currentPerformers.map((p) => p.name);
 
     // wiki演者をバリデーション
-    const validWikiPerformers = wikiPerformers.filter(name =>
-      isValidPerformerName(name) && isValidPerformerForProduct(name, product.title)
+    const validWikiPerformers = wikiPerformers.filter(
+      (name) => isValidPerformerName(name) && isValidPerformerForProduct(name, product.title),
     );
 
     if (validWikiPerformers.length === 0) {
@@ -219,11 +217,10 @@ async function main() {
     }
 
     // 差分チェック（同じなら修正不要）
-    const currentSet = new Set(currentNames.map(n => n.toLowerCase()));
-    const wikiSet = new Set(validWikiPerformers.map(n => n.toLowerCase()));
+    const currentSet = new Set(currentNames.map((n) => n.toLowerCase()));
+    const wikiSet = new Set(validWikiPerformers.map((n) => n.toLowerCase()));
 
-    const isSame = currentSet.size === wikiSet.size &&
-      [...currentSet].every(n => wikiSet.has(n));
+    const isSame = currentSet.size === wikiSet.size && [...currentSet].every((n) => wikiSet.has(n));
 
     if (isSame) {
       continue;

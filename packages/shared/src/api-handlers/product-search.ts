@@ -1,10 +1,24 @@
 import { NextResponse } from 'next/server';
 
-type SortOption = 'releaseDateDesc' | 'releaseDateAsc' | 'priceAsc' | 'priceDesc' | 'ratingDesc' | 'ratingAsc' | 'reviewCountDesc' | 'titleAsc';
+type SortOption =
+  | 'releaseDateDesc'
+  | 'releaseDateAsc'
+  | 'priceAsc'
+  | 'priceDesc'
+  | 'ratingDesc'
+  | 'ratingAsc'
+  | 'reviewCountDesc'
+  | 'titleAsc';
 
 const VALID_SORT_OPTIONS: SortOption[] = [
-  'releaseDateDesc', 'releaseDateAsc', 'priceAsc', 'priceDesc',
-  'ratingDesc', 'ratingAsc', 'reviewCountDesc', 'titleAsc',
+  'releaseDateDesc',
+  'releaseDateAsc',
+  'priceAsc',
+  'priceDesc',
+  'ratingDesc',
+  'ratingAsc',
+  'reviewCountDesc',
+  'titleAsc',
 ];
 
 function isValidSortOption(value: string | null): value is SortOption {
@@ -37,9 +51,11 @@ export function createProductSearchHandler(deps: ProductSearchHandlerDeps) {
       const limit = sanitizeNumber(searchParams.get('limit'), 50, 1, 100);
       const offset = sanitizeNumber(searchParams.get('offset'), 0, 0, 10000);
       const minPrice = searchParams.get('minPrice')
-        ? sanitizeNumber(searchParams.get('minPrice'), 0, 0, 1000000) : undefined;
+        ? sanitizeNumber(searchParams.get('minPrice'), 0, 0, 1000000)
+        : undefined;
       const maxPrice = searchParams.get('maxPrice')
-        ? sanitizeNumber(searchParams.get('maxPrice'), 1000000, 0, 1000000) : undefined;
+        ? sanitizeNumber(searchParams.get('maxPrice'), 1000000, 0, 1000000)
+        : undefined;
 
       const sortBy: SortOption = isValidSortOption(sortByParam) ? sortByParam : 'releaseDateDesc';
 
@@ -54,15 +70,23 @@ export function createProductSearchHandler(deps: ProductSearchHandlerDeps) {
       const excludeTagIds = excludeTags ? excludeTags.split(',').filter((id) => /^\d+$/.test(id)) : undefined;
 
       const products = await deps.getProducts({
-        query, limit, offset,
+        query,
+        limit,
+        offset,
         provider: site || undefined,
-        minPrice, maxPrice, sortBy,
-        tags: tagIds, excludeTags: excludeTagIds,
-        hasVideo, hasImage,
+        minPrice,
+        maxPrice,
+        sortBy,
+        tags: tagIds,
+        excludeTags: excludeTagIds,
+        hasVideo,
+        hasImage,
       });
 
       return NextResponse.json({
-        products, count: products.length, query,
+        products,
+        count: products.length,
+        query,
         filters: { site, minPrice, maxPrice, sortBy, tags: tagIds, excludeTags: excludeTagIds, hasVideo, hasImage },
       });
     } catch (error) {

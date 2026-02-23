@@ -6,11 +6,7 @@
 
 import { sql } from 'drizzle-orm';
 import { getDb } from '../db';
-import type {
-  MatchResult,
-  ProductForMatching,
-  MatchingConfig,
-} from './types';
+import type { MatchResult, ProductForMatching, MatchingConfig } from './types';
 import { DEFAULT_MATCHING_CONFIG, TITLE_MATCH_EXCLUDED_ASPS } from './types';
 
 /**
@@ -19,7 +15,7 @@ import { DEFAULT_MATCHING_CONFIG, TITLE_MATCH_EXCLUDED_ASPS } from './types';
  */
 export function normalizeTitle(title: string): string {
   return title
-    .replace(/[\s　]+/g, '')        // 全角・半角スペース除去
+    .replace(/[\s　]+/g, '') // 全角・半角スペース除去
     .replace(/[！!？?「」『』【】（）()＆&～~・:：,，。.、\[\]]/g, '') // 記号除去
     .toLowerCase();
 }
@@ -33,7 +29,7 @@ export function normalizeTitle(title: string): string {
  */
 export async function findMatchByTitleAndPerformers(
   product: ProductForMatching,
-  config: MatchingConfig = DEFAULT_MATCHING_CONFIG
+  config: MatchingConfig = DEFAULT_MATCHING_CONFIG,
 ): Promise<MatchResult | null> {
   const db = getDb();
 
@@ -49,7 +45,7 @@ export async function findMatchByTitleAndPerformers(
     normalizedTitle,
     product['id'],
     product['aspName'],
-    0.6 // 最低類似度閾値
+    0.6, // 最低類似度閾値
   );
 
   if (similarProducts.length === 0) {
@@ -74,16 +70,18 @@ async function findSimilarTitleProducts(
   normalizedTitle: string,
   excludeProductId: number,
   excludeAspName: string,
-  minSimilarity: number
-): Promise<Array<{
-  productId: number;
-  groupId?: number;
-  aspName: string;
-  similarity: number;
-  releaseDate: Date | null;
-  duration: number | null;
-  performers: string[];
-}>> {
+  minSimilarity: number,
+): Promise<
+  Array<{
+    productId: number;
+    groupId?: number;
+    aspName: string;
+    similarity: number;
+    releaseDate: Date | null;
+    duration: number | null;
+    performers: string[];
+  }>
+> {
   const db = getDb();
 
   // pg_trgm の similarity() を使用して類似タイトルを検索
@@ -121,7 +119,7 @@ async function findSimilarTitleProducts(
     LIMIT 20
   `);
 
-  return result.rows.map(row => {
+  return result.rows.map((row) => {
     const base = {
       productId: row.product_id as number,
       aspName: row.asp_name as string,
@@ -130,9 +128,7 @@ async function findSimilarTitleProducts(
       duration: row['duration'] as number | null,
       performers: row.performers ? (row.performers as string).split(',') : [],
     };
-    return row.group_id !== null
-      ? { ...base, groupId: row.group_id as number }
-      : base;
+    return row.group_id !== null ? { ...base, groupId: row.group_id as number } : base;
   });
 }
 
@@ -150,18 +146,14 @@ async function evaluateMatch(
     duration: number | null;
     performers: string[];
   },
-  config: MatchingConfig
+  config: MatchingConfig,
 ): Promise<MatchResult | null> {
   // 演者の一致数を計算
   const matchedPerformers = calculateMatchedPerformers(source.performers, candidate.performers);
   const totalPerformers = Math.max(source.performers.length, candidate.performers.length);
 
   // 1. タイトル類似度 >= 0.8 + 全演者一致
-  if (
-    candidate.similarity >= 0.8 &&
-    totalPerformers > 0 &&
-    matchedPerformers === totalPerformers
-  ) {
+  if (candidate.similarity >= 0.8 && totalPerformers > 0 && matchedPerformers === totalPerformers) {
     return {
       productId: candidate.productId,
       ...(candidate.groupId !== undefined && { groupId: candidate.groupId }),
@@ -263,8 +255,8 @@ function calculateMatchedPerformers(performers1: string[], performers2: string[]
  */
 function normalizePerformerName(name: string): string {
   return name
-    .replace(/[\s　]+/g, '')   // スペース除去
-    .replace(/[・]/g, '')       // 中点除去
+    .replace(/[\s　]+/g, '') // スペース除去
+    .replace(/[・]/g, '') // 中点除去
     .toLowerCase();
 }
 
@@ -292,7 +284,7 @@ export function calculateTitleSimilarity(title1: string, title2: string): number
   const set1 = new Set(norm1);
   const set2 = new Set(norm2);
 
-  const intersection = new Set([...set1].filter(x => set2.has(x)));
+  const intersection = new Set([...set1].filter((x) => set2.has(x)));
   const union = new Set([...set1, ...set2]);
 
   if (union.size === 0) return 0;

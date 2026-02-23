@@ -12,7 +12,16 @@ import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import RetirementAlert from '@/components/RetirementAlert';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
-import { getActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis } from '@/lib/db/queries';
+import {
+  getActressById,
+  getProducts,
+  getProductsCount,
+  getTagsForActress,
+  getPerformerAliases,
+  getActressProductCountByAsp,
+  getTagById,
+  getActressCareerAnalysis,
+} from '@/lib/db/queries';
 import { getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
 import {
   generateBaseMetadata,
@@ -77,11 +86,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
     // includeパラメータがある場合、ジャンル名を取得
     const includeParam = resolvedSearchParams.include;
-    const firstTagId = typeof includeParam === 'string'
-      ? includeParam.split(',')[0]
-      : Array.isArray(includeParam)
-      ? includeParam[0]
-      : null;
+    const firstTagId =
+      typeof includeParam === 'string'
+        ? includeParam.split(',')[0]
+        : Array.isArray(includeParam)
+          ? includeParam[0]
+          : null;
 
     if (firstTagId) {
       const tagIdNum = parseInt(firstTagId, 10);
@@ -89,10 +99,14 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         const tag = await getTagById(tagIdNum);
         if (tag) {
           // ロケールに応じたタグ名を取得
-          const tagName = locale === 'en' ? (tag.nameEn || tag.name)
-            : locale === 'zh' ? (tag.nameZh || tag.name)
-            : locale === 'ko' ? (tag.nameKo || tag.name)
-            : tag.name;
+          const tagName =
+            locale === 'en'
+              ? tag.nameEn || tag.name
+              : locale === 'zh'
+                ? tag.nameZh || tag.name
+                : locale === 'ko'
+                  ? tag.nameKo || tag.name
+                  : tag.name;
 
           const metadata = generateBaseMetadata(
             t('metaTitleWithGenre', { name: actress.name, genre: tagName }),
@@ -136,11 +150,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const alternates = {
       canonical: canonicalUrl,
       languages: {
-        'ja': `${baseUrl}${actressPath}`,
-        'en': `${baseUrl}${actressPath}?hl=en`,
-        'zh': `${baseUrl}${actressPath}?hl=zh`,
+        ja: `${baseUrl}${actressPath}`,
+        en: `${baseUrl}${actressPath}?hl=en`,
+        zh: `${baseUrl}${actressPath}?hl=zh`,
         'zh-TW': `${baseUrl}${actressPath}?hl=zh-TW`,
-        'ko': `${baseUrl}${actressPath}?hl=ko`,
+        ko: `${baseUrl}${actressPath}?hl=ko`,
         'x-default': `${baseUrl}${actressPath}`,
       },
     };
@@ -183,8 +197,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   if (!actress) notFound();
 
   const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
-  const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
-
+  const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as
+    | 'releaseDateDesc'
+    | 'releaseDateAsc'
+    | 'priceDesc'
+    | 'priceAsc'
+    | 'titleAsc';
 
   // hasVideo/hasImageフィルター
   const hasVideo = resolvedSearchParams.hasVideo === 'true';
@@ -192,23 +210,26 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const performerType = resolvedSearchParams.performerType as 'solo' | 'multi' | undefined;
 
   // Get include and exclude tags
-  const includeTags = typeof resolvedSearchParams.include === 'string'
-    ? resolvedSearchParams.include.split(',').filter(Boolean)
-    : Array.isArray(resolvedSearchParams.include)
-    ? resolvedSearchParams.include
-    : [];
-  const excludeTags = typeof resolvedSearchParams.exclude === 'string'
-    ? resolvedSearchParams.exclude.split(',').filter(Boolean)
-    : Array.isArray(resolvedSearchParams.exclude)
-    ? resolvedSearchParams.exclude
-    : [];
+  const includeTags =
+    typeof resolvedSearchParams.include === 'string'
+      ? resolvedSearchParams.include.split(',').filter(Boolean)
+      : Array.isArray(resolvedSearchParams.include)
+        ? resolvedSearchParams.include
+        : [];
+  const excludeTags =
+    typeof resolvedSearchParams.exclude === 'string'
+      ? resolvedSearchParams.exclude.split(',').filter(Boolean)
+      : Array.isArray(resolvedSearchParams.exclude)
+        ? resolvedSearchParams.exclude
+        : [];
 
   // Get ASP filter
-  const includeAsps = typeof resolvedSearchParams.asp === 'string'
-    ? resolvedSearchParams.asp.split(',').filter(Boolean)
-    : Array.isArray(resolvedSearchParams.asp)
-    ? resolvedSearchParams.asp
-    : [];
+  const includeAsps =
+    typeof resolvedSearchParams.asp === 'string'
+      ? resolvedSearchParams.asp.split(',').filter(Boolean)
+      : Array.isArray(resolvedSearchParams.asp)
+        ? resolvedSearchParams.asp
+        : [];
 
   // Common filter options for products query
   const productFilterOptions: {
@@ -254,7 +275,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     console.error(`[actress-detail] Error loading actress data for ${performerId}:`, error);
     notFound();
   }
-  const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
+  const nonPrimaryAliases = aliases.filter((alias) => !alias.isPrimary);
 
   const basePath = localizedHref(`/actress/${actress.id}`, locale);
 
@@ -263,7 +284,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
   const personSchemaOptions: Parameters<typeof generatePersonSchema>[4] = {
     workCount: total,
-    aliases: nonPrimaryAliases.map(a => a.aliasName),
+    aliases: nonPrimaryAliases.map((a) => a.aliasName),
   };
   if (careerAnalysis?.debutYear != null) personSchemaOptions.debutYear = careerAnalysis.debutYear;
   const personSchema = generatePersonSchema(
@@ -277,10 +298,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     { name: tNav('home'), url: localizedHref('/', locale) },
     { name: actress.name, url: basePath },
   ]);
-  const worksSchema = works.length > 0 ? generateItemListSchema(
-    works.map((w) => ({ name: w.title, url: localizedHref(`/product/${w.id}`, locale) })),
-    t('filmography'),
-  ) : null;
+  const worksSchema =
+    works.length > 0
+      ? generateItemListSchema(
+          works.map((w) => ({ name: w.title, url: localizedHref(`/product/${w.id}`, locale) })),
+          t('filmography'),
+        )
+      : null;
 
   // FAQ Schema生成（リッチリザルト対応）
   const actressFaqOptions: Parameters<typeof getActressPageFAQs>[1] = {
@@ -289,10 +313,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   };
   if (careerAnalysis?.debutYear != null) actressFaqOptions.debutYear = careerAnalysis.debutYear;
   const firstWork = works[0];
-  if (firstWork?.releaseDate) actressFaqOptions.latestReleaseDate = new Date(firstWork.releaseDate).toLocaleDateString('ja-JP');
-  if (nonPrimaryAliases.length > 0) actressFaqOptions.aliases = nonPrimaryAliases.map(a => a.aliasName);
-  if (genreTags.length > 0) actressFaqOptions.topGenres = genreTags.slice(0, 5).map(tag => tag.name);
-  if (productCountByAsp.length > 0) actressFaqOptions.aspNames = productCountByAsp.map(a => a.aspName);
+  if (firstWork?.releaseDate)
+    actressFaqOptions.latestReleaseDate = new Date(firstWork.releaseDate).toLocaleDateString('ja-JP');
+  if (nonPrimaryAliases.length > 0) actressFaqOptions.aliases = nonPrimaryAliases.map((a) => a.aliasName);
+  if (genreTags.length > 0) actressFaqOptions.topGenres = genreTags.slice(0, 5).map((tag) => tag.name);
+  if (productCountByAsp.length > 0) actressFaqOptions.aspNames = productCountByAsp.map((a) => a.aspName);
   if (careerAnalysis) actressFaqOptions.isRetired = !careerAnalysis.isActive;
   const actressFaqs = getActressPageFAQs(locale, actressFaqOptions);
   const faqSchema = generateFAQSchema(actressFaqs);
@@ -317,10 +342,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: actress.name },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: actress.name }]}
             className="mb-6"
           />
 
@@ -331,22 +353,22 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 src={actress.heroImage || actress.thumbnail}
                 alt={actress.name}
                 size={64}
-                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0"
+                className="h-14 w-14 shrink-0 sm:h-16 sm:w-16"
                 priority
               />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-bold theme-text truncate">{actress.name}</h1>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="theme-text truncate text-xl font-bold sm:text-2xl">{actress.name}</h1>
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
                     thumbnail={actress.heroImage || actress.thumbnail || ''}
                   />
                 </div>
-                <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
+                <p className="theme-text-secondary text-sm sm:text-base">{t('totalProducts', { count: total })}</p>
                 {nonPrimaryAliases.length > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm theme-text-muted truncate">
-                    {t('aliases')}: {nonPrimaryAliases.map(a => a.aliasName).join(', ')}
+                  <p className="theme-text-muted mt-1 truncate text-xs sm:text-sm">
+                    {t('aliases')}: {nonPrimaryAliases.map((a) => a.aliasName).join(', ')}
                   </p>
                 )}
               </div>
@@ -360,22 +382,14 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* 卒業/引退アラート */}
           {careerAnalysis && (
             <div className="mb-4">
-              <RetirementAlert
-                career={careerAnalysis}
-                actressName={actress.name}
-                locale={locale}
-              />
+              <RetirementAlert career={careerAnalysis} actressName={actress.name} locale={locale} />
             </div>
           )}
 
           {/* キャリアタイムライン */}
           {careerAnalysis && (
             <div id="career" className="mb-6">
-              <ActressCareerTimeline
-                career={careerAnalysis}
-                actressName={actress.name}
-                locale={locale}
-              />
+              <ActressCareerTimeline career={careerAnalysis} actressName={actress.name} locale={locale} />
             </div>
           )}
 
@@ -392,113 +406,104 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* AI生成のプロフィール */}
           <div className="mb-8">
-            <AiActressProfileWrapper
-              actressId={actress.id}
-              locale={locale}
-            />
+            <AiActressProfileWrapper actressId={actress.id} locale={locale} />
           </div>
 
           {/* 人気作品TOP5セクション */}
           {topProducts.length > 0 && (
             <div id="top-products">
-            <PerformerTopProducts
-              products={topProducts}
-              performerName={actress.name}
-              locale={locale}
-              theme="light"
-              translations={{
-                title: tTopProducts('title', { name: actress.name }),
-                description: tTopProducts('description'),
-                rating: tTopProducts('rating'),
-                reviews: tTopProducts('reviews'),
-                views: tTopProducts('views'),
-                onSale: tTopProducts('onSale'),
-              }}
-            />
+              <PerformerTopProducts
+                products={topProducts}
+                performerName={actress.name}
+                locale={locale}
+                theme="light"
+                translations={{
+                  title: tTopProducts('title', { name: actress.name }),
+                  description: tTopProducts('description'),
+                  rating: tTopProducts('rating'),
+                  reviews: tTopProducts('reviews'),
+                  views: tTopProducts('views'),
+                  onSale: tTopProducts('onSale'),
+                }}
+              />
             </div>
           )}
 
           {/* セール中作品セクション */}
           {onSaleProducts.length > 0 && (
             <div id="on-sale">
-            <PerformerOnSaleProducts
-              products={onSaleProducts}
-              performerName={actress.name}
-              locale={locale}
-              theme="light"
-              translations={{
-                title: tOnSale('title', { name: actress.name }),
-                description: tOnSale('description'),
-                off: tOnSale('off'),
-                endsIn: tOnSale('endsIn'),
-                endsTomorrow: tOnSale('endsTomorrow'),
-                endsToday: tOnSale('endsToday'),
-                yen: tOnSale('yen'),
-              }}
-            />
+              <PerformerOnSaleProducts
+                products={onSaleProducts}
+                performerName={actress.name}
+                locale={locale}
+                theme="light"
+                translations={{
+                  title: tOnSale('title', { name: actress.name }),
+                  description: tOnSale('description'),
+                  off: tOnSale('off'),
+                  endsIn: tOnSale('endsIn'),
+                  endsTomorrow: tOnSale('endsTomorrow'),
+                  endsToday: tOnSale('endsToday'),
+                  yen: tOnSale('yen'),
+                }}
+              />
             </div>
           )}
 
           {/* Tag Filters - 即時適用 */}
           <div id="filmography">
-          <ActressProductFilter
-            genreTags={genreTags}
-            productCountByAsp={productCountByAsp}
-            translations={{
-              filterSettings: tf('filterSettings'),
-              sampleContent: tf('sampleContent'),
-              sampleVideo: tf('sampleVideo'),
-              sampleImage: tf('sampleImage'),
-              genre: tf('genre'),
-              include: tf('include'),
-              exclude: tf('exclude'),
-              site: tf('site'),
-              clear: tf('clear'),
-              performerType: tf('performerType'),
-              solo: tf('solo'),
-              multi: tf('multi'),
-            }}
-          />
+            <ActressProductFilter
+              genreTags={genreTags}
+              productCountByAsp={productCountByAsp}
+              translations={{
+                filterSettings: tf('filterSettings'),
+                sampleContent: tf('sampleContent'),
+                sampleVideo: tf('sampleVideo'),
+                sampleImage: tf('sampleImage'),
+                genre: tf('genre'),
+                include: tf('include'),
+                exclude: tf('exclude'),
+                site: tf('site'),
+                clear: tf('clear'),
+                performerType: tf('performerType'),
+                solo: tf('solo'),
+                multi: tf('multi'),
+              }}
+            />
 
-          {/* Product List */}
-          {total > 0 ? (
-            <>
-              {/* ページネーション（上部） */}
-              {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="top" />
-              )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {works.map((work) => (
-                  <ProductCard key={work.id} product={work} />
-                ))}
-              </div>
-              {/* ページネーション（下部） */}
-              {total > PER_PAGE && (
-                <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="bottom" />
-              )}
-            </>
-          ) : (
-            <p className="text-center theme-text-muted py-12">{t('noProducts')}</p>
-          )}
+            {/* Product List */}
+            {total > 0 ? (
+              <>
+                {/* ページネーション（上部） */}
+                {total > PER_PAGE && (
+                  <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="top" />
+                )}
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                  {works.map((work) => (
+                    <ProductCard key={work.id} product={work} />
+                  ))}
+                </div>
+                {/* ページネーション（下部） */}
+                {total > PER_PAGE && (
+                  <Pagination total={total} page={page} perPage={PER_PAGE} basePath={basePath} position="bottom" />
+                )}
+              </>
+            ) : (
+              <p className="theme-text-muted py-12 text-center">{t('noProducts')}</p>
+            )}
           </div>
 
           {/* 共演者マップ */}
           <div id="costar-network" className="mt-12 mb-8">
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
-              <PerformerRelationMap
-                performerId={parseInt(actress.id)}
-                locale={locale}
-              />
+            <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-100" />}>
+              <PerformerRelationMap performerId={parseInt(actress.id)} locale={locale} />
             </Suspense>
           </div>
 
           {/* 類似女優マップ */}
           <div id="similar-network" className="mb-8">
-            <Suspense fallback={<div className="h-64 bg-gray-100 rounded-lg animate-pulse" />}>
-              <SimilarPerformerMap
-                performerId={parseInt(actress.id)}
-                locale={locale}
-              />
+            <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-100" />}>
+              <SimilarPerformerMap performerId={parseInt(actress.id)} locale={locale} />
             </Suspense>
           </div>
         </div>

@@ -3,16 +3,7 @@
  * tags, productTags, productPerformers
  */
 
-import {
-  pgTable,
-  serial,
-  varchar,
-  text,
-  integer,
-  timestamp,
-  index,
-  primaryKey,
-} from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, integer, timestamp, index, primaryKey } from 'drizzle-orm/pg-core';
 import { products } from './products';
 import { performers } from './performers';
 
@@ -53,8 +44,12 @@ export const tags = pgTable(
 export const productTags = pgTable(
   'product_tags',
   {
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
-    tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.productId, table.tagId] }),
@@ -69,8 +64,12 @@ export const productTags = pgTable(
 export const productPerformers = pgTable(
   'product_performers',
   {
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id')
+      .notNull()
+      .references(() => performers.id, { onDelete: 'cascade' }),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.productId, table.performerId] }),
@@ -86,8 +85,12 @@ export const productPerformers = pgTable(
 export const performerTags = pgTable(
   'performer_tags',
   {
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
-    tagId: integer('tag_id').notNull().references(() => tags.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id')
+      .notNull()
+      .references(() => performers.id, { onDelete: 'cascade' }),
+    tagId: integer('tag_id')
+      .notNull()
+      .references(() => tags.id, { onDelete: 'cascade' }),
     source: varchar('source', { length: 50 }), // 'minnano-av', 'product-derivation', 'ai-gemini'
     createdAt: timestamp('created_at').defaultNow().notNull(),
   },

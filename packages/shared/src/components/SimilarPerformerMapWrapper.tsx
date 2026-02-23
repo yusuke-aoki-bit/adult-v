@@ -15,11 +15,5 @@ export default function SimilarPerformerMapWrapper({ performerId, locale }: Simi
     router.push(`/${locale}/actress/${id}`);
   };
 
-  return (
-    <SimilarPerformerMap
-      performerId={performerId}
-      locale={locale}
-      onPerformerClick={handlePerformerClick}
-    />
-  );
+  return <SimilarPerformerMap performerId={performerId} locale={locale} onPerformerClick={handlePerformerClick} />;
 }

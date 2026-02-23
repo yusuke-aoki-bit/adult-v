@@ -118,7 +118,7 @@ export function verifyRequest(request: NextRequest, authType: AuthType): boolean
  */
 export function withAuth<T>(
   authType: AuthType,
-  handler: (request: NextRequest) => Promise<NextResponse<T>>
+  handler: (request: NextRequest) => Promise<NextResponse<T>>,
 ): (request: NextRequest) => Promise<NextResponse<T | { error: string }>> {
   return async (request: NextRequest) => {
     if (!verifyRequest(request, authType)) {

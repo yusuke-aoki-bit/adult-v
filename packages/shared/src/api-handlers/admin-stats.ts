@@ -26,21 +26,20 @@ export interface AdminStatsHandlerOptions {
 async function safeQuery<T>(
   db: ReturnType<AdminStatsHandlerDeps['getDb']>,
   queryFn: () => Promise<{ rows: Record<string, unknown>[] }>,
-  defaultValue: T[] = []
+  defaultValue: T[] = [],
 ): Promise<T[]> {
   try {
     const result = await queryFn();
     return result.rows as T[];
   } catch (error) {
-    logDbWarning('Query failed in safeQuery', 'safeQuery', { error: error instanceof Error ? error.message : String(error) });
+    logDbWarning('Query failed in safeQuery', 'safeQuery', {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return defaultValue;
   }
 }
 
-export function createAdminStatsHandler(
-  deps: AdminStatsHandlerDeps,
-  options: AdminStatsHandlerOptions = {}
-) {
+export function createAdminStatsHandler(deps: AdminStatsHandlerDeps, options: AdminStatsHandlerOptions = {}) {
   const { includeSeoIndexing = false } = options;
 
   return async function GET() {
@@ -205,7 +204,8 @@ export function createAdminStatsHandler(
         `),
 
         // 11. AI生成コンテンツ統計
-        safeQuery(db, () => db.execute(sql`
+        safeQuery(db, () =>
+          db.execute(sql`
           SELECT
             'products' as table_name,
             COUNT(*) as total,
@@ -214,10 +214,12 @@ export function createAdminStatsHandler(
             COUNT(CASE WHEN ai_review IS NOT NULL THEN 1 END) as with_ai_review,
             COUNT(CASE WHEN ai_catchphrase IS NOT NULL THEN 1 END) as with_ai_catchphrase
           FROM products
-        `)),
+        `),
+        ),
 
         // 12. 演者AIレビュー統計
-        safeQuery(db, () => db.execute(sql`
+        safeQuery(db, () =>
+          db.execute(sql`
           SELECT
             COUNT(*) as total_performers,
             COUNT(CASE WHEN ai_review IS NOT NULL THEN 1 END) as with_ai_review,
@@ -226,10 +228,12 @@ export function createAdminStatsHandler(
             COUNT(CASE WHEN birthday IS NOT NULL THEN 1 END) as with_birthday,
             COUNT(CASE WHEN twitter_id IS NOT NULL OR instagram_id IS NOT NULL THEN 1 END) as with_social
           FROM performers
-        `)),
+        `),
+        ),
 
         // 13. 多言語翻訳統計
-        safeQuery(db, () => db.execute(sql`
+        safeQuery(db, () =>
+          db.execute(sql`
           SELECT
             'products' as table_name,
             COUNT(*) as total,
@@ -256,10 +260,12 @@ export function createAdminStatsHandler(
             COUNT(CASE WHEN name_zh_tw IS NOT NULL AND name_zh_tw != '' THEN 1 END) as zh_tw,
             COUNT(CASE WHEN name_ko IS NOT NULL AND name_ko != '' THEN 1 END) as ko
           FROM tags
-        `)),
+        `),
+        ),
 
         // 14. DBテーブル行数サマリー
-        safeQuery(db, () => db.execute(sql`
+        safeQuery(db, () =>
+          db.execute(sql`
           SELECT 'products' as table_name, COUNT(*) as count FROM products
           UNION ALL SELECT 'product_sources', COUNT(*) FROM product_sources
           UNION ALL SELECT 'product_performers', COUNT(*) FROM product_performers
@@ -277,10 +283,12 @@ export function createAdminStatsHandler(
           UNION ALL SELECT 'wiki_crawl_data', COUNT(*) FROM wiki_crawl_data
           UNION ALL SELECT 'wiki_performer_index', COUNT(*) FROM wiki_performer_index
           ORDER BY count DESC
-        `)),
+        `),
+        ),
 
         // 14.5 日別増加量（今日と昨日の比較）
-        safeQuery(db, () => db.execute(sql`
+        safeQuery(db, () =>
+          db.execute(sql`
           SELECT
             'products' as table_name,
             (SELECT COUNT(*) FROM products WHERE created_at >= CURRENT_DATE) as today,
@@ -300,7 +308,8 @@ export function createAdminStatsHandler(
             'product_sales_active',
             (SELECT COUNT(*) FROM product_sales WHERE is_active = true),
             0
-        `)),
+        `),
+        ),
 
         // 15. ASP総数を動的に取得
         deps.getAllASPTotals(),
@@ -310,19 +319,23 @@ export function createAdminStatsHandler(
       ];
 
       // SEO Indexing統計（オプション）
-      const seoQueries = includeSeoIndexing ? [
-        // SEO Indexing Status
-        safeQuery(db, () => db.execute(sql`
+      const seoQueries = includeSeoIndexing
+        ? [
+            // SEO Indexing Status
+            safeQuery(db, () =>
+              db.execute(sql`
           SELECT
             status,
             COUNT(*) as count
           FROM seo_indexing_status
           GROUP BY status
           ORDER BY count DESC
-        `)),
+        `),
+            ),
 
-        // SEO Indexing Summary
-        safeQuery(db, () => db.execute(sql`
+            // SEO Indexing Summary
+            safeQuery(db, () =>
+              db.execute(sql`
           SELECT
             (SELECT COUNT(*) FROM seo_indexing_status) as total_indexed,
             (SELECT COUNT(*) FROM seo_indexing_status WHERE status = 'requested') as requested,
@@ -331,8 +344,10 @@ export function createAdminStatsHandler(
             (SELECT COUNT(*) FROM seo_indexing_status WHERE status = 'ownership_required') as ownership_required,
             (SELECT MAX(last_requested_at) FROM seo_indexing_status) as last_requested_at,
             (SELECT COUNT(*) FROM products) - (SELECT COUNT(*) FROM seo_indexing_status) as not_requested
-        `)),
-      ] : [];
+        `),
+            ),
+          ]
+        : [];
 
       const results = await Promise.all([...baseQueries, ...seoQueries]);
 
@@ -396,24 +411,26 @@ export function createAdminStatsHandler(
         }
       }
 
-      const collectionRatesWithEstimates = (collectionRates.rows as { asp_name: string; count: string }[]).map(row => {
-        const aspName = deps.mapDBNameToASPName(row.asp_name);
-        const estimated = estimates[row.asp_name] || estimates[aspName] || null;
-        const collected = parseInt(row['count']);
+      const collectionRatesWithEstimates = (collectionRates.rows as { asp_name: string; count: string }[]).map(
+        (row) => {
+          const aspName = deps.mapDBNameToASPName(row.asp_name);
+          const estimated = estimates[row.asp_name] || estimates[aspName] || null;
+          const collected = parseInt(row['count']);
 
-        // 対応するASPTotalからソース情報を取得
-        const totalInfo = aspTotals.find(t =>
-          t.asp === aspName || t.asp === row.asp_name || `DTI: ${t.asp}` === row.asp_name
-        );
+          // 対応するASPTotalからソース情報を取得
+          const totalInfo = aspTotals.find(
+            (t) => t.asp === aspName || t.asp === row.asp_name || `DTI: ${t.asp}` === row.asp_name,
+          );
 
-        return {
-          asp_name: row.asp_name,
-          collected,
-          estimated,
-          rate: estimated ? ((collected / estimated) * 100).toFixed(2) : null,
-          source: totalInfo?.source || null,
-        };
-      });
+          return {
+            asp_name: row.asp_name,
+            collected,
+            estimated,
+            rate: estimated ? ((collected / estimated) * 100).toFixed(2) : null,
+            source: totalInfo?.source || null,
+          };
+        },
+      );
 
       const response: Record<string, unknown> = {
         aspSummary: aspSummary.rows,

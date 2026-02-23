@@ -61,6 +61,18 @@ const CATEGORY_LABELS: Record<string, Record<string, string>> = {
     hardcore: '硬核',
     softcore: '软核',
   },
+  'zh-TW': {
+    young: '年輕/素人',
+    mature: '熟女/人妻',
+    solo: '單體女優',
+    variety: '企劃物',
+    vr: 'VR/高畫質',
+    fetish: '戀物癖',
+    cosplay: '角色扮演',
+    romance: '戀愛/主觀',
+    hardcore: '硬核',
+    softcore: '軟核',
+  },
   ko: {
     young: '젊은/아마추어',
     mature: '숙녀/유부녀',
@@ -183,9 +195,10 @@ export function usePreferenceAnalysis(locale: string = 'ja'): PreferenceAnalysis
         ja: (l) => `あなたは「${l.join('」「')}」系がお好みです`,
         en: (l) => `You prefer ${l.join(', ')} content`,
         zh: (l) => `您喜欢${l.join('、')}类内容`,
+        'zh-TW': (l) => `您喜歡${l.join('、')}類內容`,
         ko: (l) => `${l.join(', ')} 콘텐츠를 선호합니다`,
       };
-      const formatter = summaryFormats[locale] || summaryFormats.ja;
+      const formatter = summaryFormats[locale] ?? summaryFormats.ja!;
       summaryParts.push(formatter(topLabels));
     }
 
@@ -251,6 +264,19 @@ export const profileTranslations = {
     searchWithKeyword: '搜索',
     viewDiary: '查看日记',
     startViewing: '开始观看',
+  },
+  'zh-TW': {
+    title: '作品DNA分析',
+    subtitle: '視覺化您的偏好',
+    noData: '暫無資料',
+    noDataDesc: '將作品標記為「已觀看」後開始分析您的偏好',
+    basedOn: '基於以下資料的分析',
+    yourPreference: '您的偏好',
+    topCategories: '熱門類別',
+    recommendedKeywords: '推薦關鍵字',
+    searchWithKeyword: '搜尋',
+    viewDiary: '查看日記',
+    startViewing: '開始觀看',
   },
   ko: {
     title: '작품 DNA 분석',

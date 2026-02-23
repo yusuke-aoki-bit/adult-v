@@ -1,6 +1,16 @@
 'use client';
 
-import React, { createContext, useContext, useSyncExternalStore, ReactNode, useCallback, useMemo, useEffect, useState, useRef } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useSyncExternalStore,
+  ReactNode,
+  useCallback,
+  useMemo,
+  useEffect,
+  useState,
+  useRef,
+} from 'react';
 import { STORAGE_KEYS } from '../constants/storage';
 
 interface FavoritesContextType {
@@ -18,19 +28,22 @@ const FavoritesContext = createContext<FavoritesContextType | undefined>(undefin
 
 // Custom hook to sync with localStorage using useSyncExternalStore
 function useLocalStorageValue(key: string): string {
-  const subscribe = useCallback((callback: () => void) => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === key || e.key === null) {
-        callback();
-      }
-    };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('local-storage-update', callback);
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('local-storage-update', callback);
-    };
-  }, [key]);
+  const subscribe = useCallback(
+    (callback: () => void) => {
+      const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === key || e.key === null) {
+          callback();
+        }
+      };
+      window.addEventListener('storage', handleStorageChange);
+      window.addEventListener('local-storage-update', callback);
+      return () => {
+        window.removeEventListener('storage', handleStorageChange);
+        window.removeEventListener('local-storage-update', callback);
+      };
+    },
+    [key],
+  );
 
   const getSnapshot = useCallback(() => {
     return localStorage.getItem(key) || '[]';
@@ -159,13 +172,17 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
           if (actressData) {
             JSON.parse(actressData).forEach((id: number) => localActresses.add(id));
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
         try {
           const productData = localStorage.getItem(STORAGE_KEYS.FAVORITE_PRODUCTS);
           if (productData) {
             JSON.parse(productData).forEach((id: string) => localProducts.add(id));
           }
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
 
         // Merge Firestore data with local data
         const mergedActresses = new Set(localActresses);
@@ -183,7 +200,7 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
         }
 
         // Upload local items that aren't in Firestore
-        const firestoreIds = new Set(firestoreFavorites.map(f => `${f.type}_${f.itemId}`));
+        const firestoreIds = new Set(firestoreFavorites.map((f) => `${f.type}_${f.itemId}`));
 
         for (const actressId of localActresses) {
           if (!firestoreIds.has(`actress_${actressId}`)) {
@@ -219,93 +236,115 @@ export function FavoritesProvider({ children }: { children: ReactNode }) {
     syncWithFirestore();
   }, [isCloudSyncEnabled, firebaseUserId]); // Removed favoriteActresses/Products to prevent loop
 
-  const toggleActressFavorite = useCallback(async (actressId: number) => {
-    const current = new Set(favoriteActresses);
-    const isAdding = !current.has(actressId);
+  const toggleActressFavorite = useCallback(
+    async (actressId: number) => {
+      const current = new Set(favoriteActresses);
+      const isAdding = !current.has(actressId);
 
-    if (isAdding) {
-      current.add(actressId);
-    } else {
-      current.delete(actressId);
-    }
+      if (isAdding) {
+        current.add(actressId);
+      } else {
+        current.delete(actressId);
+      }
 
-    localStorage.setItem(STORAGE_KEYS.FAVORITE_ACTRESSES, JSON.stringify(Array.from(current)));
-    window.dispatchEvent(new Event('local-storage-update'));
+      localStorage.setItem(STORAGE_KEYS.FAVORITE_ACTRESSES, JSON.stringify(Array.from(current)));
+      window.dispatchEvent(new Event('local-storage-update'));
 
-    // Sync to Firestore if enabled (fire and forget)
-    if (isCloudSyncEnabled && firebaseUserId) {
-      getFirebaseModule().then(firebase => {
-        // Log analytics
-        firebase.logEvent(isAdding ? 'add_favorite' : 'remove_favorite', {
-          item_type: 'actress',
-          item_id: String(actressId),
-        });
+      // Sync to Firestore if enabled (fire and forget)
+      if (isCloudSyncEnabled && firebaseUserId) {
+        getFirebaseModule()
+          .then((firebase) => {
+            // Log analytics
+            firebase.logEvent(isAdding ? 'add_favorite' : 'remove_favorite', {
+              item_type: 'actress',
+              item_id: String(actressId),
+            });
 
-        if (isAdding) {
-          firebase.saveFavoriteToFirestore(firebaseUserId, {
-            type: 'actress',
-            itemId: String(actressId),
-          }).catch(console.error);
-        } else {
-          firebase.removeFavoriteFromFirestore(firebaseUserId, 'actress', String(actressId)).catch(console.error);
-        }
-      }).catch(console.error);
-    }
-  }, [favoriteActresses, isCloudSyncEnabled, firebaseUserId]);
+            if (isAdding) {
+              firebase
+                .saveFavoriteToFirestore(firebaseUserId, {
+                  type: 'actress',
+                  itemId: String(actressId),
+                })
+                .catch(console.error);
+            } else {
+              firebase.removeFavoriteFromFirestore(firebaseUserId, 'actress', String(actressId)).catch(console.error);
+            }
+          })
+          .catch(console.error);
+      }
+    },
+    [favoriteActresses, isCloudSyncEnabled, firebaseUserId],
+  );
 
-  const toggleProductFavorite = useCallback(async (productId: string) => {
-    const current = new Set(favoriteProducts);
-    const isAdding = !current.has(productId);
+  const toggleProductFavorite = useCallback(
+    async (productId: string) => {
+      const current = new Set(favoriteProducts);
+      const isAdding = !current.has(productId);
 
-    if (isAdding) {
-      current.add(productId);
-    } else {
-      current.delete(productId);
-    }
+      if (isAdding) {
+        current.add(productId);
+      } else {
+        current.delete(productId);
+      }
 
-    localStorage.setItem(STORAGE_KEYS.FAVORITE_PRODUCTS, JSON.stringify(Array.from(current)));
-    window.dispatchEvent(new Event('local-storage-update'));
+      localStorage.setItem(STORAGE_KEYS.FAVORITE_PRODUCTS, JSON.stringify(Array.from(current)));
+      window.dispatchEvent(new Event('local-storage-update'));
 
-    // Sync to Firestore if enabled (fire and forget)
-    if (isCloudSyncEnabled && firebaseUserId) {
-      getFirebaseModule().then(firebase => {
-        // Log analytics
-        firebase.logEvent(isAdding ? 'add_favorite' : 'remove_favorite', {
-          item_type: 'product',
-          item_id: productId,
-        });
+      // Sync to Firestore if enabled (fire and forget)
+      if (isCloudSyncEnabled && firebaseUserId) {
+        getFirebaseModule()
+          .then((firebase) => {
+            // Log analytics
+            firebase.logEvent(isAdding ? 'add_favorite' : 'remove_favorite', {
+              item_type: 'product',
+              item_id: productId,
+            });
 
-        if (isAdding) {
-          firebase.saveFavoriteToFirestore(firebaseUserId, {
-            type: 'product',
-            itemId: productId,
-          }).catch(console.error);
-        } else {
-          firebase.removeFavoriteFromFirestore(firebaseUserId, 'product', productId).catch(console.error);
-        }
-      }).catch(console.error);
-    }
-  }, [favoriteProducts, isCloudSyncEnabled, firebaseUserId]);
+            if (isAdding) {
+              firebase
+                .saveFavoriteToFirestore(firebaseUserId, {
+                  type: 'product',
+                  itemId: productId,
+                })
+                .catch(console.error);
+            } else {
+              firebase.removeFavoriteFromFirestore(firebaseUserId, 'product', productId).catch(console.error);
+            }
+          })
+          .catch(console.error);
+      }
+    },
+    [favoriteProducts, isCloudSyncEnabled, firebaseUserId],
+  );
 
   const isActressFavorite = useCallback((actressId: number) => favoriteActresses.has(actressId), [favoriteActresses]);
   const isProductFavorite = useCallback((productId: string) => favoriteProducts.has(productId), [favoriteProducts]);
 
-  const value = useMemo(() => ({
-    favoriteActresses,
-    favoriteProducts,
-    toggleActressFavorite,
-    toggleProductFavorite,
-    isActressFavorite,
-    isProductFavorite,
-    isCloudSyncEnabled,
-    isSyncing,
-  }), [favoriteActresses, favoriteProducts, toggleActressFavorite, toggleProductFavorite, isActressFavorite, isProductFavorite, isCloudSyncEnabled, isSyncing]);
-
-  return (
-    <FavoritesContext.Provider value={value}>
-      {children}
-    </FavoritesContext.Provider>
+  const value = useMemo(
+    () => ({
+      favoriteActresses,
+      favoriteProducts,
+      toggleActressFavorite,
+      toggleProductFavorite,
+      isActressFavorite,
+      isProductFavorite,
+      isCloudSyncEnabled,
+      isSyncing,
+    }),
+    [
+      favoriteActresses,
+      favoriteProducts,
+      toggleActressFavorite,
+      toggleProductFavorite,
+      isActressFavorite,
+      isProductFavorite,
+      isCloudSyncEnabled,
+      isSyncing,
+    ],
   );
+
+  return <FavoritesContext.Provider value={value}>{children}</FavoritesContext.Provider>;
 }
 
 export function useFavorites() {

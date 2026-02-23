@@ -70,9 +70,12 @@ export default function proxy(request: NextRequest) {
     // Block requests with suspicious headers for POST
     if (request.method === 'POST') {
       const contentType = request.headers.get('content-type') || '';
-      if (contentType && !contentType.includes('application/json') &&
-          !contentType.includes('application/x-www-form-urlencoded') &&
-          !contentType.includes('multipart/form-data')) {
+      if (
+        contentType &&
+        !contentType.includes('application/json') &&
+        !contentType.includes('application/x-www-form-urlencoded') &&
+        !contentType.includes('multipart/form-data')
+      ) {
         console.warn('[proxy] Suspicious content-type:', contentType);
         return new NextResponse('Unsupported Media Type', { status: 415 });
       }

@@ -23,10 +23,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData } from './lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from './lib/performer-validation';
 import { generateProductDescription, extractProductTags, translateProduct } from './lib/google-apis';
-import {
-  upsertRawHtmlDataWithGcs,
-  markRawDataAsProcessed,
-} from './lib/crawler/dedup-helper';
+import { upsertRawHtmlDataWithGcs, markRawDataAsProcessed } from './lib/crawler/dedup-helper';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import type { Browser, Page } from 'puppeteer';
@@ -70,7 +67,7 @@ interface FanzaProduct {
 async function rateLimit(): Promise<void> {
   const jitter = Math.random() * JITTER_MS;
   const delay = RATE_LIMIT_MS + jitter;
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -116,7 +113,9 @@ async function initializeSession(browserInstance: Browser): Promise<void> {
 
   const page = await browserInstance.newPage();
   try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢確認ページにアクセス
@@ -129,7 +128,7 @@ async function initializeSession(browserInstance: Browser): Promise<void> {
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
       { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
-      { name: 'i3_ab', value: 'affi_id:minpri-001', domain: '.dmm.co.jp' }
+      { name: 'i3_ab', value: 'affi_id:minpri-001', domain: '.dmm.co.jp' },
     );
 
     sessionInitialized = true;
@@ -161,13 +160,15 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
   const page = await browserInstance.newPage();
 
   try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢認証Cookie設定
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
-      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' }
+      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
     );
 
     // リクエストインターセプト（画像は取得して構造解析用に使用）
@@ -183,7 +184,7 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
 
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-      'Referer': 'https://www.dmm.co.jp/',
+      Referer: 'https://www.dmm.co.jp/',
     });
 
     const response = await page.goto(url, {
@@ -239,13 +240,15 @@ async function getCidsFromListPage(pageNum: number): Promise<string[]> {
   const page = await browserInstance.newPage();
 
   try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢認証Cookie設定
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
-      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' }
+      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
     );
 
     await page.goto(url, {
@@ -254,25 +257,25 @@ async function getCidsFromListPage(pageNum: number): Promise<string[]> {
     });
 
     // 商品リストがロードされるのを待つ
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // スクロールして商品をロード
     await page.evaluate(async () => {
       window.scrollTo(0, 500);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       window.scrollTo(0, 1000);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       window.scrollTo(0, 1500);
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // 商品画像URLからCIDを抽出
     const cids = await page.evaluate(() => {
       const cidSet = new Set<string>();
 
       // 画像URLからCIDを抽出（/video/XXXXX/ パターン）
-      document.querySelectorAll('img[src]').forEach(img => {
+      document.querySelectorAll('img[src]').forEach((img) => {
         const src = img.getAttribute('src') || '';
         // https://awsimgsrc.dmm.co.jp/pics_dig/digital/video/pxvr00352/pxvr00352ps.jpg
         const match = src.match(/\/video\/([a-z0-9]+)\//i);
@@ -282,7 +285,7 @@ async function getCidsFromListPage(pageNum: number): Promise<string[]> {
       });
 
       // aタグのhrefからもCIDを探す
-      document.querySelectorAll('a[href]').forEach(a => {
+      document.querySelectorAll('a[href]').forEach((a) => {
         const href = a.getAttribute('href') || '';
         // /av/detail/cid/ パターン
         const detailMatch = href.match(/\/av\/detail\/([a-z0-9]+)/i);
@@ -301,7 +304,6 @@ async function getCidsFromListPage(pageNum: number): Promise<string[]> {
 
     console.log(`  ✓ ${cids.length}件の商品CIDを取得`);
     return cids;
-
   } catch (error) {
     console.error(`  ❌ リストページ取得エラー: ${error}`);
     return [];
@@ -313,7 +315,10 @@ async function getCidsFromListPage(pageNum: number): Promise<string[]> {
 /**
  * 商品詳細ページをパース
  */
-async function parseDetailPage(cid: string, forceReprocess: boolean): Promise<{
+async function parseDetailPage(
+  cid: string,
+  forceReprocess: boolean,
+): Promise<{
   product: FanzaProduct | null;
   rawDataId: number | null;
   shouldSkip: boolean;
@@ -327,12 +332,7 @@ async function parseDetailPage(cid: string, forceReprocess: boolean): Promise<{
     const existing = await db
       .select()
       .from(productSources)
-      .where(
-        and(
-          eq(productSources.aspName, 'FANZA'),
-          eq(productSources.originalProductId, cid)
-        )
-      )
+      .where(and(eq(productSources.aspName, 'FANZA'), eq(productSources.originalProductId, cid)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -396,8 +396,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (jsonLdData?.name) {
       title = jsonLdData.name;
     } else {
-      const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-        || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
+      const titleMatch =
+        html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
       title = titleMatch ? titleMatch[1].trim() : `FANZA-${cid}`;
     }
     title = title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
@@ -440,8 +440,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       thumbnailUrl = Array.isArray(jsonLdData.image) ? jsonLdData.image[0] : jsonLdData.image;
     }
     if (!thumbnailUrl) {
-      const thumbnailMatch = html.match(/src="(https:\/\/awsimgsrc\.dmm\.co\.jp\/[^"]*pl\.jpg[^"]*)"/i)
-        || html.match(/src="(https:\/\/[^"]*pics[^"]*\/[^"]+pl\.jpg[^"]*)"/i);
+      const thumbnailMatch =
+        html.match(/src="(https:\/\/awsimgsrc\.dmm\.co\.jp\/[^"]*pl\.jpg[^"]*)"/i) ||
+        html.match(/src="(https:\/\/[^"]*pics[^"]*\/[^"]+pl\.jpg[^"]*)"/i);
       thumbnailUrl = thumbnailMatch ? thumbnailMatch[1] : '';
     }
 
@@ -457,8 +458,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // サンプル動画
     const sampleVideos: string[] = [];
-    const videoMatch = html.match(/src="(https:\/\/[^"]*litevideo[^"]*\.mp4[^"]*)"/i)
-      || html.match(/data-src="(https:\/\/[^"]*sample[^"]*\.mp4[^"]*)"/i);
+    const videoMatch =
+      html.match(/src="(https:\/\/[^"]*litevideo[^"]*\.mp4[^"]*)"/i) ||
+      html.match(/data-src="(https:\/\/[^"]*sample[^"]*\.mp4[^"]*)"/i);
     if (videoMatch) {
       sampleVideos.push(videoMatch[1]);
     }
@@ -498,8 +500,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
     if (priceMatches.length > 0) {
       // 最も低い価格を選択（セール価格）
-      const prices = priceMatches.map(m => parseInt(m[1].replace(/,/g, '')));
-      price = Math.min(...prices.filter(p => p > 0));
+      const prices = priceMatches.map((m) => parseInt(m[1].replace(/,/g, '')));
+      price = Math.min(...prices.filter((p) => p > 0));
     }
 
     // 説明文（☆マーク付きテキスト）
@@ -605,11 +607,7 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 
         const normalizedName = normalizePerformerName(performerName);
 
-        const [performer] = await db
-          .select()
-          .from(performers)
-          .where(eq(performers.name, normalizedName))
-          .limit(1);
+        const [performer] = await db.select().from(performers).where(eq(performers.name, normalizedName)).limit(1);
 
         let performerId: number;
         if (performer) {
@@ -626,12 +624,7 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
         const existingLink = await db
           .select()
           .from(productPerformers)
-          .where(
-            and(
-              eq(productPerformers.productId, productId),
-              eq(productPerformers.performerId, performerId)
-            )
-          )
+          .where(and(eq(productPerformers.productId, productId), eq(productPerformers.performerId, performerId)))
           .limit(1);
 
         if (existingLink.length === 0) {
@@ -644,32 +637,41 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 
       // サンプル画像保存
       if (product.thumbnailUrl) {
-        await db.insert(productImages).values({
-          productId,
-          imageUrl: product.thumbnailUrl,
-          imageType: 'thumbnail',
-          displayOrder: 0,
-          aspName: 'FANZA',
-        }).onConflictDoNothing();
+        await db
+          .insert(productImages)
+          .values({
+            productId,
+            imageUrl: product.thumbnailUrl,
+            imageType: 'thumbnail',
+            displayOrder: 0,
+            aspName: 'FANZA',
+          })
+          .onConflictDoNothing();
       }
 
       for (let i = 0; i < product.sampleImages.length; i++) {
-        await db.insert(productImages).values({
-          productId,
-          imageUrl: product.sampleImages[i],
-          imageType: 'sample',
-          displayOrder: i + 1,
-          aspName: 'FANZA',
-        }).onConflictDoNothing();
+        await db
+          .insert(productImages)
+          .values({
+            productId,
+            imageUrl: product.sampleImages[i],
+            imageType: 'sample',
+            displayOrder: i + 1,
+            aspName: 'FANZA',
+          })
+          .onConflictDoNothing();
       }
 
       // サンプル動画保存
       for (const videoUrl of product.sampleVideos) {
-        await db.insert(productVideos).values({
-          productId,
-          videoUrl,
-          source: 'FANZA',
-        }).onConflictDoNothing();
+        await db
+          .insert(productVideos)
+          .values({
+            productId,
+            videoUrl,
+            source: 'FANZA',
+          })
+          .onConflictDoNothing();
       }
     }
 
@@ -683,7 +685,10 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 /**
  * AI機能: 説明文生成とタグ抽出
  */
-async function generateAIContent(product: FanzaProduct, enableAI: boolean): Promise<{
+async function generateAIContent(
+  product: FanzaProduct,
+  enableAI: boolean,
+): Promise<{
   aiDescription: { catchphrase: string; shortDescription: string } | null;
   aiTags: { genres: string[]; attributes: string[] } | null;
 }> {
@@ -698,11 +703,7 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
 
   try {
     // 説明文生成
-    const description = await generateProductDescription(
-      product.title,
-      product.performers,
-      product.description
-    );
+    const description = await generateProductDescription(product.title, product.performers, product.description);
 
     if (description) {
       aiDescription = {
@@ -714,11 +715,7 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
     }
 
     // タグ抽出
-    const tags = await extractProductTags(
-      product.title,
-      product.performers,
-      product.description
-    );
+    const tags = await extractProductTags(product.title, product.performers, product.description);
 
     if (tags) {
       aiTags = {
@@ -740,7 +737,7 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
 async function saveAIContent(
   productId: number,
   aiDescription: { catchphrase: string; shortDescription: string } | null,
-  aiTags: { genres: string[]; attributes: string[] } | null
+  aiTags: { genres: string[]; attributes: string[] } | null,
 ): Promise<void> {
   if (!aiDescription && !aiTags) return;
 
@@ -760,10 +757,7 @@ async function saveAIContent(
     }
 
     if (Object.keys(updates).length > 0) {
-      await db
-        .update(products)
-        .set(updates)
-        .where(eq(products.id, productId));
+      await db.update(products).set(updates).where(eq(products.id, productId));
       console.log(`    💾 AI生成データを保存しました`);
     }
   } catch (error) {

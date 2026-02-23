@@ -90,36 +90,32 @@ export default function ActressFilterBar() {
       {/* トグルボタン */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-          activeFilterCount > 0 || isOpen
-            ? 'bg-pink-600 text-white'
-            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+        className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+          activeFilterCount > 0 || isOpen ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
         }`}
       >
-        <Filter className="w-4 h-4" />
+        <Filter className="h-4 w-4" />
         {t.filter}
         {activeFilterCount > 0 && (
-          <span className="px-1.5 py-0.5 text-xs bg-white/20 rounded">
-            {activeFilterCount}
-          </span>
+          <span className="rounded bg-white/20 px-1.5 py-0.5 text-xs">{activeFilterCount}</span>
         )}
-        {isOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {isOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
 
       {/* フィルターパネル */}
       {isOpen && (
-        <div className={`mt-3 p-4 bg-gray-800 rounded-lg border border-gray-700 ${isPending ? 'opacity-50' : ''}`}>
+        <div className={`mt-3 rounded-lg border border-gray-700 bg-gray-800 p-4 ${isPending ? 'opacity-50' : ''}`}>
           <div className="space-y-4">
             {/* デビュー年 */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-300">{t.debutYear}</h3>
                 {debutYear && (
                   <button
                     onClick={() => updateFilter('debutYear', null)}
-                    className="text-xs text-pink-400 hover:text-pink-300 flex items-center gap-1"
+                    className="flex items-center gap-1 text-xs text-pink-400 hover:text-pink-300"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="h-3 w-3" />
                     {t.clear}
                   </button>
                 )}
@@ -129,7 +125,7 @@ export default function ActressFilterBar() {
                   <button
                     key={option.value}
                     onClick={() => updateFilter('debutYear', debutYear === option.value ? null : option.value)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                       debutYear === option.value
                         ? 'bg-pink-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -143,14 +139,14 @@ export default function ActressFilterBar() {
 
             {/* 作品数 */}
             <div>
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex items-center justify-between">
                 <h3 className="text-sm font-medium text-gray-300">{t.workCount}</h3>
                 {minWorks && (
                   <button
                     onClick={() => updateFilter('minWorks', null)}
-                    className="text-xs text-pink-400 hover:text-pink-300 flex items-center gap-1"
+                    className="flex items-center gap-1 text-xs text-pink-400 hover:text-pink-300"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="h-3 w-3" />
                     {t.clear}
                   </button>
                 )}
@@ -160,7 +156,7 @@ export default function ActressFilterBar() {
                   <button
                     key={option.value}
                     onClick={() => updateFilter('minWorks', minWorks === option.value ? null : option.value)}
-                    className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                    className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                       minWorks === option.value
                         ? 'bg-pink-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -174,11 +170,8 @@ export default function ActressFilterBar() {
 
             {/* すべてクリア */}
             {activeFilterCount > 0 && (
-              <div className="pt-2 border-t border-gray-700">
-                <button
-                  onClick={clearAllFilters}
-                  className="text-sm text-gray-400 hover:text-white transition-colors"
-                >
+              <div className="border-t border-gray-700 pt-2">
+                <button onClick={clearAllFilters} className="text-sm text-gray-400 transition-colors hover:text-white">
                   {t.clearAll}
                 </button>
               </div>

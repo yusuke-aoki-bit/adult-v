@@ -176,10 +176,7 @@ export function trackCtaClick(
 /**
  * インプレッションをトラック
  */
-export function trackImpression(
-  experimentId: string,
-  productId?: string | number,
-) {
+export function trackImpression(experimentId: string, productId?: string | number) {
   const params: Record<string, string | number | boolean> = {};
   if (productId) {
     // eslint-disable-next-line @typescript-eslint/dot-notation
@@ -194,7 +191,7 @@ export function trackImpression(
 export function resetAllExperiments() {
   if (typeof window === 'undefined') return;
 
-  Object.keys(experiments).forEach(experimentId => {
+  Object.keys(experiments).forEach((experimentId) => {
     try {
       localStorage.removeItem(`${storageKeyPrefix}${experimentId}`);
     } catch {
@@ -228,7 +225,7 @@ export function forceVariant(experimentId: string, variant: ExperimentVariant) {
 export function getAllVariants(): Record<string, ExperimentVariant> {
   const result: Record<string, ExperimentVariant> = {};
 
-  Object.keys(experiments).forEach(experimentId => {
+  Object.keys(experiments).forEach((experimentId) => {
     result[experimentId] = getVariant(experimentId);
   });
 

@@ -1,0 +1,49 @@
+name: 機能リクエスト
+description: 新機能や改善の提案
+labels: ['enhancement']
+body:
+  - type: input
+    id: title
+    attributes:
+      label: タイトル
+      description: 機能の概要を簡潔に
+      placeholder: 例）お気に入りリストのエクスポート機能
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 説明
+      description: 機能の詳細を説明してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecase
+    attributes:
+      label: ユースケース
+      description: この機能がどのような場面で必要か
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: 提案する実装方法
+      description: 実装のアイデアがあれば記載
+    validations:
+      required: false
+
+  - type: dropdown
+    id: app
+    attributes:
+      label: 対象アプリ
+      options:
+        - apps/web
+        - apps/fanza
+        - packages/shared
+        - packages/database
+        - 全体
+    validations:
+      required: true

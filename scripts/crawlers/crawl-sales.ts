@@ -10,13 +10,7 @@
 import { getDb } from './lib/db';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
-import {
-  getFirstRow,
-  IdRow,
-  RateLimiter,
-  crawlerLog,
-  robustFetch,
-} from './lib/crawler';
+import { getFirstRow, IdRow, RateLimiter, crawlerLog, robustFetch } from './lib/crawler';
 import { getDugaClient, DugaProduct } from './lib/providers/duga-client';
 import { getSokmilClient } from './lib/providers/sokmil-client';
 
@@ -54,10 +48,11 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       const response = await robustFetch(pageInfo.url, {
         init: {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Cookie': 'adc=1',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            Cookie: 'adc=1',
           },
         },
         timeoutMs: 30000,
@@ -77,10 +72,10 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       // セール商品を抽出（複数セレクタに対応）
       // MGSの検索結果ページ構造: .search_list内の各商品
       const selectors = [
-        '.search_list .data',      // 検索結果リスト
-        '.rank_list li',           // ランキングリスト
-        '.movie_list li',          // 動画リスト
-        '.sale_container',         // セールコンテナ（親要素）
+        '.search_list .data', // 検索結果リスト
+        '.rank_list li', // ランキングリスト
+        '.movie_list li', // 動画リスト
+        '.sale_container', // セールコンテナ（親要素）
       ];
 
       // 商品リンクを直接検索
@@ -96,7 +91,7 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
         const productId = productIdMatch[1];
 
         // 重複チェック
-        if (saleItems.some(item => item.originalProductId === productId)) return;
+        if (saleItems.some((item) => item.originalProductId === productId)) return;
 
         // 親要素から価格情報を探す
         const $parent = $(el).closest('.search_list, .rank_list, li, article, .data').first();
@@ -142,7 +137,6 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       });
 
       crawlerLog.success(`Found ${saleItems.length} sale items from ${pageInfo.name}`);
-
     } catch (error) {
       crawlerLog.error(`Error crawling ${pageInfo.url}:`, error);
     }
@@ -173,7 +167,8 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
       const response = await robustFetch(pageInfo.url, {
         init: {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
           },
         },
@@ -204,7 +199,7 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
         if (!productId) return;
 
         // 重複チェック
-        if (saleItems.some(item => item.originalProductId === productId)) return;
+        if (saleItems.some((item) => item.originalProductId === productId)) return;
 
         // 価格情報を抽出
         const priceText = $item.find('.money').text();
@@ -239,7 +234,7 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
         const productId = productIdMatch[1];
 
         // 重複チェック
-        if (saleItems.some(item => item.originalProductId === productId)) return;
+        if (saleItems.some((item) => item.originalProductId === productId)) return;
 
         // 価格情報を抽出
         const $parent = $(el).closest('.contentslist, li, article');
@@ -262,7 +257,6 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
       });
 
       crawlerLog.success(`Found ${saleItems.length} sale items from ${pageInfo.name}`);
-
     } catch (error) {
       crawlerLog.error(`Error crawling DUGA sales:`, error);
     }
@@ -325,7 +319,6 @@ async function crawlSokmilSales(limit: number = 100): Promise<SaleItem[]> {
     }
 
     crawlerLog.success(`Found ${saleItems.length} sale items from SOKMIL API`);
-
   } catch (error) {
     crawlerLog.error('Error crawling SOKMIL sales via API:', error);
   }

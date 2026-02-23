@@ -1,7 +1,20 @@
 'use client';
 
 import { useState, memo } from 'react';
-import { Bot, Star, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp, Sparkles, AlertCircle, Film, Mic, Theater, CheckCircle2 } from 'lucide-react';
+import {
+  Bot,
+  Star,
+  ThumbsUp,
+  ThumbsDown,
+  ChevronDown,
+  ChevronUp,
+  Sparkles,
+  AlertCircle,
+  Film,
+  Mic,
+  Theater,
+  CheckCircle2,
+} from 'lucide-react';
 import { localeMap } from '@adult-v/shared/lib/utils/formatDate';
 
 const translations = {
@@ -149,11 +162,15 @@ interface ParsedReview {
 }
 
 function parseAiReview(review: string): ParsedReview {
-  const lines = review.split('\n').filter(l => l.trim());
+  const lines = review.split('\n').filter((l) => l.trim());
   const result: ParsedReview = {
-    summary: '', highlights: [], cautions: [],
-    recommendedFor: [], notRecommendedFor: [],
-    overallScore: 4, categoryRatings: [],
+    summary: '',
+    highlights: [],
+    cautions: [],
+    recommendedFor: [],
+    notRecommendedFor: [],
+    overallScore: 4,
+    categoryRatings: [],
   };
 
   let currentSection = 'summary';
@@ -161,23 +178,42 @@ function parseAiReview(review: string): ParsedReview {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    if (trimmed.includes('ハイライト') || trimmed.includes('Highlight') || trimmed.includes('良い点')) { currentSection = 'highlights'; continue; }
-    if (trimmed.includes('注意') || trimmed.includes('Caution') || trimmed.includes('悪い点')) { currentSection = 'cautions'; continue; }
-    if (trimmed.includes('おすすめ') || trimmed.includes('Recommend')) { currentSection = trimmed.includes('向かない') || trimmed.includes('Not') ? 'notRecommendedFor' : 'recommendedFor'; continue; }
+    if (trimmed.includes('ハイライト') || trimmed.includes('Highlight') || trimmed.includes('良い点')) {
+      currentSection = 'highlights';
+      continue;
+    }
+    if (trimmed.includes('注意') || trimmed.includes('Caution') || trimmed.includes('悪い点')) {
+      currentSection = 'cautions';
+      continue;
+    }
+    if (trimmed.includes('おすすめ') || trimmed.includes('Recommend')) {
+      currentSection = trimmed.includes('向かない') || trimmed.includes('Not') ? 'notRecommendedFor' : 'recommendedFor';
+      continue;
+    }
 
-    const categoryMatch = trimmed.match(/^(演技|映像|音声|ストーリー|Performance|Visuals|Audio|Story)[：:]\s*(\d+\.?\d*)/i);
+    const categoryMatch = trimmed.match(
+      /^(演技|映像|音声|ストーリー|Performance|Visuals|Audio|Story)[：:]\s*(\d+\.?\d*)/i,
+    );
     if (categoryMatch) {
       const categoryMap: Record<string, CategoryRating['category']> = {
-        '演技': 'performance', 'performance': 'performance',
-        '映像': 'visuals', 'visuals': 'visuals',
-        '音声': 'audio', 'audio': 'audio',
-        'ストーリー': 'story', 'story': 'story',
+        演技: 'performance',
+        performance: 'performance',
+        映像: 'visuals',
+        visuals: 'visuals',
+        音声: 'audio',
+        audio: 'audio',
+        ストーリー: 'story',
+        story: 'story',
       };
-      const category = categoryMap[categoryMatch[1].toLowerCase()];
+      const category = categoryMap[categoryMatch[1]!.toLowerCase()];
       if (category) {
-        const score = parseFloat(categoryMatch[2]);
+        const score = parseFloat(categoryMatch[2]!);
         const commentMatch = trimmed.match(/[：:]\s*\d+\.?\d*\s*[（(]([^）)]+)[）)]/);
-        result.categoryRatings.push({ category, score: Math.min(5, Math.max(0, score)), comment: commentMatch ? commentMatch[1] : undefined });
+        result.categoryRatings.push({
+          category,
+          score: Math.min(5, Math.max(0, score)),
+          comment: commentMatch ? commentMatch[1]! : undefined,
+        });
       }
       continue;
     }
@@ -196,7 +232,9 @@ function parseAiReview(review: string): ParsedReview {
   result.summary = summaryLines.join(' ').slice(0, 300);
   if (result.highlights.length === 0 && result.summary.length === 0) result.summary = review.slice(0, 300);
 
-  const scoreMatch = review.match(/総合[評点]?[：:]\s*★+|総合[評点]?[：:]\s*(\d+\.?\d*)\/5|★+|(\d+\.?\d*)\/5|(\d+\.?\d*)点/);
+  const scoreMatch = review.match(
+    /総合[評点]?[：:]\s*★+|総合[評点]?[：:]\s*(\d+\.?\d*)\/5|★+|(\d+\.?\d*)\/5|(\d+\.?\d*)点/,
+  );
   if (scoreMatch) {
     if (scoreMatch[0].includes('★')) result.overallScore = (scoreMatch[0].match(/★/g) || []).length;
     else result.overallScore = parseFloat(scoreMatch[1] || scoreMatch[2] || scoreMatch[3] || '4');
@@ -204,10 +242,14 @@ function parseAiReview(review: string): ParsedReview {
 
   if (result.categoryRatings.length === 0 && result.summary) {
     const baseScore = result.overallScore;
-    if (/演技|自然|表現|emotion|acting|natural/i.test(review)) result.categoryRatings.push({ category: 'performance', score: Math.min(5, baseScore + 0.1) });
-    if (/映像|画質|照明|美しい|visual|lighting|angle/i.test(review)) result.categoryRatings.push({ category: 'visuals', score: Math.min(5, baseScore - 0.1) });
-    if (/音|収録|BGM|クリア|audio|sound|clear/i.test(review)) result.categoryRatings.push({ category: 'audio', score: Math.min(5, baseScore + 0.15) });
-    if (/ストーリー|展開|構成|story|plot|flow/i.test(review)) result.categoryRatings.push({ category: 'story', score: Math.min(5, baseScore - 0.05) });
+    if (/演技|自然|表現|emotion|acting|natural/i.test(review))
+      result.categoryRatings.push({ category: 'performance', score: Math.min(5, baseScore + 0.1) });
+    if (/映像|画質|照明|美しい|visual|lighting|angle/i.test(review))
+      result.categoryRatings.push({ category: 'visuals', score: Math.min(5, baseScore - 0.1) });
+    if (/音|収録|BGM|クリア|audio|sound|clear/i.test(review))
+      result.categoryRatings.push({ category: 'audio', score: Math.min(5, baseScore + 0.15) });
+    if (/ストーリー|展開|構成|story|plot|flow/i.test(review))
+      result.categoryRatings.push({ category: 'story', score: Math.min(5, baseScore - 0.05) });
   }
 
   return result;
@@ -237,9 +279,28 @@ const CircularScore = memo(function CircularScore({ score, size = 100 }: { score
   const color = getScoreColor(score);
 
   return (
-    <svg width={size} height={size} className="transform -rotate-90">
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke="currentColor" strokeWidth={strokeWidth} className="theme-text-muted opacity-20" />
-      <circle cx={size / 2} cy={size / 2} r={radius} fill="none" stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={circumference - progress} className="transition-all duration-700" />
+    <svg width={size} height={size} className="-rotate-90 transform">
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={strokeWidth}
+        className="theme-text-muted opacity-20"
+      />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={radius}
+        fill="none"
+        stroke={color}
+        strokeWidth={strokeWidth}
+        strokeLinecap="round"
+        strokeDasharray={circumference}
+        strokeDashoffset={circumference - progress}
+        className="transition-all duration-700"
+      />
     </svg>
   );
 });
@@ -248,26 +309,32 @@ const CircularScore = memo(function CircularScore({ score, size = 100 }: { score
 const CategoryCard = memo(function CategoryCard({ category, score, locale }: CategoryRating & { locale: string }) {
   const t = translations[locale as keyof typeof translations] || translations['ja'];
   const icons: Record<CategoryRating['category'], React.ReactNode> = {
-    performance: <Theater className="w-4 h-4" />,
-    visuals: <Film className="w-4 h-4" />,
-    audio: <Mic className="w-4 h-4" />,
-    story: <Bot className="w-4 h-4" />,
+    performance: <Theater className="h-4 w-4" />,
+    visuals: <Film className="h-4 w-4" />,
+    audio: <Mic className="h-4 w-4" />,
+    story: <Bot className="h-4 w-4" />,
   };
   const labels: Record<CategoryRating['category'], string> = {
-    performance: t.performance, visuals: t.visuals, audio: t.audio, story: t.story,
+    performance: t.performance,
+    visuals: t.visuals,
+    audio: t.audio,
+    story: t.story,
   };
   const percentage = (score / 5) * 100;
   const color = getScoreColor(score);
 
   return (
     <div className="theme-accordion-bg rounded-lg p-3">
-      <div className="flex items-center gap-2 mb-2">
+      <div className="mb-2 flex items-center gap-2">
         <span className="theme-text-muted">{icons[category]}</span>
-        <span className="text-xs font-medium theme-text-secondary">{labels[category]}</span>
-        <span className="ml-auto text-sm font-bold theme-text">{score.toFixed(1)}</span>
+        <span className="theme-text-secondary text-xs font-medium">{labels[category]}</span>
+        <span className="theme-text ml-auto text-sm font-bold">{score.toFixed(1)}</span>
       </div>
-      <div className="w-full rounded-full h-1.5 theme-input-bg">
-        <div className="h-1.5 rounded-full transition-all duration-500" style={{ width: `${percentage}%`, backgroundColor: color }} />
+      <div className="theme-input-bg h-1.5 w-full rounded-full">
+        <div
+          className="h-1.5 rounded-full transition-all duration-500"
+          style={{ width: `${percentage}%`, backgroundColor: color }}
+        />
       </div>
     </div>
   );
@@ -275,8 +342,8 @@ const CategoryCard = memo(function CategoryCard({ category, score, locale }: Cat
 
 const HighlightItem = memo(function HighlightItem({ text }: { text: string }) {
   return (
-    <li className="text-sm theme-text-secondary flex items-start gap-2 py-1.5 px-3 rounded-md border-l-2 border-emerald-500 theme-highlight-bg">
-      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+    <li className="theme-text-secondary theme-highlight-bg flex items-start gap-2 rounded-md border-l-2 border-emerald-500 px-3 py-1.5 text-sm">
+      <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-500" />
       {text}
     </li>
   );
@@ -284,19 +351,24 @@ const HighlightItem = memo(function HighlightItem({ text }: { text: string }) {
 
 const CautionItem = memo(function CautionItem({ text }: { text: string }) {
   return (
-    <li className="text-sm theme-text-secondary flex items-start gap-2 py-1.5 px-3 rounded-md border-l-2 border-amber-500 theme-caution-bg">
-      <AlertCircle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+    <li className="theme-text-secondary theme-caution-bg flex items-start gap-2 rounded-md border-l-2 border-amber-500 px-3 py-1.5 text-sm">
+      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" />
       {text}
     </li>
   );
 });
 
 const RecommendationItem = memo(function RecommendationItem({ text }: { text: string }) {
-  return <li className="text-xs theme-text-secondary">• {text}</li>;
+  return <li className="theme-text-secondary text-xs">• {text}</li>;
 });
 
 export default function EnhancedAiReview({
-  aiReview, rating, ratingCount, locale, className = '', updatedAt,
+  aiReview,
+  rating,
+  ratingCount,
+  locale,
+  className = '',
+  updatedAt,
 }: EnhancedAiReviewProps) {
   const t = translations[locale as keyof typeof translations] || translations['ja'];
   const [isExpanded, setIsExpanded] = useState(false);
@@ -309,51 +381,59 @@ export default function EnhancedAiReview({
   const scoreLabel = getScoreLabel(displayScore, t);
 
   const formattedDate = updatedAt
-    ? new Date(updatedAt).toLocaleDateString(localeMap[locale] || 'ja-JP', { year: 'numeric', month: 'short', day: 'numeric' })
+    ? new Date(updatedAt).toLocaleDateString(localeMap[locale] || 'ja-JP', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      })
     : null;
 
-  const analysisBasis = ratingCount && ratingCount > 0
-    ? t.basedOnReviews.replace('{count}', String(ratingCount))
-    : t.basedOnDescription;
+  const analysisBasis =
+    ratingCount && ratingCount > 0 ? t.basedOnReviews.replace('{count}', String(ratingCount)) : t.basedOnDescription;
 
   return (
-    <div className={`theme-content rounded-xl border theme-border p-5 ${className}`}>
+    <div className={`theme-content theme-border rounded-xl border p-5 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
-        <h3 className="text-lg font-bold theme-text flex items-center gap-2">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/10">
-            <Bot className="w-5 h-5 text-purple-400" />
+      <div className="mb-5 flex items-center justify-between">
+        <h3 className="theme-text flex items-center gap-2 text-lg font-bold">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-500/10">
+            <Bot className="h-5 w-5 text-purple-400" />
           </div>
           {t.title}
         </h3>
-        <div className="flex items-center gap-1 text-xs theme-text-muted">
-          <Sparkles className="w-3 h-3" />
+        <div className="theme-text-muted flex items-center gap-1 text-xs">
+          <Sparkles className="h-3 w-3" />
           {t.aiGenerated}
         </div>
       </div>
 
       {/* Score + Categories - Hero Section */}
-      <div className="flex flex-col sm:flex-row gap-5 mb-5">
+      <div className="mb-5 flex flex-col gap-5 sm:flex-row">
         {/* Circular Score */}
-        <div className="flex flex-col items-center justify-center shrink-0">
-          <div className="relative w-[100px] h-[100px]">
+        <div className="flex shrink-0 flex-col items-center justify-center">
+          <div className="relative h-[100px] w-[100px]">
             <CircularScore score={displayScore} size={100} />
-            <div className="absolute inset-0 flex flex-col items-center justify-center rotate-0">
-              <span className="text-3xl font-bold theme-text">{displayScore.toFixed(1)}</span>
-              <span className="text-[10px] theme-text-muted">/5.0</span>
+            <div className="absolute inset-0 flex rotate-0 flex-col items-center justify-center">
+              <span className="theme-text text-3xl font-bold">{displayScore.toFixed(1)}</span>
+              <span className="theme-text-muted text-[10px]">/5.0</span>
             </div>
           </div>
           <div className="mt-2 flex items-center gap-1">
             {[...Array(5)].map((_, i) => (
-              <Star key={i} className={`w-3.5 h-3.5 ${i < Math.round(displayScore) ? 'text-yellow-400 fill-yellow-400' : 'theme-text-muted opacity-30'}`} />
+              <Star
+                key={i}
+                className={`h-3.5 w-3.5 ${i < Math.round(displayScore) ? 'fill-yellow-400 text-yellow-400' : 'theme-text-muted opacity-30'}`}
+              />
             ))}
           </div>
-          <span className="text-xs font-medium mt-1" style={{ color: scoreColor }}>{scoreLabel}</span>
+          <span className="mt-1 text-xs font-medium" style={{ color: scoreColor }}>
+            {scoreLabel}
+          </span>
         </div>
 
         {/* Category Ratings 2x2 Grid */}
         {parsed.categoryRatings.length > 0 && (
-          <div className="grid grid-cols-2 gap-2 flex-1 min-w-0">
+          <div className="grid min-w-0 flex-1 grid-cols-2 gap-2">
             {parsed.categoryRatings.map((cr) => (
               <CategoryCard key={cr.category} {...cr} locale={locale} />
             ))}
@@ -362,30 +442,40 @@ export default function EnhancedAiReview({
       </div>
 
       {/* Trust Indicators */}
-      <div className="mb-4 p-2 theme-accordion-bg rounded-lg text-xs theme-text-muted">
+      <div className="theme-accordion-bg theme-text-muted mb-4 rounded-lg p-2 text-xs">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
           {formattedDate && (
             <span className="flex items-center gap-1">
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
               </svg>
               {t.lastUpdated}: {formattedDate}
             </span>
           )}
           <span className="flex items-center gap-1">
-            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
             {analysisBasis}
           </span>
         </div>
-        <p className="mt-1.5 opacity-60 text-[10px]">{t.trustNote}</p>
+        <p className="mt-1.5 text-[10px] opacity-60">{t.trustNote}</p>
       </div>
 
       {/* Summary */}
       {parsed.summary && (
         <div className="mb-4">
-          <h4 className="text-sm font-medium theme-text-muted mb-2">{t.summary}</h4>
+          <h4 className="theme-text-muted mb-2 text-sm font-medium">{t.summary}</h4>
           <p className="theme-text-secondary text-sm leading-relaxed">
             {isExpanded ? parsed.summary : parsed.summary.slice(0, 150) + (parsed.summary.length > 150 ? '...' : '')}
           </p>
@@ -397,24 +487,28 @@ export default function EnhancedAiReview({
         <>
           {parsed.highlights.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-medium theme-text-muted mb-2 flex items-center gap-1">
-                <ThumbsUp className="w-4 h-4 text-emerald-500" />
+              <h4 className="theme-text-muted mb-2 flex items-center gap-1 text-sm font-medium">
+                <ThumbsUp className="h-4 w-4 text-emerald-500" />
                 {t.highlights}
               </h4>
               <ul className="space-y-1.5">
-                {parsed.highlights.map((h, i) => <HighlightItem key={i} text={h} />)}
+                {parsed.highlights.map((h, i) => (
+                  <HighlightItem key={i} text={h} />
+                ))}
               </ul>
             </div>
           )}
 
           {parsed.cautions.length > 0 && (
             <div className="mb-4">
-              <h4 className="text-sm font-medium theme-text-muted mb-2 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4 text-amber-500" />
+              <h4 className="theme-text-muted mb-2 flex items-center gap-1 text-sm font-medium">
+                <AlertCircle className="h-4 w-4 text-amber-500" />
                 {t.cautions}
               </h4>
               <ul className="space-y-1.5">
-                {parsed.cautions.map((c, i) => <CautionItem key={i} text={c} />)}
+                {parsed.cautions.map((c, i) => (
+                  <CautionItem key={i} text={c} />
+                ))}
               </ul>
             </div>
           )}
@@ -422,24 +516,28 @@ export default function EnhancedAiReview({
           {/* Recommendations */}
           <div className="grid grid-cols-2 gap-3">
             {parsed.recommendedFor.length > 0 && (
-              <div className="p-3 rounded-lg theme-highlight-bg border-l-2 border-emerald-500">
-                <h4 className="text-xs font-medium text-emerald-500 mb-1.5 flex items-center gap-1">
-                  <ThumbsUp className="w-3 h-3" />
+              <div className="theme-highlight-bg rounded-lg border-l-2 border-emerald-500 p-3">
+                <h4 className="mb-1.5 flex items-center gap-1 text-xs font-medium text-emerald-500">
+                  <ThumbsUp className="h-3 w-3" />
                   {t.recommendedFor}
                 </h4>
                 <ul className="space-y-0.5">
-                  {parsed.recommendedFor.map((item, i) => <RecommendationItem key={i} text={item} />)}
+                  {parsed.recommendedFor.map((item, i) => (
+                    <RecommendationItem key={i} text={item} />
+                  ))}
                 </ul>
               </div>
             )}
             {parsed.notRecommendedFor.length > 0 && (
-              <div className="p-3 rounded-lg theme-caution-bg border-l-2 border-amber-500">
-                <h4 className="text-xs font-medium text-amber-500 mb-1.5 flex items-center gap-1">
-                  <ThumbsDown className="w-3 h-3" />
+              <div className="theme-caution-bg rounded-lg border-l-2 border-amber-500 p-3">
+                <h4 className="mb-1.5 flex items-center gap-1 text-xs font-medium text-amber-500">
+                  <ThumbsDown className="h-3 w-3" />
                   {t.notRecommendedFor}
                 </h4>
                 <ul className="space-y-0.5">
-                  {parsed.notRecommendedFor.map((item, i) => <RecommendationItem key={i} text={item} />)}
+                  {parsed.notRecommendedFor.map((item, i) => (
+                    <RecommendationItem key={i} text={item} />
+                  ))}
                 </ul>
               </div>
             )}
@@ -450,9 +548,19 @@ export default function EnhancedAiReview({
       {/* Expand/Collapse */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full mt-4 py-2 text-sm theme-text-muted hover:theme-text flex items-center justify-center gap-1 transition-colors rounded-lg theme-accordion-hover"
+        className="theme-text-muted hover:theme-text theme-accordion-hover mt-4 flex w-full items-center justify-center gap-1 rounded-lg py-2 text-sm transition-colors"
       >
-        {isExpanded ? <><ChevronUp className="w-4 h-4" />{t.showLess}</> : <><ChevronDown className="w-4 h-4" />{t.showMore}</>}
+        {isExpanded ? (
+          <>
+            <ChevronUp className="h-4 w-4" />
+            {t.showLess}
+          </>
+        ) : (
+          <>
+            <ChevronDown className="h-4 w-4" />
+            {t.showMore}
+          </>
+        )}
       </button>
     </div>
   );

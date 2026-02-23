@@ -8,10 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { SokmilClient } from '../providers/sokmil-client';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -229,7 +226,6 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
             }
 
             stats.totalFetched++;
-
           } catch (error) {
             stats.errors++;
             console.error(`Error processing Sokmil item ${item.itemId}:`, error);
@@ -244,9 +240,9 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
@@ -274,7 +270,6 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
         },
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('Sokmil crawl error:', error);
       return NextResponse.json(
@@ -283,7 +278,7 @@ export function createCrawlSokmilHandler(deps: CrawlSokmilHandlerDeps) {
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

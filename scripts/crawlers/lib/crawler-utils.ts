@@ -6,15 +6,15 @@
 // トップページ/リダイレクトページの特徴的なパターン
 const TOP_PAGE_PATTERNS = {
   titles: [
-    /^ソクミル-\d+$/,                    // ソクミルプレースホルダー
-    /^Japanska-\d+$/,                   // Japanskaプレースホルダー
-    /^FC2動画アダルト$/,                 // FC2トップページ
-    /^MGS動画\(成人認証\)/,              // MGS認証ページ
-    /^アダルト動画.*ソクミル/,            // ソクミルトップ
-    /^無修正動画.*カリビアンコム/,        // カリビアンコムトップ
+    /^ソクミル-\d+$/, // ソクミルプレースホルダー
+    /^Japanska-\d+$/, // Japanskaプレースホルダー
+    /^FC2動画アダルト$/, // FC2トップページ
+    /^MGS動画\(成人認証\)/, // MGS認証ページ
+    /^アダルト動画.*ソクミル/, // ソクミルトップ
+    /^無修正動画.*カリビアンコム/, // カリビアンコムトップ
     // MGS トップページパターン
-    /^エロ動画・アダルトビデオ\s*-MGS動画/,   // MGSトップページタイトル
-    /^MGS動画＜プレステージ\s*グループ＞$/,   // MGSトップページ（リダイレクト後）
+    /^エロ動画・アダルトビデオ\s*-MGS動画/, // MGSトップページタイトル
+    /^MGS動画＜プレステージ\s*グループ＞$/, // MGSトップページ（リダイレクト後）
   ],
   descriptions: [
     /アダルト動画・エロ動画ソクミル/,
@@ -84,7 +84,7 @@ export function validateProductData(data: {
  */
 export function detectRedirect(
   originalUrl: string,
-  finalUrl: string
+  finalUrl: string,
 ): { isRedirected: boolean; redirectType?: string } {
   const originalHost = new URL(originalUrl).hostname;
   const finalHost = new URL(finalUrl).hostname;
@@ -96,12 +96,12 @@ export function detectRedirect(
 
   // 詳細ページから一覧/トップページへリダイレクト
   const topPagePatterns = [
-    /^\/?$/,                    // トップページ
-    /\/\?.*$/,                  // クエリパラメータのみ
-    /\/list\.html$/,            // 一覧ページ
-    /\/search/,                 // 検索ページ
-    /\/age[-_]?check/i,         // 年齢確認ページ
-    /\/confirm/i,               // 確認ページ
+    /^\/?$/, // トップページ
+    /\/\?.*$/, // クエリパラメータのみ
+    /\/list\.html$/, // 一覧ページ
+    /\/search/, // 検索ページ
+    /\/age[-_]?check/i, // 年齢確認ページ
+    /\/confirm/i, // 確認ページ
   ];
 
   const finalPath = new URL(finalUrl).pathname;
@@ -120,7 +120,7 @@ export function detectRedirect(
 export async function navigateWithRedirectCheck(
   page: any,
   url: string,
-  options: { waitUntil?: string; timeout?: number } = {}
+  options: { waitUntil?: string; timeout?: number } = {},
 ): Promise<{ success: boolean; finalUrl: string; wasRedirected: boolean; redirectType?: string }> {
   const { waitUntil = 'networkidle2', timeout = 30000 } = options;
 
@@ -150,13 +150,7 @@ export async function navigateWithRedirectCheck(
  */
 export function isTopPageHtml(html: string, aspName: string): boolean {
   // 年齢確認ダイアログ/ページの検出
-  const ageCheckPatterns = [
-    /年齢確認/,
-    /18歳以上/,
-    /age[-_]?verification/i,
-    /confirm.*age/i,
-    /はい.*いいえ.*ボタン/,
-  ];
+  const ageCheckPatterns = [/年齢確認/, /18歳以上/, /age[-_]?verification/i, /confirm.*age/i, /はい.*いいえ.*ボタン/];
 
   for (const pattern of ageCheckPatterns) {
     if (pattern.test(html)) {
@@ -171,53 +165,23 @@ export function isTopPageHtml(html: string, aspName: string): boolean {
 
   // ASP固有のトップページパターン
   const aspPatterns: Record<string, RegExp[]> = {
-    'ソクミル': [
-      /ソクミル.*トップ/,
-      /人気ランキング.*新着動画/,
-    ],
-    'MGS': [
-      /MGS動画\(成人認証\)/,
-      /年齢確認.*18歳以上/,
-    ],
-    'FC2': [
-      /FC2動画.*トップ/,
-      /FC2コンテンツマーケット/,
-    ],
-    'Japanska': [
+    ソクミル: [/ソクミル.*トップ/, /人気ランキング.*新着動画/],
+    MGS: [/MGS動画\(成人認証\)/, /年齢確認.*18歳以上/],
+    FC2: [/FC2動画.*トップ/, /FC2コンテンツマーケット/],
+    Japanska: [
       /Japanska.*トップ/,
       /無修正動画一覧/,
-      /幅広いジャンル.*30日/,  // Japanskaホームページ
+      /幅広いジャンル.*30日/, // Japanskaホームページ
     ],
     // b10f
-    'b10f': [
-      /b10f.*トップ/i,
-      /b10f\.jp.*ホーム/i,
-    ],
+    b10f: [/b10f.*トップ/i, /b10f\.jp.*ホーム/i],
     // DTI系サイト
-    '一本道': [
-      /一本道.*トップ/,
-      /1pondo\.tv.*ホーム/i,
-    ],
-    'カリビアンコム': [
-      /カリビアンコム.*トップ/,
-      /caribbeancom\.com.*ホーム/i,
-    ],
-    'カリビアンコムプレミアム': [
-      /カリビアンコムプレミアム.*トップ/,
-      /caribbeancompr\.com.*ホーム/i,
-    ],
-    'HEYZO': [
-      /HEYZO.*トップ/i,
-      /heyzo\.com.*ホーム/i,
-    ],
-    '天然むすめ': [
-      /天然むすめ.*トップ/,
-      /10musume\.com.*ホーム/i,
-    ],
-    'DTI': [
-      /DTI.*トップ/i,
-      /アフィリエイトサービス/,
-    ],
+    一本道: [/一本道.*トップ/, /1pondo\.tv.*ホーム/i],
+    カリビアンコム: [/カリビアンコム.*トップ/, /caribbeancom\.com.*ホーム/i],
+    カリビアンコムプレミアム: [/カリビアンコムプレミアム.*トップ/, /caribbeancompr\.com.*ホーム/i],
+    HEYZO: [/HEYZO.*トップ/i, /heyzo\.com.*ホーム/i],
+    天然むすめ: [/天然むすめ.*トップ/, /10musume\.com.*ホーム/i],
+    DTI: [/DTI.*トップ/i, /アフィリエイトサービス/],
   };
 
   const patterns = aspPatterns[aspName] || [];
@@ -233,10 +197,10 @@ export function isTopPageHtml(html: string, aspName: string): boolean {
 /**
  * 商品データのサニタイズ
  */
-export function sanitizeProductData(data: {
-  title?: string;
-  description?: string;
-}): { title: string; description: string } {
+export function sanitizeProductData(data: { title?: string; description?: string }): {
+  title: string;
+  description: string;
+} {
   let { title = '', description = '' } = data;
 
   // HTMLタグを除去
@@ -263,7 +227,7 @@ export function sanitizeProductData(data: {
  */
 export async function fetchPerformersFromGoogleSearch(
   productCode: string,
-  existingPerformers: string[] = []
+  existingPerformers: string[] = [],
 ): Promise<string[]> {
   try {
     // 動的インポートでGoogle APIを読み込み
@@ -274,14 +238,16 @@ export async function fetchPerformersFromGoogleSearch(
 
     // バリデーションと重複チェック
     const validPerformers: string[] = [];
-    const existingSet = new Set(existingPerformers.map(n => n.toLowerCase()));
+    const existingSet = new Set(existingPerformers.map((n) => n.toLowerCase()));
 
     for (const name of performers) {
       const normalized = normalizePerformerName(name);
-      if (normalized &&
-          isValidPerformerName(normalized) &&
-          !existingSet.has(normalized.toLowerCase()) &&
-          !validPerformers.includes(normalized)) {
+      if (
+        normalized &&
+        isValidPerformerName(normalized) &&
+        !existingSet.has(normalized.toLowerCase()) &&
+        !validPerformers.includes(normalized)
+      ) {
         validPerformers.push(normalized);
       }
     }

@@ -24,7 +24,7 @@ describe('Price Alerts Handler', () => {
         { id: 3, subscriptionId: 200, productId: 1, targetPrice: 500 },
       ];
 
-      const subscriptionAlerts = alerts.filter(a => a.subscriptionId === 100);
+      const subscriptionAlerts = alerts.filter((a) => a.subscriptionId === 100);
       expect(subscriptionAlerts).toHaveLength(2);
     });
 
@@ -64,11 +64,11 @@ describe('Price Alerts Handler', () => {
       const validPrices = [100, 1000, 50000];
       const invalidPrices = [0, -100, -1];
 
-      validPrices.forEach(price => {
+      validPrices.forEach((price) => {
         expect(price > 0).toBe(true);
       });
 
-      invalidPrices.forEach(price => {
+      invalidPrices.forEach((price) => {
         expect(price > 0).toBe(false);
       });
     });
@@ -86,13 +86,11 @@ describe('Price Alerts Handler', () => {
     });
 
     it('should prevent duplicate alerts for same product', () => {
-      const existingAlerts = [
-        { subscriptionId: 100, productId: 123 },
-      ];
+      const existingAlerts = [{ subscriptionId: 100, productId: 123 }];
       const newAlert = { subscriptionId: 100, productId: 123 };
 
       const isDuplicate = existingAlerts.some(
-        a => a.subscriptionId === newAlert.subscriptionId && a.productId === newAlert.productId
+        (a) => a.subscriptionId === newAlert.subscriptionId && a.productId === newAlert.productId,
       );
       expect(isDuplicate).toBe(true);
     });
@@ -106,7 +104,7 @@ describe('Price Alerts Handler', () => {
       ];
 
       const alertIdToDelete = 1;
-      const remainingAlerts = alerts.filter(a => a.id !== alertIdToDelete);
+      const remainingAlerts = alerts.filter((a) => a.id !== alertIdToDelete);
 
       expect(remainingAlerts).toHaveLength(1);
       expect(remainingAlerts[0]!.id).toBe(2);
@@ -177,8 +175,7 @@ describe('Price Alert Conditions', () => {
         lastNotifiedAt: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12 hours ago
       };
 
-      const hoursSinceLastNotification =
-        (Date.now() - alert.lastNotifiedAt.getTime()) / (1000 * 60 * 60);
+      const hoursSinceLastNotification = (Date.now() - alert.lastNotifiedAt.getTime()) / (1000 * 60 * 60);
       const canNotify = hoursSinceLastNotification >= 24;
 
       expect(canNotify).toBe(false);
@@ -189,8 +186,7 @@ describe('Price Alert Conditions', () => {
         lastNotifiedAt: new Date(Date.now() - 25 * 60 * 60 * 1000), // 25 hours ago
       };
 
-      const hoursSinceLastNotification =
-        (Date.now() - alert.lastNotifiedAt.getTime()) / (1000 * 60 * 60);
+      const hoursSinceLastNotification = (Date.now() - alert.lastNotifiedAt.getTime()) / (1000 * 60 * 60);
       const canNotify = hoursSinceLastNotification >= 24;
 
       expect(canNotify).toBe(true);
@@ -214,7 +210,7 @@ describe('Price Alert Batch Processing', () => {
       productId: i + 1,
     }));
     const batchSize = 100;
-    const batches: typeof allAlerts[] = [];
+    const batches: (typeof allAlerts)[] = [];
 
     for (let i = 0; i < allAlerts.length; i += batchSize) {
       batches.push(allAlerts.slice(i, i + batchSize));
@@ -234,9 +230,7 @@ describe('Price Alert Batch Processing', () => {
       { endpoint: 'endpoint4', success: false, statusCode: 500 }, // Server error - not expired
     ];
 
-    const expiredEndpoints = results
-      .filter(r => r.statusCode === 410 || r.statusCode === 404)
-      .map(r => r.endpoint);
+    const expiredEndpoints = results.filter((r) => r.statusCode === 410 || r.statusCode === 404).map((r) => r.endpoint);
 
     expect(expiredEndpoints).toHaveLength(2);
     expect(expiredEndpoints).toContain('endpoint2');

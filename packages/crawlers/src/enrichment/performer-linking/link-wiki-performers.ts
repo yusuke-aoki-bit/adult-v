@@ -11,7 +11,11 @@
 import { getDb } from '../../lib/db';
 import { products, performers, productPerformers, performerAliases, wikiCrawlData } from '../../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
-import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
+import {
+  isValidPerformerName,
+  normalizePerformerName,
+  isValidPerformerForProduct,
+} from '../../lib/performer-validation';
 
 const db = getDb();
 
@@ -86,7 +90,7 @@ async function loadWikiPerformerMappings(): Promise<Map<string, string[]>> {
   while (true) {
     // IDベースのページネーション（OFFSETより高速）
     const wikiData = await db.execute<{ id: number; product_code: string; performer_name: string }>(
-      sql`SELECT id, product_code, performer_name FROM wiki_crawl_data WHERE id > ${lastId} ORDER BY id LIMIT ${BATCH_SIZE}`
+      sql`SELECT id, product_code, performer_name FROM wiki_crawl_data WHERE id > ${lastId} ORDER BY id LIMIT ${BATCH_SIZE}`,
     );
 
     if (wikiData.rows.length === 0) {
@@ -133,11 +137,7 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
   }
 
   // 既存の演者を検索
-  let [performer] = await db
-    .select()
-    .from(performers)
-    .where(eq(performers['name'], normalizedName))
-    .limit(1);
+  let [performer] = await db.select().from(performers).where(eq(performers['name'], normalizedName)).limit(1);
 
   // 存在しなければエイリアスで検索
   if (!performer) {
@@ -155,18 +155,11 @@ async function getOrCreatePerformer(name: string): Promise<number | null> {
   // 存在しなければ作成
   if (!performer) {
     try {
-      const [inserted] = await db
-        .insert(performers)
-        .values({ name: normalizedName })
-        .returning();
+      const [inserted] = await db.insert(performers).values({ name: normalizedName }).returning();
       return inserted!.id;
     } catch {
       // 競合の場合は再取得
-      const [existing] = await db
-        .select()
-        .from(performers)
-        .where(eq(performers['name'], normalizedName))
-        .limit(1);
+      const [existing] = await db.select().from(performers).where(eq(performers['name'], normalizedName)).limit(1);
       if (existing) {
         return existing.id;
       }
@@ -185,12 +178,7 @@ async function linkPerformerToProduct(productId: number, performerId: number): P
   const existing = await db
     .select()
     .from(productPerformers)
-    .where(
-      and(
-        eq(productPerformers.productId, productId),
-        eq(productPerformers.performerId, performerId)
-      )
-    )
+    .where(and(eq(productPerformers.productId, productId), eq(productPerformers.performerId, performerId)))
     .limit(1);
 
   if (existing.length > 0) {
@@ -242,8 +230,9 @@ async function main() {
   // すでにリンク済みの商品IDを取得
   const linkedIds = onlyUnlinked
     ? new Set(
-        (await db.selectDistinct({ productId: productPerformers.productId }).from(productPerformers))
-          .map(r => r.productId)
+        (await db.selectDistinct({ productId: productPerformers.productId }).from(productPerformers)).map(
+          (r) => r.productId,
+        ),
       )
     : new Set<number>();
 
@@ -258,9 +247,7 @@ async function main() {
     .limit(limit * 2);
 
   // 未紐付けでフィルタ
-  let targetProducts = onlyUnlinked
-    ? allProducts.filter(p => !linkedIds.has(p.id))
-    : allProducts;
+  let targetProducts = onlyUnlinked ? allProducts.filter((p) => !linkedIds.has(p.id)) : allProducts;
 
   targetProducts = targetProducts.slice(0, limit);
 

@@ -19,7 +19,8 @@ const translations = {
   },
   en: {
     metaTitle: 'Image Search | FANZA Video',
-    metaDescription: 'Upload an image to find similar adult videos. AI analyzes the image and recommends the best matching products.',
+    metaDescription:
+      'Upload an image to find similar adult videos. AI analyzes the image and recommends the best matching products.',
     heading: 'Search by Image',
     subtitle: 'Just paste an image (Ctrl+V) and AI will analyze it to find similar products',
     howToUse: 'How to use',
@@ -49,25 +50,19 @@ export default async function ImageSearchPage({ params }: PageProps) {
   const t = getT(locale);
 
   return (
-    <main className="min-h-screen theme-bg">
+    <main className="theme-bg min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text mb-2">
-              {t.heading}
-            </h1>
-            <p className="theme-text-secondary">
-              {t.subtitle}
-            </p>
+            <h1 className="theme-text mb-2 text-2xl font-bold sm:text-3xl">{t.heading}</h1>
+            <p className="theme-text-secondary">{t.subtitle}</p>
           </div>
 
           <ImageSearchWrapper locale={locale} />
 
-          <div className="mt-8 p-4 rounded-lg bg-gray-100 border border-gray-200">
-            <h2 className="font-semibold theme-text mb-2">
-              {t.howToUse}
-            </h2>
-            <ul className="text-sm theme-text-secondary space-y-1">
+          <div className="mt-8 rounded-lg border border-gray-200 bg-gray-100 p-4">
+            <h2 className="theme-text mb-2 font-semibold">{t.howToUse}</h2>
+            <ul className="theme-text-secondary space-y-1 text-sm">
               <li>{t.step1}</li>
               <li>{t.step2}</li>
               <li>{t.step3}</li>

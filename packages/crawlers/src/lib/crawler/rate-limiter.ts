@@ -118,16 +118,18 @@ export class RateLimiter {
       const isRateLimited = statusCode === 429 || statusCode === 503;
       const multiplier = isRateLimited
         ? (this.options.backoffMultiplier || 2) * 2
-        : (this.options.backoffMultiplier || 2);
+        : this.options.backoffMultiplier || 2;
 
       // 指数バックオフ: baseDelay * multiplier^(errors-1)
       const baseDelay = this.options.minDelayMs;
       this.currentBackoffDelay = Math.min(
         baseDelay * Math.pow(multiplier, this.consecutiveErrors - 1),
-        this.options.maxBackoffDelayMs || 60000
+        this.options.maxBackoffDelayMs || 60000,
       );
 
-      console.log(`[RateLimiter] Backoff applied: ${this.currentBackoffDelay}ms (errors: ${this.consecutiveErrors}, statusCode: ${statusCode || 'unknown'})`);
+      console.log(
+        `[RateLimiter] Backoff applied: ${this.currentBackoffDelay}ms (errors: ${this.consecutiveErrors}, statusCode: ${statusCode || 'unknown'})`,
+      );
     }
 
     // キューに待機中のリクエストがあれば解放
@@ -272,7 +274,8 @@ export const SITE_RATE_LIMITS: Record<string, RateLimiterOptions> = {
  */
 export function getRateLimiterForSite(siteName: string): RateLimiter {
   const normalized = siteName.toLowerCase();
-  const options = SITE_RATE_LIMITS[normalized] ?? SITE_RATE_LIMITS['default'] ?? { requestsPerMinute: 30, minDelayMs: 2000, burstLimit: 3 };
+  const options = SITE_RATE_LIMITS[normalized] ??
+    SITE_RATE_LIMITS['default'] ?? { requestsPerMinute: 30, minDelayMs: 2000, burstLimit: 3 };
   return new RateLimiter(options);
 }
 

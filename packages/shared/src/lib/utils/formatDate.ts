@@ -41,11 +41,7 @@ export function formatRelativeDate(date: Date, locale: string): string {
 /**
  * 日付をローカライズしてフォーマット
  */
-export function formatLocalizedDate(
-  date: Date,
-  locale: string,
-  options?: Intl.DateTimeFormatOptions
-): string {
+export function formatLocalizedDate(date: Date, locale: string, options?: Intl.DateTimeFormatOptions): string {
   const resolvedLocale = localeMap[locale] || 'ja-JP';
   const defaultOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',

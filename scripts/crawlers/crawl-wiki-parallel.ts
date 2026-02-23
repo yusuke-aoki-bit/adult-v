@@ -23,10 +23,33 @@ const db = getDb();
 
 // 除外ワード
 const EXCLUDE_TERMS = new Set([
-  '素人', '企画', '不明', '-', '---', 'N/A', 'etc', 'etc.', '他',
-  '出演者', '女優', '女優名', 'AV女優', '男優', '配信開始日', '発売日',
-  'タイトル', '品番', '収録時間', 'ジャンル', 'シリーズ', 'メーカー', 'レーベル',
-  '編集する', '新規作成', '削除する', 'コメント',
+  '素人',
+  '企画',
+  '不明',
+  '-',
+  '---',
+  'N/A',
+  'etc',
+  'etc.',
+  '他',
+  '出演者',
+  '女優',
+  '女優名',
+  'AV女優',
+  '男優',
+  '配信開始日',
+  '発売日',
+  'タイトル',
+  '品番',
+  '収録時間',
+  'ジャンル',
+  'シリーズ',
+  'メーカー',
+  'レーベル',
+  '編集する',
+  '新規作成',
+  '削除する',
+  'コメント',
 ]);
 
 async function fetchHtml(url: string): Promise<string | null> {
@@ -56,7 +79,7 @@ async function saveToWikiCrawlData(
   source: string,
   productCode: string,
   performerNames: string[],
-  sourceUrl: string
+  sourceUrl: string,
 ): Promise<number> {
   let saved = 0;
   for (const name of performerNames) {
@@ -78,11 +101,17 @@ async function saveToWikiCrawlData(
   return saved;
 }
 
-function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { products: Array<{ code: string; performers: string[] }> } {
+function extractSeesaawikiPageData(
+  $: cheerio.CheerioAPI,
+  url: string,
+): { products: Array<{ code: string; performers: string[] }> } {
   const products: Array<{ code: string; performers: string[] }> = [];
 
   // ページタイトルから女優名を抽出
-  const pageTitle = $('h2').first().text().trim()
+  const pageTitle = $('h2')
+    .first()
+    .text()
+    .trim()
     .replace(/\s*編集する?\s*/g, '')
     .replace(/\s*<.*$/g, '')
     .trim();
@@ -94,7 +123,12 @@ function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { produc
   let performerName = '';
   if (pageTitle && pageTitle.length >= 2 && pageTitle.length <= 20 && isValidPerformerName(pageTitle)) {
     performerName = pageTitle;
-  } else if (performerFromTitle && performerFromTitle.length >= 2 && performerFromTitle.length <= 20 && isValidPerformerName(performerFromTitle)) {
+  } else if (
+    performerFromTitle &&
+    performerFromTitle.length >= 2 &&
+    performerFromTitle.length <= 20 &&
+    isValidPerformerName(performerFromTitle)
+  ) {
     performerName = performerFromTitle;
   }
 
@@ -183,7 +217,7 @@ async function getAllPageUrls(startPage: number, endPage: number): Promise<strin
         break;
       }
 
-      await new Promise(r => setTimeout(r, 300));
+      await new Promise((r) => setTimeout(r, 300));
     } catch (error) {
       console.error(`  Error fetching page ${page}:`, error);
       break;
@@ -193,7 +227,10 @@ async function getAllPageUrls(startPage: number, endPage: number): Promise<strin
   return allPageUrls;
 }
 
-async function crawlPages(pageUrls: string[], workerId: string): Promise<{ totalProducts: number; totalPerformers: number }> {
+async function crawlPages(
+  pageUrls: string[],
+  workerId: string,
+): Promise<{ totalProducts: number; totalPerformers: number }> {
   let processed = 0;
   let totalPerformers = 0;
   let totalProducts = 0;
@@ -231,7 +268,7 @@ async function crawlPages(pageUrls: string[], workerId: string): Promise<{ total
       console.log(`\n[${workerId}] 📊 Progress: ${processed}/${pageUrls.length} pages, ${totalProducts} products\n`);
     }
 
-    await new Promise(r => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 400));
   }
 
   return { totalProducts, totalPerformers };

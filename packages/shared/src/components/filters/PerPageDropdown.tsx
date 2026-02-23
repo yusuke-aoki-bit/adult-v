@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { getFilterThemeConfig, type FilterTheme } from './theme';
-import { getPerPageTranslation } from './translations';
+import { getTranslation, perPageTranslations } from '../../lib/translations';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface PerPageDropdownProps {
@@ -26,7 +26,7 @@ export default function PerPageDropdown({
   const searchParams = useSearchParams();
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
-  const t = getPerPageTranslation(locale);
+  const t = getTranslation(perPageTranslations, locale);
   const themeConfig = getFilterThemeConfig(theme);
 
   const handlePerPageChange = (newPerPage: string) => {
@@ -56,7 +56,8 @@ export default function PerPageDropdown({
       >
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}{t.items}
+            {option}
+            {t.items}
           </option>
         ))}
       </select>

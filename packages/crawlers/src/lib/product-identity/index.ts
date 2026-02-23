@@ -29,26 +29,13 @@ export type {
   BatchProcessingStats,
 } from './types';
 
-export {
-  DEFAULT_MATCHING_CONFIG,
-  TITLE_MATCH_EXCLUDED_ASPS,
-  ASP_PRIORITY,
-  createInitialStats,
-} from './types';
+export { DEFAULT_MATCHING_CONFIG, TITLE_MATCH_EXCLUDED_ASPS, ASP_PRIORITY, createInitialStats } from './types';
 
 // Code Matcher
-export {
-  findMatchByProductCode,
-  extractAndNormalizeCode,
-  calculateCodeSimilarity,
-} from './code-matcher';
+export { findMatchByProductCode, extractAndNormalizeCode, calculateCodeSimilarity } from './code-matcher';
 
 // Title Matcher
-export {
-  findMatchByTitleAndPerformers,
-  normalizeTitle,
-  calculateTitleSimilarity,
-} from './title-matcher';
+export { findMatchByTitleAndPerformers, normalizeTitle, calculateTitleSimilarity } from './title-matcher';
 
 // Group Manager
 export {

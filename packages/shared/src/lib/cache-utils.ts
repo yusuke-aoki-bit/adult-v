@@ -202,7 +202,7 @@ export interface CachedFunctionOptions {
 export function withMemoryCache<TArgs extends unknown[], TResult>(
   fn: (...args: TArgs) => Promise<TResult>,
   keyGenerator: (...args: TArgs) => string,
-  ttl: number = CACHE_CONFIG.MEMORY_TTL_MS
+  ttl: number = CACHE_CONFIG.MEMORY_TTL_MS,
 ): (...args: TArgs) => Promise<TResult> {
   const cache = getMemoryCache();
 

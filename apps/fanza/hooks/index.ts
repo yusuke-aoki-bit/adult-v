@@ -13,8 +13,4 @@ export {
   profileTranslations,
 } from '@adult-v/shared/hooks';
 
-export type {
-  BudgetSettings,
-  FavoriteItem,
-  PreferenceAnalysis,
-} from '@adult-v/shared/hooks';
+export type { BudgetSettings, FavoriteItem, PreferenceAnalysis } from '@adult-v/shared/hooks';

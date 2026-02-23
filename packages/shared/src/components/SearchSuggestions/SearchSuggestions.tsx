@@ -2,42 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
-
-// Translations
-const translations = {
-  ja: {
-    relatedTerms: '関連キーワード',
-    suggestedFilters: 'おすすめフィルター',
-    expandedQuery: '検索拡張',
-    loading: '分析中...',
-    genres: 'ジャンル',
-    performers: '出演者',
-  },
-  en: {
-    relatedTerms: 'Related Keywords',
-    suggestedFilters: 'Suggested Filters',
-    expandedQuery: 'Enhanced Search',
-    loading: 'Analyzing...',
-    genres: 'Genres',
-    performers: 'Performers',
-  },
-  zh: {
-    relatedTerms: '相关关键词',
-    suggestedFilters: '推荐筛选',
-    expandedQuery: '搜索扩展',
-    loading: '分析中...',
-    genres: '类型',
-    performers: '演员',
-  },
-  ko: {
-    relatedTerms: '관련 키워드',
-    suggestedFilters: '추천 필터',
-    expandedQuery: '검색 확장',
-    loading: '분석 중...',
-    genres: '장르',
-    performers: '출연자',
-  },
-} as const;
+import { getTranslation, searchSuggestionsTranslations } from '../../lib/translations';
 
 interface SearchAnalysis {
   performers: string[];
@@ -77,7 +42,7 @@ export function SearchSuggestions({
   const [isLoading, setIsLoading] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(searchSuggestionsTranslations, locale);
 
   const fetchAnalysis = useCallback(async () => {
     if (!query || query.length < 2) {
@@ -113,7 +78,7 @@ export function SearchSuggestions({
   if (isLoading) {
     return (
       <div className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} flex items-center gap-2`}>
-        <div className="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
+        <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
         {t.loading}
       </div>
     );
@@ -124,36 +89,43 @@ export function SearchSuggestions({
   const hasRelatedTerms = analysis.relatedTerms && analysis.relatedTerms.length > 0;
   const hasGenres = analysis.genres && analysis.genres.length > 0;
   const hasPerformers = analysis.performers && analysis.performers.length > 0;
-  const hasSuggestedGenres = analysis.suggestedFilters?.includeGenres && analysis.suggestedFilters.includeGenres.length > 0;
+  const hasSuggestedGenres =
+    analysis.suggestedFilters?.includeGenres && analysis.suggestedFilters.includeGenres.length > 0;
 
   if (!hasRelatedTerms && !hasGenres && !hasPerformers && !hasSuggestedGenres) return null;
 
-  const baseChipClass = theme === 'dark'
-    ? 'bg-gray-700 hover:bg-gray-600 text-gray-200'
-    : 'bg-gray-100 hover:bg-gray-200 text-gray-700';
+  const baseChipClass =
+    theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-100 hover:bg-gray-200 text-gray-700';
 
-  const genreChipClass = theme === 'dark'
-    ? 'bg-rose-900/50 hover:bg-rose-800/50 text-rose-200'
-    : 'bg-rose-100 hover:bg-rose-200 text-rose-700';
+  const genreChipClass =
+    theme === 'dark'
+      ? 'bg-rose-900/50 hover:bg-rose-800/50 text-rose-200'
+      : 'bg-rose-100 hover:bg-rose-200 text-rose-700';
 
-  const performerChipClass = theme === 'dark'
-    ? 'bg-purple-900/50 hover:bg-purple-800/50 text-purple-200'
-    : 'bg-purple-100 hover:bg-purple-200 text-purple-700';
+  const performerChipClass =
+    theme === 'dark'
+      ? 'bg-purple-900/50 hover:bg-purple-800/50 text-purple-200'
+      : 'bg-purple-100 hover:bg-purple-200 text-purple-700';
 
   return (
     <div className={`rounded-lg p-3 ${theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className={`flex items-center justify-between w-full text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}
+        className={`flex w-full items-center justify-between text-sm font-medium ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}
       >
         <span className="flex items-center gap-2">
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+            />
           </svg>
           {t.expandedQuery}
         </span>
         <svg
-          className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+          className={`h-4 w-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -167,7 +139,7 @@ export function SearchSuggestions({
           {/* Related terms */}
           {hasRelatedTerms && (
             <div>
-              <div className={`text-xs mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className={`mb-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                 {t.relatedTerms}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -175,7 +147,7 @@ export function SearchSuggestions({
                   <button
                     key={i}
                     onClick={() => onTermClick?.(term)}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors ${baseChipClass}`}
+                    className={`rounded-full px-3 py-1 text-sm transition-colors ${baseChipClass}`}
                   >
                     {term}
                   </button>
@@ -187,7 +159,7 @@ export function SearchSuggestions({
           {/* Extracted performers */}
           {hasPerformers && (
             <div>
-              <div className={`text-xs mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
+              <div className={`mb-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
                 {t.performers}
               </div>
               <div className="flex flex-wrap gap-2">
@@ -195,10 +167,15 @@ export function SearchSuggestions({
                   <button
                     key={i}
                     onClick={() => onPerformerClick?.(performer)}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors flex items-center gap-1 ${performerChipClass}`}
+                    className={`flex items-center gap-1 rounded-full px-3 py-1 text-sm transition-colors ${performerChipClass}`}
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
                     </svg>
                     {performer}
                   </button>
@@ -210,18 +187,21 @@ export function SearchSuggestions({
           {/* Extracted/Suggested genres */}
           {(hasGenres || hasSuggestedGenres) && (
             <div>
-              <div className={`text-xs mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                {t.genres}
-              </div>
+              <div className={`mb-2 text-xs ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>{t.genres}</div>
               <div className="flex flex-wrap gap-2">
                 {(analysis.suggestedFilters?.includeGenres || analysis.genres).map((genre, i) => (
                   <button
                     key={i}
                     onClick={() => onGenreClick?.(genre)}
-                    className={`px-3 py-1 text-sm rounded-full transition-colors flex items-center gap-1 ${genreChipClass}`}
+                    className={`flex items-center gap-1 rounded-full px-3 py-1 text-sm transition-colors ${genreChipClass}`}
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
                     </svg>
                     {genre}
                   </button>

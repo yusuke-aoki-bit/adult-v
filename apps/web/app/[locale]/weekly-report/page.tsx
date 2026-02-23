@@ -105,18 +105,20 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
     prevTagMap.set(row.name, Number(row.count));
   }
 
-  const trendingTags: TrendItem[] = (currentTagsResult.rows as Array<{ id: number; name: string; count: number }>).map(row => {
-    const currentCount = Number(row.count);
-    const prevCount = prevTagMap.get(row.name) || 0;
-    const change = prevCount > 0 ? Math.round(((currentCount - prevCount) / prevCount) * 100) : 100;
-    return {
-      id: row.id,
-      name: row.name,
-      count: currentCount,
-      change,
-      trend: change > 10 ? 'up' : change < -10 ? 'down' : 'stable',
-    };
-  });
+  const trendingTags: TrendItem[] = (currentTagsResult.rows as Array<{ id: number; name: string; count: number }>).map(
+    (row) => {
+      const currentCount = Number(row.count);
+      const prevCount = prevTagMap.get(row.name) || 0;
+      const change = prevCount > 0 ? Math.round(((currentCount - prevCount) / prevCount) * 100) : 100;
+      return {
+        id: row.id,
+        name: row.name,
+        count: currentCount,
+        change,
+        trend: change > 10 ? 'up' : change < -10 ? 'down' : 'stable',
+      };
+    },
+  );
 
   // トレンド女優
   const currentPerformersResult = await db.execute(sql`
@@ -145,7 +147,9 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
     prevPerformerMap.set(row.name, Number(row.count));
   }
 
-  const trendingPerformers: TrendItem[] = (currentPerformersResult.rows as Array<{ id: number; name: string; count: number }>).map(row => {
+  const trendingPerformers: TrendItem[] = (
+    currentPerformersResult.rows as Array<{ id: number; name: string; count: number }>
+  ).map((row) => {
     const currentCount = Number(row.count);
     const prevCount = prevPerformerMap.get(row.name) || 0;
     const change = prevCount > 0 ? Math.round(((currentCount - prevCount) / prevCount) * 100) : 100;
@@ -188,15 +192,17 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
     LIMIT 5
   `);
 
-  const topRatedProducts: TopProduct[] = (topRatedResult.rows as Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    rating: number | null;
-    reviewCount: number | null;
-    performers: string[];
-    releaseDate: string | null;
-  }>).map(row => ({
+  const topRatedProducts: TopProduct[] = (
+    topRatedResult.rows as Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      rating: number | null;
+      reviewCount: number | null;
+      performers: string[];
+      releaseDate: string | null;
+    }>
+  ).map((row) => ({
     id: row.id,
     title: row.title,
     imageUrl: row.imageUrl,
@@ -224,11 +230,13 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
     LIMIT 5
   `);
 
-  const newDebutPerformers = (newDebutResult.rows as Array<{ id: number; name: string; productCount: number }>).map(row => ({
-    id: row.id,
-    name: row.name,
-    productCount: Number(row.productCount),
-  }));
+  const newDebutPerformers = (newDebutResult.rows as Array<{ id: number; name: string; productCount: number }>).map(
+    (row) => ({
+      id: row.id,
+      name: row.name,
+      productCount: Number(row.productCount),
+    }),
+  );
 
   // インサイト生成
   const insightTranslations = {
@@ -248,9 +256,8 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
   const it = insightTranslations[locale as keyof typeof insightTranslations] || insightTranslations.ja;
   const insights: string[] = [];
 
-  const releaseChange = previousWeekReleases > 0
-    ? Math.round(((totalReleases - previousWeekReleases) / previousWeekReleases) * 100)
-    : 0;
+  const releaseChange =
+    previousWeekReleases > 0 ? Math.round(((totalReleases - previousWeekReleases) / previousWeekReleases) * 100) : 0;
 
   if (releaseChange > 10) {
     insights.push(it.releasesUp(releaseChange));
@@ -258,9 +265,9 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
     insights.push(it.releasesDown(Math.abs(releaseChange)));
   }
 
-  const risingTags = trendingTags.filter(t => t.trend === 'up').slice(0, 2);
+  const risingTags = trendingTags.filter((t) => t.trend === 'up').slice(0, 2);
   if (risingTags.length > 0) {
-    insights.push(it.tagsRising(risingTags.map(t => t.name)));
+    insights.push(it.tagsRising(risingTags.map((t) => t.name)));
   }
 
   if (newDebutPerformers.length > 0) {
@@ -268,8 +275,8 @@ async function getWeeklyReportData(locale: string): Promise<WeeklyData> {
   }
 
   return {
-    weekStart: weekStart.toISOString().split('T')[0],
-    weekEnd: weekEnd.toISOString().split('T')[0],
+    weekStart: weekStart.toISOString().split('T')[0]!,
+    weekEnd: weekEnd.toISOString().split('T')[0]!,
     totalReleases,
     previousWeekReleases,
     trendingTags,
@@ -321,14 +328,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  return generateBaseMetadata(
-    t.title,
-    t.subtitle,
-    undefined,
-    '/weekly-report',
-    undefined,
-    locale,
-  );
+  return generateBaseMetadata(t.title, t.subtitle, undefined, '/weekly-report', undefined, locale);
 }
 
 export default async function WeeklyReportPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -338,9 +338,10 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
 
   const data = await getWeeklyReportData(locale);
 
-  const releaseChange = data.previousWeekReleases > 0
-    ? Math.round(((data.totalReleases - data.previousWeekReleases) / data.previousWeekReleases) * 100)
-    : 0;
+  const releaseChange =
+    data.previousWeekReleases > 0
+      ? Math.round(((data.totalReleases - data.previousWeekReleases) / data.previousWeekReleases) * 100)
+      : 0;
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -352,9 +353,9 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
   };
 
   function TrendIcon({ trend }: { trend: 'up' | 'down' | 'stable' }) {
-    if (trend === 'up') return <TrendingUp className="w-4 h-4 text-green-400" />;
-    if (trend === 'down') return <TrendingDown className="w-4 h-4 text-red-400" />;
-    return <Minus className="w-4 h-4 text-gray-400" />;
+    if (trend === 'up') return <TrendingUp className="h-4 w-4 text-green-400" />;
+    if (trend === 'down') return <TrendingDown className="h-4 w-4 text-red-400" />;
+    return <Minus className="h-4 w-4 text-gray-400" />;
   }
 
   return (
@@ -363,65 +364,63 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
       <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t.title },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t.title }]}
             className="mb-4"
           />
 
           {/* PR表記 */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+          <div className="mb-8 text-center">
+            <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
             <p className="theme-text-muted">{t.subtitle}</p>
-            <div className="flex items-center justify-center gap-2 mt-3 text-sm theme-text-muted">
-              <Calendar className="w-4 h-4" />
-              <span>{t.weekOf}: {data.weekStart} 〜 {data.weekEnd}</span>
+            <div className="theme-text-muted mt-3 flex items-center justify-center gap-2 text-sm">
+              <Calendar className="h-4 w-4" />
+              <span>
+                {t.weekOf}: {data.weekStart} 〜 {data.weekEnd}
+              </span>
             </div>
           </div>
 
           {/* サマリーカード */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="theme-card rounded-lg p-6 text-center">
-              <Film className="w-8 h-8 mx-auto mb-2 text-rose-400" />
-              <div className="text-3xl font-bold theme-text">{data.totalReleases}</div>
-              <div className="text-sm theme-text-muted">{t.totalReleases}</div>
-              <div className={`text-sm mt-1 ${releaseChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                {releaseChange >= 0 ? '+' : ''}{releaseChange}% {t.vsLastWeek}
+              <Film className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+              <div className="theme-text text-3xl font-bold">{data.totalReleases}</div>
+              <div className="theme-text-muted text-sm">{t.totalReleases}</div>
+              <div className={`mt-1 text-sm ${releaseChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                {releaseChange >= 0 ? '+' : ''}
+                {releaseChange}% {t.vsLastWeek}
               </div>
             </div>
 
             <div className="theme-card rounded-lg p-6 text-center">
-              <Users className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-              <div className="text-3xl font-bold theme-text">{data.newDebutPerformers.length}</div>
-              <div className="text-sm theme-text-muted">{t.newDebuts}</div>
+              <Users className="mx-auto mb-2 h-8 w-8 text-purple-400" />
+              <div className="theme-text text-3xl font-bold">{data.newDebutPerformers.length}</div>
+              <div className="theme-text-muted text-sm">{t.newDebuts}</div>
             </div>
 
             <div className="theme-card rounded-lg p-6 text-center">
-              <Star className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-              <div className="text-3xl font-bold theme-text">
-                {data.topRatedProducts[0]?.rating?.toFixed(1) || '-'}
-              </div>
-              <div className="text-sm theme-text-muted">{t.topRated}</div>
+              <Star className="mx-auto mb-2 h-8 w-8 text-yellow-400" />
+              <div className="theme-text text-3xl font-bold">{data.topRatedProducts[0]?.rating?.toFixed(1) || '-'}</div>
+              <div className="theme-text-muted text-sm">{t.topRated}</div>
             </div>
           </div>
 
           {/* インサイト */}
           {data.insights.length > 0 && (
-            <div className="theme-card rounded-lg p-6 mb-8">
-              <h2 className="text-lg font-bold theme-text mb-4 flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-400" />
+            <div className="theme-card mb-8 rounded-lg p-6">
+              <h2 className="theme-text mb-4 flex items-center gap-2 text-lg font-bold">
+                <Award className="h-5 w-5 text-yellow-400" />
                 {t.insights}
               </h2>
               <ul className="space-y-2">
                 {data.insights.map((insight, i) => (
-                  <li key={i} className="flex items-start gap-2 theme-text">
+                  <li key={i} className="theme-text flex items-start gap-2">
                     <span className="text-yellow-400">•</span>
                     {insight}
                   </li>
@@ -430,26 +429,29 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
             {/* トレンドジャンル */}
             <div className="theme-card rounded-lg p-6">
-              <h2 className="text-lg font-bold theme-text mb-4">{t.trendingGenres}</h2>
+              <h2 className="theme-text mb-4 text-lg font-bold">{t.trendingGenres}</h2>
               <div className="space-y-3">
                 {data.trendingTags.map((tag, i) => (
                   <Link
                     key={tag.id}
                     href={localizedHref(`/products?tags=${tag.id}`, locale)}
-                    className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors"
+                    className="flex items-center justify-between rounded-lg bg-gray-800/50 p-3 transition-colors hover:bg-gray-700/50"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-gray-500">#{i + 1}</span>
                       <span className="theme-text">{tag.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm theme-text-muted">{tag.count} {t.works}</span>
+                      <span className="theme-text-muted text-sm">
+                        {tag.count} {t.works}
+                      </span>
                       <TrendIcon trend={tag.trend} />
                       <span className={`text-xs ${tag.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {tag.change >= 0 ? '+' : ''}{tag.change}%
+                        {tag.change >= 0 ? '+' : ''}
+                        {tag.change}%
                       </span>
                     </div>
                   </Link>
@@ -459,23 +461,26 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
 
             {/* トレンド女優 */}
             <div className="theme-card rounded-lg p-6">
-              <h2 className="text-lg font-bold theme-text mb-4">{t.trendingActresses}</h2>
+              <h2 className="theme-text mb-4 text-lg font-bold">{t.trendingActresses}</h2>
               <div className="space-y-3">
                 {data.trendingPerformers.map((performer, i) => (
                   <Link
                     key={performer.id}
                     href={localizedHref(`/actress/${performer.id}`, locale)}
-                    className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors"
+                    className="flex items-center justify-between rounded-lg bg-gray-800/50 p-3 transition-colors hover:bg-gray-700/50"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-gray-500">#{i + 1}</span>
                       <span className="theme-text">{performer.name}</span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm theme-text-muted">{performer.count} {t.works}</span>
+                      <span className="theme-text-muted text-sm">
+                        {performer.count} {t.works}
+                      </span>
                       <TrendIcon trend={performer.trend} />
                       <span className={`text-xs ${performer.change >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-                        {performer.change >= 0 ? '+' : ''}{performer.change}%
+                        {performer.change >= 0 ? '+' : ''}
+                        {performer.change}%
                       </span>
                     </div>
                   </Link>
@@ -486,38 +491,32 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
 
           {/* 高評価作品 */}
           {data.topRatedProducts.length > 0 && (
-            <div className="theme-card rounded-lg p-6 mt-8">
-              <h2 className="text-lg font-bold theme-text mb-4">{t.topRated}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="theme-card mt-8 rounded-lg p-6">
+              <h2 className="theme-text mb-4 text-lg font-bold">{t.topRated}</h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
                 {data.topRatedProducts.map((product) => (
-                  <Link
-                    key={product.id}
-                    href={localizedHref(`/products/${product.id}`, locale)}
-                    className="group"
-                  >
-                    <div className="aspect-[2/3] bg-gray-700 rounded-lg overflow-hidden mb-2">
+                  <Link key={product.id} href={localizedHref(`/products/${product.id}`, locale)} className="group">
+                    <div className="mb-2 aspect-[2/3] overflow-hidden rounded-lg bg-gray-700">
                       {product.imageUrl ? (
                         <img
                           src={product.imageUrl}
                           alt={product.title}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-500">
-                          No Image
-                        </div>
+                        <div className="flex h-full w-full items-center justify-center text-gray-500">No Image</div>
                       )}
                     </div>
-                    <h3 className="text-sm theme-text line-clamp-2 group-hover:text-rose-400 transition-colors">
+                    <h3 className="theme-text line-clamp-2 text-sm transition-colors group-hover:text-rose-400">
                       {product.title}
                     </h3>
                     {product.rating && (
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="w-3 h-3 fill-yellow-400 text-yellow-400" />
+                      <div className="mt-1 flex items-center gap-1">
+                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                         <span className="text-xs text-yellow-400">{product.rating.toFixed(1)}</span>
                         {product.reviewCount && (
-                          <span className="text-xs theme-text-muted">({product.reviewCount})</span>
+                          <span className="theme-text-muted text-xs">({product.reviewCount})</span>
                         )}
                       </div>
                     )}
@@ -529,17 +528,20 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
 
           {/* 新人デビュー */}
           {data.newDebutPerformers.length > 0 && (
-            <div className="theme-card rounded-lg p-6 mt-8">
-              <h2 className="text-lg font-bold theme-text mb-4">{t.newDebuts}</h2>
+            <div className="theme-card mt-8 rounded-lg p-6">
+              <h2 className="theme-text mb-4 text-lg font-bold">{t.newDebuts}</h2>
               <div className="flex flex-wrap gap-3">
                 {data.newDebutPerformers.map((performer) => (
                   <Link
                     key={performer.id}
                     href={localizedHref(`/actress/${performer.id}`, locale)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-rose-600 to-purple-600 rounded-full text-white hover:from-rose-500 hover:to-purple-500 transition-colors"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-purple-600 px-4 py-2 text-white transition-colors hover:from-rose-500 hover:to-purple-500"
                   >
                     <span>{performer.name}</span>
-                    <span className="text-xs opacity-80">({performer.productCount}{t.works})</span>
+                    <span className="text-xs opacity-80">
+                      ({performer.productCount}
+                      {t.works})
+                    </span>
                   </Link>
                 ))}
               </div>

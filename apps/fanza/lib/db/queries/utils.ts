@@ -4,13 +4,35 @@
  */
 
 import { getDb } from '../index';
-import { products, performers, productPerformers, tags, productTags, productSources, productImages, productVideos, productSales } from '../schema';
+import {
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productSources,
+  productImages,
+  productVideos,
+  productSales,
+} from '../schema';
 import { eq, and, asc, sql, inArray } from 'drizzle-orm';
-import type { Product as ProductType, Actress as ActressType, Actress, ProductCategory, ProviderId } from '@/types/product';
+import type {
+  Product as ProductType,
+  Actress as ActressType,
+  Actress,
+  ProductCategory,
+  ProviderId,
+} from '@/types/product';
 import type { InferSelectModel } from 'drizzle-orm';
 import { mapLegacyProvider } from '@adult-v/shared/lib/provider-utils';
 import { ASP_TO_PROVIDER_ID } from '@/lib/constants/filters';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName } from '@adult-v/shared/lib/localization';
+import {
+  getLocalizedTitle,
+  getLocalizedDescription,
+  getLocalizedPerformerName,
+  getLocalizedPerformerBio,
+  getLocalizedTagName,
+} from '@adult-v/shared/lib/localization';
 
 // ============================================================
 // 型定義
@@ -22,8 +44,20 @@ export type DbPerformer = InferSelectModel<typeof performers>;
 export type PerformerData = { id: number; name: string; nameKana: string | null };
 export type TagData = { id: number; name: string; category: string | null };
 export type ImageData = { productId: number; imageUrl: string; imageType: string; displayOrder: number | null };
-export type VideoData = { productId: number; videoUrl: string; videoType: string | null; quality: string | null; duration: number | null };
-export type SaleData = { productId: number; regularPrice: number; salePrice: number; discountPercent: number | null; endAt: Date | null };
+export type VideoData = {
+  productId: number;
+  videoUrl: string;
+  videoType: string | null;
+  quality: string | null;
+  duration: number | null;
+};
+export type SaleData = {
+  productId: number;
+  regularPrice: number;
+  salePrice: number;
+  discountPercent: number | null;
+  endAt: Date | null;
+};
 
 export interface BatchRelatedDataResult {
   performersMap: Map<number, PerformerData[]>;
@@ -65,14 +99,17 @@ export function setToMemoryCache<T>(key: string, data: T): void {
 
 // 定期的に期限切れエントリを削除（2分ごと）
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of memoryCache.entries()) {
-      if (now - entry.timestamp > CACHE_TTL_MS) {
-        memoryCache.delete(key);
+  setInterval(
+    () => {
+      const now = Date.now();
+      for (const [key, entry] of memoryCache.entries()) {
+        if (now - entry.timestamp > CACHE_TTL_MS) {
+          memoryCache.delete(key);
+        }
       }
-    }
-  }, 2 * 60 * 1000);
+    },
+    2 * 60 * 1000,
+  );
 }
 
 // ============================================================
@@ -121,7 +158,7 @@ export function generateActressId(name: string): string {
 export async function batchFetchProductRelatedData(
   db: ReturnType<typeof getDb>,
   productIds: number[],
-  preferredProviders?: string[]
+  preferredProviders?: string[],
 ): Promise<BatchRelatedDataResult> {
   if (productIds.length === 0) {
     return {
@@ -155,10 +192,7 @@ export async function batchFetchProductRelatedData(
       .from(productTags)
       .innerJoin(tags, eq(productTags.tagId, tags.id))
       .where(inArray(productTags.productId, productIds)),
-    db
-      .select()
-      .from(productSources)
-      .where(inArray(productSources.productId, productIds)),
+    db.select().from(productSources).where(inArray(productSources.productId, productIds)),
     db
       .select({
         productId: productImages.productId,
@@ -193,8 +227,8 @@ export async function batchFetchProductRelatedData(
         and(
           inArray(productSources.productId, productIds),
           eq(productSales.isActive, true),
-          sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-        )
+          sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+        ),
       ),
   ]);
 
@@ -212,8 +246,8 @@ export async function batchFetchProductRelatedData(
   }
 
   // 優先プロバイダーを考慮してソースを選択
-  const sourcesMap = new Map<number, typeof allSources[0]>();
-  const preferredProvidersUpper = preferredProviders?.map(p => p.toUpperCase()) || [];
+  const sourcesMap = new Map<number, (typeof allSources)[0]>();
+  const preferredProvidersUpper = preferredProviders?.map((p) => p.toUpperCase()) || [];
 
   // まず各productIdごとにソースをグループ化
   const sourcesByProduct = new Map<number, typeof allSources>();
@@ -228,7 +262,7 @@ export async function batchFetchProductRelatedData(
   let fallbackCount = 0;
   let skippedFanzaOnly = 0;
   for (const [productId, sources] of sourcesByProduct) {
-    const nonFanzaSources = sources.filter(s => s.aspName.toUpperCase() !== 'FANZA');
+    const nonFanzaSources = sources.filter((s) => s.aspName.toUpperCase() !== 'FANZA');
 
     if (nonFanzaSources.length === 0) {
       skippedFanzaOnly++;
@@ -236,9 +270,7 @@ export async function batchFetchProductRelatedData(
     }
 
     if (preferredProvidersUpper.length > 0) {
-      const preferredSource = nonFanzaSources.find(s =>
-        preferredProvidersUpper.includes(s.aspName.toUpperCase())
-      );
+      const preferredSource = nonFanzaSources.find((s) => preferredProvidersUpper.includes(s.aspName.toUpperCase()));
       if (preferredSource) {
         sourcesMap.set(productId, preferredSource);
         matchedCount++;
@@ -246,11 +278,13 @@ export async function batchFetchProductRelatedData(
       }
       fallbackCount++;
     }
-    sourcesMap.set(productId, nonFanzaSources[0]);
+    sourcesMap.set(productId, nonFanzaSources[0]!);
   }
 
   if (preferredProvidersUpper.length > 0 || skippedFanzaOnly > 0) {
-    console.log(`[batchFetch] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${matchedCount}, fallback: ${fallbackCount}, skipped FANZA-only: ${skippedFanzaOnly}`);
+    console.log(
+      `[batchFetch] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${matchedCount}, fallback: ${fallbackCount}, skipped FANZA-only: ${skippedFanzaOnly}`,
+    );
   }
 
   const imagesMap = new Map<number, ImageData[]>();
@@ -300,11 +334,7 @@ export async function fetchProductRelatedData(db: ReturnType<typeof getDb>, prod
       .innerJoin(tags, eq(productTags.tagId, tags.id))
       .where(eq(productTags.productId, productId)),
 
-    db
-      .select()
-      .from(productSources)
-      .where(eq(productSources.productId, productId))
-      .limit(1),
+    db.select().from(productSources).where(eq(productSources.productId, productId)).limit(1),
 
     db
       .select()
@@ -312,10 +342,7 @@ export async function fetchProductRelatedData(db: ReturnType<typeof getDb>, prod
       .where(eq(productImages.productId, productId))
       .orderBy(asc(productImages.displayOrder)),
 
-    db
-      .select()
-      .from(productVideos)
-      .where(eq(productVideos.productId, productId)),
+    db.select().from(productVideos).where(eq(productVideos.productId, productId)),
   ]);
 
   return {
@@ -360,36 +387,50 @@ interface CacheData {
 
 export function mapProductToType(
   product: DbProduct,
-  performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-  tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
+  performerData: Array<{
+    id: number;
+    name: string;
+    nameKana: string | null;
+    nameEn?: string | null;
+    nameZh?: string | null;
+    nameKo?: string | null;
+  }> = [],
+  tagData: Array<{
+    id: number;
+    name: string;
+    category: string | null;
+    nameEn?: string | null;
+    nameZh?: string | null;
+    nameKo?: string | null;
+  }> = [],
   source?: SourceData | null,
   cache?: CacheData | null,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
   videosData?: Array<{ videoUrl: string; videoType: string | null; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
-  saleData?: { regularPrice: number; salePrice: number; discountPercent: number | null; endAt?: Date | null }
+  saleData?: { regularPrice: number; salePrice: number; discountPercent: number | null; endAt?: Date | null },
 ): ProductType {
   const aspName = source?.aspName || 'DUGA';
   const mappedProvider = mapLegacyProvider(aspName);
 
   const providerLabelMap: Record<string, string> = {
-    'APEX': 'DUGA',
-    'DUGA': 'DUGA',
-    'DTI': 'DTI',
-    'DMM': 'DMM',
-    'MGS': 'MGS動画',
-    'SOKMIL': 'ソクミル',
-    'ソクミル': 'ソクミル',
-    'B10F': 'b10f.jp',
-    'JAPANSKA': 'Japanska',
-    'FC2': 'FC2',
-    'HEYZO': 'HEYZO',
-    'カリビアンコムプレミアム': 'カリビアンコムプレミアム',
-    'CARIBBEANCOMPR': 'カリビアンコムプレミアム',
-    'CARIBBEANCOM': 'カリビアンコム',
+    APEX: 'DUGA',
+    DUGA: 'DUGA',
+    DTI: 'DTI',
+    DMM: 'DMM',
+    MGS: 'MGS動画',
+    SOKMIL: 'ソクミル',
+    ソクミル: 'ソクミル',
+    B10F: 'b10f.jp',
+    JAPANSKA: 'Japanska',
+    FC2: 'FC2',
+    HEYZO: 'HEYZO',
+    カリビアンコムプレミアム: 'カリビアンコムプレミアム',
+    CARIBBEANCOMPR: 'カリビアンコムプレミアム',
+    CARIBBEANCOM: 'カリビアンコム',
     '1PONDO': '一本道',
     '10MUSUME': '天然むすめ',
-    'PACOPACOMAMA': 'パコパコママ',
+    PACOPACOMAMA: 'パコパコママ',
   };
   const providerLabel = providerLabelMap[aspName.toUpperCase()] || providerLabelMap[aspName] || aspName;
 
@@ -398,8 +439,8 @@ export function mapProductToType(
 
   let imageUrl = cache?.thumbnailUrl || product.defaultThumbnailUrl;
   if (!imageUrl && imagesData && imagesData.length > 0) {
-    const thumbnailImg = imagesData.find(img => img.imageType === 'thumbnail');
-    imageUrl = thumbnailImg?.imageUrl || imagesData[0].imageUrl;
+    const thumbnailImg = imagesData.find((img) => img.imageType === 'thumbnail');
+    imageUrl = thumbnailImg?.imageUrl || imagesData[0]!.imageUrl;
   }
   if (!imageUrl) {
     imageUrl = 'https://placehold.co/600x800/1f2937/ffffff?text=NO+IMAGE';
@@ -407,41 +448,45 @@ export function mapProductToType(
 
   const affiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
 
-  const sampleImages = imagesData && imagesData.length > 0
-    ? imagesData.map(img => img.imageUrl)
-    : (cache?.sampleImages as string[] | undefined);
+  const sampleImages =
+    imagesData && imagesData.length > 0
+      ? imagesData.map((img) => img.imageUrl)
+      : (cache?.sampleImages as string[] | undefined);
 
   const category: ProductCategory = 'premium';
 
-  const actressId = performerData.length > 0 ? String(performerData[0].id) : undefined;
-  const actressName = performerData.length > 0 ? getLocalizedPerformerName(performerData[0], locale) : undefined;
+  const actressId = performerData.length > 0 ? String(performerData[0]!.id) : undefined;
+  const actressName = performerData.length > 0 ? getLocalizedPerformerName(performerData[0]!, locale) : undefined;
 
-  const performersList = performerData.map(p => ({
+  const performersList = performerData.map((p) => ({
     id: String(p.id),
-    name: getLocalizedPerformerName(p, locale)
+    name: getLocalizedPerformerName(p, locale),
   }));
 
-  const tagsList = tagData.map(t => getLocalizedTagName(t, locale));
+  const tagsList = tagData.map((t) => getLocalizedTagName(t, locale));
 
-  const { isNew, isFuture } = product.releaseDate ? (() => {
-    const releaseDate = new Date(product.releaseDate);
-    const now = new Date();
-    const diffTime = now.getTime() - releaseDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) {
-      return { isNew: false, isFuture: true };
-    }
-    return { isNew: diffDays <= 7, isFuture: false };
-  })() : { isNew: false, isFuture: false };
+  const { isNew, isFuture } = product.releaseDate
+    ? (() => {
+        const releaseDate = new Date(product.releaseDate);
+        const now = new Date();
+        const diffTime = now.getTime() - releaseDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays < 0) {
+          return { isNew: false, isFuture: true };
+        }
+        return { isNew: diffDays <= 7, isFuture: false };
+      })()
+    : { isNew: false, isFuture: false };
 
-  const sampleVideos = videosData && videosData.length > 0
-    ? videosData.map(video => ({
-        url: video.videoUrl,
-        type: video.videoType || 'sample',
-        quality: video.quality || undefined,
-        duration: video.duration || undefined,
-      }))
-    : undefined;
+  const sampleVideos =
+    videosData && videosData.length > 0
+      ? videosData.map((video) => ({
+          url: video.videoUrl,
+          type: video.videoType || 'sample',
+          quality: video.quality || undefined,
+          duration: video.duration || undefined,
+        }))
+      : undefined;
 
   return {
     id: String(product.id),
@@ -489,7 +534,7 @@ export function mapProductToType(
 export function mapProductsWithBatchData(
   productList: DbProduct[],
   batchData: BatchRelatedDataResult,
-  locale: string = 'ja'
+  locale: string = 'ja',
 ): ProductType[] {
   return productList.map((product) => {
     const performerData = (batchData.performersMap.get(product.id) || []).filter(isValidPerformer);
@@ -497,7 +542,17 @@ export function mapProductsWithBatchData(
     const imagesData = batchData.imagesMap.get(product.id);
     const videosData = batchData.videosMap.get(product.id);
     const saleData = batchData.salesMap.get(product.id);
-    return mapProductToType(product, performerData, tagData, batchData.sourcesMap.get(product.id), undefined, imagesData, videosData, locale, saleData);
+    return mapProductToType(
+      product,
+      performerData,
+      tagData,
+      batchData.sourcesMap.get(product.id),
+      undefined,
+      imagesData,
+      videosData,
+      locale,
+      saleData,
+    );
   });
 }
 
@@ -511,11 +566,11 @@ export function mapPerformerToActressTypeSync(
   thumbnailUrl?: string,
   services?: string[],
   aliases?: string[],
-  locale: string = 'ja'
+  locale: string = 'ja',
 ): ActressType {
   const imageUrl = thumbnailUrl || ACTRESS_PLACEHOLDER;
   const providerIds = (services || [])
-    .map(s => ASP_TO_PROVIDER_ID[s])
+    .map((s) => ASP_TO_PROVIDER_ID[s])
     .filter((id): id is ProviderId => id !== undefined);
 
   const result: Actress = {

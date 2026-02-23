@@ -19,7 +19,12 @@ interface ProductImageGalleryProps {
   crossAspImages?: Array<{ imageUrl: string; aspName?: string | null }>;
 }
 
-export default function ProductImageGallery({ mainImage, sampleImages, productTitle, crossAspImages }: ProductImageGalleryProps) {
+export default function ProductImageGallery({
+  mainImage,
+  sampleImages,
+  productTitle,
+  crossAspImages,
+}: ProductImageGalleryProps) {
   const t = useTranslations('productImageGallery');
   const [selectedIndex, setSelectedIndex] = useState(0);
   const [imageError, setImageError] = useState(false);
@@ -39,13 +44,13 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
     const baseImages = [mainImage, ...(sampleImages || [])]
       .filter((img): img is string => typeof img === 'string' && Boolean(img))
       .map((img) => normalizeImageUrl(img))
-      .filter(img => img !== SHARED_PLACEHOLDER);
+      .filter((img) => img !== SHARED_PLACEHOLDER);
 
     // 品番ベースで統合した他ASPのサンプル画像を追加
     const crossAspImageUrls = (crossAspImages || [])
-      .filter(img => img.imageUrl)
-      .map(img => normalizeImageUrl(img.imageUrl))
-      .filter(img => img !== SHARED_PLACEHOLDER);
+      .filter((img) => img.imageUrl)
+      .map((img) => normalizeImageUrl(img.imageUrl))
+      .filter((img) => img !== SHARED_PLACEHOLDER);
 
     return [...baseImages, ...crossAspImageUrls];
   }, [mainImage, sampleImages, crossAspImages]);
@@ -75,14 +80,14 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
 
   // スワイプハンドラー
   const handleTouchStart = useCallback((e: TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
+    touchStartX.current = e.touches[0]!.clientX;
     touchEndX.current = null;
     setIsTransitioning(false);
   }, []);
 
   const handleTouchMove = useCallback((e: TouchEvent) => {
     if (touchStartX.current === null) return;
-    const currentX = e.touches[0].clientX;
+    const currentX = e.touches[0]!.clientX;
     touchEndX.current = currentX;
     const diff = currentX - touchStartX.current;
     setSwipeOffset(diff);
@@ -117,7 +122,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
       <div className="space-y-4">
         {/* メイン画像 */}
         <div
-          className="relative w-full bg-gray-800 rounded-lg overflow-hidden cursor-pointer group select-none"
+          className="group relative w-full cursor-pointer overflow-hidden rounded-lg bg-gray-800 select-none"
           style={{ aspectRatio: '3/4' }}
           onClick={() => setLightboxOpen(true)}
           onTouchStart={handleTouchStart}
@@ -125,7 +130,7 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
           onTouchEnd={handleTouchEnd}
         >
           <div
-            className="relative w-full h-full"
+            className="relative h-full w-full"
             style={{
               transform: `translateX(${swipeOffset}px)`,
               transition: isTransitioning ? 'transform 0.3s ease-out' : 'none',
@@ -143,31 +148,37 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
             />
           </div>
           {/* 拡大アイコン */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-            <ZoomIn className="w-12 h-12 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/20">
+            <ZoomIn className="h-12 w-12 text-white opacity-0 transition-opacity group-hover:opacity-100" />
           </div>
           {/* ナビゲーションボタン（複数画像の場合） */}
           {hasMultipleImages && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); goToPrevious(); }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToPrevious();
+                }}
+                className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
                 aria-label={t('previousImage')}
               >
-                <ChevronLeft className="w-6 h-6" />
+                <ChevronLeft className="h-6 w-6" />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); goToNext(); }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  goToNext();
+                }}
+                className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/50 p-2 text-white transition-colors hover:bg-black/70"
                 aria-label={t('nextImage')}
               >
-                <ChevronRight className="w-6 h-6" />
+                <ChevronRight className="h-6 w-6" />
               </button>
             </>
           )}
           {/* 画像カウンター */}
           {hasMultipleImages && (
-            <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/60 rounded text-white text-sm">
+            <div className="absolute right-2 bottom-2 rounded bg-black/60 px-2 py-1 text-sm text-white">
               {selectedIndex + 1} / {allImages.length}
             </div>
           )}
@@ -175,11 +186,9 @@ export default function ProductImageGallery({ mainImage, sampleImages, productTi
 
         {/* 画像情報表示 */}
         <div className="flex items-center justify-center gap-3 text-sm text-gray-400">
-          {hasMultipleImages && (
-            <span>{t('sampleImageCount', { count: allImages.length })}</span>
-          )}
+          {hasMultipleImages && <span>{t('sampleImageCount', { count: allImages.length })}</span>}
           <span className="flex items-center gap-1">
-            <ZoomIn className="w-4 h-4" />
+            <ZoomIn className="h-4 w-4" />
             {t('tapToZoom')}
           </span>
         </div>

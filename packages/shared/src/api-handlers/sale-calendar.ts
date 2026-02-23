@@ -58,7 +58,12 @@ export function createSaleCalendarHandler(deps: SaleCalendarHandlerDeps) {
       const saleEvents = saleEventsResult.rows.map((row: any) => {
         const saleDate = row['sale_date'];
         const dateStr = saleDate instanceof Date ? saleDate.toISOString().split('T')[0] : String(saleDate);
-        return { date: dateStr, productCount: Number(row['product_count']), avgDiscount: Number(row['avg_discount']), topCategories: [] };
+        return {
+          date: dateStr,
+          productCount: Number(row['product_count']),
+          avgDiscount: Number(row['avg_discount']),
+          topCategories: [],
+        };
       });
 
       const monthStats = monthStatsResult.rows.map((row: any) => ({
@@ -69,24 +74,36 @@ export function createSaleCalendarHandler(deps: SaleCalendarHandlerDeps) {
       }));
 
       const predictedSales = predictedSalesResult.rows.map((row: any) => ({
-        month: Number(row['month']), day: Number(row['day']), frequency: Number(row['frequency']),
+        month: Number(row['month']),
+        day: Number(row['day']),
+        frequency: Number(row['frequency']),
       }));
 
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
-      const nextBigSale = predictedSales.find((s: any) =>
-        s.month > currentMonth || (s.month === currentMonth && s.day > now.getDate())
-      ) || predictedSales[0];
+      const nextBigSale =
+        predictedSales.find(
+          (s: any) => s.month > currentMonth || (s.month === currentMonth && s.day > now.getDate()),
+        ) || predictedSales[0];
 
       return NextResponse.json({
-        success: true, year, saleEvents, monthStats, predictedSales, nextBigSale,
+        success: true,
+        year,
+        saleEvents,
+        monthStats,
+        predictedSales,
+        nextBigSale,
         summary: {
           totalSaleDays: saleEvents.length,
-          avgMonthlyDiscount: monthStats.length > 0
-            ? Math.round(monthStats.reduce((a: number, b: any) => a + b.avgDiscount, 0) / monthStats.length) : 0,
-          peakMonth: monthStats.reduce((max: any, curr: any) =>
-            curr.saleFrequency > (max?.saleFrequency || 0) ? curr : max, monthStats[0]
-          )?.month || null,
+          avgMonthlyDiscount:
+            monthStats.length > 0
+              ? Math.round(monthStats.reduce((a: number, b: any) => a + b.avgDiscount, 0) / monthStats.length)
+              : 0,
+          peakMonth:
+            monthStats.reduce(
+              (max: any, curr: any) => (curr.saleFrequency > (max?.saleFrequency || 0) ? curr : max),
+              monthStats[0],
+            )?.month || null,
         },
       });
     } catch (error) {
@@ -94,8 +111,14 @@ export function createSaleCalendarHandler(deps: SaleCalendarHandlerDeps) {
       const { searchParams } = new URL(request.url);
       const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString(), 10);
       return NextResponse.json({
-        success: false, fallback: true, year, saleEvents: [], monthStats: [], predictedSales: [],
-        nextBigSale: null, summary: { totalSaleDays: 0, avgMonthlyDiscount: 0, peakMonth: null },
+        success: false,
+        fallback: true,
+        year,
+        saleEvents: [],
+        monthStats: [],
+        predictedSales: [],
+        nextBigSale: null,
+        summary: { totalSaleDays: 0, avgMonthlyDiscount: 0, peakMonth: null },
       });
     }
   };

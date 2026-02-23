@@ -58,6 +58,17 @@ const translations = {
     showMore: '显示更多',
     showLess: '收起',
   },
+  'zh-TW': {
+    title: '喜歡這些女優的話',
+    subtitle: '根據您的收藏推薦',
+    loading: '分析中...',
+    noRecommendations: '新增收藏女優以查看推薦',
+    products: '作品',
+    coStarred: '次共演',
+    genreMatch: '類型匹配',
+    showMore: '顯示更多',
+    showLess: '收起',
+  },
   ko: {
     title: '이 여배우를 좋아하신다면',
     subtitle: '즐겨찾기 여배우 기반 추천',
@@ -102,7 +113,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            performerIds: favoritePerformerIds.map(id => parseInt(id)),
+            performerIds: favoritePerformerIds.map((id) => parseInt(id)),
             limit: 12,
           }),
         });
@@ -128,14 +139,11 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
   const displayedRecommendations = showAll ? recommendations : recommendations.slice(0, 6);
 
   return (
-    <div className="bg-linear-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 sm:p-6 border border-purple-500/20">
+    <div className="rounded-xl border border-purple-500/20 bg-linear-to-r from-purple-900/30 to-pink-900/30 p-4 sm:p-6">
       {/* Header */}
-      <button
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between mb-4"
-      >
+      <button onClick={() => setIsExpanded(!isExpanded)} className="mb-4 flex w-full items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-purple-500/20 rounded-lg">
+          <div className="rounded-lg bg-purple-500/20 p-2">
             <Sparkles className="h-5 w-5 text-purple-400" />
           </div>
           <div className="text-left">
@@ -153,46 +161,46 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
       {isExpanded && (
         <>
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="bg-gray-800/50 rounded-lg overflow-hidden animate-pulse">
+                <div key={i} className="animate-pulse overflow-hidden rounded-lg bg-gray-800/50">
                   <div className="aspect-square bg-gray-700" />
-                  <div className="p-2 space-y-1">
-                    <div className="h-3 bg-gray-700 rounded w-3/4" />
-                    <div className="h-2 bg-gray-700 rounded w-1/2" />
+                  <div className="space-y-1 p-2">
+                    <div className="h-3 w-3/4 rounded bg-gray-700" />
+                    <div className="h-2 w-1/2 rounded bg-gray-700" />
                   </div>
                 </div>
               ))}
             </div>
           ) : recommendations.length === 0 ? (
-            <p className="text-center text-gray-400 py-8">{t.noRecommendations}</p>
+            <p className="py-8 text-center text-gray-400">{t.noRecommendations}</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {displayedRecommendations.map((actress) => (
                   <Link
                     key={actress.id}
                     href={localizedHref(`/actress/${actress.id}`, locale)}
-                    className="group bg-gray-800/50 rounded-lg overflow-hidden hover:ring-2 hover:ring-purple-500/50 transition-all"
+                    className="group overflow-hidden rounded-lg bg-gray-800/50 transition-all hover:ring-2 hover:ring-purple-500/50"
                   >
                     {/* Thumbnail */}
-                    <div className="aspect-square relative bg-gray-700">
+                    <div className="relative aspect-square bg-gray-700">
                       {actress.heroImageUrl || actress.thumbnailUrl ? (
                         <Image
                           src={normalizeImageUrl(actress.heroImageUrl || actress.thumbnailUrl)}
                           alt={actress.name}
                           fill
-                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="object-cover transition-transform duration-300 group-hover:scale-105"
                         />
                       ) : (
-                        <div className="flex items-center justify-center h-full">
+                        <div className="flex h-full items-center justify-center">
                           <User className="h-12 w-12 text-gray-600" />
                         </div>
                       )}
 
                       {/* Match Score Badge */}
                       {actress.genreMatchPercent >= 50 && (
-                        <div className="absolute top-1 right-1 bg-purple-600/90 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                        <div className="absolute top-1 right-1 rounded bg-purple-600/90 px-1.5 py-0.5 text-[10px] font-bold text-white">
                           {actress.genreMatchPercent}%
                         </div>
                       )}
@@ -200,7 +208,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
 
                     {/* Info */}
                     <div className="p-2">
-                      <h4 className="text-white text-sm font-medium truncate group-hover:text-purple-300 transition-colors">
+                      <h4 className="truncate text-sm font-medium text-white transition-colors group-hover:text-purple-300">
                         {actress.name}
                       </h4>
                       <p className="text-xs text-gray-400">
@@ -213,7 +221,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
                           {actress.matchReasons.slice(0, 2).map((reason, i) => (
                             <span
                               key={i}
-                              className="text-[10px] bg-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded"
+                              className="rounded bg-purple-500/20 px-1.5 py-0.5 text-[10px] text-purple-300"
                             >
                               {reason}
                             </span>
@@ -230,7 +238,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
                 <div className="mt-4 text-center">
                   <button
                     onClick={() => setShowAll(!showAll)}
-                    className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center gap-1 mx-auto"
+                    className="mx-auto flex items-center gap-1 text-sm font-medium text-purple-400 hover:text-purple-300"
                   >
                     {showAll ? (
                       <>

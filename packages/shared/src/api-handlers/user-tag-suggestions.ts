@@ -40,10 +40,7 @@ export interface UserTagSuggestionsHandlerDeps {
 
 // タグ提案取得ハンドラー
 export function createUserTagSuggestionsGetHandler(deps: UserTagSuggestionsHandlerDeps) {
-  return async (
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ): Promise<NextResponse> => {
+  return async (req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> => {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);
@@ -69,17 +66,17 @@ export function createUserTagSuggestionsGetHandler(deps: UserTagSuggestionsHandl
       const suggestionsTable = deps.userTagSuggestions as any;
 
       // 承認済みまたはpending のタグ提案を取得
-      const suggestions = await db
+      const suggestions = (await db
         .select()
         .from(suggestionsTable)
         .where(
           deps.and(
             deps.eq(suggestionsTable.productId, productId),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (deps.sql as any)`${suggestionsTable.status} IN ('approved', 'pending')`
-          )
+            (deps.sql as any)`${suggestionsTable.status} IN ('approved', 'pending')`,
+          ),
         )
-        .orderBy(deps.desc(suggestionsTable.upvotes)) as UserTagSuggestion[];
+        .orderBy(deps.desc(suggestionsTable.upvotes))) as UserTagSuggestion[];
 
       // ユーザーIDがあれば投票状態も取得
       let suggestionsWithVotes: UserTagSuggestionWithVote[] = suggestions;
@@ -87,23 +84,26 @@ export function createUserTagSuggestionsGetHandler(deps: UserTagSuggestionsHandl
       if (userId && suggestions.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const votesTable = deps.userTagVotes as any;
-        const suggestionIds = suggestions.map(s => s.id);
+        const suggestionIds = suggestions.map((s) => s.id);
 
-        const votes = await db
+        const votes = (await db
           .select()
           .from(votesTable)
           .where(
             deps.and(
               deps.eq(votesTable.voterId, userId),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (deps.sql as any)`${votesTable.suggestionId} IN (${(deps.sql as any).join(suggestionIds.map((id: number) => (deps.sql as any)`${id}`), (deps.sql as any)`, `)})`
-            )
+              (deps.sql as any)`${votesTable.suggestionId} IN (${(deps.sql as any).join(
+                suggestionIds.map((id: number) => (deps.sql as any)`${id}`),
+                (deps.sql as any)`, `,
+              )})`,
+            ),
           )
-          .orderBy(deps.desc(votesTable.createdAt)) as { suggestionId: number; voteType: string }[];
+          .orderBy(deps.desc(votesTable.createdAt))) as { suggestionId: number; voteType: string }[];
 
-        const voteMap = new Map(votes.map(v => [v.suggestionId, v.voteType as 'up' | 'down']));
+        const voteMap = new Map(votes.map((v) => [v.suggestionId, v.voteType as 'up' | 'down']));
 
-        suggestionsWithVotes = suggestions.map(suggestion => ({
+        suggestionsWithVotes = suggestions.map((suggestion) => ({
           ...suggestion,
           userVote: voteMap.get(suggestion['id']) || null,
         }));
@@ -123,10 +123,7 @@ export function createUserTagSuggestionsGetHandler(deps: UserTagSuggestionsHandl
 
 // タグ提案投稿ハンドラー
 export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHandlerDeps) {
-  return async (
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ): Promise<NextResponse> => {
+  return async (req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> => {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);
@@ -169,45 +166,42 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
       const tagsTable = deps.tags as any;
 
       // 商品が存在するか確認
-      const [product] = await db
+      const [product] = (await db
         .select({ id: productsTable.id, title: productsTable.title })
         .from(productsTable)
         .where(deps.eq(productsTable.id, productId))
-        .limit(1) as { id: number; title: string }[];
+        .limit(1)) as { id: number; title: string }[];
 
       if (!product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
 
       // 同じタグ提案が既に存在するかチェック
-      const [existingSuggestion] = await db
+      const [existingSuggestion] = (await db
         .select()
         .from(suggestionsTable)
         .where(
-          deps.and(
-            deps.eq(suggestionsTable.productId, productId),
-            deps.eq(suggestionsTable.suggestedTagName, tagName)
-          )
+          deps.and(deps.eq(suggestionsTable.productId, productId), deps.eq(suggestionsTable.suggestedTagName, tagName)),
         )
-        .limit(1) as UserTagSuggestion[];
+        .limit(1)) as UserTagSuggestion[];
 
       if (existingSuggestion) {
         return NextResponse.json({ error: 'This tag has already been suggested' }, { status: 409 });
       }
 
       // 既存タグとマッチするか確認
-      const [existingTag] = await db
+      const [existingTag] = (await db
         .select({ id: tagsTable.id })
         .from(tagsTable)
         .where(deps.eq(tagsTable.name, tagName))
-        .limit(1) as { id: number }[];
+        .limit(1)) as { id: number }[];
 
       // 既存タグを取得（AI審査用）
-      const existingTags = await db
+      const existingTags = (await db
         .select({ name: tagsTable.name })
         .from(tagsTable)
         .where(deps.eq(tagsTable.id, tagsTable.id)) // 全て取得
-        .limit(100) as { name: string }[];
+        .limit(100)) as { name: string }[];
 
       // AI審査を実行
       let moderationResult: ContentModerationResult | null = null;
@@ -219,8 +213,8 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
         moderationResult = await moderateTagSuggestion({
           productTitle: product['title'],
           suggestedTag: tagName,
-          existingTags: existingTags.map(t => t.name),
-          availableTags: existingTags.map(t => t.name),
+          existingTags: existingTags.map((t) => t.name),
+          availableTags: existingTags.map((t) => t.name),
         });
 
         if (moderationResult) {
@@ -238,7 +232,7 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
       }
 
       // タグ提案を保存
-      const [newSuggestion] = await db
+      const [newSuggestion] = (await db
         .insert(suggestionsTable)
         .values({
           productId,
@@ -252,15 +246,20 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
           moderatedAt: status !== 'pending' ? new Date() : null,
           moderatedBy,
         })
-        .returning() as UserTagSuggestion[];
+        .returning()) as UserTagSuggestion[];
 
-      return NextResponse.json({
-        suggestion: newSuggestion,
-        moderation: moderationResult ? {
-          decision: moderationResult.decision,
-          reason: moderationResult.reason,
-        } : null,
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          suggestion: newSuggestion,
+          moderation: moderationResult
+            ? {
+                decision: moderationResult.decision,
+                reason: moderationResult.reason,
+              }
+            : null,
+        },
+        { status: 201 },
+      );
     } catch (error) {
       return createApiErrorResponse(error, 'Failed to create tag suggestion', 500, {
         endpoint: '/api/products/[id]/tag-suggestions',
@@ -273,7 +272,7 @@ export function createUserTagSuggestionsPostHandler(deps: UserTagSuggestionsHand
 export function createUserTagVoteHandler(deps: UserTagSuggestionsHandlerDeps) {
   return async (
     req: NextRequest,
-    { params }: { params: Promise<{ id: string; suggestionId: string }> }
+    { params }: { params: Promise<{ id: string; suggestionId: string }> },
   ): Promise<NextResponse> => {
     try {
       const { suggestionId: suggestionIdStr } = await params;
@@ -321,27 +320,22 @@ export function createUserTagVoteHandler(deps: UserTagSuggestionsHandlerDeps) {
       const votesTable = deps.userTagVotes as any;
 
       // 提案が存在するか確認
-      const [suggestion] = await db
+      const [suggestion] = (await db
         .select()
         .from(suggestionsTable)
         .where(deps.eq(suggestionsTable.id, suggestionId))
-        .limit(1) as UserTagSuggestion[];
+        .limit(1)) as UserTagSuggestion[];
 
       if (!suggestion) {
         return NextResponse.json({ error: 'Tag suggestion not found' }, { status: 404 });
       }
 
       // 既存の投票を確認
-      const [existingVote] = await db
+      const [existingVote] = (await db
         .select()
         .from(votesTable)
-        .where(
-          deps.and(
-            deps.eq(votesTable.suggestionId, suggestionId),
-            deps.eq(votesTable.voterId, userId)
-          )
-        )
-        .limit(1) as { suggestionId: number; voterId: string; voteType: string }[];
+        .where(deps.and(deps.eq(votesTable.suggestionId, suggestionId), deps.eq(votesTable.voterId, userId)))
+        .limit(1)) as { suggestionId: number; voterId: string; voteType: string }[];
 
       // 投票を更新または挿入
       await db

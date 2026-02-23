@@ -23,16 +23,12 @@ export default async function sitemapIndex() {
     const db = getDb();
 
     // Count total products and performers
-    const [productCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(products);
+    const [productCount] = await db.select({ count: sql<number>`count(*)` }).from(products);
 
-    const [performerCount] = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(performers);
+    const [performerCount] = await db.select({ count: sql<number>`count(*)` }).from(performers);
 
-    const totalProducts = Number(productCount.count);
-    const totalPerformers = Number(performerCount.count);
+    const totalProducts = Number(productCount!.count);
+    const totalPerformers = Number(performerCount!.count);
 
     // Products: Split into chunks of 10,000 (for performance)
     const productChunkSize = 10000;

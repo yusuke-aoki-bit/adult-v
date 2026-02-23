@@ -10,13 +10,21 @@ const metadataTexts = {
     title: 'Favorites',
     description: 'Your favorite products and actresses',
   },
+  zh: {
+    title: '收藏',
+    description: '您收藏的作品和女优列表',
+  },
+  'zh-TW': {
+    title: '收藏',
+    description: '您收藏的作品和女優列表',
+  },
+  ko: {
+    title: '즐겨찾기',
+    description: '즐겨찾기한 작품과 배우 목록',
+  },
 } as const;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
@@ -37,10 +45,6 @@ export async function generateMetadata({
   };
 }
 
-export default function FavoritesLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FavoritesLayout({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }

@@ -33,13 +33,7 @@ export interface CreateListModalProps {
   };
 }
 
-export function CreateListModal({
-  isOpen,
-  onClose,
-  onSubmit,
-  editingList,
-  translations: t,
-}: CreateListModalProps) {
+export function CreateListModal({ isOpen, onClose, onSubmit, editingList, translations: t }: CreateListModalProps) {
   const [title, setTitle] = useState(editingList?.title || '');
   const [description, setDescription] = useState(editingList?.description || '');
   const [isPublic, setIsPublic] = useState(editingList?.isPublic ?? true);
@@ -61,42 +55,37 @@ export function CreateListModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white dark:bg-gray-800">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
             {editingList ? t.editTitle : t.createTitle}
           </h2>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700"
-          >
-            <X className="w-5 h-5 text-gray-500" />
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700">
+            <X className="h-5 w-5 text-gray-500" />
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="p-4 space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4 p-4">
           {/* Title */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t.titleLabel}
-            </label>
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">{t.titleLabel}</label>
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t.titlePlaceholder}
               maxLength={200}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             />
           </div>
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label className="mb-1 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t.descriptionLabel}
             </label>
             <textarea
@@ -105,50 +94,44 @@ export function CreateListModal({
               placeholder={t.descriptionPlaceholder}
               rows={3}
               maxLength={500}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent resize-none"
+              className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
           {/* Visibility */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
               {t.visibilityLabel}
             </label>
             <div className="space-y-2">
-              <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                isPublic
-                  ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
-                  : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}>
-                <input
-                  type="radio"
-                  checked={isPublic}
-                  onChange={() => setIsPublic(true)}
-                  className="mt-1"
-                />
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  isPublic
+                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
+                    : 'border-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
+                }`}
+              >
+                <input type="radio" checked={isPublic} onChange={() => setIsPublic(true)} className="mt-1" />
                 <div>
                   <div className="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
-                    <Globe className="w-4 h-4 text-green-500" />
+                    <Globe className="h-4 w-4 text-green-500" />
                     {t.public}
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{t.publicDescription}</p>
                 </div>
               </label>
 
-              <label className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                !isPublic
-                  ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
-                  : 'border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-              }`}>
-                <input
-                  type="radio"
-                  checked={!isPublic}
-                  onChange={() => setIsPublic(false)}
-                  className="mt-1"
-                />
+              <label
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  !isPublic
+                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
+                    : 'border-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
+                }`}
+              >
+                <input type="radio" checked={!isPublic} onChange={() => setIsPublic(false)} className="mt-1" />
                 <div>
                   <div className="flex items-center gap-2 font-medium text-gray-900 dark:text-white">
-                    <Lock className="w-4 h-4 text-gray-400" />
+                    <Lock className="h-4 w-4 text-gray-400" />
                     {t.private}
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400">{t.privateDescription}</p>
@@ -162,22 +145,24 @@ export function CreateListModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              className="flex-1 rounded-lg border border-gray-300 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
             >
               {t.cancel}
             </button>
             <button
               type="submit"
               disabled={isSubmitting || title.trim().length < 2}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-400"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   {editingList ? t.saving : t.creating}
                 </>
+              ) : editingList ? (
+                t.save
               ) : (
-                editingList ? t.save : t.create
+                t.create
               )}
             </button>
           </div>

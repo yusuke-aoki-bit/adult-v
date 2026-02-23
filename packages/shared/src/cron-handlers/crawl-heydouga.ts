@@ -9,10 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -123,9 +120,10 @@ async function parseDetailPage(providerId: string, movieId: string): Promise<Hey
 
     // リリース日
     const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
-    const releaseDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3]
-      ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
-      : undefined;
+    const releaseDate =
+      dateMatch?.[1] && dateMatch[2] && dateMatch[3]
+        ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
+        : undefined;
 
     // 再生時間
     const durationMatch = html.match(/(?:再生時間|収録時間)[:：]?\s*(\d+)\s*(?:分|min)/);
@@ -192,7 +190,8 @@ async function saveProduct(
 
   const row = productResult.rows[0] as { id: number; is_new: boolean };
   const dbProductId = row.id;
-  if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
+  if (row.is_new) stats.newProducts++;
+  else stats.updatedProducts++;
 
   await db.execute(sql`
     INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, product_type, data_source, last_updated)
@@ -248,11 +247,14 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
         // --- ホームページモード: トップページの新着を取得 ---
         const productIds = await fetchProductIds();
         if (productIds.length === 0) {
-          return NextResponse.json({
-            success: false,
-            error: 'No product IDs found on HEYDOUGA homepage',
-            stats,
-          }, { status: 502 });
+          return NextResponse.json(
+            {
+              success: false,
+              error: 'No product IDs found on HEYDOUGA homepage',
+              stats,
+            },
+            { status: 502 },
+          );
         }
 
         console.log(`[crawl-heydouga] Homepage: Found ${productIds.length} products`);
@@ -266,7 +268,7 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
           const product = await parseDetailPage(providerId, movieId);
           if (!product) {
             stats.errors++;
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
             continue;
           }
 
@@ -279,7 +281,7 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
             console.error(`[crawl-heydouga] Error processing ${compositeId}:`, error);
           }
 
-          await new Promise(r => setTimeout(r, 1500));
+          await new Promise((r) => setTimeout(r, 1500));
         }
       } else {
         // --- スキャンモード: provider別に連番スキャン (auto-resume) ---
@@ -287,15 +289,18 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
 
         // 対象providerを決定
         const providers = providerParam
-          ? PROVIDER_CONFIGS.filter(p => p.providerId === providerParam)
+          ? PROVIDER_CONFIGS.filter((p) => p.providerId === providerParam)
           : PROVIDER_CONFIGS;
 
         if (providers.length === 0) {
-          return NextResponse.json({
-            success: false,
-            error: `Unknown provider: ${providerParam}`,
-            availableProviders: PROVIDER_CONFIGS.map(p => `${p.providerId} (${p.label})`),
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Unknown provider: ${providerParam}`,
+              availableProviders: PROVIDER_CONFIGS.map((p) => `${p.providerId} (${p.label})`),
+            },
+            { status: 400 },
+          );
         }
 
         const MAX_CONSECUTIVE_NOT_FOUND = 15;
@@ -318,17 +323,17 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
             : 0;
           let currentMovieId = lastId + 1;
 
-          console.log(`[crawl-heydouga] Scan provider=${providerId} (${providerConfig.label}): start=${currentMovieId}`);
+          console.log(
+            `[crawl-heydouga] Scan provider=${providerId} (${providerConfig.label}): start=${currentMovieId}`,
+          );
 
           let consecutiveNotFound = 0;
 
-          while (
-            currentMovieId <= maxMovieId &&
-            stats.totalFetched < limit &&
-            Date.now() - startTime < TIME_LIMIT
-          ) {
+          while (currentMovieId <= maxMovieId && stats.totalFetched < limit && Date.now() - startTime < TIME_LIMIT) {
             if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
-              console.log(`[crawl-heydouga] Provider ${providerId}: ${MAX_CONSECUTIVE_NOT_FOUND} consecutive not found, moving on`);
+              console.log(
+                `[crawl-heydouga] Provider ${providerId}: ${MAX_CONSECUTIVE_NOT_FOUND} consecutive not found, moving on`,
+              );
               break;
             }
 
@@ -338,7 +343,7 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
             if (!product) {
               consecutiveNotFound++;
               currentMovieId++;
-              await new Promise(r => setTimeout(r, 500));
+              await new Promise((r) => setTimeout(r, 500));
               continue;
             }
 
@@ -353,16 +358,16 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
             }
 
             currentMovieId++;
-            await new Promise(r => setTimeout(r, 1500));
+            await new Promise((r) => setTimeout(r, 1500));
           }
         }
       }
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
@@ -385,12 +390,11 @@ export function createCrawlHeydougaHandler(deps: CrawlHeydougaHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('[crawl-heydouga] Error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

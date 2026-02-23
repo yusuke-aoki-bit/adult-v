@@ -40,9 +40,7 @@ export interface YearlyStats {
   averageRating: number;
 }
 
-const SITE_MODE = typeof window !== 'undefined'
-  ? (process.env['NEXT_PUBLIC_SITE_MODE'] || 'adult-v')
-  : 'adult-v';
+const SITE_MODE = typeof window !== 'undefined' ? process.env['NEXT_PUBLIC_SITE_MODE'] || 'adult-v' : 'adult-v';
 const STORAGE_KEY = `viewing_diary_${SITE_MODE}`;
 const MAX_ENTRIES = 500;
 
@@ -89,9 +87,7 @@ export function useViewingDiary() {
   // エントリーを更新（評価やメモの追加）
   const updateEntry = useCallback((id: string, updates: Partial<Pick<DiaryEntry, 'rating' | 'note'>>) => {
     setEntries((prev) => {
-      const updated = prev.map((entry) =>
-        entry['id'] === id ? { ...entry, ...updates } : entry
-      );
+      const updated = prev.map((entry) => (entry['id'] === id ? { ...entry, ...updates } : entry));
 
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -143,114 +139,118 @@ export function useViewingDiary() {
   }, [entries]);
 
   // 月別統計を計算
-  const getMonthlyStats = useCallback((month: string): MonthlyStats | null => {
-    const monthEntries = entriesByMonth[month];
-    if (!monthEntries || monthEntries.length === 0) return null;
+  const getMonthlyStats = useCallback(
+    (month: string): MonthlyStats | null => {
+      const monthEntries = entriesByMonth[month];
+      if (!monthEntries || monthEntries.length === 0) return null;
 
-    // 出演者集計
-    const performerCounts: Record<string, number> = {};
-    monthEntries.forEach((entry) => {
-      if (entry['performerName']) {
-        performerCounts[entry['performerName']] = (performerCounts[entry['performerName']] || 0) + 1;
-      }
-    });
-    const topPerformerEntry = Object.entries(performerCounts).sort((a, b) => b[1] - a[1])[0];
-
-    // タグ集計
-    const tagCounts: Record<string, number> = {};
-    monthEntries.forEach((entry) => {
-      entry.tags?.forEach((tag) => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+      // 出演者集計
+      const performerCounts: Record<string, number> = {};
+      monthEntries.forEach((entry) => {
+        if (entry['performerName']) {
+          performerCounts[entry['performerName']] = (performerCounts[entry['performerName']] || 0) + 1;
+        }
       });
-    });
-    const topTagEntry = Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0];
+      const topPerformerEntry = Object.entries(performerCounts).sort((a, b) => b[1] - a[1])[0];
 
-    // 評価平均
-    const ratedEntries = monthEntries.filter((e) => e.rating);
-    const averageRating = ratedEntries.length > 0
-      ? ratedEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / ratedEntries.length
-      : 0;
+      // タグ集計
+      const tagCounts: Record<string, number> = {};
+      monthEntries.forEach((entry) => {
+        entry.tags?.forEach((tag) => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      });
+      const topTagEntry = Object.entries(tagCounts).sort((a, b) => b[1] - a[1])[0];
 
-    return {
-      month,
-      count: monthEntries.length,
-      totalDuration: monthEntries.reduce((sum, e) => sum + (e.duration || 0), 0),
-      ...(topPerformerEntry && { topPerformer: { name: topPerformerEntry[0], count: topPerformerEntry[1] } }),
-      ...(topTagEntry && { topTag: { name: topTagEntry[0], count: topTagEntry[1] } }),
-      averageRating,
-    };
-  }, [entriesByMonth]);
+      // 評価平均
+      const ratedEntries = monthEntries.filter((e) => e.rating);
+      const averageRating =
+        ratedEntries.length > 0 ? ratedEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / ratedEntries.length : 0;
+
+      return {
+        month,
+        count: monthEntries.length,
+        totalDuration: monthEntries.reduce((sum, e) => sum + (e.duration || 0), 0),
+        ...(topPerformerEntry && { topPerformer: { name: topPerformerEntry[0], count: topPerformerEntry[1] } }),
+        ...(topTagEntry && { topTag: { name: topTagEntry[0], count: topTagEntry[1] } }),
+        averageRating,
+      };
+    },
+    [entriesByMonth],
+  );
 
   // 年間統計を計算
-  const getYearlyStats = useCallback((year: number): YearlyStats => {
-    const yearEntries = entries.filter((entry) => {
-      const entryYear = new Date(entry.viewedAt).getFullYear();
-      return entryYear === year;
-    });
-
-    // 出演者集計
-    const performerCounts: Record<string, { count: number; id?: number | string }> = {};
-    yearEntries.forEach((entry) => {
-      if (entry['performerName']) {
-        const existingEntry = performerCounts[entry['performerName']];
-        if (!existingEntry) {
-          performerCounts[entry['performerName']] = {
-            count: 1,
-            ...(entry['performerId'] !== undefined && { id: entry['performerId'] }),
-          };
-        } else {
-          existingEntry.count++;
-        }
-      }
-    });
-    const topPerformers = Object.entries(performerCounts)
-      .sort((a, b) => b[1].count - a[1].count)
-      .slice(0, 10)
-      .map(([name, data]) => ({
-        name,
-        count: data['count'],
-        ...(data['id'] !== undefined && { id: data['id'] }),
-      }));
-
-    // タグ集計
-    const tagCounts: Record<string, number> = {};
-    yearEntries.forEach((entry) => {
-      entry.tags?.forEach((tag) => {
-        tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+  const getYearlyStats = useCallback(
+    (year: number): YearlyStats => {
+      const yearEntries = entries.filter((entry) => {
+        const entryYear = new Date(entry.viewedAt).getFullYear();
+        return entryYear === year;
       });
-    });
-    const topTags = Object.entries(tagCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([name, count]) => ({ name, count }));
 
-    // 月別トレンド
-    const monthlyTrend: Array<{ month: string; count: number }> = [];
-    for (let m = 1; m <= 12; m++) {
-      const monthKey = `${year}-${String(m).padStart(2, '0')}`;
-      const monthCount = yearEntries.filter((entry) => {
-        const date = new Date(entry.viewedAt);
-        return date.getMonth() + 1 === m;
-      }).length;
-      monthlyTrend.push({ month: monthKey, count: monthCount });
-    }
+      // 出演者集計
+      const performerCounts: Record<string, { count: number; id?: number | string }> = {};
+      yearEntries.forEach((entry) => {
+        if (entry['performerName']) {
+          const existingEntry = performerCounts[entry['performerName']];
+          if (!existingEntry) {
+            performerCounts[entry['performerName']] = {
+              count: 1,
+              ...(entry['performerId'] !== undefined && { id: entry['performerId'] }),
+            };
+          } else {
+            existingEntry.count++;
+          }
+        }
+      });
+      const topPerformers = Object.entries(performerCounts)
+        .sort((a, b) => b[1].count - a[1].count)
+        .slice(0, 10)
+        .map(([name, data]) => ({
+          name,
+          count: data['count'],
+          ...(data['id'] !== undefined && { id: data['id'] }),
+        }));
 
-    // 評価平均
-    const ratedEntries = yearEntries.filter((e) => e.rating);
-    const averageRating = ratedEntries.length > 0
-      ? ratedEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / ratedEntries.length
-      : 0;
+      // タグ集計
+      const tagCounts: Record<string, number> = {};
+      yearEntries.forEach((entry) => {
+        entry.tags?.forEach((tag) => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      });
+      const topTags = Object.entries(tagCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([name, count]) => ({ name, count }));
 
-    return {
-      year,
-      totalCount: yearEntries.length,
-      totalDuration: yearEntries.reduce((sum, e) => sum + (e.duration || 0), 0),
-      topPerformers,
-      topTags,
-      monthlyTrend,
-      averageRating,
-    };
-  }, [entries]);
+      // 月別トレンド
+      const monthlyTrend: Array<{ month: string; count: number }> = [];
+      for (let m = 1; m <= 12; m++) {
+        const monthKey = `${year}-${String(m).padStart(2, '0')}`;
+        const monthCount = yearEntries.filter((entry) => {
+          const date = new Date(entry.viewedAt);
+          return date.getMonth() + 1 === m;
+        }).length;
+        monthlyTrend.push({ month: monthKey, count: monthCount });
+      }
+
+      // 評価平均
+      const ratedEntries = yearEntries.filter((e) => e.rating);
+      const averageRating =
+        ratedEntries.length > 0 ? ratedEntries.reduce((sum, e) => sum + (e.rating || 0), 0) / ratedEntries.length : 0;
+
+      return {
+        year,
+        totalCount: yearEntries.length,
+        totalDuration: yearEntries.reduce((sum, e) => sum + (e.duration || 0), 0),
+        topPerformers,
+        topTags,
+        monthlyTrend,
+        averageRating,
+      };
+    },
+    [entries],
+  );
 
   // 利用可能な年のリスト
   const availableYears = useMemo(() => {
@@ -262,9 +262,12 @@ export function useViewingDiary() {
   }, [entries]);
 
   // 特定の作品の視聴回数
-  const getViewCountForProduct = useCallback((productId: string) => {
-    return entries.filter((e) => e.productId === productId).length;
-  }, [entries]);
+  const getViewCountForProduct = useCallback(
+    (productId: string) => {
+      return entries.filter((e) => e.productId === productId).length;
+    },
+    [entries],
+  );
 
   return {
     entries,

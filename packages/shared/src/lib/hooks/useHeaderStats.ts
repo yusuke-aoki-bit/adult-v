@@ -63,8 +63,8 @@ export function useSaleStats(): UseSaleStatsResult {
 
     // キャッシュがない場合はAPIからフェッチ
     fetch('/api/stats/sales')
-      .then(res => res.json())
-      .then(data => {
+      .then((res) => res.json())
+      .then((data) => {
         // APIレスポンスにtotalSalesがあることを確認
         if (data && typeof data.totalSales === 'number') {
           setSaleStats({ totalSales: data.totalSales });
@@ -100,7 +100,8 @@ export const headerTranslations = {
     sale: 'SALE',
     saleItems: '件セール中',
     fanzaSite: 'FANZA専用',
-    adultNotice: '【PR】当サイトはアフィリエイト広告を利用しています。※成人向けコンテンツを含みます。価格は販売サイトにより異なる場合があります。',
+    adultNotice:
+      '【PR】当サイトはアフィリエイト広告を利用しています。※成人向けコンテンツを含みます。価格は販売サイトにより異なる場合があります。',
     // ドロップダウンメニュー
     menuBrowse: 'コンテンツ',
     menuTools: 'ツール',
@@ -198,6 +199,45 @@ export const headerTranslations = {
     sales: '特卖',
     onSaleProducts: '特卖作品',
   },
+  'zh-TW': {
+    subtitle: 'heavy user guide',
+    products: '作品列表',
+    actresses: '女優列表',
+    diary: '觀看日記',
+    profile: 'DNA分析',
+    favorites: '收藏',
+    watchlist: '稍後觀看',
+    compare: '比較',
+    statistics: '統計',
+    calendar: '日曆',
+    discover: '探索',
+    categories: '分類',
+    menu: '選單',
+    closeMenu: '關閉選單',
+    mobileNav: '行動導覽',
+    sale: 'SALE',
+    saleItems: '件特賣中',
+    fanzaSite: 'FANZA專區',
+    adultNotice: '【廣告】本站使用聯盟廣告。※包含成人內容。價格可能因銷售網站而異。',
+    // 下拉選單
+    menuBrowse: '瀏覽',
+    menuTools: '工具',
+    menuMy: '我的',
+    menuCommunity: '社群',
+    // 額外選單項目
+    dailyPick: '今日推薦',
+    weeklyTrends: '週趨勢',
+    hiddenGems: '隱藏寶藏',
+    rookies: '新人出道',
+    birthdays: '生日',
+    annualBest: '年度最佳',
+    publicLists: '公開列表',
+    listRanking: '列表排名',
+    reviewers: '評論者',
+    voteRanking: '投票排名',
+    sales: '特賣',
+    onSaleProducts: '特賣作品',
+  },
   ko: {
     subtitle: 'heavy user guide',
     products: '작품 목록',
@@ -217,7 +257,8 @@ export const headerTranslations = {
     sale: 'SALE',
     saleItems: '개 세일 중',
     fanzaSite: 'FANZA 전용',
-    adultNotice: '【PR】이 사이트는 제휴 광고를 사용합니다. ※성인용 콘텐츠를 포함합니다. 판매 사이트에 따라 가격이 다를 수 있습니다.',
+    adultNotice:
+      '【PR】이 사이트는 제휴 광고를 사용합니다. ※성인용 콘텐츠를 포함합니다. 판매 사이트에 따라 가격이 다를 수 있습니다.',
     // 드롭다운 메뉴
     menuBrowse: '둘러보기',
     menuTools: '도구',
@@ -240,4 +281,4 @@ export const headerTranslations = {
 } as const;
 
 export type HeaderTranslationKey = keyof typeof headerTranslations;
-export type HeaderTranslation = typeof headerTranslations[HeaderTranslationKey];
+export type HeaderTranslation = (typeof headerTranslations)[HeaderTranslationKey];

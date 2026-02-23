@@ -18,8 +18,9 @@ function getHreflangLinks(path: string): string {
   ];
 
   return languages
-    .map(({ lang, suffix }) =>
-      `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`)
+    .map(
+      ({ lang, suffix }) => `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`,
+    )
     .join('\n');
 }
 
@@ -50,17 +51,21 @@ export async function GET() {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${(makerList.rows || []).map((row: Record<string, unknown>) => {
-  const path = `/makers/${row['id']}`;
-  const lastmod = row['last_updated'] ? new Date(String(row['last_updated'])).toISOString() : new Date().toISOString();
-  return `  <url>
+${(makerList.rows || [])
+  .map((row: Record<string, unknown>) => {
+    const path = `/makers/${row['id']}`;
+    const lastmod = row['last_updated']
+      ? new Date(String(row['last_updated'])).toISOString()
+      : new Date().toISOString();
+    return `  <url>
     <loc>${BASE_URL}${path}</loc>
 ${getHreflangLinks(path)}
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>`;
-}).join('\n')}
+  })
+  .join('\n')}
 </urlset>`;
 
     return new NextResponse(xml, {

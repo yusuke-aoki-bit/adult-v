@@ -18,44 +18,55 @@ const STORAGE_KEY = 'adult-v-favorites';
 export function useFavorites() {
   const [favorites, setFavorites] = useLocalStorage<FavoriteItem[]>(STORAGE_KEY, []);
 
-  const addFavorite = useCallback((item: Omit<FavoriteItem, 'addedAt'>) => {
-    setFavorites((prev) => {
-      const exists = prev.some(
-        (f) => f.type === item.type && f.id === item['id']
-      );
-      if (exists) return prev;
+  const addFavorite = useCallback(
+    (item: Omit<FavoriteItem, 'addedAt'>) => {
+      setFavorites((prev) => {
+        const exists = prev.some((f) => f.type === item.type && f.id === item['id']);
+        if (exists) return prev;
 
-      return [
-        {
-          ...item,
-          addedAt: Date.now(),
-        },
-        ...prev,
-      ];
-    });
-  }, [setFavorites]);
+        return [
+          {
+            ...item,
+            addedAt: Date.now(),
+          },
+          ...prev,
+        ];
+      });
+    },
+    [setFavorites],
+  );
 
-  const removeFavorite = useCallback((type: 'product' | 'actress', id: number | string) => {
-    setFavorites((prev) =>
-      prev.filter((f) => !(f.type === type && f.id === id))
-    );
-  }, [setFavorites]);
+  const removeFavorite = useCallback(
+    (type: 'product' | 'actress', id: number | string) => {
+      setFavorites((prev) => prev.filter((f) => !(f.type === type && f.id === id)));
+    },
+    [setFavorites],
+  );
 
-  const isFavorite = useCallback((type: 'product' | 'actress', id: number | string) => {
-    return favorites.some((f) => f.type === type && f.id === id);
-  }, [favorites]);
+  const isFavorite = useCallback(
+    (type: 'product' | 'actress', id: number | string) => {
+      return favorites.some((f) => f.type === type && f.id === id);
+    },
+    [favorites],
+  );
 
-  const toggleFavorite = useCallback((item: Omit<FavoriteItem, 'addedAt'>) => {
-    if (isFavorite(item.type, item['id'])) {
-      removeFavorite(item.type, item['id']);
-    } else {
-      addFavorite(item);
-    }
-  }, [isFavorite, removeFavorite, addFavorite]);
+  const toggleFavorite = useCallback(
+    (item: Omit<FavoriteItem, 'addedAt'>) => {
+      if (isFavorite(item.type, item['id'])) {
+        removeFavorite(item.type, item['id']);
+      } else {
+        addFavorite(item);
+      }
+    },
+    [isFavorite, removeFavorite, addFavorite],
+  );
 
-  const getFavoritesByType = useCallback((type: 'product' | 'actress') => {
-    return favorites.filter((f) => f.type === type);
-  }, [favorites]);
+  const getFavoritesByType = useCallback(
+    (type: 'product' | 'actress') => {
+      return favorites.filter((f) => f.type === type);
+    },
+    [favorites],
+  );
 
   const clearFavorites = useCallback(() => {
     setFavorites([]);

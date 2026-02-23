@@ -173,7 +173,7 @@ const getISOWeek = (date: Date): string => {
   d.setHours(0, 0, 0, 0);
   d.setDate(d.getDate() + 4 - (d.getDay() || 7));
   const yearStart = new Date(d.getFullYear(), 0, 1);
-  const weekNo = Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+  const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   return `${d.getFullYear()}-W${String(weekNo).padStart(2, '0')}`;
 };
 
@@ -205,107 +205,104 @@ export function useDiscoveryBadge() {
   }, []);
 
   // Record a discovery
-  const recordDiscovery = useCallback((
-    productId: string,
-    title: string,
-    aspName: string,
-    viewCountAtDiscovery: number = 0,
-    releaseDate?: string
-  ) => {
-    setData(prev => {
-      // Already recorded?
-      if (prev.records.some(r => r.productId === productId)) {
-        return prev;
-      }
+  const recordDiscovery = useCallback(
+    (productId: string, title: string, aspName: string, viewCountAtDiscovery: number = 0, releaseDate?: string) => {
+      setData((prev) => {
+        // Already recorded?
+        if (prev.records.some((r) => r.productId === productId)) {
+          return prev;
+        }
 
-      const now = new Date();
-      const currentWeek = getISOWeek(now);
+        const now = new Date();
+        const currentWeek = getISOWeek(now);
 
-      // Update weekly streak
-      let newStreak = prev.weeklyStreak;
-      if (prev.lastWeekViewed) {
-        const lastWeekDate = new Date(prev.lastWeekViewed.replace('W', '-W'));
-        const currentWeekDate = new Date(currentWeek.replace('W', '-W'));
-        const weekDiff = Math.round((currentWeekDate.getTime() - lastWeekDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
+        // Update weekly streak
+        let newStreak = prev.weeklyStreak;
+        if (prev.lastWeekViewed) {
+          const lastWeekDate = new Date(prev.lastWeekViewed.replace('W', '-W'));
+          const currentWeekDate = new Date(currentWeek.replace('W', '-W'));
+          const weekDiff = Math.round((currentWeekDate.getTime() - lastWeekDate.getTime()) / (7 * 24 * 60 * 60 * 1000));
 
-        if (weekDiff === 1) {
-          newStreak = prev.weeklyStreak + 1;
-        } else if (weekDiff > 1) {
+          if (weekDiff === 1) {
+            newStreak = prev.weeklyStreak + 1;
+          } else if (weekDiff > 1) {
+            newStreak = 1;
+          }
+        } else {
           newStreak = 1;
         }
-      } else {
-        newStreak = 1;
-      }
 
-      const newRecord: DiscoveryRecord = {
-        productId,
-        title,
-        discoveredAt: now.toISOString(),
-        aspName,
-        viewCountAtDiscovery,
-      };
+        const newRecord: DiscoveryRecord = {
+          productId,
+          title,
+          discoveredAt: now.toISOString(),
+          aspName,
+          viewCountAtDiscovery,
+        };
 
-      const newRecords = [...prev.records, newRecord];
+        const newRecords = [...prev.records, newRecord];
 
-      // Check for new badges
-      const newBadges = [...prev.earnedBadges];
+        // Check for new badges
+        const newBadges = [...prev.earnedBadges];
 
-      // Count-based badges
-      if (newRecords.length >= 1 && !newBadges.includes('first-discovery')) {
-        newBadges.push('first-discovery');
-      }
-      if (newRecords.length >= 10 && !newBadges.includes('explorer-10')) {
-        newBadges.push('explorer-10');
-      }
-      if (newRecords.length >= 50 && !newBadges.includes('connoisseur-50')) {
-        newBadges.push('connoisseur-50');
-      }
-      if (newRecords.length >= 100 && !newBadges.includes('veteran-100')) {
-        newBadges.push('veteran-100');
-      }
+        // Count-based badges
+        if (newRecords.length >= 1 && !newBadges.includes('first-discovery')) {
+          newBadges.push('first-discovery');
+        }
+        if (newRecords.length >= 10 && !newBadges.includes('explorer-10')) {
+          newBadges.push('explorer-10');
+        }
+        if (newRecords.length >= 50 && !newBadges.includes('connoisseur-50')) {
+          newBadges.push('connoisseur-50');
+        }
+        if (newRecords.length >= 100 && !newBadges.includes('veteran-100')) {
+          newBadges.push('veteran-100');
+        }
 
-      // Early bird badge - check if release is within 1 week
-      if (releaseDate) {
-        const release = new Date(releaseDate);
-        const daysSinceRelease = (now.getTime() - release.getTime()) / (1000 * 60 * 60 * 24);
-        if (daysSinceRelease <= 7 && daysSinceRelease >= 0) {
-          const earlyBirdCount = newRecords.filter(r => {
-            const disc = new Date(r.discoveredAt);
-            // This is a simplified check - in production you'd store releaseDate per record
-            return (disc.getTime() - new Date(r.discoveredAt).getTime()) / (1000 * 60 * 60 * 24) <= 7;
-          }).length;
-          if (earlyBirdCount >= 5 && !newBadges.includes('early-bird-5')) {
-            newBadges.push('early-bird-5');
+        // Early bird badge - check if release is within 1 week
+        if (releaseDate) {
+          const release = new Date(releaseDate);
+          const daysSinceRelease = (now.getTime() - release.getTime()) / (1000 * 60 * 60 * 24);
+          if (daysSinceRelease <= 7 && daysSinceRelease >= 0) {
+            const earlyBirdCount = newRecords.filter((r) => {
+              const disc = new Date(r.discoveredAt);
+              // This is a simplified check - in production you'd store releaseDate per record
+              return (disc.getTime() - new Date(r.discoveredAt).getTime()) / (1000 * 60 * 60 * 24) <= 7;
+            }).length;
+            if (earlyBirdCount >= 5 && !newBadges.includes('early-bird-5')) {
+              newBadges.push('early-bird-5');
+            }
           }
         }
-      }
 
-      // Multi-platform badge
-      const uniqueAsps = new Set(newRecords.map(r => r.aspName));
-      if (uniqueAsps.size >= 3 && !newBadges.includes('multi-platform')) {
-        newBadges.push('multi-platform');
-      }
+        // Multi-platform badge
+        const uniqueAsps = new Set(newRecords.map((r) => r.aspName));
+        if (uniqueAsps.size >= 3 && !newBadges.includes('multi-platform')) {
+          newBadges.push('multi-platform');
+        }
 
-      // Weekly streak badge
-      if (newStreak >= 4 && !newBadges.includes('weekly-streak')) {
-        newBadges.push('weekly-streak');
-      }
+        // Weekly streak badge
+        if (newStreak >= 4 && !newBadges.includes('weekly-streak')) {
+          newBadges.push('weekly-streak');
+        }
 
-      const newData: DiscoveryData = {
-        records: newRecords,
-        earnedBadges: newBadges,
-        weeklyStreak: newStreak,
-        lastWeekViewed: currentWeek,
-      };
+        const newData: DiscoveryData = {
+          records: newRecords,
+          earnedBadges: newBadges,
+          weeklyStreak: newStreak,
+          lastWeekViewed: currentWeek,
+        };
 
-      saveData(newData);
-      return newData;
-    });
-  }, [saveData]);
+        saveData(newData);
+        return newData;
+      });
+    },
+    [saveData],
+  );
 
   // Calculate badge progress
   const badgesWithProgress = useMemo((): Badge[] => {
-    return BADGE_DEFINITIONS.map(badge => {
+    return BADGE_DEFINITIONS.map((badge) => {
       const isEarned = data.earnedBadges.includes(badge.id);
       let progress = 0;
 
@@ -317,7 +314,7 @@ export function useDiscoveryBadge() {
           progress = Math.min(100, (data.records.length / badge.requirement) * 100);
           break;
         case 'multi-platform':
-          const uniqueAsps = new Set(data.records.map(r => r.aspName));
+          const uniqueAsps = new Set(data.records.map((r) => r.aspName));
           progress = Math.min(100, (uniqueAsps.size / badge.requirement) * 100);
           break;
         case 'weekly-streak':
@@ -337,13 +334,16 @@ export function useDiscoveryBadge() {
     });
   }, [data]);
 
-  const stats = useMemo(() => ({
-    totalDiscoveries: data.records.length,
-    earnedBadgesCount: data.earnedBadges.length,
-    weeklyStreak: data.weeklyStreak,
-    uniquePlatforms: new Set(data.records.map(r => r.aspName)).size,
-    recentDiscoveries: data.records.slice(-5).reverse(),
-  }), [data]);
+  const stats = useMemo(
+    () => ({
+      totalDiscoveries: data.records.length,
+      earnedBadgesCount: data.earnedBadges.length,
+      weeklyStreak: data.weeklyStreak,
+      uniquePlatforms: new Set(data.records.map((r) => r.aspName)).size,
+      recentDiscoveries: data.records.slice(-5).reverse(),
+    }),
+    [data],
+  );
 
   return {
     isLoading,

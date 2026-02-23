@@ -11,14 +11,12 @@ interface ImageSearchWrapperProps {
 export default function ImageSearchWrapper({ locale }: ImageSearchWrapperProps) {
   const router = useRouter();
 
-  const handleProductClick = useCallback((productId: string) => {
-    router.push(`/${locale}/products/${productId}`);
-  }, [router, locale]);
-
-  return (
-    <ImageSearch
-      locale={locale}
-      onProductClick={handleProductClick}
-    />
+  const handleProductClick = useCallback(
+    (productId: string) => {
+      router.push(`/${locale}/products/${productId}`);
+    },
+    [router, locale],
   );
+
+  return <ImageSearch locale={locale} onProductClick={handleProductClick} />;
 }

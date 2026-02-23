@@ -133,31 +133,31 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
  * これらのサイトは無修正コンテンツのためブラーを適用
  */
 const DTI_SUBSCRIPTION_DOMAINS = [
-  'caribbeancom.com',      // カリビアンコム
-  'caribbeancompr.com',    // カリビアンコムプレミアム
-  '1pondo.tv',             // 一本道
-  'heyzo.com',             // HEYZO
-  '10musume.com',          // 天然むすめ
-  'pacopacomama.com',      // パコパコママ
-  'hitozuma-giri.com',     // 人妻斬り
-  'nyoshin.com',           // 女体のしんぴ
-  'unkotare.com',          // うんこたれ
-  'av-4610.com',           // AV-4610
-  'av-0230.com',           // H0230
-  'av-e-body.com',         // E-BODY
-  'kin8tengoku.com',       // 金8天国
-  'nozox.com',             // NOZOX
-  '3d-eros.net',           // 3D-EROS
-  'pikkur.com',            // Pikkur
-  'javholic.com',          // JAV Holic
-  'dtiserv',               // DTI共通ドメイン
-  'smovie.',               // smovie系
-  'japanska',              // Japanska
+  'caribbeancom.com', // カリビアンコム
+  'caribbeancompr.com', // カリビアンコムプレミアム
+  '1pondo.tv', // 一本道
+  'heyzo.com', // HEYZO
+  '10musume.com', // 天然むすめ
+  'pacopacomama.com', // パコパコママ
+  'hitozuma-giri.com', // 人妻斬り
+  'nyoshin.com', // 女体のしんぴ
+  'unkotare.com', // うんこたれ
+  'av-4610.com', // AV-4610
+  'av-0230.com', // H0230
+  'av-e-body.com', // E-BODY
+  'kin8tengoku.com', // 金8天国
+  'nozox.com', // NOZOX
+  '3d-eros.net', // 3D-EROS
+  'pikkur.com', // Pikkur
+  'javholic.com', // JAV Holic
+  'dtiserv', // DTI共通ドメイン
+  'smovie.', // smovie系
+  'japanska', // Japanska
 ];
 
 export function isDtiUncensoredSite(url: string): boolean {
   if (!url) return false;
-  return DTI_SUBSCRIPTION_DOMAINS.some(domain => url.includes(domain));
+  return DTI_SUBSCRIPTION_DOMAINS.some((domain) => url.includes(domain));
 }
 
 /**
@@ -180,9 +180,15 @@ export function isSubscriptionSite(provider: string): boolean {
   if (!provider) return false;
   // 月額制サイト（カリビアンコムプレミアムは単品購入なので除外）
   const subscriptionProviders = [
-    'dti', 'japanska',
-    'caribbeancom', '1pondo', 'heyzo',
-    '10musume', 'pacopacomama', 'muramura', 'tokyohot'
+    'dti',
+    'japanska',
+    'caribbeancom',
+    '1pondo',
+    'heyzo',
+    '10musume',
+    'pacopacomama',
+    'muramura',
+    'tokyohot',
     // 注: caribbeancompr（カリビアンコムプレミアム）は単品購入サイトなので含めない
   ];
   return subscriptionProviders.includes(provider);

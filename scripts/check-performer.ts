@@ -28,10 +28,7 @@ async function main() {
   console.log('Performer 61646:', result);
 
   // 3. 最初の5件
-  const first5 = await db
-    .select({ id: performers.id, name: performers.name })
-    .from(performers)
-    .limit(5);
+  const first5 = await db.select({ id: performers.id, name: performers.name }).from(performers).limit(5);
   console.log('First 5:', first5);
 
   // 4. IDの範囲確認
@@ -58,7 +55,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error('Error:', e);
   process.exit(1);
 });

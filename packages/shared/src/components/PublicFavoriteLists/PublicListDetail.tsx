@@ -73,9 +73,7 @@ export function PublicListDetail({
 
   const fetchList = async () => {
     try {
-      const url = userId
-        ? `/api/favorite-lists/${listId}?userId=${userId}`
-        : `/api/favorite-lists/${listId}`;
+      const url = userId ? `/api/favorite-lists/${listId}?userId=${userId}` : `/api/favorite-lists/${listId}`;
       const response = await fetch(url);
 
       if (!response.ok) {
@@ -112,11 +110,15 @@ export function PublicListDetail({
       });
 
       if (response.ok) {
-        setList((prev) => prev ? {
-          ...prev,
-          userLiked: !prev.userLiked,
-          likeCount: prev.userLiked ? prev.likeCount - 1 : prev.likeCount + 1,
-        } : null);
+        setList((prev) =>
+          prev
+            ? {
+                ...prev,
+                userLiked: !prev.userLiked,
+                likeCount: prev.userLiked ? prev.likeCount - 1 : prev.likeCount + 1,
+              }
+            : null,
+        );
       }
     } finally {
       setIsLiking(false);
@@ -151,7 +153,7 @@ export function PublicListDetail({
 
       if (response.ok) {
         setItems((prev) => prev.filter((item) => item['productId'] !== productId));
-        setList((prev) => prev ? { ...prev, itemCount: prev.itemCount - 1 } : null);
+        setList((prev) => (prev ? { ...prev, itemCount: prev.itemCount - 1 } : null));
         onRemoveItem?.(productId);
       }
     } catch {
@@ -162,7 +164,7 @@ export function PublicListDetail({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
         <span className="ml-2 text-gray-500">{t.loading}</span>
       </div>
     );
@@ -170,12 +172,9 @@ export function PublicListDetail({
 
   if (error || !list) {
     return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 dark:text-gray-400 mb-4">{error || t.notFound}</p>
-        <button
-          onClick={onBack}
-          className="px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700"
-        >
+      <div className="py-12 text-center">
+        <p className="mb-4 text-gray-500 dark:text-gray-400">{error || t.notFound}</p>
+        <button onClick={onBack} className="rounded-lg bg-rose-600 px-4 py-2 text-white hover:bg-rose-700">
           {t.back}
         </button>
       </div>
@@ -191,35 +190,31 @@ export function PublicListDetail({
         <div>
           <button
             onClick={onBack}
-            className="flex items-center gap-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-2"
+            className="mb-2 flex items-center gap-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             {t.back}
           </button>
 
-          <div className="flex items-center gap-2 mb-1">
+          <div className="mb-1 flex items-center gap-2">
             {list['isPublic'] ? (
-              <Globe className="w-5 h-5 text-green-500" />
+              <Globe className="h-5 w-5 text-green-500" />
             ) : (
-              <Lock className="w-5 h-5 text-gray-400" />
+              <Lock className="h-5 w-5 text-gray-400" />
             )}
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-              {list['title']}
-            </h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{list['title']}</h1>
           </div>
 
-          {list['description'] && (
-            <p className="text-gray-600 dark:text-gray-400 mb-2">{list['description']}</p>
-          )}
+          {list['description'] && <p className="mb-2 text-gray-600 dark:text-gray-400">{list['description']}</p>}
 
           <div className="flex items-center gap-4 text-sm text-gray-500">
             <span>{t.items.replace('{count}', String(list.itemCount))}</span>
             <span className="flex items-center gap-1">
-              <Eye className="w-4 h-4" />
+              <Eye className="h-4 w-4" />
               {t.views.replace('{count}', String(list['viewCount']))}
             </span>
             <span className="flex items-center gap-1">
-              <Heart className={`w-4 h-4 ${list.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+              <Heart className={`h-4 w-4 ${list.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
               {t.likes.replace('{count}', String(list['likeCount']))}
             </span>
           </div>
@@ -229,11 +224,11 @@ export function PublicListDetail({
           {list['isPublic'] && (
             <button
               onClick={handleShare}
-              className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 relative"
+              className="relative rounded-lg border border-gray-300 p-2 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700"
             >
-              <Share2 className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              <Share2 className="h-5 w-5 text-gray-600 dark:text-gray-400" />
               {showCopied && (
-                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 text-xs bg-gray-800 text-white px-2 py-1 rounded">
+                <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 rounded bg-gray-800 px-2 py-1 text-xs text-white">
                   {t.copied}
                 </span>
               )}
@@ -244,16 +239,16 @@ export function PublicListDetail({
             <button
               onClick={handleLike}
               disabled={isLiking}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
                 list.userLiked
                   ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
-                  : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  : 'border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700'
               }`}
             >
               {isLiking ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
               ) : (
-                <Heart className={`w-5 h-5 ${list.userLiked ? 'fill-current' : ''}`} />
+                <Heart className={`h-5 w-5 ${list.userLiked ? 'fill-current' : ''}`} />
               )}
             </button>
           )}
@@ -262,20 +257,15 @@ export function PublicListDetail({
 
       {/* Items Grid */}
       {items.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          {t.emptyList}
-        </div>
+        <div className="py-12 text-center text-gray-500 dark:text-gray-400">{t.emptyList}</div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {items.map((item) => (
             <div
               key={item['productId']}
-              className="group relative bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+              className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
             >
-              <button
-                onClick={() => onProductClick(item['productId'])}
-                className="w-full"
-              >
+              <button onClick={() => onProductClick(item['productId'])} className="w-full">
                 {item.product['thumbnailUrl'] ? (
                   <img
                     src={item.product['thumbnailUrl']}
@@ -285,26 +275,24 @@ export function PublicListDetail({
                   />
                 ) : (
                   <div
-                    className="w-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+                    className="flex w-full items-center justify-center bg-gray-200 dark:bg-gray-700"
                     style={{ aspectRatio: '3/4' }}
                   >
                     <span className="text-gray-400">No Image</span>
                   </div>
                 )}
                 <div className="p-2">
-                  <p className="text-sm text-gray-900 dark:text-white line-clamp-2">
-                    {item.product['title']}
-                  </p>
+                  <p className="line-clamp-2 text-sm text-gray-900 dark:text-white">{item.product['title']}</p>
                 </div>
               </button>
 
               {isOwner && (
                 <button
                   onClick={() => handleRemoveItem(item['productId'])}
-                  className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="absolute top-2 right-2 rounded-full bg-red-500 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100"
                   title={t.removeItem}
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               )}
             </div>

@@ -83,7 +83,7 @@ export function createCursorFromProduct(
     duration?: number | null;
     title?: string | null;
   },
-  sortType: CursorSortType = 'releaseDate'
+  sortType: CursorSortType = 'releaseDate',
 ): CursorData {
   const id = typeof product['id'] === 'string' ? parseInt(product['id'], 10) : product['id'];
 
@@ -148,7 +148,7 @@ const SORT_TYPE_TO_COLUMN: Record<CursorSortType, string> = {
  */
 export function buildCursorCondition(
   cursor: CursorData,
-  sortOrder: 'desc' | 'asc' = 'desc'
+  sortOrder: 'desc' | 'asc' = 'desc',
 ): { condition: string; values: (string | number | null)[] } {
   const sortType = cursor.type || 'releaseDate';
   const column = SORT_TYPE_TO_COLUMN[sortType];
@@ -219,19 +219,17 @@ export function buildCursorCondition(
  * @param sortType ソートタイプ（デフォルト: 'releaseDate'）
  * @returns 次のカーソル（なければnull）
  */
-export function getNextCursor<T extends {
-  id: number | string;
-  releaseDate?: Date | string | null;
-  price?: number | null;
-  averageRating?: number | null;
-  reviewCount?: number | null;
-  duration?: number | null;
-  title?: string | null;
-}>(
-  items: T[],
-  limit: number,
-  sortType: CursorSortType = 'releaseDate'
-): ProductCursor | null {
+export function getNextCursor<
+  T extends {
+    id: number | string;
+    releaseDate?: Date | string | null;
+    price?: number | null;
+    averageRating?: number | null;
+    reviewCount?: number | null;
+    duration?: number | null;
+    title?: string | null;
+  },
+>(items: T[], limit: number, sortType: CursorSortType = 'releaseDate'): ProductCursor | null {
   if (items.length < limit) {
     // これ以上データがない
     return null;

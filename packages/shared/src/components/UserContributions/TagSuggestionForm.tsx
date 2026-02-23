@@ -90,7 +90,7 @@ export function TagSuggestionForm({
 
   if (!userId) {
     return (
-      <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-3 text-center text-sm">
+      <div className="rounded-lg bg-gray-50 p-3 text-center text-sm dark:bg-gray-800">
         <p className="text-gray-600 dark:text-gray-400">{t.loginRequired}</p>
       </div>
     );
@@ -99,7 +99,7 @@ export function TagSuggestionForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div className="flex items-center gap-2">
-        <Tag className="w-5 h-5 text-gray-500" />
+        <Tag className="h-5 w-5 text-gray-500" />
         <h4 className="font-medium text-gray-900 dark:text-white">{t.title}</h4>
       </div>
 
@@ -110,25 +110,21 @@ export function TagSuggestionForm({
           onChange={(e) => setTagName(e.target.value)}
           placeholder={t.placeholder}
           maxLength={50}
-          className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-rose-500 focus:border-transparent text-sm"
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
         <button
           type="submit"
           disabled={isSubmitting || tagName.trim().length < 2}
-          className="flex items-center gap-1 px-4 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors text-sm"
+          className="flex items-center gap-1 rounded-lg bg-rose-600 px-4 py-2 text-sm text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-400"
         >
-          {isSubmitting ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Plus className="w-4 h-4" />
-          )}
+          {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           {isSubmitting ? t.submitting : t.submit}
         </button>
       </div>
 
       {message && (
         <div
-          className={`p-2 rounded text-sm ${
+          className={`rounded p-2 text-sm ${
             message.type === 'success'
               ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
               : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'

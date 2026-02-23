@@ -32,9 +32,7 @@ const mockActresses = [
   },
 ];
 
-const mockFeaturedActresses = [
-  mockActresses[0],
-];
+const mockFeaturedActresses = [mockActresses[0]];
 
 describe('Actresses API Handler Integration', () => {
   let mockGetActresses: ReturnType<typeof vi.fn>;
@@ -72,7 +70,7 @@ describe('Actresses API Handler Integration', () => {
         expect.objectContaining({
           limit: 48, // デフォルト
           offset: 0,
-        })
+        }),
       );
     });
 
@@ -86,7 +84,7 @@ describe('Actresses API Handler Integration', () => {
         expect.objectContaining({
           limit: 24,
           offset: 20,
-        })
+        }),
       );
     });
 
@@ -99,7 +97,7 @@ describe('Actresses API Handler Integration', () => {
       expect(mockGetActresses).toHaveBeenCalledWith(
         expect.objectContaining({
           query: 'テスト',
-        })
+        }),
       );
     });
 
@@ -112,9 +110,9 @@ describe('Actresses API Handler Integration', () => {
       expect(mockGetActresses).toHaveBeenCalledWith(
         expect.objectContaining({
           ids: [1, 2, 3],
-          limit: 3,  // IDs指定時はlimit=ids.length
+          limit: 3, // IDs指定時はlimit=ids.length
           offset: 0, // IDs指定時はoffset=0
-        })
+        }),
       );
     });
   });

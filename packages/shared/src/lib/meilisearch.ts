@@ -89,38 +89,27 @@ export async function initializeProductsIndex() {
   ]);
 
   // フィルタリング可能属性を設定
-  await index.updateFilterableAttributes([
-    'providers',
-    'performerIds',
-    'tagIds',
-    'price',
-    'rating',
-    'releaseDate',
-  ]);
+  await index.updateFilterableAttributes(['providers', 'performerIds', 'tagIds', 'price', 'rating', 'releaseDate']);
 
   // ソート可能属性を設定
-  await index.updateSortableAttributes([
-    'releaseDate',
-    'price',
-    'rating',
-  ]);
+  await index.updateSortableAttributes(['releaseDate', 'price', 'rating']);
 
   // ランキングルールを設定（関連性重視）
   await index.updateRankingRules([
-    'words',      // マッチする単語数
-    'typo',       // タイポ許容度
-    'proximity',  // 単語間の距離
-    'attribute',  // 属性の重要度
-    'sort',       // ソート
-    'exactness',  // 完全一致度
+    'words', // マッチする単語数
+    'typo', // タイポ許容度
+    'proximity', // 単語間の距離
+    'attribute', // 属性の重要度
+    'sort', // ソート
+    'exactness', // 完全一致度
   ]);
 
   // タイポ許容設定
   await index.updateTypoTolerance({
     enabled: true,
     minWordSizeForTypos: {
-      oneTypo: 4,   // 4文字以上で1文字のタイポ許容
-      twoTypos: 8,  // 8文字以上で2文字のタイポ許容
+      oneTypo: 4, // 4文字以上で1文字のタイポ許容
+      twoTypos: 8, // 8文字以上で2文字のタイポ許容
     },
   });
 

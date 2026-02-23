@@ -28,7 +28,7 @@ interface PerformerWithProducts {
   productCount: number;
   productTitles: string[];
   genres: string[];
-  productAiReviews: ProductAiReview[];  // 商品のAIレビュー
+  productAiReviews: ProductAiReview[]; // 商品のAIレビュー
 }
 
 async function getPerformersNeedingReview(limit: number = 100): Promise<PerformerWithProducts[]> {
@@ -43,9 +43,7 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
       aiReview: performers.aiReview,
     })
     .from(performers)
-    .where(
-      sql`${performers.aiReview} IS NULL OR ${performers.aiReviewUpdatedAt} < ${thirtyDaysAgo.toISOString()}`
-    )
+    .where(sql`${performers.aiReview} IS NULL OR ${performers.aiReviewUpdatedAt} < ${thirtyDaysAgo.toISOString()}`)
     .orderBy(desc(performers.id))
     .limit(limit);
 
@@ -58,7 +56,7 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
       .select({ aliasName: performerAliases.aliasName })
       .from(performerAliases)
       .where(eq(performerAliases.performerId, performer.id));
-    const aliases = aliasResults.map(a => a.aliasName);
+    const aliases = aliasResults.map((a) => a.aliasName);
 
     // 出演作品を取得（AIレビューも含む）
     const performerProducts = await db
@@ -74,7 +72,7 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
       .limit(20);
 
     // タグ（ジャンル）を取得
-    const productIds = performerProducts.map(p => p.productId);
+    const productIds = performerProducts.map((p) => p.productId);
     let genres: string[] = [];
 
     if (productIds.length > 0) {
@@ -82,12 +80,17 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
         .select({ name: tags.name })
         .from(productTags)
         .innerJoin(tags, eq(productTags.tagId, tags.id))
-        .where(sql`${productTags.productId} IN (${sql.join(productIds.map(id => sql`${id}`), sql`, `)})`)
+        .where(
+          sql`${productTags.productId} IN (${sql.join(
+            productIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})`,
+        )
         .groupBy(tags.name)
         .orderBy(sql`COUNT(*) DESC`)
         .limit(10);
 
-      genres = tagResults.map(t => t.name);
+      genres = tagResults.map((t) => t.name);
     }
 
     // 商品AIレビューを抽出（存在するもののみ）
@@ -111,7 +114,7 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
       aliases: aliases.length > 0 ? aliases : null,
       aiReview: performer.aiReview,
       productCount: performerProducts.length,
-      productTitles: performerProducts.map(p => p.title),
+      productTitles: performerProducts.map((p) => p.title),
       genres,
       productAiReviews,
     });
@@ -120,10 +123,7 @@ async function getPerformersNeedingReview(limit: number = 100): Promise<Performe
   return result;
 }
 
-async function updatePerformerReview(
-  performerId: number,
-  review: GeneratedPerformerReview
-): Promise<void> {
+async function updatePerformerReview(performerId: number, review: GeneratedPerformerReview): Promise<void> {
   // レビューをJSON形式で保存
   const reviewJson = JSON.stringify(review);
 
@@ -141,7 +141,7 @@ async function main() {
 
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 100;
 
   if (dryRun) {
@@ -165,10 +165,14 @@ async function main() {
   for (let i = 0; i < performersToProcess.length; i += BATCH_SIZE) {
     const batch = performersToProcess.slice(i, i + BATCH_SIZE);
 
-    console.log(`\n--- バッチ ${Math.floor(i / BATCH_SIZE) + 1} (${i + 1}〜${Math.min(i + BATCH_SIZE, performersToProcess.length)}/${performersToProcess.length}) ---`);
+    console.log(
+      `\n--- バッチ ${Math.floor(i / BATCH_SIZE) + 1} (${i + 1}〜${Math.min(i + BATCH_SIZE, performersToProcess.length)}/${performersToProcess.length}) ---`,
+    );
 
     for (const performer of batch) {
-      console.log(`\n[${performer.id}] ${performer.name} (${performer.productCount}作品, ${performer.productAiReviews.length}件のAIレビュー)`);
+      console.log(
+        `\n[${performer.id}] ${performer.name} (${performer.productCount}作品, ${performer.productAiReviews.length}件のAIレビュー)`,
+      );
 
       if (performer.productCount === 0) {
         console.log('  → 出演作品がないためスキップ');
@@ -177,9 +181,7 @@ async function main() {
 
       try {
         // 商品AIレビューから説明文を抽出
-        const productDescriptions = performer.productAiReviews
-          .map(r => r.summary)
-          .filter(s => s && s.length > 0);
+        const productDescriptions = performer.productAiReviews.map((r) => r.summary).filter((s) => s && s.length > 0);
 
         // Gemini APIでレビュー生成
         const review = await generatePerformerReview({
@@ -216,13 +218,13 @@ async function main() {
       }
 
       // API制限対策
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     // バッチ間の待機
     if (i + BATCH_SIZE < performersToProcess.length) {
       console.log(`\n${DELAY_BETWEEN_BATCHES / 1000}秒待機中...`);
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
     }
   }
 

@@ -62,29 +62,22 @@ export async function POST(request: NextRequest) {
           status: response.status,
           ok: response.ok,
         };
-      })
+      }),
     );
 
-    const successCount = results.filter(
-      (r) => r.status === 'fulfilled' && r.value.ok
-    ).length;
+    const successCount = results.filter((r) => r.status === 'fulfilled' && r.value.ok).length;
 
     return NextResponse.json({
       success: true,
       submitted: urlsToSubmit.length,
       endpoints: results.map((r) =>
-        r.status === 'fulfilled'
-          ? r.value
-          : { endpoint: 'unknown', status: 'error', ok: false }
+        r.status === 'fulfilled' ? r.value : { endpoint: 'unknown', status: 'error', ok: false },
       ),
       successfulEndpoints: successCount,
     });
   } catch (error) {
     console.error('[IndexNow] Error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 

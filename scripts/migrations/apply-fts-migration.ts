@@ -79,7 +79,6 @@ async function applyFtsMigration() {
 
     console.log('=== Migration Applied Successfully ===\n');
     console.log('Next step: Run scripts/backfill-search-vectors.ts to populate existing data');
-
   } catch (error) {
     console.error('❌ Migration failed:', error);
     throw error;

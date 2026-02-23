@@ -240,11 +240,13 @@ export function createUserCorrectionsDeleteHandler(deps: UserCorrectionsHandlerD
 
       // pending状態の自分の提案のみ削除可能
       const result = await (db['delete'] as CallableFunction)(userCorrections)
-        .where(and(
-          eq((userCorrections as Record<string, unknown>)['id'], correctionId),
-          eq((userCorrections as Record<string, unknown>)['userId'], userId),
-          eq((userCorrections as Record<string, unknown>)['status'], 'pending')
-        ))
+        .where(
+          and(
+            eq((userCorrections as Record<string, unknown>)['id'], correctionId),
+            eq((userCorrections as Record<string, unknown>)['userId'], userId),
+            eq((userCorrections as Record<string, unknown>)['status'], 'pending'),
+          ),
+        )
         .returning();
 
       if (result.length === 0) {

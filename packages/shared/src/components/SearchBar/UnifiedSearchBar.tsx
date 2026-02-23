@@ -3,74 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { localizedHref } from '../../i18n';
-
-// Translations for UnifiedSearchBar
-export const unifiedSearchTranslations = {
-  ja: {
-    placeholder: '作品・女優・画像で検索...',
-    productPlaceholder: '作品名・ID・説明文で検索',
-    actressPlaceholder: '女優名・プロフィールで検索',
-    imagePlaceholder: '画像URLを貼り付けて類似検索',
-    aiPlaceholder: '自然言語で検索（例：明るい雰囲気の巨乳作品）',
-    shortcutHint: '/',
-    clear: 'クリア',
-    modeProduct: '作品',
-    modeActress: '女優',
-    modeImage: '画像',
-    modeAi: 'AI',
-    search: '検索',
-    dropImageHint: '画像をドロップまたはURLを貼り付け',
-    aiAnalyzing: 'AIが解析中...',
-  },
-  en: {
-    placeholder: 'Search products, actresses, images...',
-    productPlaceholder: 'Search by title, ID, description',
-    actressPlaceholder: 'Search by actress name, profile',
-    imagePlaceholder: 'Paste image URL for similar search',
-    aiPlaceholder: 'Search with natural language (e.g., busty with bright atmosphere)',
-    shortcutHint: '/',
-    clear: 'Clear',
-    modeProduct: 'Product',
-    modeActress: 'Actress',
-    modeImage: 'Image',
-    modeAi: 'AI',
-    search: 'Search',
-    dropImageHint: 'Drop image or paste URL',
-    aiAnalyzing: 'AI analyzing...',
-  },
-  zh: {
-    placeholder: '搜索作品、女优、图片...',
-    productPlaceholder: '按标题、ID、描述搜索',
-    actressPlaceholder: '按女优名、简介搜索',
-    imagePlaceholder: '粘贴图片URL进行相似搜索',
-    aiPlaceholder: '用自然语言搜索（例：氛围明亮的巨乳作品）',
-    shortcutHint: '/',
-    clear: '清除',
-    modeProduct: '作品',
-    modeActress: '女优',
-    modeImage: '图片',
-    modeAi: 'AI',
-    search: '搜索',
-    dropImageHint: '拖放图片或粘贴URL',
-    aiAnalyzing: 'AI分析中...',
-  },
-  ko: {
-    placeholder: '작품, 여배우, 이미지 검색...',
-    productPlaceholder: '제목, ID, 설명으로 검색',
-    actressPlaceholder: '여배우 이름, 프로필로 검색',
-    imagePlaceholder: '이미지 URL을 붙여넣어 유사 검색',
-    aiPlaceholder: '자연어로 검색 (예: 밝은 분위기의 거유 작품)',
-    shortcutHint: '/',
-    clear: '지우기',
-    modeProduct: '작품',
-    modeActress: '여배우',
-    modeImage: '이미지',
-    modeAi: 'AI',
-    search: '검색',
-    dropImageHint: '이미지를 드롭하거나 URL을 붙여넣기',
-    aiAnalyzing: 'AI 분석 중...',
-  },
-} as const;
+import { getTranslation, unifiedSearchTranslations } from '../../lib/translations';
 
 export type SearchMode = 'product' | 'actress' | 'image' | 'ai';
 export type SearchBarTheme = 'dark' | 'light';
@@ -110,23 +43,32 @@ const themeStyles = {
 // 検索モードアイコン
 const ModeIcons = {
   product: (
-    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
       <path d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
     </svg>
   ),
   actress: (
-    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
     </svg>
   ),
   image: (
-    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
-      <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+    <svg className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+      <path
+        fillRule="evenodd"
+        d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z"
+        clipRule="evenodd"
+      />
     </svg>
   ),
   ai: (
-    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+      />
     </svg>
   ),
 };
@@ -145,7 +87,7 @@ export function UnifiedSearchBar({
   const [showModeSelector, setShowModeSelector] = useState(false);
   const [showShortcutHint, setShowShortcutHint] = useState(true);
 
-  const t = unifiedSearchTranslations[locale as keyof typeof unifiedSearchTranslations] || unifiedSearchTranslations.ja;
+  const t = getTranslation(unifiedSearchTranslations, locale);
   const styles = themeStyles[theme];
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -217,79 +159,88 @@ export function UnifiedSearchBar({
   }, []);
 
   // 検索実行
-  const executeSearch = useCallback(async (searchQuery: string) => {
-    if (!searchQuery.trim()) return;
+  const executeSearch = useCallback(
+    async (searchQuery: string) => {
+      if (!searchQuery.trim()) return;
 
-    setIsSearching(true);
-    try {
-      switch (mode) {
-        case 'product':
-          await onProductSearch(searchQuery.trim());
-          break;
-        case 'actress':
-          onActressSearch(searchQuery.trim());
-          break;
-        case 'image':
-          // 画像検索ページにリダイレクト
-          const imageUrl = searchQuery.trim();
-          if (imageUrl.startsWith('http')) {
-            router.push(localizedHref(`/search/image?url=${encodeURIComponent(imageUrl)}`, locale));
-          } else {
-            router.push(localizedHref('/search/image', locale));
-          }
-          break;
-        case 'ai':
-          // AI検索APIを呼び出し
-          try {
-            const response = await fetch('/api/search/ai', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ query: searchQuery.trim(), locale }),
-            });
-            if (response.ok) {
-              const data = await response.json();
-              if (data.success && data.redirect) {
-                router.push(data.redirect);
-              } else if (data.success && data.searchParams) {
-                // 検索パラメータでリダイレクト
-                const params = new URLSearchParams();
-                Object.entries(data.searchParams).forEach(([key, value]) => {
-                  if (Array.isArray(value)) {
-                    value.forEach(v => params.append(key, v));
-                  } else if (value) {
-                    params.set(key, value as string);
-                  }
-                });
-                router.push(localizedHref(`/products?${params.toString()}`, locale));
-              }
+      setIsSearching(true);
+      try {
+        switch (mode) {
+          case 'product':
+            await onProductSearch(searchQuery.trim());
+            break;
+          case 'actress':
+            onActressSearch(searchQuery.trim());
+            break;
+          case 'image':
+            // 画像検索ページにリダイレクト
+            const imageUrl = searchQuery.trim();
+            if (imageUrl.startsWith('http')) {
+              router.push(localizedHref(`/search/image?url=${encodeURIComponent(imageUrl)}`, locale));
+            } else {
+              router.push(localizedHref('/search/image', locale));
             }
-          } catch (err) {
-            console.error('[AI Search] Error:', err);
-          }
-          break;
+            break;
+          case 'ai':
+            // AI検索APIを呼び出し
+            try {
+              const response = await fetch('/api/search/ai', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: searchQuery.trim(), locale }),
+              });
+              if (response.ok) {
+                const data = await response.json();
+                if (data.success && data.redirect) {
+                  router.push(data.redirect);
+                } else if (data.success && data.searchParams) {
+                  // 検索パラメータでリダイレクト
+                  const params = new URLSearchParams();
+                  Object.entries(data.searchParams).forEach(([key, value]) => {
+                    if (Array.isArray(value)) {
+                      value.forEach((v) => params.append(key, v));
+                    } else if (value) {
+                      params.set(key, value as string);
+                    }
+                  });
+                  router.push(localizedHref(`/products?${params.toString()}`, locale));
+                }
+              }
+            } catch (err) {
+              console.error('[AI Search] Error:', err);
+            }
+            break;
+        }
+      } finally {
+        setIsSearching(false);
       }
-    } finally {
-      setIsSearching(false);
-    }
-  }, [mode, onProductSearch, onActressSearch, router, locale]);
+    },
+    [mode, onProductSearch, onActressSearch, router, locale],
+  );
 
   // 入力ハンドラ（デバウンス付き）
-  const handleChange = useCallback((value: string) => {
-    setQuery(value);
+  const handleChange = useCallback(
+    (value: string) => {
+      setQuery(value);
 
-    if (debounceRef.current) {
-      clearTimeout(debounceRef.current);
-    }
-
-    // 画像モードとAIモードの場合はデバウンスなしで即時実行しない（Enterキーで実行）
-    if (mode === 'image' || mode === 'ai') return;
-
-    debounceRef.current = setTimeout(async () => {
-      if (value.trim().length >= 2) {
-        await executeSearch(value);
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
       }
-    }, mode === 'actress' ? 500 : 700);
-  }, [mode, executeSearch]);
+
+      // 画像モードとAIモードの場合はデバウンスなしで即時実行しない（Enterキーで実行）
+      if (mode === 'image' || mode === 'ai') return;
+
+      debounceRef.current = setTimeout(
+        async () => {
+          if (value.trim().length >= 2) {
+            await executeSearch(value);
+          }
+        },
+        mode === 'actress' ? 500 : 700,
+      );
+    },
+    [mode, executeSearch],
+  );
 
   // Enterキーで検索実行
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -308,26 +259,34 @@ export function UnifiedSearchBar({
 
   return (
     <div ref={containerRef} className="relative w-full">
-      <div className={`flex items-center rounded-lg border focus-within:ring-2 focus-within:ring-rose-500 focus-within:border-transparent ${styles.container}`}>
+      <div
+        className={`flex items-center rounded-lg border focus-within:border-transparent focus-within:ring-2 focus-within:ring-rose-500 ${styles.container}`}
+      >
         {/* モード切り替えボタン */}
         <div className="relative">
           <button
             type="button"
             onClick={() => setShowModeSelector(!showModeSelector)}
-            className={`flex items-center gap-1 px-2 py-2 rounded-l-lg transition-colors ${styles.modeButtonActive}`}
+            className={`flex items-center gap-1 rounded-l-lg px-2 py-2 transition-colors ${styles.modeButtonActive}`}
             title={t[`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}` as keyof typeof t] as string}
           >
             {ModeIcons[mode]}
             {!compact && (
-              <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+              <svg className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
               </svg>
             )}
           </button>
 
           {/* モードセレクタドロップダウン */}
           {showModeSelector && (
-            <div className={`absolute top-full left-0 mt-1 py-1 min-w-[120px] rounded-lg shadow-lg border z-50 ${styles.dropdown}`}>
+            <div
+              className={`absolute top-full left-0 z-50 mt-1 min-w-[120px] rounded-lg border py-1 shadow-lg ${styles.dropdown}`}
+            >
               {(['product', 'actress', 'image', 'ai'] as SearchMode[]).map((m) => (
                 <button
                   key={m}
@@ -338,7 +297,7 @@ export function UnifiedSearchBar({
                     setQuery('');
                     inputRef.current?.focus();
                   }}
-                  className={`w-full flex items-center gap-2 px-3 py-2 text-sm transition-colors ${
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-sm transition-colors ${
                     mode === m ? styles.modeButtonActive : styles.modeButton
                   }`}
                 >
@@ -367,7 +326,7 @@ export function UnifiedSearchBar({
         {/* ショートカットヒント / クリアボタン / スピナー */}
         <div className="flex items-center pr-2">
           {isSearching ? (
-            <div className={`animate-spin rounded-full h-4 w-4 border-b-2 ${styles.spinnerBorder}`} />
+            <div className={`h-4 w-4 animate-spin rounded-full border-b-2 ${styles.spinnerBorder}`} />
           ) : query ? (
             <button
               type="button"
@@ -378,12 +337,12 @@ export function UnifiedSearchBar({
               className={`p-1 text-gray-400 ${styles.clearHover} transition-colors`}
               aria-label={t.clear}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           ) : showShortcutHint && !compact ? (
-            <kbd className={`hidden sm:inline px-1.5 py-0.5 text-xs rounded font-mono ${styles.shortcutBg}`}>
+            <kbd className={`hidden rounded px-1.5 py-0.5 font-mono text-xs sm:inline ${styles.shortcutBg}`}>
               {t.shortcutHint}
             </kbd>
           ) : null}
@@ -394,11 +353,16 @@ export function UnifiedSearchBar({
               type="button"
               onClick={() => executeSearch(query)}
               disabled={isSearching}
-              className="ml-1 p-1.5 rounded bg-rose-600 text-white hover:bg-rose-700 transition-colors disabled:opacity-50"
+              className="ml-1 rounded bg-rose-600 p-1.5 text-white transition-colors hover:bg-rose-700 disabled:opacity-50"
               aria-label={t.search}
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
               </svg>
             </button>
           )}

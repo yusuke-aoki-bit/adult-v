@@ -70,14 +70,12 @@ async function main() {
   let targetTasks = MAINTENANCE_TASKS;
 
   if (taskFilter !== 'all') {
-    targetTasks = MAINTENANCE_TASKS.filter(t =>
-      t.name.toLowerCase().replace(/\s+/g, '-').includes(taskFilter)
-    );
+    targetTasks = MAINTENANCE_TASKS.filter((t) => t.name.toLowerCase().replace(/\s+/g, '-').includes(taskFilter));
   }
 
   if (targetTasks.length === 0) {
     console.error(`No tasks found for filter: ${taskFilter}`);
-    console.log('Available tasks:', MAINTENANCE_TASKS.map(t => t.name).join(', '));
+    console.log('Available tasks:', MAINTENANCE_TASKS.map((t) => t.name).join(', '));
     process.exit(1);
   }
 
@@ -138,8 +136,8 @@ async function main() {
   }
 
   // 全体統計
-  const successTotal = results.filter(r => r.success).length;
-  const failureTotal = results.filter(r => !r.success).length;
+  const successTotal = results.filter((r) => r.success).length;
+  const failureTotal = results.filter((r) => !r.success).length;
 
   console.log('\n----------------------------------------');
   console.log(`Total: ${successTotal} succeeded, ${failureTotal} failed`);

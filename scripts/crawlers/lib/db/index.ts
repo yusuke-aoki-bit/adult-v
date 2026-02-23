@@ -37,7 +37,7 @@ function getDb() {
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // Cloud SQL Proxy経由の場合はSSL不要、それ以外は環境に応じて設定
-        ssl: isCloudSqlProxy ? false : (process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false),
+        ssl: isCloudSqlProxy ? false : process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
         max: 50, // 最大接続数（本番環境での同時リクエスト対応強化）
         min: 10, // 最小接続数（常に10接続をプールに保持）
         idleTimeoutMillis: 60000, // アイドル接続のタイムアウト（60秒）

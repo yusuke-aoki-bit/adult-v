@@ -42,20 +42,38 @@ const GRID_CLASSES = 'grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2';
 const SKELETON_CLASSES = 'animate-pulse bg-gray-200 rounded-lg aspect-[2/3]';
 
 const sectionTexts = {
-  ja: { noHistory: '閲覧履歴がありません', recentActresses: '最近見た女優', recentProducts: '最近見た作品', saleActresses: 'セール中の女優', saleProducts: 'セール中の作品', recommendationHint: '閲覧履歴に基づいたおすすめを表示します' },
-  en: { noHistory: 'No viewing history', recentActresses: 'Recent actresses', recentProducts: 'Recent products', saleActresses: 'Actresses on sale', saleProducts: 'Products on sale', recommendationHint: 'Showing recommendations based on your history' },
+  ja: {
+    noHistory: '閲覧履歴がありません',
+    recentActresses: '最近見た女優',
+    recentProducts: '最近見た作品',
+    saleActresses: 'セール中の女優',
+    saleProducts: 'セール中の作品',
+    recommendationHint: '閲覧履歴に基づいたおすすめを表示します',
+  },
+  en: {
+    noHistory: 'No viewing history',
+    recentActresses: 'Recent actresses',
+    recentProducts: 'Recent products',
+    saleActresses: 'Actresses on sale',
+    saleProducts: 'Products on sale',
+    recommendationHint: 'Showing recommendations based on your history',
+  },
 } as const;
-function getSectionText(locale: string) { return sectionTexts[locale as keyof typeof sectionTexts] || sectionTexts.ja; }
+function getSectionText(locale: string) {
+  return sectionTexts[locale as keyof typeof sectionTexts] || sectionTexts.ja;
+}
 
 // 最近見た作品コンテンツ
 function RecentlyViewedContent({ locale }: { locale: string }) {
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
-  const [products, setProducts] = useState<Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    performers?: Array<{ id: number; name: string }>;
-  }>>([]);
+  const [products, setProducts] = useState<
+    Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      performers?: Array<{ id: number; name: string }>;
+    }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
 
@@ -66,14 +84,14 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const ids = recentlyViewed.slice(0, 8).map(item => item.id);
+        const ids = recentlyViewed.slice(0, 8).map((item) => item.id);
         const response = await fetch(`/api/products?ids=${ids.join(',')}`);
         if (response.ok && !cancelled) {
           const data = await response.json();
           const productList = Array.isArray(data.products) ? data.products : [];
           // 閲覧順を維持
           const productMap = new Map(productList.map((p: { id: number }) => [String(p.id), p]));
-          const ordered = ids.map(id => productMap.get(id)).filter(Boolean);
+          const ordered = ids.map((id) => productMap.get(id)).filter(Boolean);
           setProducts(ordered as typeof products);
         }
       } catch (error) {
@@ -86,11 +104,13 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       }
     };
     fetchProducts();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [historyLoading, recentlyViewed, hasFetched]);
 
   if (historyLoading || recentlyViewed.length === 0) {
-    return <p className="text-gray-500 text-sm">{getSectionText(locale).noHistory}</p>;
+    return <p className="text-sm text-gray-500">{getSectionText(locale).noHistory}</p>;
   }
 
   if (loading) {
@@ -105,8 +125,8 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
 
   // 女優を抽出（重複排除）
   const actressMap = new Map<number, { id: number; name: string }>();
-  products.forEach(product => {
-    product.performers?.forEach(performer => {
+  products.forEach((product) => {
+    product.performers?.forEach((performer) => {
       if (!actressMap.has(performer.id)) {
         actressMap.set(performer.id, performer);
       }
@@ -119,7 +139,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-pink-500 mb-2">{getSectionText(locale).recentActresses}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-pink-500">{getSectionText(locale).recentActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -137,7 +157,7 @@ function RecentlyViewedContent({ locale }: { locale: string }) {
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-500 mb-2">{getSectionText(locale).recentProducts}</h4>
+        <h4 className="mb-2 text-xs font-semibold text-gray-500">{getSectionText(locale).recentProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.map((product) => (
             <ProductCardBase
@@ -164,8 +184,8 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
 
   // 女優を抽出（重複排除）
   const actressMap = new Map<number, { id: number; name: string }>();
-  products.forEach(product => {
-    product.performers?.forEach(performer => {
+  products.forEach((product) => {
+    product.performers?.forEach((performer) => {
       if (!actressMap.has(performer.id)) {
         actressMap.set(performer.id, performer);
       }
@@ -178,7 +198,7 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-red-500 mb-2">{getSectionText(locale).saleActresses}</h4>
+          <h4 className="mb-2 text-xs font-semibold text-red-500">{getSectionText(locale).saleActresses}</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -196,7 +216,7 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
       )}
       {/* 作品 */}
       <div>
-        <h4 className="text-xs font-semibold text-gray-500 mb-2">{getSectionText(locale).saleProducts}</h4>
+        <h4 className="mb-2 text-xs font-semibold text-gray-500">{getSectionText(locale).saleProducts}</h4>
         <div className={GRID_CLASSES}>
           {products.slice(0, 8).map((product) => (
             <div key={product.productId} className="relative">
@@ -211,7 +231,7 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
                 theme="light"
               />
               {/* 割引バッジ */}
-              <div className="absolute top-1 left-1 bg-red-600 text-white text-[10px] font-bold px-1 py-0.5 rounded z-10">
+              <div className="absolute top-1 left-1 z-10 rounded bg-red-600 px-1 py-0.5 text-[10px] font-bold text-white">
                 -{product.discountPercent}%
               </div>
             </div>
@@ -225,17 +245,21 @@ function SaleProductsContent({ products, locale }: { products: SaleProduct[]; lo
 // あなたへのおすすめコンテンツ
 function RecommendationsContent({ locale }: { locale: string }) {
   const { items: recentlyViewed, isLoading: historyLoading } = useRecentlyViewed();
-  const [products, setProducts] = useState<Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    releaseDate: string | null;
-  }>>([]);
-  const [actresses, setActresses] = useState<Array<{
-    id: number;
-    name: string;
-    thumbnailUrl: string | null;
-  }>>([]);
+  const [products, setProducts] = useState<
+    Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      releaseDate: string | null;
+    }>
+  >([]);
+  const [actresses, setActresses] = useState<
+    Array<{
+      id: number;
+      name: string;
+      thumbnailUrl: string | null;
+    }>
+  >([]);
   const [loading, setLoading] = useState(false);
   const [hasFetched, setHasFetched] = useState(false);
 
@@ -251,7 +275,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          history: recentlyViewed.slice(0, 10).map(item => ({
+          history: recentlyViewed.slice(0, 10).map((item) => ({
             id: item.id,
             title: item.title,
           })),
@@ -281,7 +305,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
   }, [historyLoading, recentlyViewed.length, fetchRecommendations]);
 
   if (historyLoading || recentlyViewed.length < 1) {
-    return <p className="text-gray-500 text-sm">{getSectionText(locale).recommendationHint}</p>;
+    return <p className="text-sm text-gray-500">{getSectionText(locale).recommendationHint}</p>;
   }
 
   if (loading) {
@@ -299,7 +323,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-purple-500 mb-2">おすすめ女優</h4>
+          <h4 className="mb-2 text-xs font-semibold text-purple-500">おすすめ女優</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -319,7 +343,7 @@ function RecommendationsContent({ locale }: { locale: string }) {
       {/* 作品 */}
       {products.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 mb-2">おすすめ作品</h4>
+          <h4 className="mb-2 text-xs font-semibold text-gray-500">おすすめ作品</h4>
           <div className={GRID_CLASSES}>
             {products.map((product) => (
               <ProductCardBase
@@ -344,17 +368,21 @@ function RecommendationsContent({ locale }: { locale: string }) {
 
 // 今週の注目コンテンツ
 function WeeklyHighlightsContent({ locale: _locale }: { locale: string }) {
-  const [actresses, setActresses] = useState<Array<{
-    id: number;
-    name: string;
-    thumbnailUrl: string | null;
-  }>>([]);
-  const [products, setProducts] = useState<Array<{
-    id: number;
-    title: string;
-    imageUrl: string | null;
-    releaseDate: string | null;
-  }>>([]);
+  const [actresses, setActresses] = useState<
+    Array<{
+      id: number;
+      name: string;
+      thumbnailUrl: string | null;
+    }>
+  >([]);
+  const [products, setProducts] = useState<
+    Array<{
+      id: number;
+      title: string;
+      imageUrl: string | null;
+      releaseDate: string | null;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -364,10 +392,7 @@ function WeeklyHighlightsContent({ locale: _locale }: { locale: string }) {
         if (response.ok) {
           const data = await response.json();
           setActresses(data.trendingActresses?.slice(0, 6) || []);
-          setProducts([
-            ...(data.hotNewReleases?.slice(0, 4) || []),
-            ...(data.rediscoveredClassics?.slice(0, 4) || []),
-          ]);
+          setProducts([...(data.hotNewReleases?.slice(0, 4) || []), ...(data.rediscoveredClassics?.slice(0, 4) || [])]);
         }
       } catch (error) {
         console.error('Failed to fetch weekly highlights:', error);
@@ -393,7 +418,7 @@ function WeeklyHighlightsContent({ locale: _locale }: { locale: string }) {
       {/* 女優 */}
       {actresses.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-amber-500 mb-2">注目の女優</h4>
+          <h4 className="mb-2 text-xs font-semibold text-amber-500">注目の女優</h4>
           <div className={GRID_CLASSES}>
             {actresses.map((actress) => (
               <ActressCardBase
@@ -413,7 +438,7 @@ function WeeklyHighlightsContent({ locale: _locale }: { locale: string }) {
       {/* 作品 */}
       {products.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-gray-500 mb-2">注目の作品</h4>
+          <h4 className="mb-2 text-xs font-semibold text-gray-500">注目の作品</h4>
           <div className={GRID_CLASSES}>
             {products.map((product) => (
               <ProductCardBase
@@ -464,30 +489,32 @@ function TrendingContent({ locale }: { locale: string }) {
     return (
       <div className="space-y-2">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 bg-gray-200 rounded animate-pulse" />
+          <div key={i} className="h-8 animate-pulse rounded bg-gray-200" />
         ))}
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
       {/* ジャンル */}
       {tags.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-pink-500 mb-2">人気ジャンル</h4>
+          <h4 className="mb-2 text-xs font-semibold text-pink-500">人気ジャンル</h4>
           <div className="space-y-1">
             {tags.map((tag, index) => (
               <div
                 key={tag.name}
-                className="flex items-center gap-2 p-2 rounded bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="flex cursor-pointer items-center gap-2 rounded bg-gray-50 p-2 transition-colors hover:bg-gray-100"
               >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  index < 3 ? 'bg-yellow-500 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                    index < 3 ? 'bg-yellow-500 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}
+                >
                   {index + 1}
                 </span>
-                <span className="text-sm text-gray-900 flex-1">{tag.name}</span>
+                <span className="flex-1 text-sm text-gray-900">{tag.name}</span>
                 <span className="text-xs text-gray-500">{tag.count}作品</span>
               </div>
             ))}
@@ -497,19 +524,21 @@ function TrendingContent({ locale }: { locale: string }) {
       {/* 女優 */}
       {performers.length > 0 && (
         <div>
-          <h4 className="text-xs font-semibold text-pink-500 mb-2">人気女優</h4>
+          <h4 className="mb-2 text-xs font-semibold text-pink-500">人気女優</h4>
           <div className="space-y-1">
             {performers.map((performer, index) => (
               <div
                 key={performer.name}
-                className="flex items-center gap-2 p-2 rounded bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer"
+                className="flex cursor-pointer items-center gap-2 rounded bg-gray-50 p-2 transition-colors hover:bg-gray-100"
               >
-                <span className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold ${
-                  index < 3 ? 'bg-yellow-500 text-white' : 'bg-gray-300 text-gray-600'
-                }`}>
+                <span
+                  className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
+                    index < 3 ? 'bg-yellow-500 text-white' : 'bg-gray-300 text-gray-600'
+                  }`}
+                >
                   {index + 1}
                 </span>
-                <span className="text-sm text-gray-900 flex-1">{performer.name}</span>
+                <span className="flex-1 text-sm text-gray-900">{performer.name}</span>
                 <span className="text-xs text-gray-500">{performer.count}作品</span>
               </div>
             ))}
@@ -543,7 +572,7 @@ export function TopPageUpperSections({
         <div id="sale" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Tag className="w-5 h-5" />}
+            icon={<Tag className="h-5 w-5" />}
             title="セール中"
             subtitle="お得な割引商品をチェック"
             theme="light"
@@ -559,7 +588,7 @@ export function TopPageUpperSections({
         <div id="recently-viewed" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Clock className="w-5 h-5" />}
+            icon={<Clock className="h-5 w-5" />}
             title="最近見た作品"
             subtitle="閲覧履歴から"
             theme="light"
@@ -584,15 +613,17 @@ const NEWS_CATEGORY_STYLES: Record<string, { bg: string; text: string; label: st
 
 // ニュースコンテンツ
 function NewsContent({ locale: _locale }: { locale: string }) {
-  const [articles, setArticles] = useState<Array<{
-    id: number;
-    slug: string;
-    category: string;
-    title: string;
-    excerpt: string | null;
-    featured: boolean;
-    published_at: string;
-  }>>([]);
+  const [articles, setArticles] = useState<
+    Array<{
+      id: number;
+      slug: string;
+      category: string;
+      title: string;
+      excerpt: string | null;
+      featured: boolean;
+      published_at: string;
+    }>
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -616,20 +647,20 @@ function NewsContent({ locale: _locale }: { locale: string }) {
     return (
       <div className="space-y-2">
         {[...Array(3)].map((_, i) => (
-          <div key={i} className="h-16 bg-gray-100 rounded-lg animate-pulse" />
+          <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-100" />
         ))}
       </div>
     );
   }
 
   if (articles.length === 0) {
-    return <p className="text-gray-500 text-sm">ニュースはまだありません</p>;
+    return <p className="text-sm text-gray-500">ニュースはまだありません</p>;
   }
 
   return (
     <div className="space-y-3">
       {articles.map((article) => {
-        const style = NEWS_CATEGORY_STYLES[article.category] || NEWS_CATEGORY_STYLES['site_update'];
+        const style = (NEWS_CATEGORY_STYLES[article.category] || NEWS_CATEGORY_STYLES['site_update'])!;
         const publishedDate = new Date(article.published_at).toLocaleDateString('ja-JP', {
           month: 'short',
           day: 'numeric',
@@ -638,31 +669,19 @@ function NewsContent({ locale: _locale }: { locale: string }) {
         return (
           <div
             key={article.id}
-            className={`block p-3 rounded-lg ${
-              article.featured
-                ? 'bg-yellow-50 border border-yellow-200'
-                : 'bg-gray-50'
+            className={`block rounded-lg p-3 ${
+              article.featured ? 'border border-yellow-200 bg-yellow-50' : 'bg-gray-50'
             }`}
           >
             <div className="flex items-start gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${style.bg}`}>
-                    {style.label}
-                  </span>
+              <div className="min-w-0 flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className={`rounded px-1.5 py-0.5 text-[10px] font-bold ${style.bg}`}>{style.label}</span>
                   <span className="text-xs text-gray-400">{publishedDate}</span>
-                  {article.featured && (
-                    <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                  )}
+                  {article.featured && <Star className="h-3 w-3 fill-yellow-500 text-yellow-500" />}
                 </div>
-                <h4 className="text-sm font-medium text-gray-900 line-clamp-1">
-                  {article.title}
-                </h4>
-                {article.excerpt && (
-                  <p className="text-xs text-gray-500 line-clamp-2 mt-1">
-                    {article.excerpt}
-                  </p>
-                )}
+                <h4 className="line-clamp-1 text-sm font-medium text-gray-900">{article.title}</h4>
+                {article.excerpt && <p className="mt-1 line-clamp-2 text-xs text-gray-500">{article.excerpt}</p>}
               </div>
             </div>
           </div>
@@ -699,7 +718,7 @@ export function TopPageLowerSections({
         <div id="recommendations" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Sparkles className="w-5 h-5" />}
+            icon={<Sparkles className="h-5 w-5" />}
             title="あなたへのおすすめ"
             subtitle="閲覧履歴に基づくレコメンド"
             theme="light"
@@ -715,7 +734,7 @@ export function TopPageLowerSections({
         <div id="weekly-highlights" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<TrendingUp className="w-5 h-5" />}
+            icon={<TrendingUp className="h-5 w-5" />}
             title="今週の注目"
             subtitle="話題の女優と作品"
             theme="light"
@@ -731,7 +750,7 @@ export function TopPageLowerSections({
         <div id="news" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<Newspaper className="w-5 h-5" />}
+            icon={<Newspaper className="h-5 w-5" />}
             title="ニュース"
             subtitle="最新情報・セール・トレンド"
             theme="light"
@@ -747,7 +766,7 @@ export function TopPageLowerSections({
         <div id="trending" className="scroll-mt-20">
           <TopPageMenuSection
             type="accordion"
-            icon={<BarChart3 className="w-5 h-5" />}
+            icon={<BarChart3 className="h-5 w-5" />}
             title="トレンド分析"
             subtitle="人気ジャンル・女優ランキング"
             theme="light"
@@ -759,7 +778,7 @@ export function TopPageLowerSections({
       )}
 
       {/* 分割線 */}
-      <div className="border-t border-gray-200 my-2" />
+      <div className="my-2 border-t border-gray-200" />
 
       {/* 商品一覧へのリンク */}
       {isSectionVisible('all-products') && (
@@ -767,7 +786,7 @@ export function TopPageLowerSections({
           <TopPageMenuSection
             type="link"
             href={localizedHref('/products', locale)}
-            icon={<Film className="w-5 h-5" />}
+            icon={<Film className="h-5 w-5" />}
             title={t.viewProductList}
             subtitle={t.viewProductListDesc}
             theme="light"
@@ -780,7 +799,7 @@ export function TopPageLowerSections({
         <TopPageMenuSection
           type="link"
           href={localizedHref('/products?uncategorized=true', locale)}
-          icon={<AlertTriangle className="w-5 h-5" />}
+          icon={<AlertTriangle className="h-5 w-5" />}
           title={t.uncategorizedDescription}
           badge={t.uncategorizedCount}
           theme="light"

@@ -79,8 +79,17 @@ describe('ASP to Provider Mapping', () => {
 describe('Provider Metadata', () => {
   describe('providerMeta', () => {
     const providerIds: ProviderId[] = [
-      'fanza', 'mgs', 'duga', 'sokmil', 'fc2', 'b10f', 'japanska',
-      'caribbeancom', 'caribbeancompr', '1pondo', 'heyzo',
+      'fanza',
+      'mgs',
+      'duga',
+      'sokmil',
+      'fc2',
+      'b10f',
+      'japanska',
+      'caribbeancom',
+      'caribbeancompr',
+      '1pondo',
+      'heyzo',
     ];
 
     it('should have metadata for all major providers', () => {
@@ -150,13 +159,13 @@ describe('Alphabet', () => {
 
 describe('Sort Options', () => {
   it('should have release date options', () => {
-    const values = SORT_OPTIONS.map(o => o.value);
+    const values = SORT_OPTIONS.map((o) => o.value);
     expect(values).toContain('releaseDateDesc');
     expect(values).toContain('releaseDateAsc');
   });
 
   it('should have price options', () => {
-    const values = SORT_OPTIONS.map(o => o.value);
+    const values = SORT_OPTIONS.map((o) => o.value);
     expect(values).toContain('priceAsc');
     expect(values).toContain('priceDesc');
   });
@@ -172,7 +181,7 @@ describe('Sort Options', () => {
 
 describe('Price Ranges', () => {
   it('should have an "all" option', () => {
-    const allOption = PRICE_RANGES.find(r => r.value === '');
+    const allOption = PRICE_RANGES.find((r) => r.value === '');
     expect(allOption).toBeDefined();
     expect(allOption!.label).toBe('すべて');
   });

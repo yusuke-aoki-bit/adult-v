@@ -7,7 +7,12 @@ import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { SocialShareButtons, Pagination } from '@adult-v/shared/components';
 import { getSaleProducts, getSaleStats, SaleProduct } from '@/lib/db/queries';
-import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateItemListSchema } from '@/lib/seo';
+import {
+  generateBaseMetadata,
+  generateBreadcrumbSchema,
+  generateCollectionPageSchema,
+  generateItemListSchema,
+} from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 // getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
@@ -29,7 +34,8 @@ const pageTexts = {
     all: 'すべて',
     discount: '割引率',
     noItems: 'セール中の作品がありません',
-    disclaimer: '※ セール情報は各サイトから取得しており、実際の価格・終了時期と異なる場合があります。購入前に必ず各サイトでご確認ください。',
+    disclaimer:
+      '※ セール情報は各サイトから取得しており、実際の価格・終了時期と異なる場合があります。購入前に必ず各サイトでご確認ください。',
     endingSoon: '終了間近',
     endingSoonAlt: '間もなく終了',
     daysLeft: (days: number) => `残り${days}日`,
@@ -52,7 +58,8 @@ const pageTexts = {
     all: 'All',
     discount: 'Discount',
     noItems: 'No items on sale',
-    disclaimer: '※ Sale information is fetched from each site and may differ from actual prices and end dates. Please verify on each site before purchasing.',
+    disclaimer:
+      '※ Sale information is fetched from each site and may differ from actual prices and end dates. Please verify on each site before purchasing.',
     endingSoon: 'Ending soon',
     endingSoonAlt: 'Ending soon',
     daysLeft: (days: number) => `${days} days left`,
@@ -93,11 +100,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     alternates: {
       canonical: `${baseUrl}/sales`,
       languages: {
-        'ja': `${baseUrl}/sales`,
-        'en': `${baseUrl}/sales?hl=en`,
-        'zh': `${baseUrl}/sales?hl=zh`,
+        ja: `${baseUrl}/sales`,
+        en: `${baseUrl}/sales?hl=en`,
+        zh: `${baseUrl}/sales?hl=zh`,
         'zh-TW': `${baseUrl}/sales?hl=zh-TW`,
-        'ko': `${baseUrl}/sales?hl=ko`,
+        ko: `${baseUrl}/sales?hl=ko`,
         'x-default': `${baseUrl}/sales`,
       },
     },
@@ -129,14 +136,11 @@ function formatEndTime(endAt: Date | null, locale: string): string | null {
 // unstable_cacheでDBクエリをキャッシュ（1800秒 = 30分）
 const getCachedSalePageData = unstable_cache(
   async () => {
-    const [allSaleProducts, saleStats] = await Promise.all([
-      getSaleProducts({ limit: 500 }),
-      getSaleStats(),
-    ]);
+    const [allSaleProducts, saleStats] = await Promise.all([getSaleProducts({ limit: 500 }), getSaleStats()]);
     return { allSaleProducts, saleStats };
   },
   ['sales-page-data'],
-  { revalidate: 1800, tags: ['sale-products'] }
+  { revalidate: 1800, tags: ['sale-products'] },
 );
 
 export default async function SalesPage({ params, searchParams }: PageProps) {
@@ -156,10 +160,10 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   // フィルタリング
   let filteredProducts = allSaleProducts;
   if (aspFilter) {
-    filteredProducts = filteredProducts.filter(p => p.aspName.toLowerCase() === aspFilter.toLowerCase());
+    filteredProducts = filteredProducts.filter((p) => p.aspName.toLowerCase() === aspFilter.toLowerCase());
   }
   if (minDiscount > 0) {
-    filteredProducts = filteredProducts.filter(p => p.discountPercent >= minDiscount);
+    filteredProducts = filteredProducts.filter((p) => p.discountPercent >= minDiscount);
   }
 
   // ページネーション
@@ -169,18 +173,20 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   const paginatedProducts = filteredProducts.slice(startIndex, startIndex + perPage);
 
   // ASP別の集計
-  const aspCounts = allSaleProducts.reduce((acc, p) => {
-    acc[p.aspName] = (acc[p.aspName] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const aspCounts = allSaleProducts.reduce(
+    (acc, p) => {
+      acc[p.aspName] = (acc[p.aspName] || 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
 
   // 統計情報を計算
-  const maxDiscount = allSaleProducts.length > 0
-    ? Math.max(...allSaleProducts.map(p => p.discountPercent))
-    : 0;
-  const avgDiscount = allSaleProducts.length > 0
-    ? Math.round(allSaleProducts.reduce((sum, p) => sum + p.discountPercent, 0) / allSaleProducts.length)
-    : 0;
+  const maxDiscount = allSaleProducts.length > 0 ? Math.max(...allSaleProducts.map((p) => p.discountPercent)) : 0;
+  const avgDiscount =
+    allSaleProducts.length > 0
+      ? Math.round(allSaleProducts.reduce((sum, p) => sum + p.discountPercent, 0) / allSaleProducts.length)
+      : 0;
 
   // パンくずリスト
   const breadcrumbItems = [
@@ -213,59 +219,48 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
       <section className="py-4 md:py-6">
         <div className="container mx-auto px-4">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: pt.sales },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: pt.sales }]}
             className="mb-3"
           />
 
           {/* ヘッダー */}
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2 flex items-center gap-2">
+              <h1 className="mb-2 flex items-center gap-2 text-2xl font-bold text-white md:text-3xl">
                 <span className="text-3xl">🔥</span>
                 {pt.onSaleVideos}
               </h1>
-              <p className="text-gray-400">
-                {pt.itemsOnSale(totalCount.toLocaleString())}
-              </p>
+              <p className="text-gray-400">{pt.itemsOnSale(totalCount.toLocaleString())}</p>
             </div>
-            <SocialShareButtons
-              title={pt.onSaleVideosTitle}
-              compact
-              hashtags={['セール', '割引']}
-            />
+            <SocialShareButtons title={pt.onSaleVideosTitle} compact hashtags={['セール', '割引']} />
           </div>
 
           {/* 統計情報 */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className="bg-linear-to-br from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-lg p-4 text-center">
+          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+            <div className="rounded-lg border border-orange-500/30 bg-linear-to-br from-orange-500/20 to-red-500/20 p-4 text-center">
               <p className="text-2xl font-bold text-orange-400">{saleStats.totalSales.toLocaleString()}</p>
               <p className="text-xs text-gray-400">{pt.onSale}</p>
             </div>
-            <div className="bg-linear-to-br from-pink-500/20 to-rose-500/20 border border-pink-500/30 rounded-lg p-4 text-center">
+            <div className="rounded-lg border border-pink-500/30 bg-linear-to-br from-pink-500/20 to-rose-500/20 p-4 text-center">
               <p className="text-2xl font-bold text-pink-400">{maxDiscount}%</p>
               <p className="text-xs text-gray-400">{pt.maxDiscount}</p>
             </div>
-            <div className="bg-linear-to-br from-blue-500/20 to-cyan-500/20 border border-blue-500/30 rounded-lg p-4 text-center">
+            <div className="rounded-lg border border-blue-500/30 bg-linear-to-br from-blue-500/20 to-cyan-500/20 p-4 text-center">
               <p className="text-2xl font-bold text-blue-400">{avgDiscount}%</p>
               <p className="text-xs text-gray-400">{pt.avgDiscount}</p>
             </div>
-            <div className="bg-linear-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 rounded-lg p-4 text-center">
+            <div className="rounded-lg border border-green-500/30 bg-linear-to-br from-green-500/20 to-emerald-500/20 p-4 text-center">
               <p className="text-2xl font-bold text-green-400">{Object.keys(aspCounts).length}</p>
               <p className="text-xs text-gray-400">{pt.sites}</p>
             </div>
           </div>
 
           {/* ASPフィルター */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             <Link
               href={localizedHref('/sales', locale)}
-              className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                !aspFilter
-                  ? 'bg-rose-500 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
+                !aspFilter ? 'bg-rose-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               {pt.all} ({allSaleProducts.length})
@@ -276,7 +271,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
                 <Link
                   key={asp}
                   href={localizedHref(`/sales?asp=${asp.toLowerCase()}`, locale)}
-                  className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                  className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
                     aspFilter?.toLowerCase() === asp.toLowerCase()
                       ? 'bg-rose-500 text-white'
                       : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -288,7 +283,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           </div>
 
           {/* 割引率フィルター */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             {[0, 30, 50, 70].map((discount) => (
               <Link
                 key={discount}
@@ -296,35 +291,25 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
                   discount === 0
                     ? `/sales${aspFilter ? `?asp=${aspFilter}` : ''}`
                     : `/sales?minDiscount=${discount}${aspFilter ? `&asp=${aspFilter}` : ''}`,
-                  locale
+                  locale,
                 )}
-                className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
-                  minDiscount === discount
-                    ? 'bg-orange-500 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
+                  minDiscount === discount ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
-                {discount === 0
-                  ? pt.discount
-                  : `${discount}%+`}
+                {discount === 0 ? pt.discount : `${discount}%+`}
               </Link>
             ))}
           </div>
 
           {/* 商品一覧 */}
           {paginatedProducts.length === 0 ? (
-            <p className="text-gray-400 text-center py-12">
-              {pt.noItems}
-            </p>
+            <p className="py-12 text-center text-gray-400">{pt.noItems}</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {paginatedProducts.map((product) => (
-                  <SaleProductCard
-                    key={`${product.productId}-${product.aspName}`}
-                    product={product}
-                    locale={locale}
-                  />
+                  <SaleProductCard key={`${product.productId}-${product.aspName}`} product={product} locale={locale} />
                 ))}
               </div>
 
@@ -346,10 +331,8 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           )}
 
           {/* 注意書き */}
-          <div className="mt-8 p-4 bg-gray-800/50 rounded-lg text-xs text-gray-400">
-            <p>
-              {pt.disclaimer}
-            </p>
+          <div className="mt-8 rounded-lg bg-gray-800/50 p-4 text-xs text-gray-400">
+            <p>{pt.disclaimer}</p>
           </div>
         </div>
       </section>
@@ -366,91 +349,89 @@ function getUrgencyLevel(endAt: Date | null): 'critical' | 'urgent' | 'normal' |
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
 
   if (diffHours <= 1) return 'critical'; // 1時間以内
-  if (diffHours <= 6) return 'urgent';   // 6時間以内
+  if (diffHours <= 6) return 'urgent'; // 6時間以内
   return 'normal';
 }
 
 // セール商品カードコンポーネント（CTA大型化版）
-function SaleProductCard({
-  product,
-  locale,
-}: {
-  product: SaleProduct;
-  locale: string;
-}) {
+function SaleProductCard({ product, locale }: { product: SaleProduct; locale: string }) {
   const pt = getPageText(locale);
   const productUrl = localizedHref(`/products/${product.normalizedProductId || product.productId}`, locale);
   const endTimeText = formatEndTime(product.endAt, locale);
   const urgency = getUrgencyLevel(product.endAt);
 
   return (
-    <div className="group relative bg-gray-800 rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500 transition-all">
+    <div className="group relative overflow-hidden rounded-lg bg-gray-800 transition-all hover:ring-2 hover:ring-rose-500">
       {/* 緊急セールバッジ（1時間以内） */}
       {urgency === 'critical' && (
-        <div className="absolute top-0 left-0 right-0 z-20 bg-red-600 text-white text-center py-1 text-xs font-bold animate-pulse">
+        <div className="absolute top-0 right-0 left-0 z-20 animate-pulse bg-red-600 py-1 text-center text-xs font-bold text-white">
           {pt.endingSoonBadge}
         </div>
       )}
 
       {/* 割引バッジ - 大型化 */}
-      <div className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} left-2 z-10 px-2.5 py-1.5 bg-linear-to-r from-red-600 to-orange-500 rounded-lg text-white text-sm font-bold shadow-lg`}>
+      <div
+        className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} left-2 z-10 rounded-lg bg-linear-to-r from-red-600 to-orange-500 px-2.5 py-1.5 text-sm font-bold text-white shadow-lg`}
+      >
         -{product.discountPercent}%
       </div>
 
       {/* ASPバッジ */}
-      <div className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} right-2 z-10 px-2 py-0.5 bg-black/70 rounded text-white text-[10px]`}>
+      <div
+        className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} right-2 z-10 rounded bg-black/70 px-2 py-0.5 text-[10px] text-white`}
+      >
         {product.aspName}
       </div>
 
       {/* 画像 */}
-      <Link href={productUrl} className={`block aspect-[3/4] relative ${urgency === 'critical' ? 'mt-6' : ''}`}>
+      <Link href={productUrl} className={`relative block aspect-[3/4] ${urgency === 'critical' ? 'mt-6' : ''}`}>
         {product.thumbnailUrl ? (
           <Image
             src={product.thumbnailUrl}
             alt={product.title}
             fill
-            className="object-cover group-hover:scale-105 transition-transform duration-300"
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
           />
         ) : (
-          <div className="w-full h-full bg-gray-700 flex items-center justify-center text-gray-500">
-            No Image
-          </div>
+          <div className="flex h-full w-full items-center justify-center bg-gray-700 text-gray-500">No Image</div>
         )}
       </Link>
 
       {/* 情報 */}
       <div className="p-3">
         <Link href={productUrl}>
-          <h3 className="text-xs text-white line-clamp-2 mb-1.5 group-hover:text-rose-400 transition-colors">
+          <h3 className="mb-1.5 line-clamp-2 text-xs text-white transition-colors group-hover:text-rose-400">
             {product.title}
           </h3>
         </Link>
 
         {/* 出演者 */}
         {product.performers.length > 0 && (
-          <p className="text-[10px] text-gray-400 truncate mb-1.5">
-            {product.performers.map(p => p.name).join(', ')}
+          <p className="mb-1.5 truncate text-[10px] text-gray-400">
+            {product.performers.map((p) => p.name).join(', ')}
           </p>
         )}
 
         {/* 価格 - 強調 */}
-        <div className="flex items-baseline gap-2 mb-2">
-          <span className="text-base font-bold text-rose-400">
-            ¥{product.salePrice.toLocaleString()}
-          </span>
-          <span className="text-xs text-gray-500 line-through">
-            ¥{product.regularPrice.toLocaleString()}
-          </span>
+        <div className="mb-2 flex items-baseline gap-2">
+          <span className="text-base font-bold text-rose-400">¥{product.salePrice.toLocaleString()}</span>
+          <span className="text-xs text-gray-500 line-through">¥{product.regularPrice.toLocaleString()}</span>
         </div>
 
         {/* 終了時間 - 緊急度で色分け */}
         {endTimeText && (
-          <p className={`text-xs font-medium mb-2 ${
-            urgency === 'critical' ? 'text-red-400 animate-pulse' :
-            urgency === 'urgent' ? 'text-orange-400' : 'text-yellow-400'
-          }`}>
-            {urgency === 'critical' && '⚠️ '}{endTimeText}
+          <p
+            className={`mb-2 text-xs font-medium ${
+              urgency === 'critical'
+                ? 'animate-pulse text-red-400'
+                : urgency === 'urgent'
+                  ? 'text-orange-400'
+                  : 'text-yellow-400'
+            }`}
+          >
+            {urgency === 'critical' && '⚠️ '}
+            {endTimeText}
           </p>
         )}
 
@@ -460,7 +441,7 @@ function SaleProductCard({
             href={product.affiliateUrl}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className={`block w-full py-2.5 text-center text-sm font-bold text-white rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-[1.02] ${
+            className={`block w-full rounded-lg py-2.5 text-center text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl ${
               urgency === 'critical'
                 ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
                 : 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'

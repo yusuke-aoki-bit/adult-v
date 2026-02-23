@@ -1,11 +1,7 @@
 'use client';
 
 import { initializeApp, getApps, type FirebaseApp } from 'firebase/app';
-import {
-  initializeAppCheck,
-  ReCaptchaV3Provider,
-  type AppCheck,
-} from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaV3Provider, type AppCheck } from 'firebase/app-check';
 import {
   getAuth,
   signInAnonymously,
@@ -42,12 +38,7 @@ import {
   setUserProperties,
   type Analytics,
 } from 'firebase/analytics';
-import {
-  getRemoteConfig,
-  fetchAndActivate,
-  getValue,
-  type RemoteConfig,
-} from 'firebase/remote-config';
+import { getRemoteConfig, fetchAndActivate, getValue, type RemoteConfig } from 'firebase/remote-config';
 import { getMessaging, getToken, onMessage, type Messaging } from 'firebase/messaging';
 import { getPerformance, type FirebasePerformance } from 'firebase/performance';
 
@@ -74,11 +65,7 @@ let performance: FirebasePerformance | null = null;
 
 // Check if Firebase is configured
 export function isFirebaseConfigured(): boolean {
-  return !!(
-    firebaseConfig.apiKey &&
-    firebaseConfig.projectId &&
-    firebaseConfig.appId
-  );
+  return !!(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.appId);
 }
 
 // Initialize Firebase app
@@ -199,8 +186,7 @@ export function getFirebaseRemoteConfig(): RemoteConfig | null {
   if (!remoteConfig) {
     remoteConfig = getRemoteConfig(firebaseApp);
     // Set minimum fetch interval for development
-    remoteConfig.settings.minimumFetchIntervalMillis =
-      process.env['NODE_ENV'] === 'development' ? 0 : 3600000; // 1 hour in production
+    remoteConfig.settings.minimumFetchIntervalMillis = process.env['NODE_ENV'] === 'development' ? 0 : 3600000; // 1 hour in production
   }
   return remoteConfig;
 }
@@ -429,7 +415,7 @@ export interface FirestoreRecentlyViewed {
 // Save favorite to Firestore
 export async function saveFavoriteToFirestore(
   userId: string,
-  favorite: Omit<FirestoreFavorite, 'addedAt'>
+  favorite: Omit<FirestoreFavorite, 'addedAt'>,
 ): Promise<boolean> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return false;
@@ -451,7 +437,7 @@ export async function saveFavoriteToFirestore(
 export async function removeFavoriteFromFirestore(
   userId: string,
   type: 'product' | 'actress',
-  itemId: string
+  itemId: string,
 ): Promise<boolean> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return false;
@@ -475,7 +461,7 @@ export async function getFavoritesFromFirestore(userId: string): Promise<Firesto
     const favoritesRef = collection(firestore, 'users', userId, 'favorites');
     const q = query(favoritesRef, orderBy('addedAt', 'desc'));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as FirestoreFavorite);
+    return snapshot.docs.map((doc) => doc.data() as FirestoreFavorite);
   } catch (error) {
     console.error('Failed to get favorites:', error);
     return [];
@@ -485,7 +471,7 @@ export async function getFavoritesFromFirestore(userId: string): Promise<Firesto
 // Save recently viewed to Firestore
 export async function saveRecentlyViewedToFirestore(
   userId: string,
-  item: Omit<FirestoreRecentlyViewed, 'viewedAt'>
+  item: Omit<FirestoreRecentlyViewed, 'viewedAt'>,
 ): Promise<boolean> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return false;
@@ -506,7 +492,7 @@ export async function saveRecentlyViewedToFirestore(
 // Get recently viewed from Firestore
 export async function getRecentlyViewedFromFirestore(
   userId: string,
-  maxItems: number = 20
+  maxItems: number = 20,
 ): Promise<FirestoreRecentlyViewed[]> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return [];
@@ -515,7 +501,7 @@ export async function getRecentlyViewedFromFirestore(
     const recentRef = collection(firestore, 'users', userId, 'recentlyViewed');
     const q = query(recentRef, orderBy('viewedAt', 'desc'), limit(maxItems));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(doc => doc.data() as FirestoreRecentlyViewed);
+    return snapshot.docs.map((doc) => doc.data() as FirestoreRecentlyViewed);
   } catch (error) {
     console.error('Failed to get recently viewed:', error);
     return [];
@@ -537,7 +523,7 @@ export interface FirestoreWatchlistItem {
 // Save watchlist item to Firestore
 export async function saveWatchlistItemToFirestore(
   userId: string,
-  item: Omit<FirestoreWatchlistItem, 'addedAt'>
+  item: Omit<FirestoreWatchlistItem, 'addedAt'>,
 ): Promise<boolean> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return false;
@@ -556,10 +542,7 @@ export async function saveWatchlistItemToFirestore(
 }
 
 // Remove watchlist item from Firestore
-export async function removeWatchlistItemFromFirestore(
-  userId: string,
-  productId: string
-): Promise<boolean> {
+export async function removeWatchlistItemFromFirestore(userId: string, productId: string): Promise<boolean> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return false;
 
@@ -576,7 +559,7 @@ export async function removeWatchlistItemFromFirestore(
 // Get all watchlist items from Firestore
 export async function getWatchlistFromFirestore(
   userId: string,
-  maxItems: number = 100
+  maxItems: number = 100,
 ): Promise<FirestoreWatchlistItem[]> {
   const firestore = getFirebaseFirestore();
   if (!firestore) return [];
@@ -585,7 +568,7 @@ export async function getWatchlistFromFirestore(
     const watchlistRef = collection(firestore, 'users', userId, 'watchlist');
     const q = query(watchlistRef, orderBy('addedAt', 'desc'), limit(maxItems));
     const snapshot = await getDocs(q);
-    return snapshot.docs.map(d => d.data() as FirestoreWatchlistItem);
+    return snapshot.docs.map((d) => d.data() as FirestoreWatchlistItem);
   } catch (error) {
     console.error('Failed to get watchlist:', error);
     return [];
@@ -628,10 +611,7 @@ export interface AnalyticsEventParams {
 }
 
 // Log analytics event
-export function logEvent<T extends AnalyticsEventName>(
-  eventName: T,
-  params?: AnalyticsEventParams[T]
-): void {
+export function logEvent<T extends AnalyticsEventName>(eventName: T, params?: AnalyticsEventParams[T]): void {
   const firebaseAnalytics = getFirebaseAnalytics();
   if (!firebaseAnalytics) return;
 
@@ -704,9 +684,7 @@ export async function fetchRemoteConfig(): Promise<boolean> {
 }
 
 // Get remote config value
-export function getRemoteConfigValue<K extends keyof RemoteConfigDefaults>(
-  key: K
-): RemoteConfigDefaults[K] {
+export function getRemoteConfigValue<K extends keyof RemoteConfigDefaults>(key: K): RemoteConfigDefaults[K] {
   const rc = getFirebaseRemoteConfig();
   if (!rc) return remoteConfigDefaults[key];
 

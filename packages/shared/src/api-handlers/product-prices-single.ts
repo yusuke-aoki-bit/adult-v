@@ -18,19 +18,13 @@ export interface ProductPricesSingleHandlerDeps {
 }
 
 export function createProductPricesSingleHandler(deps: ProductPricesSingleHandlerDeps) {
-  return async function GET(
-    _request: Request,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
       const productId = parseInt(id);
 
       if (isNaN(productId)) {
-        return NextResponse.json(
-          { error: 'Invalid product ID' },
-          { status: 400 },
-        );
+        return NextResponse.json({ error: 'Invalid product ID' }, { status: 400 });
       }
 
       const sources = await deps.getProductSourcesWithSales(productId);

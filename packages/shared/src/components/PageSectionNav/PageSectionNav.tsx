@@ -3,6 +3,7 @@
 import { SectionNav, type SectionItem } from '../SectionNav';
 import { HomeSectionManager } from '../HomeSectionManager';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, pageSectionNavTranslations } from '../../lib/translations';
 
 export interface PageSectionNavConfig {
   // 上部セクション
@@ -27,41 +28,6 @@ interface PageSectionNavProps {
   pageId?: string;
 }
 
-const translations = {
-  ja: {
-    sale: 'セール中',
-    recentlyViewed: '最近見た作品',
-    recommendations: 'おすすめ',
-    weeklyHighlights: '今週の注目',
-    trending: 'トレンド分析',
-    allProducts: '全作品一覧',
-  },
-  en: {
-    sale: 'On Sale',
-    recentlyViewed: 'Recently Viewed',
-    recommendations: 'For You',
-    weeklyHighlights: 'This Week',
-    trending: 'Trending',
-    allProducts: 'All Products',
-  },
-  zh: {
-    sale: '特卖',
-    recentlyViewed: '最近浏览',
-    recommendations: '推荐',
-    weeklyHighlights: '本周热门',
-    trending: '趋势',
-    allProducts: '全部作品',
-  },
-  ko: {
-    sale: '세일',
-    recentlyViewed: '최근 본 작품',
-    recommendations: '추천',
-    weeklyHighlights: '이번 주',
-    trending: '트렌드',
-    allProducts: '전체 작품',
-  },
-};
-
 export function PageSectionNav({
   locale,
   config,
@@ -72,7 +38,7 @@ export function PageSectionNav({
 }: PageSectionNavProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(pageSectionNavTranslations, locale);
 
   const sections: SectionItem[] = [];
 

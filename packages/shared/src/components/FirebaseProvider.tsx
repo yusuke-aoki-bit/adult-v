@@ -2,11 +2,7 @@
 
 import { useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import {
-  logEvent,
-  fetchRemoteConfig,
-  getFirebasePerformance,
-} from '../lib/firebase';
+import { logEvent, fetchRemoteConfig, getFirebasePerformance } from '../lib/firebase';
 
 interface FirebaseProviderProps {
   children: React.ReactNode;

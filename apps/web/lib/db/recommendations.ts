@@ -44,7 +44,12 @@ export type {
 
 // 以下は個別実装のまま（特殊なロジックがあるため）
 
-import { products as productsTable, productPerformers as ppTable, productTags as ptTable, tags as tagsTable } from './schema';
+import {
+  products as productsTable,
+  productPerformers as ppTable,
+  productTags as ptTable,
+  tags as tagsTable,
+} from './schema';
 import { eq, and, inArray, ne, sql, desc } from 'drizzle-orm';
 
 /**
@@ -52,7 +57,11 @@ import { eq, and, inArray, ne, sql, desc } from 'drizzle-orm';
  */
 export async function getPerformerOtherProducts(performerId: number, currentProductId?: string, limit: number = 12) {
   const db = getDb();
-  const currentProductIdNum = currentProductId ? (typeof currentProductId === 'string' ? parseInt(currentProductId) : currentProductId) : undefined;
+  const currentProductIdNum = currentProductId
+    ? typeof currentProductId === 'string'
+      ? parseInt(currentProductId)
+      : currentProductId
+    : undefined;
 
   const query = db
     .select({
@@ -70,11 +79,8 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
     .innerJoin(ppTable, eq(productsTable.id, ppTable.productId))
     .where(
       currentProductIdNum
-        ? and(
-            eq(ppTable.performerId, performerId),
-            ne(productsTable.id, currentProductIdNum)
-          )
-        : eq(ppTable.performerId, performerId)
+        ? and(eq(ppTable.performerId, performerId), ne(productsTable.id, currentProductIdNum))
+        : eq(ppTable.performerId, performerId),
     )
     .orderBy(desc(productsTable.releaseDate))
     .limit(limit);
@@ -139,10 +145,7 @@ export async function getTrendingProducts(limit: number = 20, days: number = 7) 
 /**
  * Get personalized recommendations based on user's favorite items
  */
-export async function getRecommendationsFromFavorites(
-  favoriteProductIds: number[],
-  limit: number = 12
-) {
+export async function getRecommendationsFromFavorites(favoriteProductIds: number[], limit: number = 12) {
   if (favoriteProductIds.length === 0) {
     return [];
   }
@@ -191,10 +194,16 @@ export async function getRecommendationsFromFavorites(
       .where(
         and(
           inArray(ppTable.performerId, performerIds),
-          sql`${productsTable.id} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`
-        )
+          sql`${productsTable.id} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`,
+        ),
       )
-      .groupBy(productsTable.id, productsTable.title, productsTable.normalizedProductId, productsTable.releaseDate, productsTable.defaultThumbnailUrl)
+      .groupBy(
+        productsTable.id,
+        productsTable.title,
+        productsTable.normalizedProductId,
+        productsTable.releaseDate,
+        productsTable.defaultThumbnailUrl,
+      )
       .orderBy(desc(sql`match_score`), desc(productsTable.releaseDate))
       .limit(limit);
 
@@ -221,12 +230,15 @@ export async function getRecommendationsFromFavorites(
       .from(productsTable)
       .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))
       .where(
-        and(
-          inArray(ptTable.tagId, tagIds),
-          sql`${productsTable.id} NOT IN (${sql.join(allExcludedIds, sql`, `)})`
-        )
+        and(inArray(ptTable.tagId, tagIds), sql`${productsTable.id} NOT IN (${sql.join(allExcludedIds, sql`, `)})`),
       )
-      .groupBy(productsTable.id, productsTable.title, productsTable.normalizedProductId, productsTable.releaseDate, productsTable.defaultThumbnailUrl)
+      .groupBy(
+        productsTable.id,
+        productsTable.title,
+        productsTable.normalizedProductId,
+        productsTable.releaseDate,
+        productsTable.defaultThumbnailUrl,
+      )
       .orderBy(desc(sql`match_score`), desc(productsTable.releaseDate))
       .limit(limit - recommendations.length);
 
@@ -234,7 +246,7 @@ export async function getRecommendationsFromFavorites(
       ...tagMatches.map((p) => ({
         ...p,
         matchType: 'favorite_tag' as const,
-      }))
+      })),
     );
   }
 
@@ -245,10 +257,12 @@ export async function getRecommendationsFromFavorites(
  * Get product's genre tags with IDs (excludes maker/label)
  * 商品のジャンルタグ情報をIDと共に取得
  */
-export async function getProductGenreTags(productId: number): Promise<Array<{
-  id: number;
-  name: string;
-}>> {
+export async function getProductGenreTags(productId: number): Promise<
+  Array<{
+    id: number;
+    name: string;
+  }>
+> {
   const db = getDb();
 
   const result = await db
@@ -259,10 +273,7 @@ export async function getProductGenreTags(productId: number): Promise<Array<{
     .from(tagsTable)
     .innerJoin(ptTable, eq(tagsTable.id, ptTable.tagId))
     .where(
-      and(
-        eq(ptTable.productId, productId),
-        sql`(${tagsTable.category} = 'genre' OR ${tagsTable.category} IS NULL)`
-      )
+      and(eq(ptTable.productId, productId), sql`(${tagsTable.category} = 'genre' OR ${tagsTable.category} IS NULL)`),
     );
 
   return result;
@@ -287,12 +298,7 @@ export async function getProductMaker(productId: number): Promise<{
     })
     .from(tagsTable)
     .innerJoin(ptTable, eq(tagsTable.id, ptTable.tagId))
-    .where(
-      and(
-        eq(ptTable.productId, productId),
-        sql`${tagsTable.category} IN ('maker', 'label')`
-      )
-    )
+    .where(and(eq(ptTable.productId, productId), sql`${tagsTable.category} IN ('maker', 'label')`))
     .limit(1);
 
   const item = result[0];
@@ -309,11 +315,7 @@ export async function getProductMaker(productId: number): Promise<{
  * Get same maker products
  * 同じメーカーの他の商品を取得
  */
-export async function getSameMakerProducts(
-  makerId: number,
-  currentProductId: number,
-  limit: number = 6
-) {
+export async function getSameMakerProducts(makerId: number, currentProductId: number, limit: number = 6) {
   const db = getDb();
 
   const result = await db
@@ -330,12 +332,7 @@ export async function getSameMakerProducts(
     })
     .from(productsTable)
     .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))
-    .where(
-      and(
-        eq(ptTable.tagId, makerId),
-        ne(productsTable.id, currentProductId)
-      )
-    )
+    .where(and(eq(ptTable.tagId, makerId), ne(productsTable.id, currentProductId)))
     .orderBy(desc(productsTable.releaseDate))
     .limit(limit);
 
@@ -359,12 +356,7 @@ export async function getProductSeries(productId: number): Promise<{
     })
     .from(tagsTable)
     .innerJoin(ptTable, eq(tagsTable.id, ptTable.tagId))
-    .where(
-      and(
-        eq(ptTable.productId, productId),
-        eq(tagsTable.category, 'series')
-      )
-    )
+    .where(and(eq(ptTable.productId, productId), eq(tagsTable.category, 'series')))
     .limit(1);
 
   const seriesItem = result[0];
@@ -380,11 +372,7 @@ export async function getProductSeries(productId: number): Promise<{
  * Get same series products
  * 同じシリーズの他の商品を取得
  */
-export async function getSameSeriesProducts(
-  seriesId: number,
-  currentProductId: number,
-  limit: number = 6
-) {
+export async function getSameSeriesProducts(seriesId: number, currentProductId: number, limit: number = 6) {
   const db = getDb();
 
   const result = await db
@@ -401,12 +389,7 @@ export async function getSameSeriesProducts(
     })
     .from(productsTable)
     .innerJoin(ptTable, eq(productsTable.id, ptTable.productId))
-    .where(
-      and(
-        eq(ptTable.tagId, seriesId),
-        ne(productsTable.id, currentProductId)
-      )
-    )
+    .where(and(eq(ptTable.tagId, seriesId), ne(productsTable.id, currentProductId)))
     .orderBy(desc(productsTable.releaseDate))
     .limit(limit);
 

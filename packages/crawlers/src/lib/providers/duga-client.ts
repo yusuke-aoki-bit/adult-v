@@ -158,12 +158,7 @@ export class DugaApiClient {
   private readonly requestTimestamps: number[] = [];
   private readonly maxRequestsPer60Seconds = 60;
 
-  constructor(config: {
-    appId: string;
-    agentId: string;
-    bannerId?: string;
-    baseUrl?: string;
-  }) {
+  constructor(config: { appId: string; agentId: string; bannerId?: string; baseUrl?: string }) {
     this.appId = config.appId;
     this.agentId = config.agentId;
     this.bannerId = config.bannerId || '01';
@@ -272,9 +267,9 @@ export class DugaApiClient {
     // hitsはstring型で返ってくるため、parseIntで数値に変換
     const items = data.items || data.products || [];
     return {
-      hits: typeof data.hits === 'string' ? parseInt(data.hits, 10) : (data.hits || 0),
-      count: typeof data['count'] === 'string' ? parseInt(data['count'], 10) : (data['count'] || 0),
-      offset: typeof data.offset === 'string' ? parseInt(data.offset, 10) : (data.offset || 0),
+      hits: typeof data.hits === 'string' ? parseInt(data.hits, 10) : data.hits || 0,
+      count: typeof data['count'] === 'string' ? parseInt(data['count'], 10) : data['count'] || 0,
+      offset: typeof data.offset === 'string' ? parseInt(data.offset, 10) : data.offset || 0,
       items: items.map((item: any) => this.normalizeProduct(item)),
     };
   }
@@ -462,10 +457,7 @@ export class DugaApiClient {
    * @param options 追加オプション
    * @returns 検索結果
    */
-  async searchByKeyword(
-    keyword: string,
-    options: Partial<DugaSearchParams> = {}
-  ): Promise<DugaApiResponse> {
+  async searchByKeyword(keyword: string, options: Partial<DugaSearchParams> = {}): Promise<DugaApiResponse> {
     return this.searchProducts({
       ...options,
       keyword,
@@ -479,10 +471,7 @@ export class DugaApiClient {
    * @param options 追加オプション
    * @returns 検索結果
    */
-  async searchByPerformer(
-    performerId: string,
-    options: Partial<DugaSearchParams> = {}
-  ): Promise<DugaApiResponse> {
+  async searchByPerformer(performerId: string, options: Partial<DugaSearchParams> = {}): Promise<DugaApiResponse> {
     return this.searchProducts({
       ...options,
       performerid: performerId,

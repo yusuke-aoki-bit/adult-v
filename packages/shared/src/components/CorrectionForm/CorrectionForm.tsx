@@ -101,47 +101,39 @@ export function CorrectionForm({
 
   if (success) {
     return (
-      <div className="bg-gray-800 rounded-lg p-6 text-center">
-        <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-3" />
-        <p className="text-green-400 font-medium">{t.success}</p>
+      <div className="rounded-lg bg-gray-800 p-6 text-center">
+        <CheckCircle className="mx-auto mb-3 h-12 w-12 text-green-500" />
+        <p className="font-medium text-green-400">{t.success}</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-gray-800 rounded-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+    <form onSubmit={handleSubmit} className="rounded-lg bg-gray-800 p-6">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
           <AlertCircle className="h-5 w-5 text-yellow-500" />
           {t.title}
         </h3>
         {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-400 hover:text-white transition-colors"
-          >
+          <button type="button" onClick={onClose} className="text-gray-400 transition-colors hover:text-white">
             <X className="h-5 w-5" />
           </button>
         )}
       </div>
 
       {error && (
-        <div className="mb-4 p-3 bg-red-900/50 border border-red-700 rounded-lg text-red-300 text-sm">
-          {error}
-        </div>
+        <div className="mb-4 rounded-lg border border-red-700 bg-red-900/50 p-3 text-sm text-red-300">{error}</div>
       )}
 
       <div className="space-y-4">
         {/* Field Selection */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            {t.fieldLabel}
-          </label>
+          <label className="mb-1 block text-sm font-medium text-gray-300">{t.fieldLabel}</label>
           <select
             value={selectedField}
             onChange={(e) => setSelectedField(e.target.value)}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
           >
             {fields.map((field) => (
               <option key={field.name} value={field.name}>
@@ -154,10 +146,8 @@ export function CorrectionForm({
         {/* Current Value (Read-only) */}
         {currentField && (
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-1">
-              {t.currentValue}
-            </label>
-            <div className="w-full bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 text-gray-400 text-sm">
+            <label className="mb-1 block text-sm font-medium text-gray-300">{t.currentValue}</label>
+            <div className="w-full rounded-lg border border-gray-700 bg-gray-900 px-3 py-2 text-sm text-gray-400">
               {currentField.currentValue || '-'}
             </div>
           </div>
@@ -165,7 +155,7 @@ export function CorrectionForm({
 
         {/* Suggested Value */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
+          <label className="mb-1 block text-sm font-medium text-gray-300">
             {t.suggestedValue} <span className="text-rose-500">*</span>
           </label>
           <input
@@ -173,33 +163,31 @@ export function CorrectionForm({
             value={suggestedValue}
             onChange={(e) => setSuggestedValue(e.target.value)}
             placeholder={t.suggestedValuePlaceholder}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500"
+            className="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-rose-500 focus:outline-none"
             required
           />
         </div>
 
         {/* Reason */}
         <div>
-          <label className="block text-sm font-medium text-gray-300 mb-1">
-            {t.reason}
-          </label>
+          <label className="mb-1 block text-sm font-medium text-gray-300">{t.reason}</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder={t.reasonPlaceholder}
             rows={3}
-            className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-rose-500 resize-none"
+            className="w-full resize-none rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-rose-500 focus:outline-none"
           />
         </div>
       </div>
 
       {/* Actions */}
-      <div className="flex gap-3 mt-6">
+      <div className="mt-6 flex gap-3">
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+            className="flex-1 rounded-lg bg-gray-700 px-4 py-2 text-white transition-colors hover:bg-gray-600"
           >
             {t.cancel}
           </button>
@@ -207,7 +195,7 @@ export function CorrectionForm({
         <button
           type="submit"
           disabled={isSubmitting || !userId}
-          className="flex-1 px-4 py-2 bg-rose-600 hover:bg-rose-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-600"
         >
           {isSubmitting ? (
             <>

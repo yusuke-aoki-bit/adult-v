@@ -1,5 +1,6 @@
 /**
  * Shared translations for section components
+ * Moved from components/sections/translations.ts to centralize all translations
  */
 
 export const recentlyViewedTranslations = {
@@ -291,12 +292,3 @@ export const productDetailTranslations = {
     performers: '출연자',
   },
 } as const;
-
-export type Locale = 'ja' | 'en' | 'zh' | 'zh-TW' | 'ko';
-
-export function getTranslation<T extends Record<string, unknown>>(
-  translations: Record<Locale | string, T>,
-  locale: string
-): T {
-  return (translations[locale as Locale] || translations['ja']) as T;
-}

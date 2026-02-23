@@ -36,7 +36,7 @@ interface DtiSiteConfig {
   detailPagePattern: string;
   encoding: string;
   aspName: string;
-  isSpa?: boolean;  // SPAサイトはホームページから取得
+  isSpa?: boolean; // SPAサイトはホームページから取得
 }
 
 const DTI_SITES: Record<string, DtiSiteConfig> = {
@@ -63,7 +63,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/movies/{id}/',
     encoding: 'utf-8',
     aspName: '1PONDO',
-    isSpa: true,  // SPAサイト - ホームページから取得
+    isSpa: true, // SPAサイト - ホームページから取得
   },
   heyzo: {
     name: 'HEYZO',
@@ -80,7 +80,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'euc-jp',
     aspName: '10MUSUME',
-    isSpa: true,  // SPAサイト - ホームページから取得
+    isSpa: true, // SPAサイト - ホームページから取得
   },
   pacopacomama: {
     name: 'パコパコママ',
@@ -89,7 +89,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'euc-jp',
     aspName: 'PACOPACOMAMA',
-    isSpa: true,  // SPAサイト - ホームページから取得
+    isSpa: true, // SPAサイト - ホームページから取得
   },
   muramura: {
     name: 'むらむら',
@@ -106,7 +106,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'utf-8',
     aspName: 'H4610',
-    isSpa: true,  // SPAサイト - ホームページから取得
+    isSpa: true, // SPAサイト - ホームページから取得
   },
   h0930: {
     name: '人妻斬り',
@@ -115,7 +115,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'utf-8',
     aspName: 'H0930',
-    isSpa: true,  // SPAサイト - ホームページから取得
+    isSpa: true, // SPAサイト - ホームページから取得
   },
   c0930: {
     name: '人妻斬り（熟女）',
@@ -124,7 +124,7 @@ const DTI_SITES: Record<string, DtiSiteConfig> = {
     detailPagePattern: '/moviepages/{id}/index.html',
     encoding: 'utf-8',
     aspName: 'C0930',
-    isSpa: true,  // SPAサイト - ホームページから取得
+    isSpa: true, // SPAサイト - ホームページから取得
   },
   kin8tengoku: {
     name: '金髪天國',
@@ -166,8 +166,8 @@ interface CaribbeanProduct {
   thumbnailUrl: string;
   sampleImages: string[];
   genres: string[];
-  price: number | null;  // 月額料金
-  rawHtml: string;  // ハッシュ計算用
+  price: number | null; // 月額料金
+  rawHtml: string; // ハッシュ計算用
 }
 
 /**
@@ -176,7 +176,7 @@ interface CaribbeanProduct {
 async function rateLimit(): Promise<void> {
   const jitter = Math.random() * JITTER_MS;
   const delay = RATE_LIMIT_MS + jitter;
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -186,8 +186,9 @@ async function fetchPage(url: string, encoding: string = 'utf-8'): Promise<strin
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
       },
     });
@@ -213,10 +214,7 @@ async function fetchPage(url: string, encoding: string = 'utf-8'): Promise<strin
 /**
  * リストページから商品IDを抽出
  */
-async function extractProductIdsFromList(
-  siteConfig: DtiSiteConfig,
-  pageNum: number
-): Promise<string[]> {
+async function extractProductIdsFromList(siteConfig: DtiSiteConfig, pageNum: number): Promise<string[]> {
   const url = siteConfig.listPageUrl.replace('{page}', pageNum.toString());
   console.log(`📄 Fetching list page: ${url}`);
 
@@ -246,9 +244,7 @@ async function extractProductIdsFromList(
  * ホームページから商品IDを抽出（SPAサイト用）
  * SPAサイトはlistpagesが使えないため、ホームページに表示されている商品IDを取得
  */
-async function extractProductIdsFromHomepage(
-  siteConfig: DtiSiteConfig
-): Promise<string[]> {
+async function extractProductIdsFromHomepage(siteConfig: DtiSiteConfig): Promise<string[]> {
   const url = siteConfig.baseUrl + '/';
   console.log(`📄 Fetching homepage (SPA mode): ${url}`);
 
@@ -263,9 +259,10 @@ async function extractProductIdsFromHomepage(
   $('a[href*="moviepages"]').each((_, el) => {
     const href = $(el).attr('href') || '';
     // 自サイトのリンクのみ抽出（他サイトへのリンクは除外）
-    const isOwnSite = href.includes(siteConfig.baseUrl) ||
-                      href.startsWith('/moviepages') ||
-                      href.startsWith('//www.' + siteConfig.baseUrl.replace('https://www.', ''));
+    const isOwnSite =
+      href.includes(siteConfig.baseUrl) ||
+      href.startsWith('/moviepages') ||
+      href.startsWith('//www.' + siteConfig.baseUrl.replace('https://www.', ''));
 
     if (!isOwnSite && href.includes('//')) {
       return; // 他サイトへのリンクはスキップ
@@ -288,10 +285,7 @@ async function extractProductIdsFromHomepage(
 /**
  * 商品詳細ページから情報を抽出
  */
-async function extractProductDetails(
-  siteConfig: DtiSiteConfig,
-  productId: string
-): Promise<CaribbeanProduct | null> {
+async function extractProductDetails(siteConfig: DtiSiteConfig, productId: string): Promise<CaribbeanProduct | null> {
   const detailPath = siteConfig.detailPagePattern.replace('{id}', productId);
   const url = `${siteConfig.baseUrl}${detailPath}`;
   console.log(`  📦 Fetching detail: ${url}`);
@@ -416,7 +410,7 @@ async function extractProductDetails(
     sampleImages,
     genres,
     price,
-    rawHtml: html,  // ハッシュ計算用に生HTML保存
+    rawHtml: html, // ハッシュ計算用に生HTML保存
   };
 }
 
@@ -426,7 +420,7 @@ async function extractProductDetails(
 async function saveProduct(
   siteConfig: DtiSiteConfig,
   product: CaribbeanProduct,
-  forceReprocess: boolean = false
+  forceReprocess: boolean = false,
 ): Promise<{ saved: boolean; isNew: boolean; skippedUnchanged: boolean }> {
   try {
     const normalizedProductId = `${siteConfig.aspName}-${product['productId']}`;
@@ -436,7 +430,7 @@ async function saveProduct(
       siteConfig.aspName,
       product['productId'],
       `${siteConfig.baseUrl}/moviepages/${product['productId']}/index.html`,
-      product.rawHtml
+      product.rawHtml,
     );
 
     // ハッシュ変更なし、かつ処理済みならスキップ
@@ -489,22 +483,24 @@ async function saveProduct(
     }
 
     // ProductSource（価格情報含む）
-    await db['insert'](productSources).values({
-      productId: productId,
-      aspName: siteConfig.aspName,
-      originalProductId: product['productId'],
-      affiliateUrl: `${siteConfig.baseUrl}/moviepages/${product['productId']}/index.html`,
-      price: product['price'],  // 月額料金
-      dataSource: 'SCRAPE',
-      isSubscription: true, // DTI系は月額制
-    }).onConflictDoUpdate({
-      target: [productSources.productId, productSources.aspName],
-      set: {
+    await db['insert'](productSources)
+      .values({
+        productId: productId,
+        aspName: siteConfig.aspName,
+        originalProductId: product['productId'],
         affiliateUrl: `${siteConfig.baseUrl}/moviepages/${product['productId']}/index.html`,
-        price: product['price'],
-        lastUpdated: new Date(),
-      },
-    });
+        price: product['price'], // 月額料金
+        dataSource: 'SCRAPE',
+        isSubscription: true, // DTI系は月額制
+      })
+      .onConflictDoUpdate({
+        target: [productSources.productId, productSources.aspName],
+        set: {
+          affiliateUrl: `${siteConfig.baseUrl}/moviepages/${product['productId']}/index.html`,
+          price: product['price'],
+          lastUpdated: new Date(),
+        },
+      });
 
     // 出演者
     for (const performerName of product.performers) {
@@ -575,9 +571,9 @@ async function main(): Promise<void> {
 
   // コマンドライン引数
   const args = process.argv.slice(2);
-  const siteArg = args.find(a => a.startsWith('--site='))?.split('=')[1] || 'caribbeancom';
-  const pagesArg = args.find(a => a.startsWith('--pages='))?.split('=')[1];
-  const startPageArg = args.find(a => a.startsWith('--start-page='))?.split('=')[1];
+  const siteArg = args.find((a) => a.startsWith('--site='))?.split('=')[1] || 'caribbeancom';
+  const pagesArg = args.find((a) => a.startsWith('--pages='))?.split('=')[1];
+  const startPageArg = args.find((a) => a.startsWith('--start-page='))?.split('=')[1];
   const forceReprocess = args.includes('--force');
 
   const pages = pagesArg ? parseInt(pagesArg) : 5;
@@ -591,7 +587,9 @@ async function main(): Promise<void> {
   }
 
   console.log(`📍 Site: ${siteConfig.name}`);
-  console.log(`📄 Mode: ${siteConfig.isSpa ? 'SPA (homepage only)' : `Pages ${startPage} to ${startPage + pages - 1}`}`);
+  console.log(
+    `📄 Mode: ${siteConfig.isSpa ? 'SPA (homepage only)' : `Pages ${startPage} to ${startPage + pages - 1}`}`,
+  );
   console.log(`🔄 強制再処理: ${forceReprocess ? '有効' : '無効'}\n`);
 
   let totalNew = 0;

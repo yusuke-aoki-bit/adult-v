@@ -84,6 +84,7 @@ tmp/
 tmpclaude-*
 test-results/
 playwright-report/
+.lighthouseci/
 
 # Local dev scripts with credentials
 scripts/asp-coverage.mjs

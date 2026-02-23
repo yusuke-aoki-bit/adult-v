@@ -2,14 +2,7 @@
  * キャッシュユーティリティのテスト
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import {
-  generateCacheKey,
-  getCache,
-  setCache,
-  deleteCache,
-  clearCache,
-  CACHE_KEYS,
-} from '@adult-v/shared/lib/cache';
+import { generateCacheKey, getCache, setCache, deleteCache, clearCache, CACHE_KEYS } from '@adult-v/shared/lib/cache';
 
 // 環境変数のモック（Redisを無効化してインメモリキャッシュのみテスト）
 vi.mock('@upstash/redis', () => ({

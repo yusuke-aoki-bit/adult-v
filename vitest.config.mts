@@ -9,25 +9,20 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./vitest.setup.ts'],
     include: ['__tests__/unit/**/*.{test,spec}.{ts,tsx}', '__tests__/integration/**/*.{test,spec}.{ts,tsx}'],
-    exclude: [
-      'node_modules/**',
-      '__tests__/e2e/**',
-      '.next/**',
-    ],
+    exclude: ['node_modules/**', '__tests__/e2e/**', '.next/**'],
     // Increase timeout for tests that use dynamic imports (slower on Windows)
     testTimeout: 30000,
     hookTimeout: 30000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: [
-        'node_modules/',
-        '.next/',
-        'coverage/',
-        '**/*.config.*',
-        'vitest.setup.ts',
-        'e2e/',
-      ],
+      exclude: ['node_modules/', '.next/', 'coverage/', '**/*.config.*', 'vitest.setup.ts', 'e2e/'],
+      thresholds: {
+        statements: 30,
+        branches: 30,
+        functions: 30,
+        lines: 30,
+      },
     },
     deps: {
       // Handle packages that need to be transformed

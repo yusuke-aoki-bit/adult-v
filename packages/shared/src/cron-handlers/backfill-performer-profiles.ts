@@ -185,7 +185,9 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
         product_count: number;
       }>) {
         if (Date.now() - startTime > TIME_LIMIT) {
-          console.log(`[backfill-performer-profiles] Time limit reached, processed ${stats.performersChecked}/${performers.rows.length}`);
+          console.log(
+            `[backfill-performer-profiles] Time limit reached, processed ${stats.performersChecked}/${performers.rows.length}`,
+          );
           break;
         }
         stats.performersChecked++;
@@ -340,7 +342,9 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
       console.log(`[backfill-performer-profiles] Complete`);
       console.log(`  Checked: ${stats.performersChecked}`);
       console.log(`  Updated: ${stats.profilesUpdated}`);
-      console.log(`  Images: ${stats.imagesUpdated}, Heights: ${stats.heightUpdated}, Birthdays: ${stats.birthdayUpdated}`);
+      console.log(
+        `  Images: ${stats.imagesUpdated}, Heights: ${stats.heightUpdated}, Birthdays: ${stats.birthdayUpdated}`,
+      );
       console.log(`  Errors: ${stats.errors}`);
 
       return NextResponse.json({
@@ -355,7 +359,7 @@ export function createBackfillPerformerProfilesHandler(deps: BackfillPerformerPr
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

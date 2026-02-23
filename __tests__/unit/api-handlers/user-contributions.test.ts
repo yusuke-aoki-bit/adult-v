@@ -39,7 +39,7 @@ describe('User Reviews Handler', () => {
         { id: 2, status: 'pending' },
         { id: 3, status: 'rejected' },
       ];
-      const approvedReviews = reviews.filter(r => r.status === 'approved');
+      const approvedReviews = reviews.filter((r) => r.status === 'approved');
       expect(approvedReviews).toHaveLength(1);
     });
   });
@@ -54,11 +54,11 @@ describe('User Reviews Handler', () => {
       const validRatings = [1, 2, 3, 4, 5];
       const invalidRatings = [0, 6, -1, 10];
 
-      validRatings.forEach(rating => {
+      validRatings.forEach((rating) => {
         expect(rating >= 1 && rating <= 5).toBe(true);
       });
 
-      invalidRatings.forEach(rating => {
+      invalidRatings.forEach((rating) => {
         expect(rating >= 1 && rating <= 5).toBe(false);
       });
     });
@@ -76,7 +76,7 @@ describe('User Reviews Handler', () => {
       const newReview = { productId: 123, userId: 'user-1' };
 
       const isDuplicate = existingReviews.some(
-        r => r.productId === newReview.productId && r.userId === newReview.userId
+        (r) => r.productId === newReview.productId && r.userId === newReview.userId,
       );
       expect(isDuplicate).toBe(true);
     });
@@ -122,9 +122,7 @@ describe('Tag Suggestions Handler', () => {
       const existingTags = ['action', 'comedy', 'drama'];
       const newTag = 'Action'; // Should match case-insensitively
 
-      const isDuplicate = existingTags.some(
-        tag => tag.toLowerCase() === newTag.toLowerCase()
-      );
+      const isDuplicate = existingTags.some((tag) => tag.toLowerCase() === newTag.toLowerCase());
       expect(isDuplicate).toBe(true);
     });
   });
@@ -176,7 +174,7 @@ describe('Performer Suggestions Handler', () => {
       ];
 
       const searchQuery = '山田';
-      const matches = performers.filter(p => p.name.includes(searchQuery));
+      const matches = performers.filter((p) => p.name.includes(searchQuery));
 
       expect(matches).toHaveLength(1);
       expect(matches[0]!.name).toBe('山田花子');
@@ -205,9 +203,7 @@ describe('Performer Suggestions Handler', () => {
       const existingPerformers = ['山田花子', '佐藤美咲'];
       const newPerformer = '山田花子';
 
-      const isDuplicate = existingPerformers.some(
-        p => p.toLowerCase() === newPerformer.toLowerCase()
-      );
+      const isDuplicate = existingPerformers.some((p) => p.toLowerCase() === newPerformer.toLowerCase());
       expect(isDuplicate).toBe(true);
     });
   });
@@ -228,7 +224,9 @@ describe('User Contributions Section Integration', () => {
 
   it('should handle login required callback', () => {
     let loginCalled = false;
-    const onLoginRequired = () => { loginCalled = true; };
+    const onLoginRequired = () => {
+      loginCalled = true;
+    };
 
     // Simulate user action without login
     const userId = null;

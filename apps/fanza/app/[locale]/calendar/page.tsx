@@ -13,17 +13,14 @@ import { getPopularTags } from '@/lib/db/queries';
 // force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
 export const dynamic = 'force-dynamic';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
 
   const titles: Record<string, string> = {
     ja: 'リリースカレンダー | 新作AV発売日一覧',
     en: 'Release Calendar | New AV Release Dates',
     zh: '发行日历 | 新作AV发售日一览',
+    'zh-TW': '發行日曆 | 新作AV發售日一覽',
     ko: '출시 캘린더 | 신작 AV 발매일 목록',
   };
 
@@ -31,6 +28,7 @@ export async function generateMetadata({
     ja: 'AV作品のリリースカレンダー。月別・日別の新作発売日を一覧で確認。発売予定の作品もチェックできます。',
     en: 'AV release calendar. Check new releases by month and day. View upcoming releases.',
     zh: 'AV作品发行日历。按月、按日查看新作发售日。还可以查看即将发售的作品。',
+    'zh-TW': 'AV作品發行日曆。按月、按日查看新作發售日。還可以查看即將發售的作品。',
     ko: 'AV 작품 출시 캘린더. 월별, 일별 신작 발매일 확인. 출시 예정 작품도 확인 가능.',
   };
 
@@ -91,11 +89,12 @@ export default async function CalendarPage({
     ja: 'リリースカレンダー',
     en: 'Release Calendar',
     zh: '发行日历',
+    'zh-TW': '發行日曆',
     ko: '출시 캘린더',
   };
 
   // タグをProductListFilter用に変換
-  const genreTagsForFilter = popularTags.map(tag => ({
+  const genreTagsForFilter = popularTags.map((tag) => ({
     id: tag.id,
     name: tag.name,
     count: tag.count,
@@ -106,7 +105,7 @@ export default async function CalendarPage({
       {/* 構造化データ */}
       <JsonLD data={structuredData} />
 
-      <section id="calendar" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
+      <section id="calendar" className="scroll-mt-20 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
@@ -117,7 +116,7 @@ export default async function CalendarPage({
           />
 
           <div className="mb-2 sm:mb-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text mb-0.5">
+            <h1 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">
               {pageTitle[locale] ?? pageTitle['ja']}
             </h1>
           </div>

@@ -114,15 +114,13 @@ describe('CompareButton', () => {
 
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         'product_compare_list',
-        expect.stringContaining('test-123')
+        expect.stringContaining('test-123'),
       );
     });
 
     it('追加済みの場合、クリックで削除', () => {
       // 事前にリストに追加
-      const existingItems = [
-        { id: 'test-123', title: 'Test', addedAt: Date.now() },
-      ];
+      const existingItems = [{ id: 'test-123', title: 'Test', addedAt: Date.now() }];
       localStorageMock.setItem('product_compare_list', JSON.stringify(existingItems));
 
       render(<CompareButton product={defaultProduct} />);
@@ -147,9 +145,7 @@ describe('CompareButton', () => {
     });
 
     it('リストにある場合は選択状態', () => {
-      const existingItems = [
-        { id: 'test-123', title: 'Test', addedAt: Date.now() },
-      ];
+      const existingItems = [{ id: 'test-123', title: 'Test', addedAt: Date.now() }];
       localStorageMock.setItem('product_compare_list', JSON.stringify(existingItems));
 
       render(<CompareButton product={defaultProduct} theme="dark" />);
@@ -169,9 +165,7 @@ describe('CompareButton', () => {
     });
 
     it('選択時に適切なaria-label', () => {
-      const existingItems = [
-        { id: 'test-123', title: 'Test', addedAt: Date.now() },
-      ];
+      const existingItems = [{ id: 'test-123', title: 'Test', addedAt: Date.now() }];
       localStorageMock.setItem('product_compare_list', JSON.stringify(existingItems));
 
       render(<CompareButton product={defaultProduct} locale="ja" />);

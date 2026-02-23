@@ -92,8 +92,8 @@ ANALYZE product_viewers;
 function splitStatements(sql: string): string[] {
   return sql
     .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0 && !s.startsWith('--'));
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0 && !s.startsWith('--'));
 }
 
 async function main() {

@@ -1,28 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { ConditionalLayout } from "@/components/ConditionalLayout";
-import { JsonLD } from "@/components/JsonLD";
-import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
-import { defaultLocale } from "@/i18n";
-import { CookieConsent } from "@adult-v/shared/components";
-import { SiteProvider } from "@/lib/contexts/SiteContext";
-import { getServerSiteMode } from "@/lib/server/site-mode";
-import { LazyPWAInstaller } from "@/components/LazyPWAInstaller";
-import { ClientProviders } from "@adult-v/shared/components";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { ConditionalLayout } from '@/components/ConditionalLayout';
+import { JsonLD } from '@/components/JsonLD';
+import { generateBaseMetadata, generateWebSiteSchema } from '@/lib/seo';
+import { defaultLocale } from '@/i18n';
+import { CookieConsent } from '@adult-v/shared/components';
+import { SiteProvider } from '@/lib/contexts/SiteContext';
+import { getServerSiteMode } from '@/lib/server/site-mode';
+import { LazyPWAInstaller } from '@/components/LazyPWAInstaller';
+import { ClientProviders } from '@adult-v/shared/components';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+  display: 'swap',
   preload: true,
   adjustFontFallback: true, // CLS対策: フォールバックフォントのサイズを調整
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
   preload: true,
   adjustFontFallback: true, // CLS対策: フォールバックフォントのサイズを調整
 });
@@ -68,7 +68,10 @@ export default async function RootLayout({
         {/* SEO: PageSpeedがStreaming SSR遅延出力を検出できない問題の対策 - charsetの直後に配置 */}
         <meta charSet="utf-8" />
         <title>ADULT VIEWER LAB - heavy user guide</title>
-        <meta name="description" content="Cross-platform adult streaming database covering DUGA, MGS, DTI, Caribbeancom with 38,000+ actresses. Browse by popularity, genres, and new releases." />
+        <meta
+          name="description"
+          content="Cross-platform adult streaming database covering DUGA, MGS, DTI, Caribbeancom with 38,000+ actresses. Browse by popularity, genres, and new releases."
+        />
         {/* LCP改善: 画像CDNへのpreconnect（unoptimized=trueで直接CDN配信のため重要） */}
         <link rel="preconnect" href="https://pics.dmm.co.jp" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://awsimgsrc.dmm.co.jp" crossOrigin="anonymous" />
@@ -84,7 +87,7 @@ export default async function RootLayout({
         <JsonLD data={websiteSchema} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased flex flex-col min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} flex min-h-screen flex-col antialiased`}
       >
         {gaId && <CookieConsent gaId={gaId} />}
         <ClientProviders>

@@ -58,9 +58,7 @@ async function getPerformersFromWiki(productCode: string): Promise<string[]> {
 }
 
 // FANZA検索
-async function findPerformersFromFanza(
-  productCode: string
-): Promise<{ id: number; name: string }[]> {
+async function findPerformersFromFanza(productCode: string): Promise<{ id: number; name: string }[]> {
   const result = await db.execute(sql`
     SELECT DISTINCT pf.id, pf.name
     FROM performers pf
@@ -84,7 +82,7 @@ async function mergePerformerIntoCorrect(
   fakePerformerId: number,
   fakePerformerName: string,
   correctPerformerId: number,
-  correctPerformerName: string
+  correctPerformerName: string,
 ): Promise<{ productsMoved: number; aliasAdded: boolean }> {
   let productsMoved = 0;
   let aliasAdded = false;
@@ -123,7 +121,7 @@ async function mergePerformerIntoCorrect(
   `);
 
   console.log(
-    `  Merged: ${fakePerformerName} (${fakePerformerId}) → ${correctPerformerName} (${correctPerformerId}), moved ${productsMoved} products`
+    `  Merged: ${fakePerformerName} (${fakePerformerId}) → ${correctPerformerName} (${correctPerformerId}), moved ${productsMoved} products`,
   );
 
   return { productsMoved, aliasAdded };
@@ -221,7 +219,7 @@ async function mergeFakePerformers(limit: number): Promise<{
       fakePerformer.id,
       fakePerformer.name,
       correctPerformerId,
-      correctPerformerName
+      correctPerformerName,
     );
 
     performersMerged++;
@@ -235,7 +233,7 @@ async function mergeFakePerformers(limit: number): Promise<{
 // 紐付け処理
 async function linkPerformersFromLookup(
   asp: string | undefined,
-  limit: number
+  limit: number,
 ): Promise<{ productsProcessed: number; newLinks: number }> {
   let productsProcessed = 0;
   let newLinks = 0;

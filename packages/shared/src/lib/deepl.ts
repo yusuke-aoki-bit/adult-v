@@ -14,7 +14,7 @@ export async function translateWithDeepL(text: string, targetLang: string): Prom
     const response = await fetch(baseUrl, {
       method: 'POST',
       headers: {
-        'Authorization': `DeepL-Auth-Key ${apiKey}`,
+        Authorization: `DeepL-Auth-Key ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({

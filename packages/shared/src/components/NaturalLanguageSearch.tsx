@@ -5,88 +5,7 @@ import Link from 'next/link';
 import { Search, Sparkles, X, Loader2, MessageSquare, ChevronRight } from 'lucide-react';
 import { localizedHref } from '../i18n';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
-
-const translations = {
-  ja: {
-    title: '自然言語で検索',
-    placeholder: 'シーンを説明してください（例：「プールで始まるやつ」）',
-    search: '検索',
-    searching: '検索中...',
-    results: '件の結果',
-    noResults: '該当する作品が見つかりませんでした',
-    tryDifferent: '別の言葉で試してください',
-    suggestions: '検索例',
-    recentSearches: '最近の検索',
-    clear: 'クリア',
-  },
-  en: {
-    title: 'Natural Language Search',
-    placeholder: 'Describe the scene (e.g., "starts at a pool")',
-    search: 'Search',
-    searching: 'Searching...',
-    results: ' results',
-    noResults: 'No matching products found',
-    tryDifferent: 'Try different words',
-    suggestions: 'Suggestions',
-    recentSearches: 'Recent Searches',
-    clear: 'Clear',
-  },
-  zh: {
-    title: '自然语言搜索',
-    placeholder: '描述场景（例："在泳池开始的"）',
-    search: '搜索',
-    searching: '搜索中...',
-    results: '个结果',
-    noResults: '未找到匹配的作品',
-    tryDifferent: '尝试其他关键词',
-    suggestions: '搜索示例',
-    recentSearches: '最近搜索',
-    clear: '清除',
-  },
-  ko: {
-    title: '자연어 검색',
-    placeholder: '장면을 설명하세요 (예: "수영장에서 시작하는")',
-    search: '검색',
-    searching: '검색 중...',
-    results: '개 결과',
-    noResults: '일치하는 작품을 찾을 수 없습니다',
-    tryDifferent: '다른 단어로 시도해보세요',
-    suggestions: '검색 예시',
-    recentSearches: '최근 검색',
-    clear: '삭제',
-  },
-} as const;
-
-const SEARCH_SUGGESTIONS = {
-  ja: [
-    'オフィスでのシーン',
-    '野外・露出系',
-    '制服もの',
-    'マッサージ店',
-    '温泉・お風呂',
-  ],
-  en: [
-    'Office scenes',
-    'Outdoor activities',
-    'Uniform themes',
-    'Massage parlor',
-    'Hot spring / Bath',
-  ],
-  zh: [
-    '办公室场景',
-    '户外活动',
-    '制服主题',
-    '按摩店',
-    '温泉/浴室',
-  ],
-  ko: [
-    '사무실 장면',
-    '야외 활동',
-    '유니폼 테마',
-    '마사지샵',
-    '온천/목욕',
-  ],
-};
+import { getTranslation, naturalLanguageSearchTranslations, searchSuggestionsData } from '../lib/translations';
 
 const RECENT_SEARCHES_KEY = 'adult-v-recent-scene-searches';
 
@@ -112,8 +31,8 @@ interface NaturalLanguageSearchProps {
 export default function NaturalLanguageSearch({ locale, className = '' }: NaturalLanguageSearchProps) {
   const { theme } = useSiteTheme();
   const isDark = theme === 'dark';
-  const t = translations[locale as keyof typeof translations] || translations['ja'];
-  const suggestions = SEARCH_SUGGESTIONS[locale as keyof typeof SEARCH_SUGGESTIONS] || SEARCH_SUGGESTIONS.ja;
+  const t = getTranslation(naturalLanguageSearchTranslations, locale);
+  const suggestions = searchSuggestionsData[locale as keyof typeof searchSuggestionsData] || searchSuggestionsData.ja;
 
   const [query, setQuery] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -135,7 +54,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
   }, []);
 
   const saveRecentSearch = (searchQuery: string) => {
-    const updated = [searchQuery, ...recentSearches.filter(s => s !== searchQuery)].slice(0, 5);
+    const updated = [searchQuery, ...recentSearches.filter((s) => s !== searchQuery)].slice(0, 5);
     setRecentSearches(updated);
     try {
       localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
@@ -195,8 +114,8 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
   return (
     <div className={`${isDark ? 'bg-gray-800' : 'bg-white shadow'} rounded-lg p-4 ${className}`}>
       {/* Header */}
-      <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} flex items-center gap-2 mb-4`}>
-        <MessageSquare className={`w-5 h-5 ${isDark ? 'text-blue-400' : 'text-blue-500'}`} />
+      <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'} mb-4 flex items-center gap-2`}>
+        <MessageSquare className={`h-5 w-5 ${isDark ? 'text-blue-400' : 'text-blue-500'}`} />
         {t.title}
       </h3>
 
@@ -209,15 +128,17 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder={t.placeholder}
-          className={`w-full px-4 py-3 pl-10 ${isDark ? 'bg-gray-750 text-white border-gray-600 placeholder:text-gray-500' : 'bg-gray-50 text-gray-900 border-gray-200 placeholder:text-gray-400'} rounded-lg border focus:border-blue-500 focus:outline-none`}
+          className={`w-full px-4 py-3 pl-10 ${isDark ? 'bg-gray-750 border-gray-600 text-white placeholder:text-gray-500' : 'border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400'} rounded-lg border focus:border-blue-500 focus:outline-none`}
         />
-        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+        <Search
+          className={`absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}
+        />
         {query && (
           <button
             onClick={() => setQuery('')}
-            className={`absolute right-3 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
+            className={`absolute top-1/2 right-3 -translate-y-1/2 ${isDark ? 'text-gray-500 hover:text-white' : 'text-gray-400 hover:text-gray-600'}`}
           >
-            <X className="w-4 h-4" />
+            <X className="h-4 w-4" />
           </button>
         )}
       </div>
@@ -226,16 +147,16 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
       <button
         onClick={() => handleSearch()}
         disabled={isLoading || !query.trim()}
-        className={`w-full py-2 ${isDark ? 'bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600' : 'bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300'} disabled:cursor-not-allowed text-white rounded-lg flex items-center justify-center gap-2 transition-colors mb-4`}
+        className={`w-full py-2 ${isDark ? 'bg-blue-600 hover:bg-blue-500 disabled:bg-gray-600' : 'bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300'} mb-4 flex items-center justify-center gap-2 rounded-lg text-white transition-colors disabled:cursor-not-allowed`}
       >
         {isLoading ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
             {t.searching}
           </>
         ) : (
           <>
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="h-4 w-4" />
             {t.search}
           </>
         )}
@@ -247,40 +168,43 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
           {results.length > 0 ? (
             <>
               <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'} mb-3`}>
-                {results.length}{t.results}
+                {results.length}
+                {t.results}
               </p>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {results.slice(0, 6).map(result => (
+              <div className="max-h-60 space-y-2 overflow-y-auto">
+                {results.slice(0, 6).map((result) => (
                   <Link
                     key={result.id}
                     href={localizedHref(`/products/${result.id}`, locale)}
-                    className={`flex items-center gap-3 p-2 ${isDark ? 'bg-gray-750 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'} rounded-lg transition-colors group`}
+                    className={`flex items-center gap-3 p-2 ${isDark ? 'bg-gray-750 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'} group rounded-lg transition-colors`}
                   >
-                    <div className={`w-10 h-14 shrink-0 rounded overflow-hidden ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
+                    <div
+                      className={`h-14 w-10 shrink-0 overflow-hidden rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}
+                    >
                       {result.imageUrl ? (
-                        <img
-                          src={result.imageUrl}
-                          alt=""
-                          className="w-full h-full object-cover"
-                        />
+                        <img src={result.imageUrl} alt="" className="h-full w-full object-cover" />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Search className={`w-4 h-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
+                        <div className="flex h-full w-full items-center justify-center">
+                          <Search className={`h-4 w-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />
                         </div>
                       )}
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm ${isDark ? 'text-white group-hover:text-blue-400' : 'text-gray-700 group-hover:text-blue-500'} truncate transition-colors`}>
+                    <div className="min-w-0 flex-1">
+                      <p
+                        className={`text-sm ${isDark ? 'text-white group-hover:text-blue-400' : 'text-gray-700 group-hover:text-blue-500'} truncate transition-colors`}
+                      >
                         {result.title}
                       </p>
                     </div>
-                    <ChevronRight className={`w-4 h-4 ${isDark ? 'text-gray-600 group-hover:text-gray-400' : 'text-gray-300 group-hover:text-gray-500'} shrink-0`} />
+                    <ChevronRight
+                      className={`h-4 w-4 ${isDark ? 'text-gray-600 group-hover:text-gray-400' : 'text-gray-300 group-hover:text-gray-500'} shrink-0`}
+                    />
                   </Link>
                 ))}
               </div>
             </>
           ) : (
-            <div className="text-center py-4">
+            <div className="py-4 text-center">
               <p className={`${isDark ? 'text-gray-400' : 'text-gray-500'} mb-1`}>{t.noResults}</p>
               <p className={`text-sm ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t.tryDifferent}</p>
             </div>
@@ -291,7 +215,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
       {/* Recent Searches */}
       {!hasSearched && recentSearches.length > 0 && (
         <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
+          <div className="mb-2 flex items-center justify-between">
             <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{t.recentSearches}</p>
             <button
               onClick={clearRecentSearches}
@@ -308,7 +232,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                   setQuery(search);
                   handleSearch(search);
                 }}
-                className={`px-3 py-1.5 ${isDark ? 'bg-gray-750 hover:bg-gray-700 text-gray-300' : 'bg-gray-100 hover:bg-gray-200 text-gray-600'} text-sm rounded-full transition-colors`}
+                className={`px-3 py-1.5 ${isDark ? 'bg-gray-750 text-gray-300 hover:bg-gray-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'} rounded-full text-sm transition-colors`}
               >
                 {search}
               </button>
@@ -329,7 +253,7 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                   setQuery(suggestion);
                   handleSearch(suggestion);
                 }}
-                className={`px-3 py-1.5 ${isDark ? 'bg-blue-900/30 hover:bg-blue-900/50 text-blue-300' : 'bg-blue-50 hover:bg-blue-100 text-blue-600'} text-sm rounded-full transition-colors`}
+                className={`px-3 py-1.5 ${isDark ? 'bg-blue-900/30 text-blue-300 hover:bg-blue-900/50' : 'bg-blue-50 text-blue-600 hover:bg-blue-100'} rounded-full text-sm transition-colors`}
               >
                 {suggestion}
               </button>

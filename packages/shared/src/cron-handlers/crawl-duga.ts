@@ -8,10 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { DugaClient } from '../providers/duga-client';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -75,9 +72,9 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
 
       async function flushPerformerBatch() {
         if (allPerformerNames.size === 0) return;
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
           for (const name of performerNames) {
@@ -206,8 +203,8 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
 
             // サンプル動画URL（DUGAはAPIレスポンスに含まれる場合）
             if (item.sampleVideos && item.sampleVideos.length > 0) {
-              const videoValuesClauses = item.sampleVideos.map((videoUrl: string, i: number) =>
-                sql`(${productId}, 'DUGA', ${videoUrl}, 'sample', ${i})`
+              const videoValuesClauses = item.sampleVideos.map(
+                (videoUrl: string, i: number) => sql`(${productId}, 'DUGA', ${videoUrl}, 'sample', ${i})`,
               );
               const videoResult = await db.execute(sql`
                 INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
@@ -227,7 +224,6 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
             }
 
             stats.totalFetched++;
-
           } catch (error) {
             stats.errors++;
             console.error(`Error processing DUGA product ${item['productId']}:`, error);
@@ -259,7 +255,6 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
         },
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('DUGA crawl error:', error);
       return NextResponse.json(
@@ -268,7 +263,7 @@ export function createCrawlDugaHandler(deps: CrawlDugaHandlerDeps) {
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

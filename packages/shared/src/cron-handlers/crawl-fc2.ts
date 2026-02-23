@@ -8,10 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 import { createSaleHelperQueries } from '../db-queries/sale-helper';
 
 interface CrawlStats {
@@ -150,7 +147,9 @@ async function parseDetailPage(articleId: string): Promise<(FC2Product & { rawHt
           saleInfo = {
             regularPrice,
             salePrice: price,
-            discountPercent: discountMatch?.[1] ? parseInt(discountMatch[1]) : Math.round((1 - price / regularPrice) * 100),
+            discountPercent: discountMatch?.[1]
+              ? parseInt(discountMatch[1])
+              : Math.round((1 - price / regularPrice) * 100),
             saleType: 'sale',
           };
         }
@@ -253,9 +252,9 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
 
       async function flushPerformerBatch() {
         if (allPerformerNames.size === 0) return;
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
           for (const name of performerNames) {
@@ -277,20 +276,25 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
         const articleIds = await fetchArticleIds(currentPage);
         if (articleIds.length === 0) {
           consecutiveEmpty++;
-          console.log(`[crawl-fc2] No articles on page ${currentPage} (empty: ${consecutiveEmpty}/${MAX_CONSECUTIVE_EMPTY})`);
+          console.log(
+            `[crawl-fc2] No articles on page ${currentPage} (empty: ${consecutiveEmpty}/${MAX_CONSECUTIVE_EMPTY})`,
+          );
           currentPage++;
           continue;
         }
         consecutiveEmpty = 0;
 
         // バッチ既存チェック: 全articleIdを一括クエリ
-        const idValues = sql.join(articleIds.map(id => sql`${id}`), sql`, `);
+        const idValues = sql.join(
+          articleIds.map((id) => sql`${id}`),
+          sql`, `,
+        );
         const existingResult = await db.execute(sql`
           SELECT original_product_id FROM product_sources
           WHERE asp_name = 'FC2' AND original_product_id IN (${idValues})
         `);
         const existingArticleIds = new Set(
-          (existingResult.rows as { original_product_id: string }[]).map(r => r.original_product_id)
+          (existingResult.rows as { original_product_id: string }[]).map((r) => r.original_product_id),
         );
 
         let pageHadNewProducts = false;
@@ -339,7 +343,8 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
 
             const row = productResult.rows[0] as { id: number; is_new: boolean };
             const productId = row.id;
-            if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
+            if (row.is_new) stats.newProducts++;
+            else stats.updatedProducts++;
 
             const affiliateUrl = generateAffiliateUrl(product.articleId);
             await db.execute(sql`
@@ -376,7 +381,7 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
               if (videoResult.rowCount && videoResult.rowCount > 0) stats.videosAdded++;
             }
 
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            await new Promise((resolve) => setTimeout(resolve, 1000));
           } catch (error) {
             stats.errors++;
             console.error(`Error processing FC2 product ${product.articleId}:`, error);
@@ -392,7 +397,7 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
         await flushPerformerBatch();
 
         currentPage++;
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
 
       // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
@@ -411,12 +416,11 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
         },
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('FC2 crawl error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

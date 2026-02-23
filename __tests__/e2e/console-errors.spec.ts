@@ -58,13 +58,7 @@ const CRITICAL_ERROR_PATTERNS = [
 ];
 
 // 警告パターン（ログ出力するが失敗しない）
-const WARNING_PATTERNS = [
-  'Warning:',
-  'Deprecation',
-  'deprecated',
-  'will be removed',
-  'is deprecated',
-];
+const WARNING_PATTERNS = ['Warning:', 'Deprecation', 'deprecated', 'will be removed', 'is deprecated'];
 
 interface ConsoleError {
   type: 'critical' | 'warning' | 'error';
@@ -74,21 +68,15 @@ interface ConsoleError {
 }
 
 function shouldIgnore(text: string): boolean {
-  return IGNORED_PATTERNS.some(pattern =>
-    text.toLowerCase().includes(pattern.toLowerCase())
-  );
+  return IGNORED_PATTERNS.some((pattern) => text.toLowerCase().includes(pattern.toLowerCase()));
 }
 
 function isCriticalError(text: string): boolean {
-  return CRITICAL_ERROR_PATTERNS.some(pattern =>
-    text.includes(pattern)
-  );
+  return CRITICAL_ERROR_PATTERNS.some((pattern) => text.includes(pattern));
 }
 
 function isWarning(text: string): boolean {
-  return WARNING_PATTERNS.some(pattern =>
-    text.toLowerCase().includes(pattern.toLowerCase())
-  );
+  return WARNING_PATTERNS.some((pattern) => text.toLowerCase().includes(pattern.toLowerCase()));
 }
 
 function classifyError(text: string): 'critical' | 'warning' | 'error' {
@@ -97,10 +85,7 @@ function classifyError(text: string): 'critical' | 'warning' | 'error' {
   return 'error';
 }
 
-async function collectConsoleErrors(
-  page: Page,
-  navigateFn: () => Promise<void>
-): Promise<ConsoleError[]> {
+async function collectConsoleErrors(page: Page, navigateFn: () => Promise<void>): Promise<ConsoleError[]> {
   const errors: ConsoleError[] = [];
 
   // コンソールメッセージを監視
@@ -169,9 +154,9 @@ test.describe('Console Error Detection', () => {
         await page.goto(path, { waitUntil: 'networkidle' });
       });
 
-      const criticalErrors = errors.filter(e => e.type === 'critical');
-      const warnings = errors.filter(e => e.type === 'warning');
-      const generalErrors = errors.filter(e => e.type === 'error');
+      const criticalErrors = errors.filter((e) => e.type === 'critical');
+      const warnings = errors.filter((e) => e.type === 'warning');
+      const generalErrors = errors.filter((e) => e.type === 'error');
 
       // 警告を出力（失敗しない）
       if (warnings.length > 0) {
@@ -197,10 +182,7 @@ test.describe('Console Error Detection', () => {
         });
       }
 
-      expect(
-        criticalErrors,
-        `深刻なコンソールエラーが検出されました: ${path}`
-      ).toHaveLength(0);
+      expect(criticalErrors, `深刻なコンソールエラーが検出されました: ${path}`).toHaveLength(0);
     });
   }
 });
@@ -211,7 +193,7 @@ test.describe('Dynamic Page Console Errors', () => {
     await page.goto('/ja/products', { waitUntil: 'networkidle' });
 
     const productLink = page.locator('a[href*="/products/"]').first();
-    if (await productLink.count() === 0) {
+    if ((await productLink.count()) === 0) {
       test.skip();
       return;
     }
@@ -221,18 +203,15 @@ test.describe('Dynamic Page Console Errors', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
-    expect(
-      criticalErrors,
-      '商品詳細ページで深刻なエラーが検出されました'
-    ).toHaveLength(0);
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
+    expect(criticalErrors, '商品詳細ページで深刻なエラーが検出されました').toHaveLength(0);
   });
 
   test('女優詳細ページ - コンソールエラーなし', async ({ page }) => {
     await page.goto('/ja/actresses', { waitUntil: 'networkidle' });
 
     const actressLink = page.locator('a[href*="/actress/"]').first();
-    if (await actressLink.count() === 0) {
+    if ((await actressLink.count()) === 0) {
       test.skip();
       return;
     }
@@ -242,11 +221,8 @@ test.describe('Dynamic Page Console Errors', () => {
       await page.waitForLoadState('networkidle');
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
-    expect(
-      criticalErrors,
-      '女優詳細ページで深刻なエラーが検出されました'
-    ).toHaveLength(0);
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
+    expect(criticalErrors, '女優詳細ページで深刻なエラーが検出されました').toHaveLength(0);
   });
 });
 
@@ -256,14 +232,16 @@ test.describe('User Interaction Console Errors', () => {
 
     const errors = await collectConsoleErrors(page, async () => {
       // 検索ボックスを探してクリック
-      const searchButton = page.locator('[data-testid="search-button"], button:has-text("検索"), input[type="search"]').first();
-      if (await searchButton.count() > 0) {
+      const searchButton = page
+        .locator('[data-testid="search-button"], button:has-text("検索"), input[type="search"]')
+        .first();
+      if ((await searchButton.count()) > 0) {
         await searchButton.click();
         await page.waitForTimeout(500);
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -276,7 +254,9 @@ test.describe('User Interaction Console Errors', () => {
     const ageModal = page.locator('div.fixed.inset-0.bg-gray-900.z-50');
     if (await ageModal.isVisible({ timeout: 2000 }).catch(() => false)) {
       // 「はい」ボタンをクリックして閉じる
-      const confirmButton = page.locator('button:has-text("はい"), button:has-text("Yes"), button:has-text("Enter")').first();
+      const confirmButton = page
+        .locator('button:has-text("はい"), button:has-text("Yes"), button:has-text("Enter")')
+        .first();
       if (await confirmButton.isVisible({ timeout: 1000 }).catch(() => false)) {
         await confirmButton.click();
         await page.waitForTimeout(500);
@@ -285,14 +265,16 @@ test.describe('User Interaction Console Errors', () => {
 
     const errors = await collectConsoleErrors(page, async () => {
       // ハンバーガーメニューを探してクリック
-      const menuButton = page.locator('[data-testid="mobile-menu"], button[aria-label*="menu"], button[aria-label*="メニュー"]').first();
+      const menuButton = page
+        .locator('[data-testid="mobile-menu"], button[aria-label*="menu"], button[aria-label*="メニュー"]')
+        .first();
       if (await menuButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await menuButton.click();
         await page.waitForTimeout(500);
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 
@@ -301,14 +283,16 @@ test.describe('User Interaction Console Errors', () => {
 
     const errors = await collectConsoleErrors(page, async () => {
       // テーマ切替ボタンを探してクリック
-      const themeButton = page.locator('[data-testid="theme-toggle"], button[aria-label*="theme"], button[aria-label*="テーマ"]').first();
-      if (await themeButton.count() > 0) {
+      const themeButton = page
+        .locator('[data-testid="theme-toggle"], button[aria-label*="theme"], button[aria-label*="テーマ"]')
+        .first();
+      if ((await themeButton.count()) > 0) {
         await themeButton.click();
         await page.waitForTimeout(500);
       }
     });
 
-    const criticalErrors = errors.filter(e => e.type === 'critical');
+    const criticalErrors = errors.filter((e) => e.type === 'critical');
     expect(criticalErrors).toHaveLength(0);
   });
 });
@@ -318,23 +302,16 @@ test.describe('Console Error Report', () => {
     const pageResults: { page: string; critical: number; warnings: number; errors: number }[] = [];
     const allCriticalErrors: { page: string; error: string }[] = [];
 
-    const pagesToCheck = [
-      '/',
-      '/ja/products',
-      '/ja/actresses',
-      '/ja/categories',
-      '/ja/calendar',
-      '/ja/statistics',
-    ];
+    const pagesToCheck = ['/', '/ja/products', '/ja/actresses', '/ja/categories', '/ja/calendar', '/ja/statistics'];
 
     for (const pagePath of pagesToCheck) {
       const errors = await collectConsoleErrors(page, async () => {
         await page.goto(pagePath, { waitUntil: 'networkidle' });
       });
 
-      const critical = errors.filter(e => e.type === 'critical');
-      const warnings = errors.filter(e => e.type === 'warning');
-      const general = errors.filter(e => e.type === 'error');
+      const critical = errors.filter((e) => e.type === 'critical');
+      const warnings = errors.filter((e) => e.type === 'warning');
+      const general = errors.filter((e) => e.type === 'error');
 
       pageResults.push({
         page: pagePath,
@@ -343,7 +320,7 @@ test.describe('Console Error Report', () => {
         errors: general.length,
       });
 
-      critical.forEach(e => {
+      critical.forEach((e) => {
         allCriticalErrors.push({ page: pagePath, error: e.text });
       });
     }
@@ -373,9 +350,6 @@ test.describe('Console Error Report', () => {
     }
 
     // 深刻なエラーがあれば失敗
-    expect(
-      allCriticalErrors,
-      '深刻なコンソールエラーが検出されました'
-    ).toHaveLength(0);
+    expect(allCriticalErrors, '深刻なコンソールエラーが検出されました').toHaveLength(0);
   });
 });

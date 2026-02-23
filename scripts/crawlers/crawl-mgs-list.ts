@@ -15,11 +15,28 @@
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import { getDb } from './lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from './lib/db/schema';
+import {
+  rawHtmlData,
+  productSources,
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productImages,
+  productVideos,
+  productReviews,
+  productRatingSummary,
+} from './lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from './lib/performer-validation';
 import { validateProductData, isTopPageHtml } from './lib/crawler-utils';
-import { generateProductDescription, extractProductTags, translateProduct, GeneratedDescription } from './lib/google-apis';
+import {
+  generateProductDescription,
+  extractProductTags,
+  translateProduct,
+  GeneratedDescription,
+} from './lib/google-apis';
 import { saveRawHtml, calculateHash } from './lib/gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from './lib/sale-helper';
 
@@ -32,26 +49,96 @@ const ITEMS_PER_PAGE = 120;
 // これらのシリーズプレフィックスで検索することで、新着順だけでなく過去の商品も取得
 const MGS_SERIES_PREFIXES = [
   // プレステージ
-  'ABW', 'ABP', 'ABS', 'ABF', 'CHN', 'TEM', 'SGA', 'SABA', 'KBI', 'GAV',
-  'AOI', 'EDD', 'YRH', 'SRS', 'MBM', 'FIV', 'BXH', 'RDT', 'MAN', 'MGT',
+  'ABW',
+  'ABP',
+  'ABS',
+  'ABF',
+  'CHN',
+  'TEM',
+  'SGA',
+  'SABA',
+  'KBI',
+  'GAV',
+  'AOI',
+  'EDD',
+  'YRH',
+  'SRS',
+  'MBM',
+  'FIV',
+  'BXH',
+  'RDT',
+  'MAN',
+  'MGT',
   // SODクリエイト
-  'STARS', 'SDAB', 'SDJS', 'SDDE', 'SDAM', 'SDMU', 'SDNT', 'SDNM', 'SDEN',
-  'SDMF', 'SDMM', 'JUFE', 'JUSD', 'JUNY',
+  'STARS',
+  'SDAB',
+  'SDJS',
+  'SDDE',
+  'SDAM',
+  'SDMU',
+  'SDNT',
+  'SDNM',
+  'SDEN',
+  'SDMF',
+  'SDMM',
+  'JUFE',
+  'JUSD',
+  'JUNY',
   // kawaii
-  'CAWD', 'KAVR', 'KWBD', 'KAWD',
+  'CAWD',
+  'KAVR',
+  'KWBD',
+  'KAWD',
   // ムーディーズ
-  'MIAA', 'MIDE', 'MIRD', 'MIDD', 'MIMK', 'PRED', 'PPPD', 'SNIS', 'SSNI',
+  'MIAA',
+  'MIDE',
+  'MIRD',
+  'MIDD',
+  'MIMK',
+  'PRED',
+  'PPPD',
+  'SNIS',
+  'SSNI',
   // S1
-  'SSIS', 'SONE', 'SIVR', 'OFJE', 'SOE', 'MSFH',
+  'SSIS',
+  'SONE',
+  'SIVR',
+  'OFJE',
+  'SOE',
+  'MSFH',
   // アイデアポケット
-  'IPX', 'IPZ', 'IPVR', 'SUPD', 'HODV',
+  'IPX',
+  'IPZ',
+  'IPVR',
+  'SUPD',
+  'HODV',
   // 素人系
-  '261ARA', '259LUXU', '300MIUM', '300MAAN', '300NTK', '300ORETD', '261SIRO',
-  '230OREC', '230ORETV', '390JAC', '336KNB', '200GANA', '320MMGH', '345SIMM',
+  '261ARA',
+  '259LUXU',
+  '300MIUM',
+  '300MAAN',
+  '300NTK',
+  '300ORETD',
+  '261SIRO',
+  '230OREC',
+  '230ORETV',
+  '390JAC',
+  '336KNB',
+  '200GANA',
+  '320MMGH',
+  '345SIMM',
   // FALENOstar
-  'FSDSS', 'FLNS', 'MFCS', 'FADSS',
+  'FSDSS',
+  'FLNS',
+  'MFCS',
+  'FADSS',
   // その他人気
-  'GVH', 'JUL', 'ROE', 'MOND', 'MEYD', 'ENGSUB',
+  'GVH',
+  'JUL',
+  'ROE',
+  'MOND',
+  'MEYD',
+  'ENGSUB',
 ];
 
 // 日付ソートオプション（古い順、新しい順）
@@ -104,7 +191,7 @@ async function fetchProductUrlsBySeries(
   const response = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
+      Cookie: 'adc=1',
     },
   });
 
@@ -180,7 +267,7 @@ async function crawlSeriesFull(
   // 2ページ目以降を取得
   for (let page = 2; page <= totalPages; page++) {
     try {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
 
       const result = await fetchProductUrlsBySeries(seriesKeyword, page);
 
@@ -197,7 +284,6 @@ async function crawlSeriesFull(
       }
 
       console.log(`    ✅ Page ${page}/${totalPages}: ${result.urls.length} products (total: ${allUrls.length})`);
-
     } catch (error) {
       console.error(`  ❌ Error at page ${page}:`, error);
       break;
@@ -218,7 +304,7 @@ async function fetchProductUrls(page: number): Promise<string[]> {
   const response = await fetch(url, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
+      Cookie: 'adc=1',
     },
   });
 
@@ -270,15 +356,16 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   const title = $('h1.tag').text().trim() || $('title').text().trim();
 
   // トップページ検出
-  if (isTopPageHtml(html, 'MGS') ||
-      title.includes('エロ動画・アダルトビデオ -MGS動画') ||
-      title.includes('MGS動画＜プレステージ グループ＞')) {
+  if (
+    isTopPageHtml(html, 'MGS') ||
+    title.includes('エロ動画・アダルトビデオ -MGS動画') ||
+    title.includes('MGS動画＜プレステージ グループ＞')
+  ) {
     return null;
   }
 
   // 商品詳細ページチェック
-  const hasProductDetails = $('th:contains("配信開始日")').length > 0 ||
-                            $('th:contains("出演")').length > 0;
+  const hasProductDetails = $('th:contains("配信開始日")').length > 0 || $('th:contains("出演")').length > 0;
   if (!hasProductDetails) return null;
 
   // リリース日
@@ -287,10 +374,13 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 
   // 出演者
   const rawPerformerNames: string[] = [];
-  $('th:contains("出演")').next('td').find('a').each((_, elem) => {
-    const name = $(elem).text().trim();
-    if (name) rawPerformerNames.push(name);
-  });
+  $('th:contains("出演")')
+    .next('td')
+    .find('a')
+    .each((_, elem) => {
+      const name = $(elem).text().trim();
+      if (name) rawPerformerNames.push(name);
+    });
 
   if (rawPerformerNames.length === 0) {
     const performerText = $('th:contains("出演")').next('td').text().trim();
@@ -303,7 +393,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   }
 
   const performerNames = rawPerformerNames
-    .map(name => normalizePerformerName(name))
+    .map((name) => normalizePerformerName(name))
     .filter((name): name is string => name !== null && isValidPerformerForProduct(name, title));
 
   // サムネイル
@@ -316,9 +406,13 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   // サンプル画像
   const sampleImages: string[] = [];
   const shouldExcludeImage = (url: string): boolean => {
-    return url.includes('sample_button') || url.includes('sample-button') ||
-           url.includes('samplemovie') || url.includes('sample_movie') ||
-           url.includes('btn_sample');
+    return (
+      url.includes('sample_button') ||
+      url.includes('sample-button') ||
+      url.includes('samplemovie') ||
+      url.includes('sample_movie') ||
+      url.includes('btn_sample')
+    );
   };
 
   $('.sample-photo img, .sample-box img, .sample-image img').each((_, elem) => {
@@ -415,10 +509,13 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 
   // ジャンル
   const genres: string[] = [];
-  $('th:contains("ジャンル")').next('td').find('a').each((_, elem) => {
-    const genre = $(elem).text().trim();
-    if (genre) genres.push(genre);
-  });
+  $('th:contains("ジャンル")')
+    .next('td')
+    .find('a')
+    .each((_, elem) => {
+      const genre = $(elem).text().trim();
+      if (genre) genres.push(genre);
+    });
 
   return {
     productId,
@@ -439,12 +536,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 /**
  * 商品データをDBに保存
  */
-async function saveProduct(
-  mgsProduct: MgsProduct,
-  html: string,
-  enableAI: boolean,
-  stats: CrawlStats,
-): Promise<void> {
+async function saveProduct(mgsProduct: MgsProduct, html: string, enableAI: boolean, stats: CrawlStats): Promise<void> {
   const db = getDb();
   const normalizedProductId = mgsProduct.productId.toLowerCase();
 
@@ -566,11 +658,7 @@ async function saveProduct(
     // 出演者保存
     if (mgsProduct.performerNames && mgsProduct.performerNames.length > 0) {
       for (const name of mgsProduct.performerNames) {
-        const performerRecord = await db
-          .select()
-          .from(performers)
-          .where(eq(performers.name, name))
-          .limit(1);
+        const performerRecord = await db.select().from(performers).where(eq(performers.name, name)).limit(1);
 
         let performerId: number;
         if (performerRecord.length === 0) {
@@ -641,13 +729,16 @@ async function saveProduct(
         .limit(1);
 
       if (existing.length === 0) {
-        await db.insert(productVideos).values({
-          productId,
-          videoUrl: mgsProduct.sampleVideoUrl,
-          videoType: 'sample',
-          displayOrder: 0,
-          aspName: SOURCE_NAME,
-        }).onConflictDoNothing();
+        await db
+          .insert(productVideos)
+          .values({
+            productId,
+            videoUrl: mgsProduct.sampleVideoUrl,
+            videoType: 'sample',
+            displayOrder: 0,
+            aspName: SOURCE_NAME,
+          })
+          .onConflictDoNothing();
       }
     }
 
@@ -669,14 +760,14 @@ async function saveProduct(
 
         const aiTags = await extractProductTags(mgsProduct.title, mgsProduct.description);
 
-        if (aiDescription || (aiTags.genres.length > 0)) {
+        if (aiDescription || aiTags.genres.length > 0) {
           await db
             .update(products)
             .set({
               aiDescription: aiDescription ? JSON.stringify(aiDescription) : undefined,
               aiCatchphrase: aiDescription?.catchphrase,
               aiShortDescription: aiDescription?.shortDescription,
-              aiTags: (aiTags.genres.length > 0 || aiTags.attributes.length > 0) ? JSON.stringify(aiTags) : undefined,
+              aiTags: aiTags.genres.length > 0 || aiTags.attributes.length > 0 ? JSON.stringify(aiTags) : undefined,
             })
             .where(eq(products.id, productId));
         }
@@ -734,10 +825,7 @@ async function saveProduct(
 
         let genreTagId: number;
         if (existingGenreTag.length === 0) {
-          const [newGenreTag] = await db
-            .insert(tags)
-            .values({ name: genreName, category: 'genre' })
-            .returning();
+          const [newGenreTag] = await db.insert(tags).values({ name: genreName, category: 'genre' }).returning();
           genreTagId = newGenreTag.id;
         } else {
           genreTagId = existingGenreTag[0].id;
@@ -755,7 +843,6 @@ async function saveProduct(
         }
       }
     }
-
   } catch (error) {
     console.error(`    ❌ Error:`, error);
     stats.errors++;
@@ -765,18 +852,12 @@ async function saveProduct(
 /**
  * フルスキャンモード: 全シリーズをクロール
  */
-async function runFullScan(
-  enableAI: boolean,
-  targetSeries?: string,
-  maxPagesPerSeries: number = 500,
-): Promise<void> {
+async function runFullScan(enableAI: boolean, targetSeries?: string, maxPagesPerSeries: number = 500): Promise<void> {
   console.log('=== MGSフルスキャンモード ===');
   console.log(`AI: ${enableAI ? 'enabled' : 'disabled'}`);
   console.log(`Max pages per series: ${maxPagesPerSeries}`);
 
-  const seriesToCrawl = targetSeries
-    ? [targetSeries]
-    : MGS_SERIES_PREFIXES;
+  const seriesToCrawl = targetSeries ? [targetSeries] : MGS_SERIES_PREFIXES;
 
   console.log(`\n📋 Series to crawl: ${seriesToCrawl.length}`);
   if (targetSeries) {
@@ -804,7 +885,7 @@ async function runFullScan(
       const seriesUrls = await crawlSeriesFull(series, maxPagesPerSeries);
 
       // 重複を除外
-      const newUrls = seriesUrls.filter(url => !allProcessedUrls.has(url));
+      const newUrls = seriesUrls.filter((url) => !allProcessedUrls.has(url));
       console.log(`  📊 New URLs (excluding duplicates): ${newUrls.length}`);
 
       // 各商品をクロール
@@ -830,7 +911,7 @@ async function runFullScan(
           const response = await fetch(url, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-              'Cookie': 'adc=1',
+              Cookie: 'adc=1',
             },
           });
 
@@ -852,8 +933,7 @@ async function runFullScan(
           await saveProduct(mgsProduct, html, enableAI, stats);
 
           // レート制限
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         } catch (error) {
           console.error(`      ❌ Error:`, error);
           stats.errors++;
@@ -871,8 +951,7 @@ async function runFullScan(
       console.table(stats);
 
       // シリーズ間の待機
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
       console.error(`\n  ❌ Error processing series ${series}:`, error);
     }
@@ -888,10 +967,10 @@ async function runFullScan(
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const pagesArg = args.find(arg => arg.startsWith('--pages='));
-  const seriesArg = args.find(arg => arg.startsWith('--series='));
-  const maxPagesArg = args.find(arg => arg.startsWith('--max-pages='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const pagesArg = args.find((arg) => arg.startsWith('--pages='));
+  const seriesArg = args.find((arg) => arg.startsWith('--series='));
+  const maxPagesArg = args.find((arg) => arg.startsWith('--max-pages='));
   const enableAI = !args.includes('--no-ai');
   const fullScan = args.includes('--full-scan');
 
@@ -941,7 +1020,7 @@ async function main() {
       }
 
       // レート制限
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error(`  ❌ Error fetching page ${page}:`, error);
       break;
@@ -964,7 +1043,7 @@ async function main() {
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-          'Cookie': 'adc=1',
+          Cookie: 'adc=1',
         },
       });
 
@@ -986,8 +1065,7 @@ async function main() {
       await saveProduct(mgsProduct, html, enableAI, stats);
 
       // レート制限
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       console.error(`    ❌ Error:`, error);
       stats.errors++;

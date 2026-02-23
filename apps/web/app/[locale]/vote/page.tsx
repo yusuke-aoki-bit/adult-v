@@ -86,16 +86,16 @@ const categories: VoteCategory[] = [
 ];
 
 function CategoryIcon({ icon }: { icon: 'star' | 'fire' | 'trophy' }) {
-  if (icon === 'star') return <Star className="w-5 h-5" />;
-  if (icon === 'fire') return <Flame className="w-5 h-5" />;
-  return <Trophy className="w-5 h-5" />;
+  if (icon === 'star') return <Star className="h-5 w-5" />;
+  if (icon === 'fire') return <Flame className="h-5 w-5" />;
+  return <Trophy className="h-5 w-5" />;
 }
 
 function getRankIcon(rank: number) {
-  if (rank === 1) return <Crown className="w-6 h-6 text-yellow-400" />;
-  if (rank === 2) return <Medal className="w-6 h-6 text-gray-300" />;
-  if (rank === 3) return <Medal className="w-6 h-6 text-amber-600" />;
-  return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold text-sm">#{rank}</span>;
+  if (rank === 1) return <Crown className="h-6 w-6 text-yellow-400" />;
+  if (rank === 2) return <Medal className="h-6 w-6 text-gray-300" />;
+  if (rank === 3) return <Medal className="h-6 w-6 text-amber-600" />;
+  return <span className="flex h-6 w-6 items-center justify-center text-sm font-bold text-gray-500">#{rank}</span>;
 }
 
 function getRankBg(rank: number) {
@@ -177,15 +177,13 @@ export default function VotePage() {
       if (!response.ok) throw new Error('Vote failed');
 
       // 楽観的更新
-      setProducts(prev =>
-        prev.map(p =>
-          p.id === productId
-            ? { ...p, voteCount: p.voteCount + 1, hasVoted: true }
-            : p
-        ).sort((a, b) => b.voteCount - a.voteCount)
-         .map((p, i) => ({ ...p, rank: i + 1 }))
+      setProducts((prev) =>
+        prev
+          .map((p) => (p.id === productId ? { ...p, voteCount: p.voteCount + 1, hasVoted: true } : p))
+          .sort((a, b) => b.voteCount - a.voteCount)
+          .map((p, i) => ({ ...p, rank: i + 1 })),
       );
-      setStats(prev => ({ ...prev, totalVotes: prev.totalVotes + 1 }));
+      setStats((prev) => ({ ...prev, totalVotes: prev.totalVotes + 1 }));
     } catch {
       setError(t.error);
     } finally {
@@ -197,40 +195,40 @@ export default function VotePage() {
     <div className="theme-body min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* PR表記 */}
-        <p className="text-xs theme-text-muted mb-6">
-          <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+        <p className="theme-text-muted mb-6 text-xs">
+          <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
           当ページには広告・アフィリエイトリンクが含まれています
         </p>
 
         {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-full mb-4">
-            <Vote className="w-5 h-5" />
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-white">
+            <Vote className="h-5 w-5" />
             <span className="font-bold">VOTE NOW</span>
           </div>
-          <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+          <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
           <p className="theme-text-muted">{t.subtitle}</p>
         </div>
 
         {/* 統計 */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-4">
           <div className="theme-card rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold theme-text">{stats.totalVotes}</div>
-            <div className="text-sm theme-text-muted">{t.totalVotes}</div>
+            <div className="theme-text text-2xl font-bold">{stats.totalVotes}</div>
+            <div className="theme-text-muted text-sm">{t.totalVotes}</div>
           </div>
           <div className="theme-card rounded-lg p-4 text-center">
-            <div className="text-2xl font-bold theme-text">{stats.participants}</div>
-            <div className="text-sm theme-text-muted">{t.participants}</div>
+            <div className="theme-text text-2xl font-bold">{stats.participants}</div>
+            <div className="theme-text-muted text-sm">{t.participants}</div>
           </div>
         </div>
 
         {/* カテゴリタブ */}
-        <div className="flex gap-2 mb-8 overflow-x-auto pb-2">
-          {categories.map(category => (
+        <div className="mb-8 flex gap-2 overflow-x-auto pb-2">
+          {categories.map((category) => (
             <button
               key={category.id}
               onClick={() => setActiveCategory(category.id)}
-              className={`flex items-center gap-2 px-4 py-3 rounded-lg font-medium transition-all whitespace-nowrap ${
+              className={`flex items-center gap-2 rounded-lg px-4 py-3 font-medium whitespace-nowrap transition-all ${
                 activeCategory === category.id
                   ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
                   : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
@@ -247,77 +245,67 @@ export default function VotePage() {
 
         {/* ログインプロンプト */}
         {!isAuthLoading && !userId && (
-          <div className="theme-card rounded-lg p-6 text-center mb-8">
-            <Vote className="w-12 h-12 mx-auto mb-4 text-gray-500" />
+          <div className="theme-card mb-8 rounded-lg p-6 text-center">
+            <Vote className="mx-auto mb-4 h-12 w-12 text-gray-500" />
             <p className="theme-text-muted mb-4">{t.loginToVote}</p>
           </div>
         )}
 
         {/* エラー */}
-        {error && (
-          <div className="text-center py-4 text-red-400 mb-4">
-            {error}
-          </div>
-        )}
+        {error && <div className="mb-4 py-4 text-center text-red-400">{error}</div>}
 
         {/* ローディング */}
         {isLoading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
             <span className="ml-2 text-gray-500">{t.loading}</span>
           </div>
         )}
 
         {/* 作品リスト */}
         {!isLoading && products.length === 0 ? (
-          <div className="theme-card rounded-lg p-8 text-center theme-text-muted">
-            {t.noProducts}
-          </div>
+          <div className="theme-card theme-text-muted rounded-lg p-8 text-center">{t.noProducts}</div>
         ) : (
           <div className="space-y-3">
-            {products.map(product => (
+            {products.map((product) => (
               <div
                 key={product.id}
-                className={`theme-card rounded-lg overflow-hidden border ${getRankBg(product.rank)} transition-all`}
+                className={`theme-card overflow-hidden rounded-lg border ${getRankBg(product.rank)} transition-all`}
               >
                 <div className="flex items-center">
                   {/* ランク */}
-                  <div className="flex-shrink-0 w-16 flex items-center justify-center">
-                    {getRankIcon(product.rank)}
-                  </div>
+                  <div className="flex w-16 flex-shrink-0 items-center justify-center">{getRankIcon(product.rank)}</div>
 
                   {/* サムネイル */}
-                  <div className="flex-shrink-0 w-20 h-28 bg-gray-700 overflow-hidden">
+                  <div className="h-28 w-20 flex-shrink-0 overflow-hidden bg-gray-700">
                     {product.imageUrl ? (
                       <img
                         src={product.imageUrl}
                         alt={product.title}
-                        className="w-full h-full object-cover"
+                        className="h-full w-full object-cover"
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-500">
-                        No Image
-                      </div>
+                      <div className="flex h-full w-full items-center justify-center text-gray-500">No Image</div>
                     )}
                   </div>
 
                   {/* コンテンツ */}
-                  <div className="flex-1 p-4 min-w-0">
+                  <div className="min-w-0 flex-1 p-4">
                     <Link
                       href={`/${locale}/products/${product.id}`}
-                      className="font-bold theme-text hover:text-rose-400 transition-colors line-clamp-2 mb-1"
+                      className="theme-text mb-1 line-clamp-2 font-bold transition-colors hover:text-rose-400"
                     >
                       {product.title}
                     </Link>
                     {product.performers.length > 0 && (
-                      <p className="text-sm theme-text-muted line-clamp-1 mb-2">
+                      <p className="theme-text-muted mb-2 line-clamp-1 text-sm">
                         {product.performers.slice(0, 3).join(', ')}
                       </p>
                     )}
                     <div className="flex items-center gap-2 text-sm">
                       <span className="flex items-center gap-1 text-yellow-400">
-                        <ThumbsUp className="w-4 h-4" />
+                        <ThumbsUp className="h-4 w-4" />
                         {product.voteCount} {t.votes}
                       </span>
                     </div>
@@ -329,30 +317,28 @@ export default function VotePage() {
                       <button
                         onClick={() => handleVote(product.id)}
                         disabled={product.hasVoted || votingProductId === product.id}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                        className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all ${
                           product.hasVoted
-                            ? 'bg-green-600/30 text-green-400 cursor-not-allowed'
+                            ? 'cursor-not-allowed bg-green-600/30 text-green-400'
                             : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-500 hover:to-blue-500'
                         }`}
                       >
                         {votingProductId === product.id ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : product.hasVoted ? (
                           <>
-                            <ThumbsUp className="w-4 h-4" />
+                            <ThumbsUp className="h-4 w-4" />
                             {t.voted}
                           </>
                         ) : (
                           <>
-                            <Vote className="w-4 h-4" />
+                            <Vote className="h-4 w-4" />
                             {t.vote}
                           </>
                         )}
                       </button>
                     ) : (
-                      <div className="text-xs theme-text-muted px-4 py-2">
-                        {t.loginToVote}
-                      </div>
+                      <div className="theme-text-muted px-4 py-2 text-xs">{t.loginToVote}</div>
                     )}
                   </div>
                 </div>

@@ -17,28 +17,28 @@ async function enableFuzzySearch() {
     // Create GIN index for products.title
     console.log('Creating index on products.title...');
     await db.execute(
-      sql`CREATE INDEX IF NOT EXISTS idx_products_title_trgm ON products USING gin (title gin_trgm_ops);`
+      sql`CREATE INDEX IF NOT EXISTS idx_products_title_trgm ON products USING gin (title gin_trgm_ops);`,
     );
     console.log('✓ Created index idx_products_title_trgm');
 
     // Create GIN index for products.description
     console.log('Creating index on products.description...');
     await db.execute(
-      sql`CREATE INDEX IF NOT EXISTS idx_products_description_trgm ON products USING gin (description gin_trgm_ops);`
+      sql`CREATE INDEX IF NOT EXISTS idx_products_description_trgm ON products USING gin (description gin_trgm_ops);`,
     );
     console.log('✓ Created index idx_products_description_trgm');
 
     // Create GIN index for performers.name
     console.log('Creating index on performers.name...');
     await db.execute(
-      sql`CREATE INDEX IF NOT EXISTS idx_performers_name_trgm ON performers USING gin (name gin_trgm_ops);`
+      sql`CREATE INDEX IF NOT EXISTS idx_performers_name_trgm ON performers USING gin (name gin_trgm_ops);`,
     );
     console.log('✓ Created index idx_performers_name_trgm');
 
     // Create GIN index for performers.name_kana
     console.log('Creating index on performers.name_kana...');
     await db.execute(
-      sql`CREATE INDEX IF NOT EXISTS idx_performers_name_kana_trgm ON performers USING gin (name_kana gin_trgm_ops);`
+      sql`CREATE INDEX IF NOT EXISTS idx_performers_name_kana_trgm ON performers USING gin (name_kana gin_trgm_ops);`,
     );
     console.log('✓ Created index idx_performers_name_kana_trgm');
 

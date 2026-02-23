@@ -14,10 +14,7 @@ export async function POST(request: NextRequest) {
     const { query, availableGenres, popularPerformers } = body;
 
     if (!query || typeof query !== 'string') {
-      return NextResponse.json(
-        { error: '検索クエリが必要です' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '検索クエリが必要です' }, { status: 400 });
     }
 
     const analysis = await analyzeSearchQuery(query, {

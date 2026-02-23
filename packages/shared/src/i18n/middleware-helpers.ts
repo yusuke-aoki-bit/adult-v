@@ -72,11 +72,7 @@ export const MALICIOUS_BOT_PATTERNS = [
 /**
  * セキュリティ: 保護が必要なパス
  */
-export const SENSITIVE_PATHS = [
-  '/api/age-verify',
-  '/api/notifications',
-  '/api/admin',
-];
+export const SENSITIVE_PATHS = ['/api/age-verify', '/api/notifications', '/api/admin'];
 
 /**
  * セキュリティ: SQLインジェクションパターン
@@ -108,14 +104,14 @@ export const XSS_PATTERNS = [
  * 悪意のあるボットかどうかを判定
  */
 export function isMaliciousBot(userAgent: string): boolean {
-  return MALICIOUS_BOT_PATTERNS.some(pattern => pattern.test(userAgent));
+  return MALICIOUS_BOT_PATTERNS.some((pattern) => pattern.test(userAgent));
 }
 
 /**
  * センシティブなパスかどうかを判定
  */
 export function isSensitivePath(pathname: string): boolean {
-  return SENSITIVE_PATHS.some(path => pathname.startsWith(path));
+  return SENSITIVE_PATHS.some((path) => pathname.startsWith(path));
 }
 
 /**
@@ -124,7 +120,7 @@ export function isSensitivePath(pathname: string): boolean {
 export function hasSqlInjection(url: string): boolean {
   try {
     const decodedUrl = decodeURIComponent(url);
-    return SQL_INJECTION_PATTERNS.some(pattern => pattern.test(decodedUrl));
+    return SQL_INJECTION_PATTERNS.some((pattern) => pattern.test(decodedUrl));
   } catch {
     return false;
   }
@@ -136,7 +132,7 @@ export function hasSqlInjection(url: string): boolean {
 export function hasXssAttempt(url: string): boolean {
   try {
     const decodedUrl = decodeURIComponent(url);
-    return XSS_PATTERNS.some(pattern => pattern.test(decodedUrl));
+    return XSS_PATTERNS.some((pattern) => pattern.test(decodedUrl));
   } catch {
     return false;
   }

@@ -20,7 +20,7 @@ describe('DBスキーマとAPIカラム名の一致', () => {
     const productsColumns = [
       'id',
       'title',
-      'normalized_product_id',  // NOT 'normalized_id'
+      'normalized_product_id', // NOT 'normalized_id'
       'default_thumbnail_url',
       'release_date',
       'duration_seconds',
@@ -53,7 +53,7 @@ describe('DBスキーマとAPIカラム名の一致', () => {
     const productViewsColumns = [
       'id',
       'product_id',
-      'session_id',  // 協調フィルタリングに必要
+      'session_id', // 協調フィルタリングに必要
       'viewed_at',
       'created_at',
     ];
@@ -70,21 +70,14 @@ describe('DBスキーマとAPIカラム名の一致', () => {
 
   describe('price_historyテーブル', () => {
     // DBスキーマで定義されているカラム名（0032_add_price_history.sql）
-    const priceHistoryColumns = [
-      'id',
-      'product_source_id',
-      'price',
-      'sale_price',
-      'discount_percent',
-      'recorded_at',
-    ];
+    const priceHistoryColumns = ['id', 'product_source_id', 'price', 'sale_price', 'discount_percent', 'recorded_at'];
 
     it('price-history.tsがスキーマ定義のカラム名を使用', () => {
       const filePath = path.join(PROJECT_ROOT, 'packages/shared/src/db-queries/price-history.ts');
       const content = fs.readFileSync(filePath, 'utf-8');
 
       // スキーマで定義されたカラム名を使用
-      priceHistoryColumns.forEach(column => {
+      priceHistoryColumns.forEach((column) => {
         expect(content).toContain(column);
       });
     });

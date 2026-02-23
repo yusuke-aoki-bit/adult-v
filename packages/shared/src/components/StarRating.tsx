@@ -87,13 +87,9 @@ export default function StarRating({
           );
         })}
       </div>
-      <span className={`${textSizeClasses[size]} font-semibold ${ratingColor}`}>
-        {rating.toFixed(1)}
-      </span>
+      <span className={`${textSizeClasses[size]} font-semibold ${ratingColor}`}>{rating.toFixed(1)}</span>
       {showCount && reviewCount !== undefined && reviewCount > 0 && (
-        <span className={`${textSizeClasses[size]} text-gray-500`}>
-          ({reviewCount.toLocaleString()})
-        </span>
+        <span className={`${textSizeClasses[size]} text-gray-500`}>({reviewCount.toLocaleString()})</span>
       )}
     </div>
   );

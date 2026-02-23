@@ -30,7 +30,10 @@ async function main() {
     const combinedName = row.name as string;
 
     // カンマで分割
-    const names = combinedName.split(',').map(n => n.trim()).filter(n => n.length > 0);
+    const names = combinedName
+      .split(',')
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0);
 
     if (names.length <= 1) {
       skipped++;
@@ -45,7 +48,7 @@ async function main() {
       SELECT product_id FROM product_performers WHERE performer_id = ${oldPerformerId}
     `);
 
-    const productIds = relatedProducts.rows.map(r => r.product_id as number);
+    const productIds = relatedProducts.rows.map((r) => r.product_id as number);
     console.log(`  → 関連商品: ${productIds.length}件`);
 
     // 各名前に対して処理

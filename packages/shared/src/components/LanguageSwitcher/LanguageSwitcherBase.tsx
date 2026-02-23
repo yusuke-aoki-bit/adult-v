@@ -25,13 +25,17 @@ export interface LanguageSwitcherBaseProps {
 
 const themeStyles = {
   dark: {
-    select: 'appearance-none bg-gray-800 border border-gray-600 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent cursor-pointer',
-    selectDisabled: 'appearance-none bg-gray-800 border border-gray-600 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-500 cursor-wait',
+    select:
+      'appearance-none bg-gray-800 border border-gray-600 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-200 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent cursor-pointer',
+    selectDisabled:
+      'appearance-none bg-gray-800 border border-gray-600 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-500 cursor-wait',
     icon: 'text-gray-400',
   },
   light: {
-    select: 'appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent cursor-pointer',
-    selectDisabled: 'appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-400 cursor-wait',
+    select:
+      'appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent cursor-pointer',
+    selectDisabled:
+      'appearance-none bg-white border border-gray-300 rounded-md px-4 py-2 pr-8 text-sm font-medium text-gray-400 cursor-wait',
     icon: 'text-gray-700',
   },
 };
@@ -61,28 +65,31 @@ function LanguageSwitcherContent({ theme }: { theme: LanguageSwitcherTheme }) {
     }
   }, [searchParams]);
 
-  const handleLanguageChange = useCallback((newLocale: Locale) => {
-    if (newLocale === locale) return;
+  const handleLanguageChange = useCallback(
+    (newLocale: Locale) => {
+      if (newLocale === locale) return;
 
-    // クッキーに言語設定を保存
-    document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`; // 1年間有効
+      // クッキーに言語設定を保存
+      document.cookie = `NEXT_LOCALE=${newLocale}; path=/; max-age=31536000`; // 1年間有効
 
-    // 新しいURLを構築（?hl= パラメータ方式）
-    const newParams = new URLSearchParams(searchParams.toString());
+      // 新しいURLを構築（?hl= パラメータ方式）
+      const newParams = new URLSearchParams(searchParams.toString());
 
-    if (newLocale === defaultLocale) {
-      // デフォルトロケールの場合は hl パラメータを削除
-      newParams.delete('hl');
-    } else {
-      // 他の言語の場合は hl パラメータを設定
-      newParams.set('hl', newLocale);
-    }
+      if (newLocale === defaultLocale) {
+        // デフォルトロケールの場合は hl パラメータを削除
+        newParams.delete('hl');
+      } else {
+        // 他の言語の場合は hl パラメータを設定
+        newParams.set('hl', newLocale);
+      }
 
-    const queryString = newParams.toString();
-    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+      const queryString = newParams.toString();
+      const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
 
-    router.push(newUrl);
-  }, [locale, pathname, router, searchParams]);
+      router.push(newUrl);
+    },
+    [locale, pathname, router, searchParams],
+  );
 
   return (
     <div className="relative">
@@ -113,16 +120,15 @@ export function LanguageSwitcherBase({ theme: themeProp }: LanguageSwitcherBaseP
   const styles = themeStyles[theme];
 
   return (
-    <Suspense fallback={
-      <div className="relative">
-        <select
-          disabled
-          className={styles.selectDisabled}
-        >
-          <option>...</option>
-        </select>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="relative">
+          <select disabled className={styles.selectDisabled}>
+            <option>...</option>
+          </select>
+        </div>
+      }
+    >
       <LanguageSwitcherContent theme={theme} />
     </Suspense>
   );

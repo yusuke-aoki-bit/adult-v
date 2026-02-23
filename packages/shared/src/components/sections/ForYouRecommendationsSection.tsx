@@ -5,7 +5,7 @@ import { Sparkles, Users, RefreshCw, AlertCircle } from 'lucide-react';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
-import { forYouTranslations, getTranslation } from './translations';
+import { forYouTranslations, getTranslation } from '../../lib/translations';
 
 // Generic product type that works with both apps
 interface BaseProduct {
@@ -102,18 +102,21 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
   const [retryCount, setRetryCount] = useState(0);
 
   // 展開時にフェッチをトリガー
-  const handleToggle = useCallback((isOpen: boolean) => {
-    if (isOpen && !hasExpanded) {
-      setIsLoading(true);
-      setHasExpanded(true);
-    }
-  }, [hasExpanded]);
+  const handleToggle = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen && !hasExpanded) {
+        setIsLoading(true);
+        setHasExpanded(true);
+      }
+    },
+    [hasExpanded],
+  );
 
   // リトライハンドラー
   const handleRetry = useCallback(() => {
     setIsRetrying(true);
     setError(null);
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
   }, []);
 
   // Fetch recommendations (only when expanded)
@@ -133,7 +136,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
 
       try {
         // Step 1: Get recommendation IDs
-        const productIds = viewedItems.slice(0, 10).map(item => item['id']);
+        const productIds = viewedItems.slice(0, 10).map((item) => item['id']);
 
         let recommendations: RecommendationMeta[];
         if (fetchRecommendations) {
@@ -160,7 +163,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
         }
 
         // Step 2: Get full product info from IDs
-        const ids = recommendations.map(r => r.id);
+        const ids = recommendations.map((r) => r.id);
 
         let fetchedProducts: T[];
         if (fetchProducts) {
@@ -212,11 +215,11 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
 
               if (uniquePerformers.length > 0) {
                 if (fetchActresses) {
-                  const actressIds = uniquePerformers.map(p => p.id);
+                  const actressIds = uniquePerformers.map((p) => p.id);
                   const fetchedActresses = await fetchActresses(actressIds);
                   setActresses(fetchedActresses);
                 } else if (toActressType) {
-                  const convertedActresses = uniquePerformers.map(p => toActressType(p));
+                  const convertedActresses = uniquePerformers.map((p) => toActressType(p));
                   setActresses(convertedActresses);
                 }
               } else {
@@ -241,7 +244,18 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
     if (!isViewedLoading) {
       doFetch();
     }
-  }, [viewedItems, isViewedLoading, fetchRecommendations, fetchProducts, fetchActresses, toActressType, ActressCard, hasExpanded, retryCount, locale]);
+  }, [
+    viewedItems,
+    isViewedLoading,
+    fetchRecommendations,
+    fetchProducts,
+    fetchActresses,
+    toActressType,
+    ActressCard,
+    hasExpanded,
+    retryCount,
+    locale,
+  ]);
 
   // Don't render if no viewing history or still loading
   if (isViewedLoading || viewedItems.length < 2) {
@@ -264,27 +278,23 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
     // エラー時はリトライボタンを表示
     if (error) {
       return (
-        <div className={`flex flex-col items-center justify-center py-8 px-4 rounded-lg ${
-          theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
-        }`}>
-          <AlertCircle className={`w-8 h-8 mb-3 ${
-            theme === 'dark' ? 'text-red-400' : 'text-red-500'
-          }`} />
-          <p className={`text-sm mb-4 text-center ${
-            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {error}
-          </p>
+        <div
+          className={`flex flex-col items-center justify-center rounded-lg px-4 py-8 ${
+            theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
+          }`}
+        >
+          <AlertCircle className={`mb-3 h-8 w-8 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`} />
+          <p className={`mb-4 text-center text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{error}</p>
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               theme === 'dark'
-                ? 'bg-rose-600 hover:bg-rose-700 text-white disabled:bg-gray-600'
-                : 'bg-rose-500 hover:bg-rose-600 text-white disabled:bg-gray-400'
+                ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
+                : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
             } disabled:cursor-not-allowed`}
           >
-            <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
             {isRetrying ? t.retrying : t.retry}
           </button>
         </div>
@@ -298,22 +308,28 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
         {/* 共演者セクション（遅延読み込み） */}
         {ActressCard && (isActressLoading || actresses.length > 0) && (
           <div>
-            <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
-              <Users className="w-3.5 h-3.5" />
+            <h4
+              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}
+            >
+              <Users className="h-3.5 w-3.5" />
               {t.recommendedActresses}
-              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">{t.loadingActresses}</span>}
+              {isActressLoading && (
+                <span className="theme-text-muted animate-pulse text-[10px]">{t.loadingActresses}</span>
+              )}
             </h4>
             {isActressLoading ? (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="theme-skeleton-card rounded-lg animate-pulse overflow-hidden">
-                    <div className="aspect-square theme-skeleton-image" />
-                    <div className="p-1.5"><div className="h-2.5 theme-skeleton-image rounded w-3/4" /></div>
+                  <div key={i} className="theme-skeleton-card animate-pulse overflow-hidden rounded-lg">
+                    <div className="theme-skeleton-image aspect-square" />
+                    <div className="p-1.5">
+                      <div className="theme-skeleton-image h-2.5 w-3/4 rounded" />
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {actresses.map((actress) => (
                   <ActressCard key={actress['id']} actress={actress} size="mini" />
                 ))}
@@ -325,11 +341,11 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
         {/* 作品セクション */}
         <div>
           {ActressCard && actresses.length > 0 && (
-            <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h4 className={`mb-2 text-xs font-semibold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               {t.recommendedProducts}
             </h4>
           )}
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
             {products.map((product) => (
               <ProductCard key={product['id']} product={product} size="mini" />
             ))}
@@ -343,7 +359,7 @@ export function ForYouRecommendationsSection<T extends BaseProduct, A extends Ba
     <section className="py-3 sm:py-4">
       <div className="container mx-auto px-3 sm:px-4">
         <AccordionSection
-          icon={<Sparkles className="w-5 h-5" />}
+          icon={<Sparkles className="h-5 w-5" />}
           title={t.title}
           {...(hasExpanded && products.length > 0 && { itemCount: products.length })}
           defaultOpen={false}

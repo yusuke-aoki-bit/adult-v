@@ -61,13 +61,13 @@ function generateDateRanges(startYear: number, endYear: number): Array<{ start: 
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const offsetArg = args.find(arg => arg.startsWith('--offset='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const offsetArg = args.find((arg) => arg.startsWith('--offset='));
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
   const fullScan = args.includes('--full-scan');
-  const yearArg = args.find(arg => arg.startsWith('--year='));
-  const monthArg = args.find(arg => arg.startsWith('--month='));
+  const yearArg = args.find((arg) => arg.startsWith('--year='));
+  const monthArg = args.find((arg) => arg.startsWith('--month='));
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]!) : 100;
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1]!) : 0;
@@ -114,10 +114,12 @@ async function main() {
       if (targetYear && targetMonth) {
         // 特定の年月のみ
         const lastDay = new Date(targetYear, targetMonth, 0).getDate();
-        dateRanges = [{
-          start: `${targetYear}-${targetMonth.toString().padStart(2, '0')}-01T00:00:00`,
-          end: `${targetYear}-${targetMonth.toString().padStart(2, '0')}-${lastDay}T23:59:59`,
-        }];
+        dateRanges = [
+          {
+            start: `${targetYear}-${targetMonth.toString().padStart(2, '0')}-01T00:00:00`,
+            end: `${targetYear}-${targetMonth.toString().padStart(2, '0')}-${lastDay}T23:59:59`,
+          },
+        ];
       } else if (targetYear) {
         // 特定の年のみ
         dateRanges = generateDateRanges(targetYear, targetYear);
@@ -203,24 +205,22 @@ async function main() {
 
           allProducts.push(...periodItems);
           console.log(`  📦 期間合計: ${periodItems.length}件 (全体累計: ${allProducts.length.toLocaleString()}件)`);
-
         } catch (error) {
           crawlerLog.error(`期間 ${range.start} の取得に失敗:`, error);
           rateLimiter.done();
         }
 
         // レートリミット対策: 期間ごとに少し待機
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       }
-
     } else {
       // 通常モード: 新着順で取得
       console.log('🔄 SOKMIL APIから新着作品を取得中...\n');
 
       // 新着作品を取得（正しいAPIパラメータ: hits/offset）
       // Sokmil API仕様: hits(20-100), offset(1-50000), sort(date)
-      const hitsPerRequest = 100;  // 最大100件
-      let currentOffset = offset + 1;  // APIのoffsetは1から開始
+      const hitsPerRequest = 100; // 最大100件
+      let currentOffset = offset + 1; // APIのoffsetは1から開始
       let totalCount = 0;
 
       // ページネーションループ（limit件に達するまで、または全件取得まで）
@@ -232,7 +232,7 @@ async function main() {
           const response = await sokmilClient.searchItems({
             hits: hitsPerRequest,
             offset: currentOffset,
-            sort: 'date',  // 新着順
+            sort: 'date', // 新着順
           });
 
           if (response['status'] !== 'success') {
@@ -265,7 +265,7 @@ async function main() {
           // レートリミット対策: 5000件ごとに休憩
           if (allProducts.length % 5000 === 0 && allProducts.length > 0) {
             console.log('⏳ レートリミット対策: 3秒待機...');
-            await new Promise(resolve => setTimeout(resolve, 3000));
+            await new Promise((resolve) => setTimeout(resolve, 3000));
           }
         } catch (error) {
           crawlerLog.error(`offset=${currentOffset}の取得に失敗:`, error);
@@ -395,7 +395,7 @@ async function main() {
           'sokmil',
           rawDataId,
           'sokmil_raw_responses',
-          upsertResult.gcsUrl || `hash:${rawDataId}`
+          upsertResult.gcsUrl || `hash:${rawDataId}`,
         );
 
         // 5. 画像を保存（バッチINSERT）
@@ -405,7 +405,7 @@ async function main() {
 
         if (imageUrls.length > 0) {
           const imageTypes = imageUrls.map((url) =>
-            url === item['thumbnailUrl'] || url === item.packageImageUrl ? 'thumbnail' : 'sample'
+            url === item['thumbnailUrl'] || url === item.packageImageUrl ? 'thumbnail' : 'sample',
           );
           const displayOrders = imageUrls.map((_, i) => i);
 
@@ -434,8 +434,8 @@ async function main() {
         if (item.actors && item.actors.length > 0) {
           // バリデーションと正規化を先に行う（nullを除外）
           const validPerformerNames = item.actors
-            .filter(actor => isValidPerformerName(actor.name))
-            .map(actor => normalizePerformerName(actor.name))
+            .filter((actor) => isValidPerformerName(actor.name))
+            .map((actor) => normalizePerformerName(actor.name))
             .filter((name): name is string => name !== null && isValidPerformerForProduct(name, item.itemName));
 
           if (validPerformerNames.length > 0) {
@@ -455,7 +455,7 @@ async function main() {
 
             // バッチでproduct_performersにリレーション作成
             const performerIds = validPerformerNames
-              .map(name => performerIdMap.get(name))
+              .map((name) => performerIdMap.get(name))
               .filter((id): id is number => id !== undefined);
 
             if (performerIds.length > 0) {
@@ -529,7 +529,6 @@ async function main() {
         // レート制限
         await rateLimiter.wait();
         rateLimiter.done();
-
       } catch (error) {
         stats.errors++;
         crawlerLog.error(`商品処理エラー (${item.itemId}):`, error);
@@ -550,7 +549,6 @@ async function main() {
     console.log(`タグリンク: ${stats.tagsLinked}`);
     console.log(`エラー: ${stats.errors}`);
     console.log('========================================\n');
-
   } catch (error) {
     crawlerLog.error('クロール処理中にエラーが発生しました:', error);
     process.exit(1);

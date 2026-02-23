@@ -15,12 +15,7 @@ import { logDbErrorAndThrow } from '../lib/db-logger';
 /**
  * 女優ソートオプション
  */
-export type ActressSortOption =
-  | 'nameAsc'
-  | 'nameDesc'
-  | 'productCountDesc'
-  | 'productCountAsc'
-  | 'recent';
+export type ActressSortOption = 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
 
 /**
  * 女優リスト取得オプション
@@ -102,7 +97,7 @@ export interface ActressListQueryDeps {
     thumbnail: string | undefined,
     services: string[] | undefined,
     aliases: string[] | undefined,
-    locale: string
+    locale: string,
   ) => unknown;
   /** バッチでサムネイルを取得 */
   batchGetPerformerThumbnails: (performerIds: number[]) => Promise<Map<number, string>>;
@@ -156,7 +151,12 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
     const conditions: SQL[] = [];
 
     // サイトモード別ASPフィルタ
-    if (siteMode === 'all' && 'ids' in (options || {}) && (options as GetActressesOptions)?.ids && (options as GetActressesOptions).ids!.length > 0) {
+    if (
+      siteMode === 'all' &&
+      'ids' in (options || {}) &&
+      (options as GetActressesOptions)?.ids &&
+      (options as GetActressesOptions).ids!.length > 0
+    ) {
       conditions.push(inArray(performers['id'], (options as GetActressesOptions).ids!));
     } else {
       conditions.push(createActressAspFilterCondition(performers, siteMode));
@@ -166,7 +166,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           sql`EXISTS (
             SELECT 1 FROM ${productPerformers} pp
             WHERE pp.performer_id = ${performers['id']}
-          )`
+          )`,
         );
       }
     }
@@ -176,36 +176,42 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       conditions.push(
         sql`NOT (
           LEFT(${performers['name']}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
-        )`
+        )`,
       );
     }
 
     // 対象タグでフィルタ（EXISTS サブクエリ）
     if (options?.includeTags && options.includeTags.length > 0) {
-      const tagIds = options.includeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const tagIds = options.includeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (tagIds.length > 0) {
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productPerformers} pp
             JOIN ${productTags} pt ON pp.product_id = pt.product_id
             WHERE pp.performer_id = ${performers['id']}
-            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
-          )`
+            AND pt.tag_id IN (${sql.join(
+              tagIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
 
     // 除外タグでフィルタ（NOT EXISTS サブクエリ）
     if (options?.excludeTags && options.excludeTags.length > 0) {
-      const tagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const tagIds = options.excludeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (tagIds.length > 0) {
         conditions.push(
           sql`NOT EXISTS (
             SELECT 1 FROM ${productPerformers} pp
             JOIN ${productTags} pt ON pp.product_id = pt.product_id
             WHERE pp.performer_id = ${performers['id']}
-            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
-          )`
+            AND pt.tag_id IN (${sql.join(
+              tagIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
@@ -217,8 +223,11 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           SELECT 1 FROM ${productPerformers} pp
           JOIN ${productSources} ps ON pp.product_id = ps.product_id
           WHERE pp.performer_id = ${performers['id']}
-          AND LOWER(ps.asp_name) IN (${sql.join(options.includeAsps.map(a => sql`${a.toLowerCase()}`), sql`, `)})
-        )`
+          AND LOWER(ps.asp_name) IN (${sql.join(
+            options.includeAsps.map((a) => sql`${a.toLowerCase()}`),
+            sql`, `,
+          )})
+        )`,
       );
     }
 
@@ -229,8 +238,11 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           SELECT 1 FROM ${productPerformers} pp
           JOIN ${productSources} ps ON pp.product_id = ps.product_id
           WHERE pp.performer_id = ${performers['id']}
-          AND LOWER(ps.asp_name) IN (${sql.join(options.excludeAsps.map(a => sql`${a.toLowerCase()}`), sql`, `)})
-        )`
+          AND LOWER(ps.asp_name) IN (${sql.join(
+            options.excludeAsps.map((a) => sql`${a.toLowerCase()}`),
+            sql`, `,
+          )})
+        )`,
       );
     }
 
@@ -241,7 +253,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           SELECT 1 FROM ${productPerformers} pp
           JOIN ${productVideos} pv ON pp.product_id = pv.product_id
           WHERE pp.performer_id = ${performers['id']}
-        )`
+        )`,
       );
     }
 
@@ -252,7 +264,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           SELECT 1 FROM ${productPerformers} pp
           JOIN ${productImages} pi ON pp.product_id = pi.product_id
           WHERE pp.performer_id = ${performers['id']}
-        )`
+        )`,
       );
     }
 
@@ -265,7 +277,10 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
     if (enableActressFeatureFilter) {
       if (options?.cupSizes && options.cupSizes.length > 0) {
         conditions.push(
-          sql`${performers['cup']} IN (${sql.join(options.cupSizes.map(c => sql`${c}`), sql`, `)})`
+          sql`${performers['cup']} IN (${sql.join(
+            options.cupSizes.map((c) => sql`${c}`),
+            sql`, `,
+          )})`,
         );
       }
       if (options?.heightMin !== undefined) {
@@ -276,7 +291,10 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
       }
       if (options?.bloodTypes && options.bloodTypes.length > 0) {
         conditions.push(
-          sql`${performers['bloodType']} IN (${sql.join(options.bloodTypes.map(b => sql`${b}`), sql`, `)})`
+          sql`${performers['bloodType']} IN (${sql.join(
+            options.bloodTypes.map((b) => sql`${b}`),
+            sql`, `,
+          )})`,
         );
       }
 
@@ -299,8 +317,8 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
         } else if (range.includes('-')) {
           // '2020-2023' → 範囲指定
           const [startStr, endStr] = range.split('-');
-          const startYear = parseInt(startStr, 10);
-          const endYear = parseInt(endStr, 10);
+          const startYear = parseInt(startStr!, 10);
+          const endYear = parseInt(endStr!, 10);
           if (!isNaN(startYear) && !isNaN(endYear)) {
             conditions.push(sql`${performers['debutYear']} >= ${startYear}`);
             conditions.push(sql`${performers['debutYear']} <= ${endYear}`);
@@ -339,13 +357,13 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
               sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
               sql`${performers['name']} ILIKE ${searchPattern}`,
               sql`${performers['nameKana']} ILIKE ${searchPattern}`,
-              sql`${performers.aiReview} ILIKE ${searchPattern}`
+              sql`${performers.aiReview} ILIKE ${searchPattern}`,
             )!
           : or(
               sql`similarity(${performers['name']}, ${options.query}) > 0.2`,
               sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
               sql`${performers['name']} ILIKE ${searchPattern}`,
-              sql`${performers['nameKana']} ILIKE ${searchPattern}`
+              sql`${performers['nameKana']} ILIKE ${searchPattern}`,
             )!;
 
       // 別名マッチングをEXISTSサブクエリに変換
@@ -386,7 +404,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
             sortBy === 'productCountDesc'
               ? desc(sql`COALESCE(${performers.releaseCount}, 0)`)
               : asc(sql`COALESCE(${performers.releaseCount}, 0)`),
-            desc(performers['id'])
+            desc(performers['id']),
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
@@ -397,10 +415,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           .select()
           .from(performers)
           .where(whereClause)
-          .orderBy(
-            desc(sql`COALESCE(${performers.latestReleaseDate}, '1900-01-01')`),
-            desc(performers['id'])
-          )
+          .orderBy(desc(sql`COALESCE(${performers.latestReleaseDate}, '1900-01-01')`), desc(performers['id']))
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
       } else {
@@ -445,7 +460,7 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
           thumbnails.get(id),
           servicesMap.get(id),
           aliasesMap.get(id),
-          locale
+          locale,
         );
       });
 
@@ -461,10 +476,24 @@ export function createActressListQueries(deps: ActressListQueryDeps): ActressLis
    */
   async function getActressesCount(options?: GetActressesCountOptions): Promise<number> {
     // フィルターの有無をチェック
-    const hasFilters = options?.query || options?.includeTags?.length || options?.excludeTags?.length ||
-      options?.excludeInitials || options?.includeAsps?.length || options?.excludeAsps?.length ||
-      options?.hasVideo || options?.hasImage || options?.hasReview || options?.onSale ||
-      (enableActressFeatureFilter && (options?.cupSizes?.length || options?.heightMin || options?.heightMax || options?.bloodTypes?.length || options?.debutYearRange || options?.minWorks));
+    const hasFilters =
+      options?.query ||
+      options?.includeTags?.length ||
+      options?.excludeTags?.length ||
+      options?.excludeInitials ||
+      options?.includeAsps?.length ||
+      options?.excludeAsps?.length ||
+      options?.hasVideo ||
+      options?.hasImage ||
+      options?.hasReview ||
+      options?.onSale ||
+      (enableActressFeatureFilter &&
+        (options?.cupSizes?.length ||
+          options?.heightMin ||
+          options?.heightMax ||
+          options?.bloodTypes?.length ||
+          options?.debutYearRange ||
+          options?.minWorks));
 
     // キャッシュキーをサイトモードで分ける
     const cacheKey = siteMode === 'fanza-only' ? 'actressesCount:fanza:base' : 'actressesCount:base';

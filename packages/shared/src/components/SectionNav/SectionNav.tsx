@@ -15,11 +15,7 @@ interface SectionNavProps {
   offset?: number; // スクロール時のオフセット（ヘッダー分など）
 }
 
-export function SectionNav({
-  sections,
-  position = 'right',
-  offset = 80,
-}: SectionNavProps) {
+export function SectionNav({ sections, position = 'right', offset = 80 }: SectionNavProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isVisible, setIsVisible] = useState(false);
@@ -62,14 +58,17 @@ export function SectionNav({
   }, [activeSection]);
 
   // セクションにスクロール
-  const scrollToSection = useCallback((sectionId: string) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      const top = element.getBoundingClientRect().top + window.scrollY - offset;
-      window.scrollTo({ top, behavior: 'smooth' });
-      setIsExpanded(false);
-    }
-  }, [offset]);
+  const scrollToSection = useCallback(
+    (sectionId: string) => {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        const top = element.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top, behavior: 'smooth' });
+        setIsExpanded(false);
+      }
+    },
+    [offset],
+  );
 
   if (!isVisible || sections.length === 0) {
     return null;
@@ -80,9 +79,9 @@ export function SectionNav({
       {/* モバイル: 水平スクロールタブバー */}
       <div
         ref={mobileNavRef}
-        className="md:hidden sticky top-[60px] z-30 backdrop-blur-sm border-b theme-border theme-section-nav-bg"
+        className="theme-border theme-section-nav-bg sticky top-[60px] z-30 border-b backdrop-blur-sm md:hidden"
       >
-        <div className="flex overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+        <div className="scrollbar-hide flex snap-x snap-mandatory overflow-x-auto">
           {sections.map((section) => {
             const isActive = activeSection === section.id;
             return (
@@ -90,13 +89,13 @@ export function SectionNav({
                 key={section.id}
                 data-section={section.id}
                 onClick={() => scrollToSection(section.id)}
-                className={`shrink-0 snap-start px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors border-b-2 ${
+                className={`shrink-0 snap-start border-b-2 px-4 py-2.5 text-xs font-medium whitespace-nowrap transition-colors ${
                   isActive
                     ? 'theme-section-nav-active'
-                    : 'border-transparent theme-text-muted hover:theme-text-secondary'
+                    : 'theme-text-muted hover:theme-text-secondary border-transparent'
                 }`}
               >
-                {section.icon && <span className="inline-block w-3.5 h-3.5 mr-1 align-middle">{section.icon}</span>}
+                {section.icon && <span className="mr-1 inline-block h-3.5 w-3.5 align-middle">{section.icon}</span>}
                 {section.label}
               </button>
             );
@@ -106,51 +105,37 @@ export function SectionNav({
 
       {/* デスクトップ: 右サイドドットナビ */}
       <div
-        className={`hidden md:block fixed ${position === 'right' ? 'right-4' : 'left-4'} top-1/2 -translate-y-1/2 z-40 transition-all duration-300`}
+        className={`fixed hidden md:block ${position === 'right' ? 'right-4' : 'left-4'} top-1/2 z-40 -translate-y-1/2 transition-all duration-300`}
       >
         {/* 展開ボタン */}
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`
-            w-10 h-10 rounded-full flex items-center justify-center shadow-lg transition-all
-            theme-content theme-text-secondary theme-accordion-hover
-            ${isExpanded ? 'rotate-45' : ''}
-          `}
+          className={`theme-content theme-text-secondary theme-accordion-hover flex h-10 w-10 items-center justify-center rounded-full shadow-lg transition-all ${isExpanded ? 'rotate-45' : ''} `}
           aria-label="Toggle section navigation"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
         {/* セクションリスト */}
         <div
-          className={`
-            absolute ${position === 'right' ? 'right-0' : 'left-0'} top-12
-            transition-all duration-300 origin-top
-            ${isExpanded ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}
-          `}
+          className={`absolute ${position === 'right' ? 'right-0' : 'left-0'} top-12 origin-top transition-all duration-300 ${isExpanded ? 'scale-100 opacity-100' : 'pointer-events-none scale-95 opacity-0'} `}
         >
-          <div className="rounded-lg shadow-xl overflow-hidden min-w-[180px] theme-content border theme-border">
+          <div className="theme-content theme-border min-w-[180px] overflow-hidden rounded-lg border shadow-xl">
             {sections.map((section) => {
               const isActive = activeSection === section.id;
               return (
                 <button
                   key={section.id}
                   onClick={() => scrollToSection(section.id)}
-                  className={`
-                    w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 transition-colors
-                    ${isActive
-                      ? 'theme-section-nav-active-bg'
-                      : 'theme-text-secondary theme-accordion-hover'
-                    }
-                  `}
+                  className={`flex w-full items-center gap-2 px-4 py-2.5 text-left text-sm transition-colors ${
+                    isActive ? 'theme-section-nav-active-bg' : 'theme-text-secondary theme-accordion-hover'
+                  } `}
                 >
-                  {section.icon && <span className="w-4 h-4 shrink-0">{section.icon}</span>}
+                  {section.icon && <span className="h-4 w-4 shrink-0">{section.icon}</span>}
                   <span className="truncate">{section.label}</span>
-                  {isActive && (
-                    <span className="ml-auto w-1.5 h-1.5 rounded-full bg-current" />
-                  )}
+                  {isActive && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-current" />}
                 </button>
               );
             })}
@@ -166,7 +151,7 @@ export function SectionNav({
                 <button
                   key={section.id}
                   onClick={() => scrollToSection(section.id)}
-                  className="w-2 h-2 rounded-full transition-all"
+                  className="h-2 w-2 rounded-full transition-all"
                   style={{
                     backgroundColor: isActive ? 'var(--section-nav-active)' : 'var(--section-nav-dot-inactive)',
                     ...(isActive ? { width: '10px', height: '10px' } : {}),

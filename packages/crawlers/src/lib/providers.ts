@@ -1,5 +1,21 @@
 // Provider types
-export type ProviderId = 'duga' | 'sokmil' | 'dti' | 'mgs' | 'b10f' | 'japanska' | 'fc2' | 'fanza' | 'caribbeancom' | 'caribbeancompr' | '1pondo' | 'heyzo' | '10musume' | 'pacopacomama' | 'muramura' | 'tokyohot';
+export type ProviderId =
+  | 'duga'
+  | 'sokmil'
+  | 'dti'
+  | 'mgs'
+  | 'b10f'
+  | 'japanska'
+  | 'fc2'
+  | 'fanza'
+  | 'caribbeancom'
+  | 'caribbeancompr'
+  | '1pondo'
+  | 'heyzo'
+  | '10musume'
+  | 'pacopacomama'
+  | 'muramura'
+  | 'tokyohot';
 
 export interface ProviderMeta {
   id: ProviderId;
@@ -9,7 +25,6 @@ export interface ProviderMeta {
   description: string;
   siteUrl: string;
 }
-
 
 /**
  * プロバイダーメタデータ（クライアントサイドでも使用可能）

@@ -6,7 +6,7 @@ import { Flame, Users } from 'lucide-react';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
-import { salesTranslations, getTranslation } from './translations';
+import { salesTranslations, getTranslation } from '../../lib/translations';
 
 // Generic product type that works with both apps
 interface BaseProduct {
@@ -98,12 +98,15 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
   const [hasExpanded, setHasExpanded] = useState(defaultOpen);
 
   // 展開時にフェッチをトリガー
-  const handleToggle = useCallback((isOpen: boolean) => {
-    if (isOpen && !hasExpanded) {
-      setIsLoading(true);
-      setHasExpanded(true);
-    }
-  }, [hasExpanded]);
+  const handleToggle = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen && !hasExpanded) {
+        setIsLoading(true);
+        setHasExpanded(true);
+      }
+    },
+    [hasExpanded],
+  );
 
   // Fetch products (only when expanded)
   useEffect(() => {
@@ -119,7 +122,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
       }
 
       try {
-        const ids = saleProducts.slice(0, 8).map(p => p.productId);
+        const ids = saleProducts.slice(0, 8).map((p) => p.productId);
 
         let fetchedProducts: T[];
         if (fetchProducts) {
@@ -181,11 +184,11 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
 
               if (uniquePerformers.length > 0) {
                 if (fetchActresses) {
-                  const actressIds = uniquePerformers.map(p => p.id);
+                  const actressIds = uniquePerformers.map((p) => p.id);
                   const fetchedActresses = await fetchActresses(actressIds);
                   setActresses(fetchedActresses);
                 } else if (toActressType) {
-                  const convertedActresses = uniquePerformers.map(p => toActressType(p));
+                  const convertedActresses = uniquePerformers.map((p) => toActressType(p));
                   setActresses(convertedActresses);
                 }
               } else {
@@ -232,22 +235,26 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
         {/* 共演者セクション（遅延読み込み） */}
         {ActressCard && (isActressLoading || actresses.length > 0) && (
           <div>
-            <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
-              <Users className="w-3.5 h-3.5" />
+            <h4
+              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}
+            >
+              <Users className="h-3.5 w-3.5" />
               セール中の女優
-              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">読み込み中...</span>}
+              {isActressLoading && <span className="theme-text-muted animate-pulse text-[10px]">読み込み中...</span>}
             </h4>
             {isActressLoading ? (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="theme-skeleton-card rounded-lg animate-pulse overflow-hidden">
-                    <div className="aspect-square theme-skeleton-image" />
-                    <div className="p-1.5"><div className="h-2.5 theme-skeleton-image rounded w-3/4" /></div>
+                  <div key={i} className="theme-skeleton-card animate-pulse overflow-hidden rounded-lg">
+                    <div className="theme-skeleton-image aspect-square" />
+                    <div className="p-1.5">
+                      <div className="theme-skeleton-image h-2.5 w-3/4 rounded" />
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {actresses.map((actress) => (
                   <ActressCard key={actress['id']} actress={actress} size="mini" />
                 ))}
@@ -259,11 +266,11 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
         {/* 作品セクション */}
         <div>
           {ActressCard && actresses.length > 0 && (
-            <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h4 className={`mb-2 text-xs font-semibold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               セール作品
             </h4>
           )}
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
             {products.map((product) => (
               <ProductCard key={product['id']} product={product} size="mini" />
             ))}
@@ -273,10 +280,10 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
         {/* View all sales link */}
         <Link
           href={`/${locale}/products?onSale=true`}
-          className={`flex items-center justify-center gap-2 mt-2 py-2 ${themeConfig.salesSection.linkColorClass} transition-colors text-sm font-medium`}
+          className={`mt-2 flex items-center justify-center gap-2 py-2 ${themeConfig.salesSection.linkColorClass} text-sm font-medium transition-colors`}
         >
           {t.viewAll}
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </Link>
@@ -289,7 +296,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
 
   return (
     <AccordionSection
-      icon={<Flame className="w-5 h-5" />}
+      icon={<Flame className="h-5 w-5" />}
       title={t.title}
       {...(displayCount > 0 && { itemCount: displayCount })}
       defaultOpen={defaultOpen}

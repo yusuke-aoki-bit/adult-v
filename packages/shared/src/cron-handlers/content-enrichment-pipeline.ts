@@ -16,10 +16,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { sql } from '@adult-v/database';
 import pLimit from 'p-limit';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface PipelineDeps {
   verifyCronRequest: (request: NextRequest) => boolean;
@@ -29,7 +26,10 @@ interface PipelineDeps {
   // Translation deps (optional)
   translateText?: (text: string, targetLang: string) => Promise<string | null>;
   // SEO deps (optional)
-  requestIndexing?: (url: string, type?: 'URL_UPDATED' | 'URL_DELETED') => Promise<{ success: boolean; error?: string }>;
+  requestIndexing?: (
+    url: string,
+    type?: 'URL_UPDATED' | 'URL_DELETED',
+  ) => Promise<{ success: boolean; error?: string }>;
   siteBaseUrl?: string;
 }
 
@@ -60,7 +60,7 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
     const { searchParams } = new URL(request['url']);
     const limit = parseInt(searchParams.get('limit') || '100', 10);
     const phasesParam = searchParams.get('phases') || 'translation,seo,performer';
-    const phases = phasesParam.split(',').map(p => p.trim());
+    const phases = phasesParam.split(',').map((p) => p.trim());
 
     console.log('[content-enrichment-pipeline] Starting pipeline');
     console.log(`  Limit: ${limit}`);
@@ -85,7 +85,14 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
         const msg = `Translation phase error: ${error instanceof Error ? error.message : 'Unknown'}`;
         console.error(`[Phase 1] ${msg}`);
         errors.push(msg);
-        stats.phases.push({ phase: 'translation', processed: 0, success: 0, errors: 1, skipped: 0, duration: Date.now() - phaseStart });
+        stats.phases.push({
+          phase: 'translation',
+          processed: 0,
+          success: 0,
+          errors: 1,
+          skipped: 0,
+          duration: Date.now() - phaseStart,
+        });
       }
     } else if (phases.includes('translation')) {
       console.log('\n[Phase 1] Skipped (time limit)');
@@ -104,7 +111,14 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
         const msg = `SEO phase error: ${error instanceof Error ? error.message : 'Unknown'}`;
         console.error(`[Phase 2] ${msg}`);
         errors.push(msg);
-        stats.phases.push({ phase: 'seo', processed: 0, success: 0, errors: 1, skipped: 0, duration: Date.now() - phaseStart });
+        stats.phases.push({
+          phase: 'seo',
+          processed: 0,
+          success: 0,
+          errors: 1,
+          skipped: 0,
+          duration: Date.now() - phaseStart,
+        });
       }
     } else if (phases.includes('seo')) {
       console.log('\n[Phase 2] Skipped (time limit)');
@@ -123,7 +137,14 @@ export function createContentEnrichmentPipelineHandler(deps: PipelineDeps) {
         const msg = `Performer phase error: ${error instanceof Error ? error.message : 'Unknown'}`;
         console.error(`[Phase 3] ${msg}`);
         errors.push(msg);
-        stats.phases.push({ phase: 'performer', processed: 0, success: 0, errors: 1, skipped: 0, duration: Date.now() - phaseStart });
+        stats.phases.push({
+          phase: 'performer',
+          processed: 0,
+          success: 0,
+          errors: 1,
+          skipped: 0,
+          duration: Date.now() - phaseStart,
+        });
       }
     } else if (phases.includes('performer')) {
       console.log('\n[Phase 3] Skipped (time limit)');
@@ -151,11 +172,7 @@ const TRANSLATION_LANGUAGES = [
 /**
  * 翻訳バックフィルフェーズ（多言語対応）
  */
-async function runTranslationPhase(
-  db: any,
-  limit: number,
-  deps: PipelineDeps
-): Promise<PhaseResult> {
+async function runTranslationPhase(db: any, limit: number, deps: PipelineDeps): Promise<PhaseResult> {
   const result: PhaseResult = {
     phase: 'translation',
     processed: 0,
@@ -195,23 +212,25 @@ async function runTranslationPhase(
 
     const concurrencyLimit = pLimit(3);
 
-    await Promise.all(productRows.map(product => concurrencyLimit(async () => {
-      result.processed++;
+    await Promise.all(
+      productRows.map((product) =>
+        concurrencyLimit(async () => {
+          result.processed++;
 
-      try {
-        // 翻訳実行
-        const translatedTitle = await deps.translateText!(product['title'], lang.deeplCode);
-        if (!translatedTitle) {
-          result.skipped++;
-          return;
-        }
+          try {
+            // 翻訳実行
+            const translatedTitle = await deps.translateText!(product['title'], lang.deeplCode);
+            if (!translatedTitle) {
+              result.skipped++;
+              return;
+            }
 
-        const translatedDescription = product['description']
-          ? await deps.translateText!(product['description'], lang.deeplCode)
-          : null;
+            const translatedDescription = product['description']
+              ? await deps.translateText!(product['description'], lang.deeplCode)
+              : null;
 
-        // 翻訳を保存
-        await db.execute(sql`
+            // 翻訳を保存
+            await db.execute(sql`
           INSERT INTO product_translations (product_id, language, title, description)
           VALUES (${product['id']}, ${lang.code}, ${translatedTitle}, ${translatedDescription})
           ON CONFLICT (product_id, language) DO UPDATE SET
@@ -220,39 +239,41 @@ async function runTranslationPhase(
             updated_at = NOW()
         `);
 
-        // productsテーブルの多言語カラムも更新
-        if (lang.code === 'en') {
-          await db.execute(sql`
+            // productsテーブルの多言語カラムも更新
+            if (lang.code === 'en') {
+              await db.execute(sql`
             UPDATE products
             SET title_en = ${translatedTitle},
                 description_en = ${translatedDescription}
             WHERE id = ${product['id']}
           `);
-        } else if (lang.code === 'zh') {
-          await db.execute(sql`
+            } else if (lang.code === 'zh') {
+              await db.execute(sql`
             UPDATE products
             SET title_zh = ${translatedTitle},
                 description_zh = ${translatedDescription}
             WHERE id = ${product['id']}
           `);
-        } else if (lang.code === 'ko') {
-          await db.execute(sql`
+            } else if (lang.code === 'ko') {
+              await db.execute(sql`
             UPDATE products
             SET title_ko = ${translatedTitle},
                 description_ko = ${translatedDescription}
             WHERE id = ${product['id']}
           `);
-        }
+            }
 
-        result.success++;
+            result.success++;
 
-        // レート制限対策
-        await new Promise(r => setTimeout(r, 50));
-      } catch (error) {
-        console.error(`  Translation error for product ${product['id']} (${lang.code}):`, error);
-        result.errors++;
-      }
-    })));
+            // レート制限対策
+            await new Promise((r) => setTimeout(r, 50));
+          } catch (error) {
+            console.error(`  Translation error for product ${product['id']} (${lang.code}):`, error);
+            result.errors++;
+          }
+        }),
+      ),
+    );
   }
 
   return result;
@@ -261,11 +282,7 @@ async function runTranslationPhase(
 /**
  * SEOインデックス登録フェーズ
  */
-async function runSeoPhase(
-  db: any,
-  limit: number,
-  deps: PipelineDeps
-): Promise<PhaseResult> {
+async function runSeoPhase(db: any, limit: number, deps: PipelineDeps): Promise<PhaseResult> {
   const result: PhaseResult = {
     phase: 'seo',
     processed: 0,
@@ -301,34 +318,38 @@ async function runSeoPhase(
 
   const concurrencyLimit = pLimit(3);
 
-  await Promise.all(productRows.map(product => concurrencyLimit(async () => {
-    result.processed++;
+  await Promise.all(
+    productRows.map((product) =>
+      concurrencyLimit(async () => {
+        result.processed++;
 
-    const productUrl = `${siteBaseUrl}/products/${product.normalized_product_id}`;
+        const productUrl = `${siteBaseUrl}/products/${product.normalized_product_id}`;
 
-    try {
-      const indexResult = await deps.requestIndexing!(productUrl, 'URL_UPDATED');
+        try {
+          const indexResult = await deps.requestIndexing!(productUrl, 'URL_UPDATED');
 
-      if (indexResult.success) {
-        await db.execute(sql`
+          if (indexResult.success) {
+            await db.execute(sql`
           INSERT INTO seo_indexing_status (url, product_id, status, last_requested_at)
           VALUES (${productUrl}, ${product['id']}, 'requested', NOW())
           ON CONFLICT (url) DO UPDATE SET
             status = 'requested',
             last_requested_at = NOW()
         `);
-        result.success++;
-      } else {
-        result.skipped++;
-      }
+            result.success++;
+          } else {
+            result.skipped++;
+          }
 
-      // レート制限対策
-      await new Promise(r => setTimeout(r, 100));
-    } catch (error) {
-      console.error(`  Indexing error for product ${product['id']}:`, error);
-      result.errors++;
-    }
-  })));
+          // レート制限対策
+          await new Promise((r) => setTimeout(r, 100));
+        } catch (error) {
+          console.error(`  Indexing error for product ${product['id']}:`, error);
+          result.errors++;
+        }
+      }),
+    ),
+  );
 
   return result;
 }
@@ -336,10 +357,7 @@ async function runSeoPhase(
 /**
  * 演者紐付けフェーズ
  */
-async function runPerformerPhase(
-  db: any,
-  limit: number
-): Promise<PhaseResult> {
+async function runPerformerPhase(db: any, limit: number): Promise<PhaseResult> {
   const result: PhaseResult = {
     phase: 'performer',
     processed: 0,
@@ -387,7 +405,10 @@ async function runPerformerPhase(
 
   // 2. lookupテーブルを一括検索
   const codes = [...codeToProducts.keys()];
-  const codeValues = sql.join(codes.map(c => sql`${c}`), sql`, `);
+  const codeValues = sql.join(
+    codes.map((c) => sql`${c}`),
+    sql`, `,
+  );
 
   const lookupResult = await db.execute(sql`
     SELECT product_code_normalized, performer_names
@@ -415,9 +436,9 @@ async function runPerformerPhase(
   }
 
   // 4. 演者を一括UPSERT
-  const performerData = [...allPerformerNames].map(name => ({ name }));
+  const performerData = [...allPerformerNames].map((name) => ({ name }));
   const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-  const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+  const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
   // 5. product_performersリンクを一括INSERT
   const links: { productId: number; performerId: number }[] = [];
@@ -447,8 +468,20 @@ function isValidPerformerName(name: string): boolean {
   if (exactExcludePatterns.includes(name)) return false;
 
   const partialExcludePatterns = [
-    'AV', '動画', 'サンプル', '無料', '高画質', 'HD', '4K', 'VR',
-    'カテゴリ', 'タグ', 'ジャンル', '人気', 'ランキング', '新着',
+    'AV',
+    '動画',
+    'サンプル',
+    '無料',
+    '高画質',
+    'HD',
+    '4K',
+    'VR',
+    'カテゴリ',
+    'タグ',
+    'ジャンル',
+    '人気',
+    'ランキング',
+    '新着',
   ];
-  return !partialExcludePatterns.some(p => name.includes(p));
+  return !partialExcludePatterns.some((p) => name.includes(p));
 }

@@ -19,16 +19,26 @@ if (!process.env.DATABASE_URL) {
 }
 
 import { getDb } from './lib/db';
-import { products, productSources, performers, productPerformers, productImages, productVideos, rawHtmlData } from './lib/db/schema';
+import {
+  products,
+  productSources,
+  performers,
+  productPerformers,
+  productImages,
+  productVideos,
+  rawHtmlData,
+} from './lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData, isTopPageHtml } from './lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from './lib/performer-validation';
-import { generateProductDescription, extractProductTags, GeneratedDescription, translateProduct } from './lib/google-apis';
-import { saveSaleInfo, SaleInfo } from './lib/sale-helper';
 import {
-  upsertRawHtmlDataWithGcs,
-  markRawDataAsProcessed,
-} from './lib/crawler/dedup-helper';
+  generateProductDescription,
+  extractProductTags,
+  GeneratedDescription,
+  translateProduct,
+} from './lib/google-apis';
+import { saveSaleInfo, SaleInfo } from './lib/sale-helper';
+import { upsertRawHtmlDataWithGcs, markRawDataAsProcessed } from './lib/crawler/dedup-helper';
 
 const db = getDb();
 
@@ -71,7 +81,10 @@ function generateAffiliateUrl(articleId: string): string {
 /**
  * 商品詳細ページをパース
  */
-async function parseDetailPage(articleId: string, forceReprocess: boolean = false): Promise<{ product: FC2Product | null; rawDataId: number | null; shouldSkip: boolean }> {
+async function parseDetailPage(
+  articleId: string,
+  forceReprocess: boolean = false,
+): Promise<{ product: FC2Product | null; rawDataId: number | null; shouldSkip: boolean }> {
   const url = `https://adult.contents.fc2.com/article/${articleId}/`;
 
   try {
@@ -96,7 +109,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
       /この商品は.*(?:削除|存在しません|見つかりません)/i,
       /指定された商品.*(?:削除|存在しません)/i,
       /お探しのページは.*見つかりません/i,
-      /お探しの商品.*見つかりませんでした/i,  // FC2特有のエラーページ
+      /お探しの商品.*見つかりませんでした/i, // FC2特有のエラーページ
       /404\s*(?:not\s*found|error)/i,
       /ページが見つかりません/i,
       /商品が見つかりません/i,
@@ -149,7 +162,7 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     }
 
     // レート制限
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     // タイトル抽出
     let title = '';
@@ -183,9 +196,15 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     }
 
     // 説明抽出
-    const descMatch = html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i) ||
-                      html.match(/<div[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
-    const description = descMatch ? descMatch[1].replace(/<[^>]+>/g, '').trim().substring(0, 1000) : undefined;
+    const descMatch =
+      html.match(/<meta[^>]*name="description"[^>]*content="([^"]+)"/i) ||
+      html.match(/<div[^>]*class="[^"]*description[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    const description = descMatch
+      ? descMatch[1]
+          .replace(/<[^>]+>/g, '')
+          .trim()
+          .substring(0, 1000)
+      : undefined;
 
     // 出演者抽出（共通バリデーション使用）
     const performersList: string[] = [];
@@ -195,10 +214,12 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     for (const match of performerMatches) {
       const rawName = match[1].trim();
       const normalizedName = normalizePerformerName(rawName);
-      if (normalizedName &&
-          !performersList.includes(normalizedName) &&
-          isValidPerformerName(normalizedName) &&
-          isValidPerformerForProduct(normalizedName, title)) {
+      if (
+        normalizedName &&
+        !performersList.includes(normalizedName) &&
+        isValidPerformerName(normalizedName) &&
+        isValidPerformerForProduct(normalizedName, title)
+      ) {
         performersList.push(normalizedName);
       }
     }
@@ -207,13 +228,15 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     if (performersList.length === 0) {
       const actorLabelMatch = html.match(/出演[者：:]\s*([^<\n]+)/i);
       if (actorLabelMatch) {
-        const names = actorLabelMatch[1].split(/[,、\/]/).map(n => n.trim());
+        const names = actorLabelMatch[1].split(/[,、\/]/).map((n) => n.trim());
         for (const rawName of names.slice(0, 10)) {
           const normalizedName = normalizePerformerName(rawName);
-          if (normalizedName &&
-              !performersList.includes(normalizedName) &&
-              isValidPerformerName(normalizedName) &&
-              isValidPerformerForProduct(normalizedName, title)) {
+          if (
+            normalizedName &&
+            !performersList.includes(normalizedName) &&
+            isValidPerformerName(normalizedName) &&
+            isValidPerformerForProduct(normalizedName, title)
+          ) {
             performersList.push(normalizedName);
           }
         }
@@ -221,8 +244,9 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     }
 
     // サムネイル抽出
-    const thumbMatch = html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i) ||
-                       html.match(/<img[^>]*class="[^"]*(?:thumbnail|main)[^"]*"[^>]*src="([^"]+)"/i);
+    const thumbMatch =
+      html.match(/<meta[^>]*property="og:image"[^>]*content="([^"]+)"/i) ||
+      html.match(/<img[^>]*class="[^"]*(?:thumbnail|main)[^"]*"[^>]*src="([^"]+)"/i);
     const thumbnailUrl = thumbMatch ? thumbMatch[1] : undefined;
 
     // サンプル画像抽出
@@ -291,8 +315,8 @@ async function parseDetailPage(articleId: string, forceReprocess: boolean = fals
     }
 
     // カテゴリ抽出
-    const categoryMatch = html.match(/カテゴリ[：:]\s*([^<\n]+)/i) ||
-                          html.match(/<a[^>]*href="[^"]*category[^"]*"[^>]*>([^<]+)<\/a>/i);
+    const categoryMatch =
+      html.match(/カテゴリ[：:]\s*([^<\n]+)/i) || html.match(/<a[^>]*href="[^"]*category[^"]*"[^>]*>([^<]+)<\/a>/i);
     const category = categoryMatch ? categoryMatch[1].trim() : undefined;
 
     // サンプル動画URL抽出
@@ -436,11 +460,7 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
 
       // 出演者登録
       for (const performerName of product.performers) {
-        const [performer] = await db
-          .select()
-          .from(performers)
-          .where(eq(performers.name, performerName))
-          .limit(1);
+        const [performer] = await db.select().from(performers).where(eq(performers.name, performerName)).limit(1);
 
         let performerId: number;
         if (performer) {
@@ -457,12 +477,7 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
         const existingLink = await db
           .select()
           .from(productPerformers)
-          .where(
-            and(
-              eq(productPerformers.productId, productId),
-              eq(productPerformers.performerId, performerId)
-            )
-          )
+          .where(and(eq(productPerformers.productId, productId), eq(productPerformers.performerId, performerId)))
           .limit(1);
 
         if (existingLink.length === 0) {
@@ -475,34 +490,43 @@ async function saveProduct(product: FC2Product): Promise<number | null> {
 
       // サンプル画像保存
       if (product.thumbnailUrl) {
-        await db.insert(productImages).values({
-          productId,
-          imageUrl: product.thumbnailUrl,
-          imageType: 'thumbnail',
-          displayOrder: 0,
-          aspName: 'FC2',
-        }).onConflictDoNothing();
+        await db
+          .insert(productImages)
+          .values({
+            productId,
+            imageUrl: product.thumbnailUrl,
+            imageType: 'thumbnail',
+            displayOrder: 0,
+            aspName: 'FC2',
+          })
+          .onConflictDoNothing();
       }
 
       for (let i = 0; i < product.sampleImages.length; i++) {
-        await db.insert(productImages).values({
-          productId,
-          imageUrl: product.sampleImages[i],
-          imageType: 'sample',
-          displayOrder: i + 1,
-          aspName: 'FC2',
-        }).onConflictDoNothing();
+        await db
+          .insert(productImages)
+          .values({
+            productId,
+            imageUrl: product.sampleImages[i],
+            imageType: 'sample',
+            displayOrder: i + 1,
+            aspName: 'FC2',
+          })
+          .onConflictDoNothing();
       }
 
       // サンプル動画保存
       if (product.sampleVideoUrl) {
-        await db.insert(productVideos).values({
-          productId,
-          videoUrl: product.sampleVideoUrl,
-          videoType: 'sample',
-          aspName: 'FC2',
-          displayOrder: 0,
-        }).onConflictDoNothing();
+        await db
+          .insert(productVideos)
+          .values({
+            productId,
+            videoUrl: product.sampleVideoUrl,
+            videoType: 'sample',
+            aspName: 'FC2',
+            displayOrder: 0,
+          })
+          .onConflictDoNothing();
         console.log(`    🎬 サンプル動画保存完了`);
       }
 
@@ -550,9 +574,10 @@ async function fetchArticleIds(page: number = 1): Promise<string[]> {
     try {
       const response = await fetch(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
           'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         },
       });
 
@@ -663,10 +688,7 @@ async function saveAIContent(
     }
 
     if (Object.keys(updateData).length > 0) {
-      await db
-        .update(products)
-        .set(updateData)
-        .where(eq(products.id, productId));
+      await db.update(products).set(updateData).where(eq(products.id, productId));
       console.log(`    💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -725,10 +747,7 @@ async function translateAndSave(
 
     if (Object.keys(updateData).length > 0) {
       updateData.updatedAt = new Date();
-      await db
-        .update(products)
-        .set(updateData)
-        .where(eq(products.id, productId));
+      await db.update(products).set(updateData).where(eq(products.id, productId));
       console.log(`    💾 翻訳データを保存しました`);
     }
   } catch (error) {
@@ -739,12 +758,7 @@ async function translateAndSave(
 /**
  * ID範囲スキャンモード: 連続する商品IDをスキャン
  */
-async function runIdScanMode(
-  fromId: number,
-  toId: number,
-  enableAI: boolean,
-  forceReprocess: boolean,
-): Promise<void> {
+async function runIdScanMode(fromId: number, toId: number, enableAI: boolean, forceReprocess: boolean): Promise<void> {
   console.log('=== FC2 ID範囲スキャンモード ===');
   console.log(`範囲: ${fromId} - ${toId}`);
   console.log(`AI機能: ${enableAI ? '有効' : '無効'}`);
@@ -768,7 +782,9 @@ async function runIdScanMode(
 
     // 進捗表示（1000件ごと）
     if ((articleId - startId) % 1000 === 0 && articleId !== startId) {
-      console.log(`\n📈 進捗: ${articleId - startId}/${endId - startId} IDs checked, ${totalFound} found, ${totalSaved} saved\n`);
+      console.log(
+        `\n📈 進捗: ${articleId - startId}/${endId - startId} IDs checked, ${totalFound} found, ${totalSaved} saved\n`,
+      );
     }
 
     // 連続エラーチェック
@@ -814,7 +830,7 @@ async function runIdScanMode(
     }
 
     // レート制限（短めの間隔）
-    await new Promise(resolve => setTimeout(resolve, 500));
+    await new Promise((resolve) => setTimeout(resolve, 500));
   }
 
   console.log('\n=== スキャン完了 ===');
@@ -841,7 +857,7 @@ async function main() {
 
   // ID範囲スキャン用のオプション
   let fromId = 1000000; // FC2商品IDはだいたい100万台から
-  let toId = 5000000;   // 現在は500万台まで存在
+  let toId = 5000000; // 現在は500万台まで存在
 
   for (let i = 0; i < args.length; i++) {
     if (args[i] === '--start' && args[i + 1]) {
@@ -972,7 +988,7 @@ async function main() {
       }
 
       // ページ間の待機
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     }
   }
 

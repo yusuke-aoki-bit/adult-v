@@ -60,13 +60,7 @@ export default function ProductActions({
         size="md"
         locale={locale}
       />
-      <FavoriteButton
-        type="product"
-        id={productId}
-        title={title}
-        thumbnail={imageUrl ?? undefined}
-        size="lg"
-      />
+      <FavoriteButton type="product" id={productId} title={title} thumbnail={imageUrl ?? undefined} size="lg" />
       <CompareButton
         product={{
           id: productId,

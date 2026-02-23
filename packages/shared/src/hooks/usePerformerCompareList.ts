@@ -10,9 +10,6 @@ export interface PerformerCompareItem {
   addedAt: number;
 }
 
-export const usePerformerCompareList = createCompareListHook<PerformerCompareItem>(
-  'performer_compare_list',
-  4,
-);
+export const usePerformerCompareList = createCompareListHook<PerformerCompareItem>('performer_compare_list', 4);
 
 export default usePerformerCompareList;

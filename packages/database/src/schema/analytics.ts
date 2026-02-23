@@ -27,7 +27,9 @@ export const priceHistory = pgTable(
   'price_history',
   {
     id: serial('id').primaryKey(),
-    productSourceId: integer('product_source_id').notNull().references(() => productSources.id, { onDelete: 'cascade' }),
+    productSourceId: integer('product_source_id')
+      .notNull()
+      .references(() => productSources.id, { onDelete: 'cascade' }),
     price: integer('price').notNull(),
     salePrice: integer('sale_price'),
     discountPercent: integer('discount_percent'),
@@ -36,7 +38,10 @@ export const priceHistory = pgTable(
   (table) => ({
     productSourceIdx: index('idx_price_history_product_source').on(table.productSourceId),
     recordedAtIdx: index('idx_price_history_recorded_at').on(table.recordedAt),
-    productSourceRecordedIdx: index('idx_price_history_product_source_recorded').on(table.productSourceId, table.recordedAt),
+    productSourceRecordedIdx: index('idx_price_history_product_source_recorded').on(
+      table.productSourceId,
+      table.recordedAt,
+    ),
   }),
 );
 
@@ -78,7 +83,9 @@ export const videoTimestamps = pgTable(
   'video_timestamps',
   {
     id: serial('id').primaryKey(),
-    productVideoId: integer('product_video_id').notNull().references(() => productVideos.id, { onDelete: 'cascade' }),
+    productVideoId: integer('product_video_id')
+      .notNull()
+      .references(() => productVideos.id, { onDelete: 'cascade' }),
     timestampSeconds: integer('timestamp_seconds').notNull(),
     label: varchar('label', { length: 100 }),
     voteCount: integer('vote_count').default(0),
@@ -98,7 +105,9 @@ export const footerFeaturedActresses = pgTable(
   'footer_featured_actresses',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id')
+      .notNull()
+      .references(() => performers.id, { onDelete: 'cascade' }),
     performerName: varchar('performer_name', { length: 200 }).notNull(),
     impressions: integer('impressions').default(0),
     position: decimal('position', { precision: 6, scale: 2 }),

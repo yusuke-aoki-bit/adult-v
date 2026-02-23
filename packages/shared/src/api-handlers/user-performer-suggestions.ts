@@ -41,10 +41,7 @@ export interface UserPerformerSuggestionsHandlerDeps {
 
 // 演者提案取得ハンドラー
 export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSuggestionsHandlerDeps) {
-  return async (
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ): Promise<NextResponse> => {
+  return async (req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> => {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);
@@ -70,17 +67,17 @@ export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSugg
       const suggestionsTable = deps.userPerformerSuggestions as any;
 
       // 承認済みまたはpending の演者提案を取得
-      const suggestions = await db
+      const suggestions = (await db
         .select()
         .from(suggestionsTable)
         .where(
           deps.and(
             deps.eq(suggestionsTable.productId, productId),
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            (deps.sql as any)`${suggestionsTable.status} IN ('approved', 'pending')`
-          )
+            (deps.sql as any)`${suggestionsTable.status} IN ('approved', 'pending')`,
+          ),
         )
-        .orderBy(deps.desc(suggestionsTable.upvotes)) as UserPerformerSuggestion[];
+        .orderBy(deps.desc(suggestionsTable.upvotes))) as UserPerformerSuggestion[];
 
       // ユーザーIDがあれば投票状態も取得
       let suggestionsWithVotes: UserPerformerSuggestionWithVote[] = suggestions;
@@ -88,23 +85,26 @@ export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSugg
       if (userId && suggestions.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const votesTable = deps.userPerformerVotes as any;
-        const suggestionIds = suggestions.map(s => s.id);
+        const suggestionIds = suggestions.map((s) => s.id);
 
-        const votes = await db
+        const votes = (await db
           .select()
           .from(votesTable)
           .where(
             deps.and(
               deps.eq(votesTable.voterId, userId),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (deps.sql as any)`${votesTable.suggestionId} IN (${(deps.sql as any).join(suggestionIds.map((id: number) => (deps.sql as any)`${id}`), (deps.sql as any)`, `)})`
-            )
+              (deps.sql as any)`${votesTable.suggestionId} IN (${(deps.sql as any).join(
+                suggestionIds.map((id: number) => (deps.sql as any)`${id}`),
+                (deps.sql as any)`, `,
+              )})`,
+            ),
           )
-          .orderBy(deps.desc(votesTable.createdAt)) as { suggestionId: number; voteType: string }[];
+          .orderBy(deps.desc(votesTable.createdAt))) as { suggestionId: number; voteType: string }[];
 
-        const voteMap = new Map(votes.map(v => [v.suggestionId, v.voteType as 'up' | 'down']));
+        const voteMap = new Map(votes.map((v) => [v.suggestionId, v.voteType as 'up' | 'down']));
 
-        suggestionsWithVotes = suggestions.map(suggestion => ({
+        suggestionsWithVotes = suggestions.map((suggestion) => ({
           ...suggestion,
           userVote: voteMap.get(suggestion['id']) || null,
         }));
@@ -124,10 +124,7 @@ export function createUserPerformerSuggestionsGetHandler(deps: UserPerformerSugg
 
 // 演者提案投稿ハンドラー
 export function createUserPerformerSuggestionsPostHandler(deps: UserPerformerSuggestionsHandlerDeps) {
-  return async (
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ): Promise<NextResponse> => {
+  return async (req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> => {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);
@@ -170,49 +167,46 @@ export function createUserPerformerSuggestionsPostHandler(deps: UserPerformerSug
       const performersTable = deps.performers as any;
 
       // 商品が存在するか確認
-      const [product] = await db
+      const [product] = (await db
         .select({ id: productsTable.id, title: productsTable.title })
         .from(productsTable)
         .where(deps.eq(productsTable.id, productId))
-        .limit(1) as { id: number; title: string }[];
+        .limit(1)) as { id: number; title: string }[];
 
       if (!product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
 
       // 同じ演者提案が既に存在するかチェック
-      const [existingSuggestion] = await db
+      const [existingSuggestion] = (await db
         .select()
         .from(suggestionsTable)
         .where(
           deps.and(
             deps.eq(suggestionsTable.productId, productId),
-            deps.eq(suggestionsTable.performerName, performerName)
-          )
+            deps.eq(suggestionsTable.performerName, performerName),
+          ),
         )
-        .limit(1) as UserPerformerSuggestion[];
+        .limit(1)) as UserPerformerSuggestion[];
 
       if (existingSuggestion) {
         return NextResponse.json({ error: 'This performer has already been suggested' }, { status: 409 });
       }
 
       // 既存の演者とマッチするか確認（部分一致）
-      const [existingPerformer] = await db
+      const [existingPerformer] = (await db
         .select({ id: performersTable.id, name: performersTable.name })
         .from(performersTable)
         .where(
-          deps.or(
-            deps.eq(performersTable.name, performerName),
-            deps.ilike(performersTable.name, `%${performerName}%`)
-          )
+          deps.or(deps.eq(performersTable.name, performerName), deps.ilike(performersTable.name, `%${performerName}%`)),
         )
-        .limit(1) as { id: number; name: string }[];
+        .limit(1)) as { id: number; name: string }[];
 
       // 演者提案は基本的に pending（人間による確認が必要）
       const status = 'pending';
 
       // 演者提案を保存
-      const [newSuggestion] = await db
+      const [newSuggestion] = (await db
         .insert(suggestionsTable)
         .values({
           productId,
@@ -223,12 +217,15 @@ export function createUserPerformerSuggestionsPostHandler(deps: UserPerformerSug
           downvotes: 0,
           status,
         })
-        .returning() as UserPerformerSuggestion[];
+        .returning()) as UserPerformerSuggestion[];
 
-      return NextResponse.json({
-        suggestion: newSuggestion,
-        matchedPerformer: existingPerformer || null,
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          suggestion: newSuggestion,
+          matchedPerformer: existingPerformer || null,
+        },
+        { status: 201 },
+      );
     } catch (error) {
       return createApiErrorResponse(error, 'Failed to create performer suggestion', 500, {
         endpoint: '/api/products/[id]/performer-suggestions',
@@ -241,7 +238,7 @@ export function createUserPerformerSuggestionsPostHandler(deps: UserPerformerSug
 export function createUserPerformerVoteHandler(deps: UserPerformerSuggestionsHandlerDeps) {
   return async (
     req: NextRequest,
-    { params }: { params: Promise<{ id: string; suggestionId: string }> }
+    { params }: { params: Promise<{ id: string; suggestionId: string }> },
   ): Promise<NextResponse> => {
     try {
       const { suggestionId: suggestionIdStr } = await params;
@@ -289,27 +286,22 @@ export function createUserPerformerVoteHandler(deps: UserPerformerSuggestionsHan
       const votesTable = deps.userPerformerVotes as any;
 
       // 提案が存在するか確認
-      const [suggestion] = await db
+      const [suggestion] = (await db
         .select()
         .from(suggestionsTable)
         .where(deps.eq(suggestionsTable.id, suggestionId))
-        .limit(1) as UserPerformerSuggestion[];
+        .limit(1)) as UserPerformerSuggestion[];
 
       if (!suggestion) {
         return NextResponse.json({ error: 'Performer suggestion not found' }, { status: 404 });
       }
 
       // 既存の投票を確認
-      const [existingVote] = await db
+      const [existingVote] = (await db
         .select()
         .from(votesTable)
-        .where(
-          deps.and(
-            deps.eq(votesTable.suggestionId, suggestionId),
-            deps.eq(votesTable.voterId, userId)
-          )
-        )
-        .limit(1) as { suggestionId: number; voterId: string; voteType: string }[];
+        .where(deps.and(deps.eq(votesTable.suggestionId, suggestionId), deps.eq(votesTable.voterId, userId)))
+        .limit(1)) as { suggestionId: number; voterId: string; voteType: string }[];
 
       // 投票を更新または挿入
       await db

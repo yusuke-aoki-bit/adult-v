@@ -13,10 +13,14 @@ import { localeMap } from '@adult-v/shared/lib/utils/formatDate';
  * - 600分（10時間）以上の異常値は非表示
  * - 時間と分に分けて表示
  */
-const durationFormats: Record<string, { hour: string; hourMin: (h: number, m: number) => string; hourOnly: (h: number) => string }> = {
+const durationFormats: Record<
+  string,
+  { hour: string; hourMin: (h: number, m: number) => string; hourOnly: (h: number) => string }
+> = {
   ja: { hour: '時間', hourMin: (h, m) => `${h}時間${m}分`, hourOnly: (h) => `${h}時間` },
   en: { hour: 'h', hourMin: (h, m) => `${h}h ${m}m`, hourOnly: (h) => `${h}h` },
   zh: { hour: '小时', hourMin: (h, m) => `${h}小时${m}分钟`, hourOnly: (h) => `${h}小时` },
+  'zh-TW': { hour: '小時', hourMin: (h, m) => `${h}小時${m}分鐘`, hourOnly: (h) => `${h}小時` },
   ko: { hour: '시간', hourMin: (h, m) => `${h}시간 ${m}분`, hourOnly: (h) => `${h}시간` },
 };
 
@@ -32,7 +36,7 @@ function formatDuration(minutes: number, locale: string): string | null {
 
   const hours = Math.floor(minutes / 60);
   const mins = minutes % 60;
-  const fmt = durationFormats[locale] || durationFormats['en'];
+  const fmt = durationFormats[locale] ?? durationFormats['en']!;
 
   return mins > 0 ? fmt.hourMin(hours, mins) : fmt.hourOnly(hours);
 }
@@ -71,7 +75,8 @@ const translations = {
     sites: 'sites',
     productId: 'Product ID:',
     subscriptionOnly: 'Subscription Only',
-    dataInfo: 'We collect pricing and availability information from multiple distribution sites to provide the latest data',
+    dataInfo:
+      'We collect pricing and availability information from multiple distribution sites to provide the latest data',
     lastUpdated: 'Last Updated:',
     verifiedData: 'Verified Data',
     officialSource: 'Official Source',
@@ -95,6 +100,25 @@ const translations = {
     verifiedData: '已验证数据',
     officialSource: '官方来源',
     copyrightNotice: '所有图片和视频内容的版权归各权利人所有',
+  },
+  'zh-TW': {
+    productDetails: '作品詳情',
+    duration: '時長:',
+    minutes: '分鐘',
+    releaseDate: '發佈日期:',
+    performerCount: '演員數:',
+    people: '人',
+    tagCount: '標籤數:',
+    items: '個',
+    distributionSites: '發行站點',
+    sites: '個站點',
+    productId: '產品編號:',
+    subscriptionOnly: '僅限會員',
+    dataInfo: '我們從多個發行站點收集價格和庫存資訊，以提供最新資料',
+    lastUpdated: '最後更新:',
+    verifiedData: '已驗證資料',
+    officialSource: '官方來源',
+    copyrightNotice: '所有圖片和影片內容的著作權歸各權利人所有',
   },
   ko: {
     productDetails: '작품 상세 정보',
@@ -147,110 +171,108 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
   const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   return (
-    <div className="bg-gray-800 rounded-lg p-6 space-y-4">
-      <h2 className="text-xl font-bold text-white border-b border-gray-700 pb-2">
-        {t.productDetails}
-      </h2>
+    <div className="space-y-4 rounded-lg bg-gray-800 p-6">
+      <h2 className="border-b border-gray-700 pb-2 text-xl font-bold text-white">{t.productDetails}</h2>
 
       {/* 基本情報 */}
       <div className="grid grid-cols-2 gap-4 text-sm">
         {duration && formatDuration(duration, locale) && (
           <div>
             <span className="text-gray-400">{t.duration}</span>
-            <span className="text-white ml-2 font-semibold">
-              {formatDuration(duration, locale)}{duration < 60 ? t.minutes : ''}
+            <span className="ml-2 font-semibold text-white">
+              {formatDuration(duration, locale)}
+              {duration < 60 ? t.minutes : ''}
             </span>
           </div>
         )}
         {releaseDate && (
           <div>
             <span className="text-gray-400">{t.releaseDate}</span>
-            <span className="text-white ml-2 font-semibold">{releaseDate}</span>
+            <span className="ml-2 font-semibold text-white">{releaseDate}</span>
           </div>
         )}
         <div>
           <span className="text-gray-400">{t.performerCount}</span>
-          <span className="text-white ml-2 font-semibold">{performerCount}{t.people}</span>
+          <span className="ml-2 font-semibold text-white">
+            {performerCount}
+            {t.people}
+          </span>
         </div>
         <div>
           <span className="text-gray-400">{t.tagCount}</span>
-          <span className="text-white ml-2 font-semibold">{tagCount}{t.items}</span>
+          <span className="ml-2 font-semibold text-white">
+            {tagCount}
+            {t.items}
+          </span>
         </div>
       </div>
 
       {/* データソースの透明性 - apps/webではFANZAを除外 */}
-      {sources.filter(s => s.aspName !== 'FANZA').length > 0 && (
-        <div className="mt-6 pt-4 border-t border-gray-700">
-          <h3 className="text-sm font-semibold text-white mb-3">
-            {t.distributionSites} ({sources.filter(s => s.aspName !== 'FANZA').length} {t.sites})
+      {sources.filter((s) => s.aspName !== 'FANZA').length > 0 && (
+        <div className="mt-6 border-t border-gray-700 pt-4">
+          <h3 className="mb-3 text-sm font-semibold text-white">
+            {t.distributionSites} ({sources.filter((s) => s.aspName !== 'FANZA').length} {t.sites})
           </h3>
           <div className="space-y-2">
             {sources
               // apps/webではFANZAソースを除外（FANZAはFanzaCrossLink経由で表示）
               .filter((source) => source.aspName !== 'FANZA')
               .map((source) => {
-              const providerId = ASP_TO_PROVIDER_ID[source.aspName.toLowerCase()];
-              const meta = providerId ? providerMeta[providerId] : null;
-              const gradientStyle = meta?.gradientColors
-                ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
-                : { backgroundColor: '#4b5563' };
+                const providerId = ASP_TO_PROVIDER_ID[source.aspName.toLowerCase()];
+                const meta = providerId ? providerMeta[providerId] : null;
+                const gradientStyle = meta?.gradientColors
+                  ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
+                  : { backgroundColor: '#4b5563' };
 
-              return (
-              <div
-                key={`${source.aspName}-${source.originalProductId}`}
-                className="flex items-center justify-between bg-gray-700/50 rounded p-3 text-xs"
-              >
-                <div className="flex items-center gap-3">
-                  <span
-                    className="px-2 py-1 rounded font-bold text-white"
-                    style={gradientStyle}
+                return (
+                  <div
+                    key={`${source.aspName}-${source.originalProductId}`}
+                    className="flex items-center justify-between rounded bg-gray-700/50 p-3 text-xs"
                   >
-                    {meta?.label || source.aspName}
-                  </span>
-                  <span className="text-gray-300">
-                    {t.productId} {source.originalProductId}
-                  </span>
-                </div>
-                {source.price !== null && source.price > 0 ? (
-                  <span className="text-green-400 font-semibold">
-                    {formatPrice(source.price, source.currency ?? undefined)}
-                  </span>
-                ) : isSubscriptionProvider(source.aspName) ? (
-                  <span className="text-rose-400 font-semibold">
-                    {t.subscriptionOnly}
-                  </span>
-                ) : null}
-              </div>
-              );
-            })}
+                    <div className="flex items-center gap-3">
+                      <span className="rounded px-2 py-1 font-bold text-white" style={gradientStyle}>
+                        {meta?.label || source.aspName}
+                      </span>
+                      <span className="text-gray-300">
+                        {t.productId} {source.originalProductId}
+                      </span>
+                    </div>
+                    {source.price !== null && source.price > 0 ? (
+                      <span className="font-semibold text-green-400">
+                        {formatPrice(source.price, source.currency ?? undefined)}
+                      </span>
+                    ) : isSubscriptionProvider(source.aspName) ? (
+                      <span className="font-semibold text-rose-400">{t.subscriptionOnly}</span>
+                    ) : null}
+                  </div>
+                );
+              })}
           </div>
-          <p className="text-xs text-gray-400 mt-3">
-            {t.dataInfo}
-          </p>
+          <p className="mt-3 text-xs text-gray-400">{t.dataInfo}</p>
         </div>
       )}
 
       {/* 更新日時 */}
       {updatedAt && (
-        <div className="text-xs text-gray-400 pt-4 border-t border-gray-700">
+        <div className="border-t border-gray-700 pt-4 text-xs text-gray-400">
           {t.lastUpdated} {new Date(updatedAt).toLocaleString(localeMap[locale] || 'ja-JP')}
         </div>
       )}
 
       {/* 信頼性バッジ */}
       <div className="flex items-center gap-2 pt-4">
-        <div className="flex items-center gap-1 px-3 py-1 bg-blue-600/20 border border-blue-600 rounded-full">
-          <svg className="w-4 h-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+        <div className="flex items-center gap-1 rounded-full border border-blue-600 bg-blue-600/20 px-3 py-1">
+          <svg className="h-4 w-4 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
             <path
               fillRule="evenodd"
               d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
               clipRule="evenodd"
             />
           </svg>
-          <span className="text-xs text-blue-300 font-medium">{t.verifiedData}</span>
+          <span className="text-xs font-medium text-blue-300">{t.verifiedData}</span>
         </div>
-        <div className="flex items-center gap-1 px-3 py-1 bg-green-600/20 border border-green-600 rounded-full">
-          <svg className="w-4 h-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
+        <div className="flex items-center gap-1 rounded-full border border-green-600 bg-green-600/20 px-3 py-1">
+          <svg className="h-4 w-4 text-green-400" fill="currentColor" viewBox="0 0 20 20">
             <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
             <path
               fillRule="evenodd"
@@ -258,14 +280,12 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
               clipRule="evenodd"
             />
           </svg>
-          <span className="text-xs text-green-300 font-medium">{t.officialSource}</span>
+          <span className="text-xs font-medium text-green-300">{t.officialSource}</span>
         </div>
       </div>
 
       {/* 著作権表示 */}
-      <p className="text-xs text-gray-500 pt-4 border-t border-gray-700">
-        {t.copyrightNotice}
-      </p>
+      <p className="border-t border-gray-700 pt-4 text-xs text-gray-500">{t.copyrightNotice}</p>
     </div>
   );
 });

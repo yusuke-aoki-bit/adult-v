@@ -86,7 +86,9 @@ export const performerAliases = pgTable(
   'performer_aliases',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id')
+      .notNull()
+      .references(() => performers.id, { onDelete: 'cascade' }),
     aliasName: varchar('alias_name', { length: 200 }).notNull(),
     source: varchar('source', { length: 100 }), // 'av-wiki', 'seesaa-wiki', 'manual' など
     isPrimary: boolean('is_primary').default(false), // 主要な名前かどうか
@@ -107,7 +109,9 @@ export const performerExternalIds = pgTable(
   'performer_external_ids',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id')
+      .notNull()
+      .references(() => performers.id, { onDelete: 'cascade' }),
     provider: varchar('provider', { length: 50 }).notNull(), // 'sokmil', 'fanza', 'mgs', 'b10f', etc.
     externalId: varchar('external_id', { length: 200 }).notNull(), // そのサイトでの女優ID
     externalUrl: text('external_url'), // そのサイトでの女優ページURL
@@ -130,7 +134,9 @@ export const performerImages = pgTable(
   'performer_images',
   {
     id: serial('id').primaryKey(),
-    performerId: integer('performer_id').notNull().references(() => performers.id, { onDelete: 'cascade' }),
+    performerId: integer('performer_id')
+      .notNull()
+      .references(() => performers.id, { onDelete: 'cascade' }),
     imageUrl: text('image_url').notNull(),
     imageType: varchar('image_type', { length: 50 }), // 'profile', 'thumbnail', 'banner', 'gallery' など
     width: integer('width'), // 画像の幅

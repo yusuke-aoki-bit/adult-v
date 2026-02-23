@@ -48,12 +48,10 @@ export interface ProductQueryDeps {
       salePrice: number;
       discountPercent: number | null;
       endAt: Date | null;
-    }
+    },
   ) => unknown;
   /** Function to fetch product related data (productId only) */
-  fetchProductRelatedData: (
-    productId: number
-  ) => Promise<{
+  fetchProductRelatedData: (productId: number) => Promise<{
     performerData: unknown[];
     tagData: unknown[];
     sourceData?: unknown;
@@ -140,8 +138,9 @@ export function createProductQueries(deps: ProductQueryDeps) {
       }
 
       const product = result[0];
-      const { performerData, tagData, sourceData, imagesData, videosData, saleData } =
-        await fetchProductRelatedData(product['id']);
+      const { performerData, tagData, sourceData, imagesData, videosData, saleData } = await fetchProductRelatedData(
+        product['id'],
+      );
 
       return mapProductToType(
         product,
@@ -152,7 +151,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         imagesData,
         videosData,
         locale,
-        saleData
+        saleData,
       ) as T;
     } catch (error) {
       logDbErrorAndThrow(error, 'getProductById', { productId: id });
@@ -162,10 +161,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
   /**
    * 品番で商品を検索（バリエーション対応）
    */
-  async function searchProductByProductId<T>(
-    productId: string,
-    locale: string = 'ja'
-  ): Promise<T | null> {
+  async function searchProductByProductId<T>(productId: string, locale: string = 'ja'): Promise<T | null> {
     try {
       const db = getDb();
       const variants = generateProductIdVariations(productId);
@@ -179,8 +175,9 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       if (productByNormalizedId.length > 0) {
         const product = productByNormalizedId[0];
-        const { performerData, tagData, sourceData, imagesData, videosData, saleData } =
-          await fetchProductRelatedData(product['id']);
+        const { performerData, tagData, sourceData, imagesData, videosData, saleData } = await fetchProductRelatedData(
+          product['id'],
+        );
 
         return mapProductToType(
           product,
@@ -191,7 +188,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
           imagesData,
           videosData,
           locale,
-          saleData
+          saleData,
         ) as T;
       }
 
@@ -207,11 +204,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
       }
 
       const source = sourceByOriginalId[0];
-      const product = await db
-        .select()
-        .from(products)
-        .where(eq(products['id'], source.productId))
-        .limit(1);
+      const product = await db.select().from(products).where(eq(products['id'], source.productId)).limit(1);
 
       if (product.length === 0) {
         return null;
@@ -243,10 +236,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
           .from(productImages)
           .where(eq(productImages.productId, productData.id))
           .orderBy(asc(productImages.displayOrder)),
-        db
-          .select()
-          .from(productVideos)
-          .where(eq(productVideos.productId, productData.id)),
+        db.select().from(productVideos).where(eq(productVideos.productId, productData.id)),
         // セール情報を取得
         db
           .select({
@@ -261,19 +251,21 @@ export function createProductQueries(deps: ProductQueryDeps) {
             and(
               eq(productSources.productId, productData.id),
               eq(productSales.isActive, true),
-              sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-            )
+              sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+            ),
           )
           .limit(1),
       ]);
 
       // セールデータの変換
-      const saleData = saleDataResult[0] ? {
-        regularPrice: saleDataResult[0].regularPrice,
-        salePrice: saleDataResult[0].salePrice,
-        discountPercent: saleDataResult[0].discountPercent,
-        endAt: saleDataResult[0].endAt,
-      } : undefined;
+      const saleData = saleDataResult[0]
+        ? {
+            regularPrice: saleDataResult[0].regularPrice,
+            salePrice: saleDataResult[0].salePrice,
+            discountPercent: saleDataResult[0].discountPercent,
+            endAt: saleDataResult[0].endAt,
+          }
+        : undefined;
 
       return mapProductToType(
         productData,
@@ -284,7 +276,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         imagesData,
         videosData,
         locale,
-        saleData
+        saleData,
       ) as T;
     } catch (error) {
       logDbErrorAndThrow(error, 'searchByProductId', { productId });
@@ -297,10 +289,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
   async function getProductSources(productId: number): Promise<ProductSourceResult[]> {
     const db = getDb();
 
-    const sources = await db
-      .select()
-      .from(productSources)
-      .where(eq(productSources.productId, productId));
+    const sources = await db.select().from(productSources).where(eq(productSources.productId, productId));
 
     return sources;
   }
@@ -309,9 +298,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
    * 商品ソース情報をセール情報付きで取得
    * siteMode='all' の場合はFANZAを除外（adult-vサイト用）
    */
-  async function getProductSourcesWithSales(
-    productId: number
-  ): Promise<ProductSourceWithSaleResult[]> {
+  async function getProductSourcesWithSales(productId: number): Promise<ProductSourceWithSaleResult[]> {
     const db = getDb();
 
     // Build WHERE clause with optional FANZA exclusion
@@ -350,9 +337,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
   /**
    * 品番から商品ソース情報を取得（名寄せ用）
    */
-  async function getProductSourcesByMakerCode(
-    makerProductCode: string
-  ): Promise<ProductSourceWithSaleResult[]> {
+  async function getProductSourcesByMakerCode(makerProductCode: string): Promise<ProductSourceWithSaleResult[]> {
     const db = getDb();
 
     // 品番を正規化（空白・ハイフン除去、小文字化）
@@ -414,7 +399,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
   async function fuzzySearchProducts<T>(
     query: string,
     limit: number = 20,
-    getProductByIdFn: (id: string, locale?: string) => Promise<T | null>
+    getProductByIdFn: (id: string, locale?: string) => Promise<T | null>,
   ): Promise<T[]> {
     try {
       const db = getDb();
@@ -432,7 +417,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
         .select({ id: products['id'] })
         .from(products)
         .where(
-          sql`${products.normalizedProductId} ILIKE ${searchPattern} OR ${products['title']} ILIKE ${searchPattern}`
+          sql`${products.normalizedProductId} ILIKE ${searchPattern} OR ${products['title']} ILIKE ${searchPattern}`,
         )
         .limit(limit);
 
@@ -447,7 +432,9 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       // 各商品の詳細情報を取得
       const productDetails = await Promise.all(
-        Array.from(productIds).slice(0, limit).map(id => getProductByIdFn(id))
+        Array.from(productIds)
+          .slice(0, limit)
+          .map((id) => getProductByIdFn(id)),
       );
 
       return productDetails.filter((p): p is NonNullable<typeof p> => p !== null) as T[];
@@ -461,10 +448,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
    * @param options.limit - 取得する商品数（デフォルト: 100）
    * @param options.locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）
    */
-  async function getRecentProducts<T>(options?: {
-    limit?: number;
-    locale?: string;
-  }): Promise<T[]> {
+  async function getRecentProducts<T>(options?: { limit?: number; locale?: string }): Promise<T[]> {
     try {
       const db = getDb();
       const limit = options?.limit || 100;
@@ -481,7 +465,9 @@ export function createProductQueries(deps: ProductQueryDeps) {
       const productsWithData = await Promise.all(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         results.map(async (product: any) => {
-          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product['id'] as number);
+          const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(
+            product['id'] as number,
+          );
 
           return mapProductToType(
             product,
@@ -491,9 +477,9 @@ export function createProductQueries(deps: ProductQueryDeps) {
             undefined,
             imagesData as unknown[],
             videosData as unknown[],
-            locale
+            locale,
           );
-        })
+        }),
       );
 
       return productsWithData as T[];
@@ -514,13 +500,15 @@ export function createProductQueries(deps: ProductQueryDeps) {
       includeImageType?: boolean;
       filterImageTypes?: string[];
       limit?: number;
-    }
-  ): Promise<Array<{
-    imageUrl: string;
-    imageType?: string;
-    displayOrder?: number | null;
-    aspName: string | null;
-  }>> {
+    },
+  ): Promise<
+    Array<{
+      imageUrl: string;
+      imageType?: string;
+      displayOrder?: number | null;
+      aspName: string | null;
+    }>
+  > {
     if (!makerProductCode) return [];
 
     try {
@@ -531,9 +519,13 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
       if (includeImageType) {
         // image_type, display_orderを含む詳細版
-        const imageTypeFilter = filterImageTypes && filterImageTypes.length > 0
-          ? sql`AND pi.image_type IN (${sql.join(filterImageTypes.map(t => sql`${t}`), sql`, `)})`
-          : sql``;
+        const imageTypeFilter =
+          filterImageTypes && filterImageTypes.length > 0
+            ? sql`AND pi.image_type IN (${sql.join(
+                filterImageTypes.map((t) => sql`${t}`),
+                sql`, `,
+              )})`
+            : sql``;
         const limitClause = limit ? sql`LIMIT ${limit}` : sql``;
 
         const result = await db.execute(sql`
@@ -578,7 +570,7 @@ export function createProductQueries(deps: ProductQueryDeps) {
 
         type SimpleImageRow = { image_url: string; asp_name: string | null };
         const rows = (result.rows || []) as SimpleImageRow[];
-        return rows.map(row => ({
+        return rows.map((row) => ({
           imageUrl: row.image_url,
           aspName: row.asp_name,
         }));

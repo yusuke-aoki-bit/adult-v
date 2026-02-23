@@ -89,110 +89,115 @@ export default function MakersListPage() {
     fetchMakers();
   }, [category, locale]);
 
-  const filteredMakers = makers.filter(m => {
+  const filteredMakers = makers.filter((m) => {
     if (!searchQuery) return true;
-    const name = locale === 'en' && m.nameEn ? m.nameEn
-      : locale === 'zh' && m.nameZh ? m.nameZh
-      : locale === 'ko' && m.nameKo ? m.nameKo
-      : m.name;
+    const name =
+      locale === 'en' && m.nameEn
+        ? m.nameEn
+        : locale === 'zh' && m.nameZh
+          ? m.nameZh
+          : locale === 'ko' && m.nameKo
+            ? m.nameKo
+            : m.name;
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
   const getLocalizedName = (maker: Maker) => {
-    return locale === 'en' && maker.nameEn ? maker.nameEn
-      : locale === 'zh' && maker.nameZh ? maker.nameZh
-      : locale === 'ko' && maker.nameKo ? maker.nameKo
-      : maker.name;
+    return locale === 'en' && maker.nameEn
+      ? maker.nameEn
+      : locale === 'zh' && maker.nameZh
+        ? maker.nameZh
+        : locale === 'ko' && maker.nameKo
+          ? maker.nameKo
+          : maker.name;
   };
 
   return (
-    <div className="min-h-screen theme-body">
+    <div className="theme-body min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
-            <Building2 className="w-7 h-7 text-rose-400" />
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-white sm:text-3xl">
+            <Building2 className="h-7 w-7 text-rose-400" />
             {t.title}
           </h1>
-          <p className="text-gray-400 mt-2">{t.description}</p>
+          <p className="mt-2 text-gray-400">{t.description}</p>
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row">
           <div className="flex gap-2">
             {(['both', 'maker', 'label'] as const).map((cat) => (
               <button
                 key={cat}
                 onClick={() => setCategory(cat)}
-                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
-                  category === cat
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                className={`rounded-lg px-4 py-2 text-sm transition-colors ${
+                  category === cat ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 {cat === 'both' ? t.all : cat === 'maker' ? t.makers : t.labels}
               </button>
             ))}
           </div>
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="relative flex-1">
+            <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.search}
-              className="w-full pl-10 pr-4 py-2 bg-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500"
+              className="w-full rounded-lg bg-gray-700 py-2 pr-4 pl-10 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
             />
           </div>
         </div>
 
         {/* Content */}
         {isLoading ? (
-          <div className="text-center py-12">
-            <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
-            <p className="text-gray-400 mt-4">{t.loading}</p>
+          <div className="py-12 text-center">
+            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-rose-500 border-t-transparent" />
+            <p className="mt-4 text-gray-400">{t.loading}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {filteredMakers.map((maker) => (
               <Link
                 key={maker.id}
                 href={localizedHref(`/makers/${maker.id}`, locale)}
-                className="bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors group"
+                className="group rounded-lg bg-gray-800 p-4 transition-colors hover:bg-gray-700"
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    maker.category === 'maker'
-                      ? 'bg-rose-500/20'
-                      : 'bg-purple-500/20'
-                  }`}>
+                <div className="mb-3 flex items-center gap-3">
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-lg ${
+                      maker.category === 'maker' ? 'bg-rose-500/20' : 'bg-purple-500/20'
+                    }`}
+                  >
                     {maker.category === 'maker' ? (
-                      <Building2 className={`w-5 h-5 ${
-                        maker.category === 'maker' ? 'text-rose-400' : 'text-purple-400'
-                      }`} />
+                      <Building2
+                        className={`h-5 w-5 ${maker.category === 'maker' ? 'text-rose-400' : 'text-purple-400'}`}
+                      />
                     ) : (
-                      <Tag className="w-5 h-5 text-purple-400" />
+                      <Tag className="h-5 w-5 text-purple-400" />
                     )}
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded ${
-                    maker.category === 'maker'
-                      ? 'bg-rose-900 text-rose-300'
-                      : 'bg-purple-900 text-purple-300'
-                  }`}>
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs ${
+                      maker.category === 'maker' ? 'bg-rose-900 text-rose-300' : 'bg-purple-900 text-purple-300'
+                    }`}
+                  >
                     {maker.category === 'maker' ? t.makers : t.labels}
                   </span>
                 </div>
-                <h3 className="text-white font-semibold group-hover:text-rose-400 transition-colors line-clamp-2">
+                <h3 className="line-clamp-2 font-semibold text-white transition-colors group-hover:text-rose-400">
                   {getLocalizedName(maker)}
                 </h3>
-                <div className="flex items-center gap-3 mt-2 text-sm text-gray-400">
+                <div className="mt-2 flex items-center gap-3 text-sm text-gray-400">
                   <span className="flex items-center gap-1">
-                    <Film className="w-3 h-3" />
+                    <Film className="h-3 w-3" />
                     {maker.productCount.toLocaleString()} {t.products}
                   </span>
                   {maker.averageRating && (
                     <span className="flex items-center gap-1">
-                      <Star className="w-3 h-3 text-yellow-400" />
+                      <Star className="h-3 w-3 text-yellow-400" />
                       {maker.averageRating.toFixed(1)}
                     </span>
                   )}
@@ -203,9 +208,9 @@ export default function MakersListPage() {
         )}
 
         {!isLoading && filteredMakers.length === 0 && (
-          <div className="text-center py-12">
-            <Building2 className="w-16 h-16 text-gray-600 mx-auto" />
-            <p className="text-gray-400 mt-4">No makers found</p>
+          <div className="py-12 text-center">
+            <Building2 className="mx-auto h-16 w-16 text-gray-600" />
+            <p className="mt-4 text-gray-400">No makers found</p>
           </div>
         )}
       </div>

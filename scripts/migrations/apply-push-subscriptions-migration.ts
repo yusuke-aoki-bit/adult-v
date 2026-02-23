@@ -7,13 +7,7 @@ async function applyMigration() {
   try {
     console.log('Applying push subscriptions migration...');
 
-    const migrationPath = path.join(
-      __dirname,
-      '..',
-      'drizzle',
-      'migrations',
-      '0008_add_push_subscriptions.sql'
-    );
+    const migrationPath = path.join(__dirname, '..', 'drizzle', 'migrations', '0008_add_push_subscriptions.sql');
 
     const migrationSQL = fs.readFileSync(migrationPath, 'utf-8');
 

@@ -80,9 +80,7 @@ export function createPriceHistoryQueries(getDb: () => any) {
       const limit = options?.limit ?? 90;
       const daysBack = options?.daysBack ?? 365;
 
-      const aspFilter = options?.aspName
-        ? sql`AND ps.asp_name = ${options['aspName']}`
-        : sql``;
+      const aspFilter = options?.aspName ? sql`AND ps.asp_name = ${options['aspName']}` : sql``;
 
       const result = await db.execute(sql`
         SELECT
@@ -114,15 +112,10 @@ export function createPriceHistoryQueries(getDb: () => any) {
     /**
      * 価格統計を取得
      */
-    async getPriceStats(
-      normalizedProductId: string,
-      aspName?: string,
-    ): Promise<PriceStats | null> {
+    async getPriceStats(normalizedProductId: string, aspName?: string): Promise<PriceStats | null> {
       const db = getDb();
 
-      const aspFilter = aspName
-        ? sql`AND ps.asp_name = ${aspName}`
-        : sql``;
+      const aspFilter = aspName ? sql`AND ps.asp_name = ${aspName}` : sql``;
 
       const result = await db.execute(sql`
         SELECT

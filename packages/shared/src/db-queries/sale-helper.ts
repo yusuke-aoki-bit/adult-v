@@ -71,11 +71,7 @@ export interface SaleQueryDeps {
 }
 
 export interface SaleHelperQueries {
-  saveSaleInfo: (
-    aspName: string,
-    originalProductId: string,
-    saleInfo: SaleInfo
-  ) => Promise<boolean>;
+  saveSaleInfo: (aspName: string, originalProductId: string, saleInfo: SaleInfo) => Promise<boolean>;
   deactivateSale: (aspName: string, originalProductId: string) => Promise<void>;
   deactivateExpiredSales: () => Promise<number>;
 }
@@ -89,11 +85,7 @@ export interface SaleStatsWithAspResult {
 }
 
 export interface SaleQueryQueries {
-  getSaleProducts: (options?: {
-    limit?: number;
-    aspName?: string;
-    minDiscount?: number;
-  }) => Promise<SaleProduct[]>;
+  getSaleProducts: (options?: { limit?: number; aspName?: string; minDiscount?: number }) => Promise<SaleProduct[]>;
   getSaleStats: (aspName?: string) => Promise<SaleStatsWithAspResult>;
 }
 
@@ -106,11 +98,7 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
   /**
    * セール情報を保存または更新
    */
-  async function saveSaleInfo(
-    aspName: string,
-    originalProductId: string,
-    saleInfo: SaleInfo
-  ): Promise<boolean> {
+  async function saveSaleInfo(aspName: string, originalProductId: string, saleInfo: SaleInfo): Promise<boolean> {
     const db = getDb();
 
     try {
@@ -121,8 +109,7 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
 
       // 割引率を計算
       const discountPercent =
-        saleInfo.discountPercent ||
-        Math.round((1 - saleInfo.salePrice / saleInfo.regularPrice) * 100);
+        saleInfo.discountPercent || Math.round((1 - saleInfo.salePrice / saleInfo.regularPrice) * 100);
 
       // product_sourceを検索
       const sourceResult = await db.execute(drizzleSql`
@@ -219,10 +206,7 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
   /**
    * セールが終了した商品を非アクティブに
    */
-  async function deactivateSale(
-    aspName: string,
-    originalProductId: string
-  ): Promise<void> {
+  async function deactivateSale(aspName: string, originalProductId: string): Promise<void> {
     const db = getDb();
 
     try {
@@ -350,8 +334,11 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
       const productIds = typedResults.map((r) => r.productId as number);
 
       // performer_imagesテーブルからのサブクエリでフォールバック画像を取得
-      const rawPerformerData = productIds.length > 0
-        ? await db.execute(drizzleSql`
+      const rawPerformerData =
+        productIds.length > 0
+          ? await db
+              .execute(
+                drizzleSql`
             SELECT
               pp.product_id as "productId",
               p.id as "performerId",
@@ -365,14 +352,22 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
               ) as "profileImageUrl"
             FROM product_performers pp
             INNER JOIN performers p ON pp.performer_id = p.id
-            WHERE pp.product_id IN (${drizzleSql.join(productIds.map(id => drizzleSql`${id}`), drizzleSql`, `)})
-          `).then((r: { rows: unknown[] }) => r.rows)
-        : [];
+            WHERE pp.product_id IN (${drizzleSql.join(
+              productIds.map((id) => drizzleSql`${id}`),
+              drizzleSql`, `,
+            )})
+          `,
+              )
+              .then((r: { rows: unknown[] }) => r.rows)
+          : [];
 
       // 商品IDごとに出演者をグループ化
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const typedPerformerData = rawPerformerData as any[];
-      const performersByProduct = new Map<number, Array<{ id: number; name: string; profileImageUrl?: string | null }>>();
+      const performersByProduct = new Map<
+        number,
+        Array<{ id: number; name: string; profileImageUrl?: string | null }>
+      >();
       for (const p of typedPerformerData) {
         const productId = p.productId as number;
         const arr = performersByProduct.get(productId) || [];
@@ -427,10 +422,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
           .select({ count: drizzleSql<number>`count(*)` })
           .from(productSales)
           .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
-          .where(and(
-            ...baseConditions,
-            eq(productSources.aspName, aspName)
-          ));
+          .where(and(...baseConditions, eq(productSources.aspName, aspName)));
 
         const total = Number(totalResult[0]?.count || 0);
 
@@ -443,10 +435,7 @@ export function createSaleQueries(deps: SaleQueryDeps): SaleQueryQueries {
           })
           .from(productSales)
           .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
-          .where(and(
-            ...baseConditions,
-            eq(productSources.aspName, aspName)
-          ))
+          .where(and(...baseConditions, eq(productSources.aspName, aspName)))
           .groupBy(productSources.aspName)
           .orderBy(desc(drizzleSql`count(*)`));
 

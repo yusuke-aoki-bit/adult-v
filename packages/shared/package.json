@@ -38,6 +38,9 @@
     "./lib/asp-totals": "./src/lib/asp-totals.ts",
     "./lib/localization": "./src/lib/localization.ts",
     "./lib/google-analytics": "./src/lib/google-analytics.ts",
+    "./lib/health-check": "./src/lib/health-check.ts",
+    "./lib/logger": "./src/lib/logger.ts",
+    "./lib/translations": "./src/lib/translations/index.ts",
     "./lib/rate-limit": "./src/lib/rate-limit.ts",
     "./lib/providers": "./src/lib/providers.ts",
     "./lib/provider-utils": "./src/lib/provider-utils.ts",
@@ -82,9 +85,11 @@
   },
   "dependencies": {
     "@adult-v/database": "workspace:*",
+    "@asteasolutions/zod-to-openapi": "^8.4.1",
     "@upstash/redis": "^1.36.0",
     "firebase": "^11.0.0",
-    "p-limit": "^7.2.0"
+    "p-limit": "^7.2.0",
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "lucide-react": "^0.469.0",

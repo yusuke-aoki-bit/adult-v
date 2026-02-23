@@ -67,13 +67,11 @@ async function main() {
   const startTime = Date.now();
 
   // 対象タスクをフィルタリング
-  const targetTasks = aspFilter === 'all'
-    ? BACKFILL_TASKS
-    : BACKFILL_TASKS.filter(t => t.asp === aspFilter);
+  const targetTasks = aspFilter === 'all' ? BACKFILL_TASKS : BACKFILL_TASKS.filter((t) => t.asp === aspFilter);
 
   if (targetTasks.length === 0) {
     console.error(`No tasks found for ASP: ${aspFilter}`);
-    console.log('Available ASPs:', BACKFILL_TASKS.map(t => t.asp).join(', '));
+    console.log('Available ASPs:', BACKFILL_TASKS.map((t) => t.asp).join(', '));
     process.exit(1);
   }
 
@@ -122,8 +120,8 @@ async function main() {
   }
 
   // 全体統計
-  const successTotal = results.filter(r => r.success).length;
-  const failureTotal = results.filter(r => !r.success).length;
+  const successTotal = results.filter((r) => r.success).length;
+  const failureTotal = results.filter((r) => !r.success).length;
 
   console.log('\n----------------------------------------');
   console.log(`Total: ${successTotal} succeeded, ${failureTotal} failed`);

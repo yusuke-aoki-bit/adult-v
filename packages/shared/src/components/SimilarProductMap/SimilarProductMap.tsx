@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, similarProductMapTranslations } from '../../lib/translations';
 
 type ViewMode = 'list' | 'network';
 
@@ -53,45 +54,11 @@ const HOP_COLORS = {
   2: { fill: '#8B5CF6', stroke: '#A78BFA', light: { fill: '#7C3AED', stroke: '#8B5CF6' } }, // violet (ジャンル)
 };
 
-const mapTexts = {
-  ja: {
-    analyzing: '類似作品を分析中...',
-    networkTitle: '類似作品ネットワーク',
-    networkSubtitle: '出演者・ジャンルによる関連',
-    listView: 'リスト表示',
-    networkView: 'ネットワーク図',
-    sameMaker: '同じメーカー',
-    samePerformer: '同じ出演者',
-    similarGenre: 'ジャンル類似',
-    sameMakerProducts: '同じメーカーの作品',
-    samePerformerProducts: '同じ出演者の作品',
-    similarGenreProducts: 'ジャンル類似作品',
-  },
-  en: {
-    analyzing: 'Analyzing similar products...',
-    networkTitle: 'Similar Products Network',
-    networkSubtitle: 'Related by performers & genres',
-    listView: 'List view',
-    networkView: 'Network view',
-    sameMaker: 'Same maker',
-    samePerformer: 'Same performer',
-    similarGenre: 'Similar genre',
-    sameMakerProducts: 'Same Maker',
-    samePerformerProducts: 'Same Performer',
-    similarGenreProducts: 'Similar Genre',
-  },
-} as const;
-function getMapText(locale: string) { return mapTexts[locale as keyof typeof mapTexts] || mapTexts.ja; }
 
-export function SimilarProductMap({
-  productId,
-  locale,
-  theme: themeProp,
-  onProductClick,
-}: SimilarProductMapProps) {
+export function SimilarProductMap({ productId, locale, theme: themeProp, onProductClick }: SimilarProductMapProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const mt = getMapText(locale);
+  const mt = getTranslation(similarProductMapTranslations, locale);
   const [data, setData] = useState<ProductSimilarityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,8 +97,8 @@ export function SimilarProductMap({
     positions.set(data.product['id'], { x: centerX, y: centerY });
 
     // ホップごとにグループ化
-    const hop1 = data.similar.filter(r => r.hop === 1);
-    const hop2 = data.similar.filter(r => r.hop === 2);
+    const hop1 = data.similar.filter((r) => r.hop === 1);
+    const hop2 = data.similar.filter((r) => r.hop === 2);
 
     // 1ホップ目：中心から近い円
     const radius1 = 100;
@@ -153,7 +120,7 @@ export function SimilarProductMap({
       });
     });
 
-    const nodes = data.similar.map(sim => ({
+    const nodes = data.similar.map((sim) => ({
       ...sim,
       x: positions.get(sim.id)?.x || 0,
       y: positions.get(sim.id)?.y || 0,
@@ -180,15 +147,17 @@ export function SimilarProductMap({
 
   if (loading) {
     return (
-      <div className={`p-6 rounded-lg ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
+      <div className={`rounded-lg p-6 ${isDark ? 'bg-gray-800' : 'bg-gray-100'}`}>
         <div className="flex items-center justify-center gap-2">
-          <svg className={`animate-spin w-5 h-5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`} fill="none" viewBox="0 0 24 24">
+          <svg
+            className={`h-5 w-5 animate-spin ${isDark ? 'text-gray-400' : 'text-gray-500'}`}
+            fill="none"
+            viewBox="0 0 24 24"
+          >
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
           </svg>
-          <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>
-            {mt.analyzing}
-          </span>
+          <span className={isDark ? 'text-gray-400' : 'text-gray-500'}>{mt.analyzing}</span>
         </div>
       </div>
     );
@@ -203,49 +172,62 @@ export function SimilarProductMap({
   }
 
   return (
-    <div className={`rounded-lg overflow-hidden ${isDark ? 'bg-gray-800' : 'bg-white border border-gray-200'}`}>
+    <div className={`overflow-hidden rounded-lg ${isDark ? 'bg-gray-800' : 'border border-gray-200 bg-white'}`}>
       {/* ヘッダー */}
-      <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+      <div className={`border-b p-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
         <div className="flex items-center justify-between">
           <div>
-            <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {mt.networkTitle}
-            </h3>
-            <p className={`text-xs mt-1 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-              {mt.networkSubtitle}
-            </p>
+            <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{mt.networkTitle}</h3>
+            <p className={`mt-1 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{mt.networkSubtitle}</p>
           </div>
           {/* 表示切り替えボタン */}
           <div className="flex gap-1">
             <button
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded transition-colors ${
+              className={`rounded p-2 transition-colors ${
                 viewMode === 'list'
-                  ? isDark ? 'bg-sky-600 text-white' : 'bg-rose-600 text-white'
-                  : isDark ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? isDark
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-rose-600 text-white'
+                  : isDark
+                    ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
               title={mt.listView}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 10h16M4 14h16M4 18h16"
+                />
               </svg>
             </button>
             <button
               onClick={() => setViewMode('network')}
-              className={`p-2 rounded transition-colors ${
+              className={`rounded p-2 transition-colors ${
                 viewMode === 'network'
-                  ? isDark ? 'bg-sky-600 text-white' : 'bg-rose-600 text-white'
-                  : isDark ? 'bg-gray-700 text-gray-400 hover:bg-gray-600' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  ? isDark
+                    ? 'bg-sky-600 text-white'
+                    : 'bg-rose-600 text-white'
+                  : isDark
+                    ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
               title={mt.networkView}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="3" strokeWidth={2} />
                 <circle cx="4" cy="8" r="2" strokeWidth={2} />
                 <circle cx="20" cy="8" r="2" strokeWidth={2} />
                 <circle cx="4" cy="16" r="2" strokeWidth={2} />
                 <circle cx="20" cy="16" r="2" strokeWidth={2} />
-                <path strokeLinecap="round" strokeWidth={2} d="M9 10.5L5.5 8.5M15 10.5L18.5 8.5M9 13.5L5.5 15.5M15 13.5L18.5 15.5" />
+                <path
+                  strokeLinecap="round"
+                  strokeWidth={2}
+                  d="M9 10.5L5.5 8.5M15 10.5L18.5 8.5M9 13.5L5.5 15.5M15 13.5L18.5 15.5"
+                />
               </svg>
             </button>
           </div>
@@ -253,82 +235,81 @@ export function SimilarProductMap({
       </div>
 
       {/* 凡例 */}
-      {viewMode === 'network' && (() => {
-        const hop1Data = data.similar.filter(s => s.hop === 1);
-        const isMakerBased = hop1Data.length > 0 && (hop1Data[0]?.makerScore ?? 0) > 0;
-        return (
-          <div className={`px-4 py-2 flex gap-4 text-xs ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(1).fill }} />
-              <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                {isMakerBased ? mt.sameMaker : mt.samePerformer}
-              </span>
+      {viewMode === 'network' &&
+        (() => {
+          const hop1Data = data.similar.filter((s) => s.hop === 1);
+          const isMakerBased = hop1Data.length > 0 && (hop1Data[0]?.makerScore ?? 0) > 0;
+          return (
+            <div className={`flex gap-4 px-4 py-2 text-xs ${isDark ? 'bg-gray-900/50' : 'bg-gray-50'}`}>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getHopColor(1).fill }} />
+                <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
+                  {isMakerBased ? mt.sameMaker : mt.samePerformer}
+                </span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="h-3 w-3 rounded-full" style={{ backgroundColor: getHopColor(2).fill }} />
+                <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>{mt.similarGenre}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(2).fill }} />
-              <span className={isDark ? 'text-gray-400' : 'text-gray-600'}>
-                {mt.similarGenre}
-              </span>
-            </div>
-          </div>
-        );
-      })()}
+          );
+        })()}
 
       {/* リスト表示 */}
       {viewMode === 'list' && (
         <div className="p-4">
-          {[1, 2].map(hop => {
-            const hopSimilar = data.similar.filter(s => s.hop === hop);
+          {[1, 2].map((hop) => {
+            const hopSimilar = data.similar.filter((s) => s.hop === hop);
             if (hopSimilar.length === 0) return null;
             const isMakerBased = hop === 1 && (hopSimilar[0]?.makerScore ?? 0) > 0;
             return (
               <div key={hop} className="mb-4 last:mb-0">
-                <h4 className={`text-sm font-medium mb-2 flex items-center gap-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-                  <span className="w-3 h-3 rounded-full" style={{ backgroundColor: getHopColor(hop).fill }} />
+                <h4
+                  className={`mb-2 flex items-center gap-2 text-sm font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}
+                >
+                  <span className="h-3 w-3 rounded-full" style={{ backgroundColor: getHopColor(hop).fill }} />
                   {hop === 1
-                    ? (isMakerBased ? mt.sameMakerProducts : mt.samePerformerProducts)
+                    ? isMakerBased
+                      ? mt.sameMakerProducts
+                      : mt.samePerformerProducts
                     : mt.similarGenreProducts}
                 </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                   {hopSimilar.map((sim) => {
                     const scorePercent = Math.round(sim.similarityScore * 100);
                     return (
                       <div
                         key={sim.id}
-                        className={`group cursor-pointer rounded-lg overflow-hidden transition-transform hover:scale-105 ${
+                        className={`group cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-105 ${
                           isDark ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-50 hover:bg-gray-100'
                         }`}
                         onClick={() => onProductClick?.(sim.id)}
                       >
-                        <div className="aspect-2/3 relative overflow-hidden">
+                        <div className="relative aspect-2/3 overflow-hidden">
                           {sim.thumbnailUrl ? (
-                            <img
-                              src={sim.thumbnailUrl}
-                              alt={sim.title}
-                              className="w-full h-full object-cover"
-                            />
+                            <img src={sim.thumbnailUrl} alt={sim.title} className="h-full w-full object-cover" />
                           ) : (
-                            <div className={`w-full h-full flex items-center justify-center ${
-                              isDark ? 'bg-gray-600' : 'bg-gray-200'
-                            }`}>
-                              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                                NO IMAGE
-                              </span>
+                            <div
+                              className={`flex h-full w-full items-center justify-center ${
+                                isDark ? 'bg-gray-600' : 'bg-gray-200'
+                              }`}
+                            >
+                              <span className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>NO IMAGE</span>
                             </div>
                           )}
                           <div
-                            className="absolute top-2 right-2 px-2 py-0.5 rounded text-xs font-medium text-white"
+                            className="absolute top-2 right-2 rounded px-2 py-0.5 text-xs font-medium text-white"
                             style={{ backgroundColor: getScoreColor(sim.similarityScore).bg }}
                           >
                             {scorePercent}%
                           </div>
                         </div>
                         <div className="p-2">
-                          <p className={`text-xs font-medium truncate ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                          <p className={`truncate text-xs font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
                             {sim.normalizedProductId || sim.title.slice(0, 10)}
                           </p>
                           {sim.similarityReasons.length > 0 && (
-                            <p className={`text-xs truncate mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
+                            <p className={`mt-0.5 truncate text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
                               {sim.similarityReasons[0]}
                             </p>
                           )}
@@ -354,7 +335,7 @@ export function SimilarProductMap({
                 const targetPos = nodePositions.get(edge.target);
                 if (!sourcePos || !targetPos) return null;
 
-                const targetNode = data.similar.find(s => s.id === edge.target);
+                const targetNode = data.similar.find((s) => s.id === edge.target);
                 const hopColor = targetNode ? getHopColor(targetNode.hop) : getHopColor(1);
                 const strokeWidth = Math.max(1, edge.weight / 30);
 
@@ -373,7 +354,7 @@ export function SimilarProductMap({
               })}
 
               {/* 中心ノード（対象の作品） */}
-              <g className="cursor-pointer group/center">
+              <g className="group/center cursor-pointer">
                 <title>{`${data.product.normalizedProductId || ''} ${data.product['title']}`.trim()}</title>
                 <circle
                   cx="250"
@@ -401,14 +382,7 @@ export function SimilarProductMap({
                   />
                 )}
                 {!data.product['thumbnailUrl'] && (
-                  <text
-                    x="250"
-                    y="255"
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize="10"
-                    fontWeight="bold"
-                  >
+                  <text x="250" y="255" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
                     {(data.product.normalizedProductId || data.product['title']).slice(0, 6)}
                   </text>
                 )}
@@ -423,11 +397,7 @@ export function SimilarProductMap({
                 const tooltipText = `${node.normalizedProductId || ''} ${node.title}`.trim();
 
                 return (
-                  <g
-                    key={node.id}
-                    className="cursor-pointer group/node"
-                    onClick={() => onProductClick?.(node.id)}
-                  >
+                  <g key={node.id} className="group/node cursor-pointer" onClick={() => onProductClick?.(node.id)}>
                     <title>{tooltipText}</title>
                     <circle
                       cx={node.x}

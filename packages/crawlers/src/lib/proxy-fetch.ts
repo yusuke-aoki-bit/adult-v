@@ -48,10 +48,7 @@ export function getProxyInfo(): { enabled: boolean; url: string } {
  * Proxy対応のfetch関数
  * 環境変数でProxyが有効な場合のみProxy経由でリクエスト
  */
-export async function proxyFetch(
-  url: string | URL,
-  init?: RequestInit & { timeout?: number }
-): Promise<Response> {
+export async function proxyFetch(url: string | URL, init?: RequestInit & { timeout?: number }): Promise<Response> {
   const agent = getProxyAgent();
 
   // Node.js 18+のfetchはagentオプションをサポートしていないため
@@ -80,15 +77,13 @@ export async function proxyFetch(
  * MGS用のProxy対応fetch
  * 年齢確認Cookieを自動付与
  */
-export async function mgsFetch(
-  url: string,
-  options?: RequestInit
-): Promise<Response> {
+export async function mgsFetch(url: string, options?: RequestInit): Promise<Response> {
   const headers = {
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'User-Agent':
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
-    'Cookie': 'adc=1',
+    Cookie: 'adc=1',
     ...options?.headers,
   };
 
@@ -105,7 +100,7 @@ export async function proxyFetchWithRetry(
   url: string,
   options?: RequestInit,
   maxRetries: number = 3,
-  retryDelayMs: number = 1000
+  retryDelayMs: number = 1000,
 ): Promise<Response> {
   let lastError: Error | null = null;
 
@@ -121,7 +116,7 @@ export async function proxyFetchWithRetry(
       // サーバーエラー（5xx）はリトライ
       if (attempt < maxRetries) {
         console.log(`[Proxy] Retry ${attempt}/${maxRetries} for ${url} (status: ${response.status})`);
-        await new Promise(resolve => setTimeout(resolve, retryDelayMs * attempt));
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt));
         continue;
       }
 
@@ -131,7 +126,7 @@ export async function proxyFetchWithRetry(
 
       if (attempt < maxRetries) {
         console.log(`[Proxy] Retry ${attempt}/${maxRetries} for ${url} (error: ${lastError.message})`);
-        await new Promise(resolve => setTimeout(resolve, retryDelayMs * attempt));
+        await new Promise((resolve) => setTimeout(resolve, retryDelayMs * attempt));
         continue;
       }
     }

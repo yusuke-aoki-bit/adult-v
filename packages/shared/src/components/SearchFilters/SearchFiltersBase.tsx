@@ -4,6 +4,7 @@ import { useState, useCallback, memo } from 'react';
 import { Calendar, Filter, X } from 'lucide-react';
 import { providerMeta } from '../../lib/providers';
 import { ASP_TO_PROVIDER_ID } from '../../constants/filters';
+import { getTranslation, searchFiltersTranslations } from '../../lib/translations';
 
 export interface SearchFilterOptions {
   query?: string;
@@ -60,45 +61,6 @@ export const SORT_OPTIONS = [
   { value: 'views_desc', label: '人気順' },
 ];
 
-export const searchFiltersTranslations = {
-  ja: {
-    filter: 'フィルター',
-    clear: 'クリア',
-    sortBy: '並び替え',
-    providers: '配信元',
-    releaseDate: '発売日',
-    hasVideo: 'サンプル動画あり',
-    hasImage: 'サンプル画像あり',
-  },
-  en: {
-    filter: 'Filters',
-    clear: 'Clear',
-    sortBy: 'Sort by',
-    providers: 'Providers',
-    releaseDate: 'Release Date',
-    hasVideo: 'Has sample video',
-    hasImage: 'Has sample images',
-  },
-  zh: {
-    filter: '筛选',
-    clear: '清除',
-    sortBy: '排序',
-    providers: '来源',
-    releaseDate: '发行日期',
-    hasVideo: '有样品视频',
-    hasImage: '有样品图片',
-  },
-  ko: {
-    filter: '필터',
-    clear: '지우기',
-    sortBy: '정렬',
-    providers: '제공자',
-    releaseDate: '발매일',
-    hasVideo: '샘플 동영상 있음',
-    hasImage: '샘플 이미지 있음',
-  },
-} as const;
-
 export const SearchFiltersBase = memo(function SearchFiltersBase({
   onFilterChange,
   initialFilters = {},
@@ -108,36 +70,42 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
 }: SearchFiltersBaseProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [filters, setFilters] = useState<SearchFilterOptions>(initialFilters);
-  const t = searchFiltersTranslations[locale] || searchFiltersTranslations.ja;
+  const t = getTranslation(searchFiltersTranslations, locale);
 
-  const handleFilterChange = useCallback((key: keyof SearchFilterOptions, value: SearchFilterOptions[keyof SearchFilterOptions]) => {
-    setFilters(prev => {
-      const newFilters = { ...prev, [key]: value };
-      onFilterChange(newFilters);
-      return newFilters;
-    });
-  }, [onFilterChange]);
+  const handleFilterChange = useCallback(
+    (key: keyof SearchFilterOptions, value: SearchFilterOptions[keyof SearchFilterOptions]) => {
+      setFilters((prev) => {
+        const newFilters = { ...prev, [key]: value };
+        onFilterChange(newFilters);
+        return newFilters;
+      });
+    },
+    [onFilterChange],
+  );
 
-  const handleProviderToggle = useCallback((provider: string) => {
-    setFilters(prev => {
-      const currentProviders = prev.providers || [];
-      const newProviders = currentProviders.includes(provider)
-        ? currentProviders.filter((p) => p !== provider)
-        : [...currentProviders, provider];
-      const newFilters: SearchFilterOptions = {
-        ...prev,
-        ...(newProviders.length > 0 ? { providers: newProviders } : {}),
-      };
-      if (newProviders.length === 0) {
-        delete newFilters.providers;
-      }
-      onFilterChange(newFilters);
-      return newFilters;
-    });
-  }, [onFilterChange]);
+  const handleProviderToggle = useCallback(
+    (provider: string) => {
+      setFilters((prev) => {
+        const currentProviders = prev.providers || [];
+        const newProviders = currentProviders.includes(provider)
+          ? currentProviders.filter((p) => p !== provider)
+          : [...currentProviders, provider];
+        const newFilters: SearchFilterOptions = {
+          ...prev,
+          ...(newProviders.length > 0 ? { providers: newProviders } : {}),
+        };
+        if (newProviders.length === 0) {
+          delete newFilters.providers;
+        }
+        onFilterChange(newFilters);
+        return newFilters;
+      });
+    },
+    [onFilterChange],
+  );
 
   const clearFilters = useCallback(() => {
-    setFilters(prev => {
+    setFilters((prev) => {
       const clearedFilters: SearchFilterOptions = {
         ...(prev.query && { query: prev.query }),
       };
@@ -147,12 +115,12 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
   }, [onFilterChange]);
 
   const activeFilterCount = Object.keys(filters).filter(
-    (key) => key !== 'query' && filters[key as keyof SearchFilterOptions] !== undefined
+    (key) => key !== 'query' && filters[key as keyof SearchFilterOptions] !== undefined,
   ).length;
 
   return (
     <div className={theme.container}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <button
           onClick={() => setIsOpen(!isOpen)}
           className={`flex items-center gap-2 ${theme.button} ${theme.buttonHover} transition-colors`}
@@ -161,9 +129,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
           <span className="font-medium">
             {t.filter}
             {activeFilterCount > 0 && (
-              <span className={`ml-2 text-xs px-2 py-0.5 rounded-full ${theme.badge}`}>
-                {activeFilterCount}
-              </span>
+              <span className={`ml-2 rounded-full px-2 py-0.5 text-xs ${theme.badge}`}>{activeFilterCount}</span>
             )}
           </span>
         </button>
@@ -180,12 +146,10 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
       </div>
 
       {isOpen && (
-        <div className={`space-y-4 pt-4 border-t ${theme.border}`}>
+        <div className={`space-y-4 border-t pt-4 ${theme.border}`}>
           {/* Sort By */}
           <div>
-            <label className={`block text-sm font-medium ${theme.label} mb-2`}>
-              {t.sortBy}
-            </label>
+            <label className={`block text-sm font-medium ${theme.label} mb-2`}>{t.sortBy}</label>
             <select
               value={filters.sortBy || 'relevance'}
               onChange={(e) => handleFilterChange('sortBy', e.target.value)}
@@ -203,25 +167,24 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
           {/* Providers - FANZAサイトでは非表示 */}
           {!isFanzaSite && (
             <div>
-              <label className={`block text-sm font-medium ${theme.label} mb-2`}>
-                {t.providers}
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              <label className={`block text-sm font-medium ${theme.label} mb-2`}>{t.providers}</label>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
                 {PROVIDERS.map((provider) => {
                   const providerId = ASP_TO_PROVIDER_ID[provider.value.toLowerCase()];
                   const meta = providerId ? providerMeta[providerId] : null;
                   const isSelected = filters.providers?.includes(provider.value);
-                  const gradientStyle = isSelected && meta?.gradientColors
-                    ? { background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})` }
-                    : undefined;
+                  const gradientStyle =
+                    isSelected && meta?.gradientColors
+                      ? {
+                          background: `linear-gradient(to right, ${meta.gradientColors.from}, ${meta.gradientColors.to})`,
+                        }
+                      : undefined;
                   return (
                     <button
                       key={provider.value}
                       onClick={() => handleProviderToggle(provider.value)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                        isSelected
-                          ? 'text-white'
-                          : `${theme.providerInactive} ${theme.providerInactiveHover}`
+                      className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+                        isSelected ? 'text-white' : `${theme.providerInactive} ${theme.providerInactiveHover}`
                       }`}
                       style={gradientStyle}
                     >
@@ -245,7 +208,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                   type="date"
                   value={filters.dateFrom || ''}
                   onChange={(e) => handleFilterChange('dateFrom', e.target.value || undefined)}
-                  className={`w-full rounded-lg px-3 py-2 outline-none text-sm ${theme.dateInput} ${theme.dateInputFocus}`}
+                  className={`w-full rounded-lg px-3 py-2 text-sm outline-none ${theme.dateInput} ${theme.dateInputFocus}`}
                   aria-label={`${t.releaseDate} (from)`}
                 />
               </div>
@@ -254,7 +217,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                   type="date"
                   value={filters.dateTo || ''}
                   onChange={(e) => handleFilterChange('dateTo', e.target.value || undefined)}
-                  className={`w-full rounded-lg px-3 py-2 outline-none text-sm ${theme.dateInput} ${theme.dateInputFocus}`}
+                  className={`w-full rounded-lg px-3 py-2 text-sm outline-none ${theme.dateInput} ${theme.dateInputFocus}`}
                   aria-label={`${t.releaseDate} (to)`}
                 />
               </div>
@@ -268,7 +231,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 type="checkbox"
                 checked={filters.hasVideo || false}
                 onChange={(e) => handleFilterChange('hasVideo', e.target.checked || undefined)}
-                className={`w-4 h-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500`}
+                className={`h-4 w-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2`}
               />
               <span className={filters.hasVideo ? 'font-medium' : ''}>{t.hasVideo}</span>
             </label>
@@ -278,7 +241,7 @@ export const SearchFiltersBase = memo(function SearchFiltersBase({
                 type="checkbox"
                 checked={filters.hasImage || false}
                 onChange={(e) => handleFilterChange('hasImage', e.target.checked || undefined)}
-                className={`w-4 h-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-blue-500`}
+                className={`h-4 w-4 rounded ${theme.checkbox} focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2`}
               />
               <span className={filters.hasImage ? 'font-medium' : ''}>{t.hasImage}</span>
             </label>

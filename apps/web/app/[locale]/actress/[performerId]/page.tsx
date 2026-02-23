@@ -14,7 +14,17 @@ import {
 } from '@adult-v/shared/components';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
-import { getCachedActressById, getProducts, getProductsCount, getTagsForActress, getPerformerAliases, getActressProductCountByAsp, getTagById, getActressCareerAnalysis, getActressBudgetSummary } from '@/lib/db/queries';
+import {
+  getCachedActressById,
+  getProducts,
+  getProductsCount,
+  getTagsForActress,
+  getPerformerAliases,
+  getActressProductCountByAsp,
+  getTagById,
+  getActressCareerAnalysis,
+  getActressBudgetSummary,
+} from '@/lib/db/queries';
 import ActressCareerTimeline from '@/components/ActressCareerTimeline';
 import RetirementAlert from '@/components/RetirementAlert';
 import { getPerformerTopProducts, getPerformerOnSaleProducts } from '@/lib/db/recommendations';
@@ -59,7 +69,6 @@ interface PageProps {
   }>;
 }
 
-
 const DEFAULT_PER_PAGE = 48;
 const VALID_PER_PAGE = [12, 24, 48, 96];
 
@@ -86,11 +95,12 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
 
     // includeパラメータがある場合、ジャンル名を取得
     const includeParam = resolvedSearchParams.include;
-    const firstTagId = typeof includeParam === 'string'
-      ? includeParam.split(',')[0]
-      : Array.isArray(includeParam)
-      ? includeParam[0]
-      : null;
+    const firstTagId =
+      typeof includeParam === 'string'
+        ? includeParam.split(',')[0]
+        : Array.isArray(includeParam)
+          ? includeParam[0]
+          : null;
 
     if (firstTagId) {
       const tagIdNum = parseInt(firstTagId, 10);
@@ -98,10 +108,14 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
         const tag = await getTagById(tagIdNum);
         if (tag) {
           // ロケールに応じたタグ名を取得
-          const tagName = locale === 'en' ? (tag.nameEn || tag.name)
-            : locale === 'zh' ? (tag.nameZh || tag.name)
-            : locale === 'ko' ? (tag.nameKo || tag.name)
-            : tag.name;
+          const tagName =
+            locale === 'en'
+              ? tag.nameEn || tag.name
+              : locale === 'zh'
+                ? tag.nameZh || tag.name
+                : locale === 'ko'
+                  ? tag.nameKo || tag.name
+                  : tag.name;
 
           const metadata = generateBaseMetadata(
             t('metaTitleWithGenre', { name: actress.name, genre: tagName }),
@@ -143,11 +157,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const alternates = {
       canonical: canonicalUrl,
       languages: {
-        'ja': `${baseUrl}${actressPath}`,
-        'en': `${baseUrl}${actressPath}?hl=en`,
-        'zh': `${baseUrl}${actressPath}?hl=zh`,
+        ja: `${baseUrl}${actressPath}`,
+        en: `${baseUrl}${actressPath}?hl=en`,
+        zh: `${baseUrl}${actressPath}?hl=zh`,
         'zh-TW': `${baseUrl}${actressPath}?hl=zh-TW`,
-        'ko': `${baseUrl}${actressPath}?hl=ko`,
+        ko: `${baseUrl}${actressPath}?hl=ko`,
         'x-default': `${baseUrl}${actressPath}`,
       },
     };
@@ -188,12 +202,16 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   if (!actress) notFound();
 
   const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
-  const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as 'releaseDateDesc' | 'releaseDateAsc' | 'priceDesc' | 'priceAsc' | 'titleAsc';
+  const sortBy = (resolvedSearchParams.sort || 'releaseDateDesc') as
+    | 'releaseDateDesc'
+    | 'releaseDateAsc'
+    | 'priceDesc'
+    | 'priceAsc'
+    | 'titleAsc';
 
   // 表示件数（URLパラメータから取得、無効な値はデフォルトに）
   const perPageParam = parseInt(resolvedSearchParams.perPage || '', 10);
   const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
-
 
   // hasVideo/hasImageフィルター
   const hasVideo = resolvedSearchParams.hasVideo === 'true';
@@ -201,23 +219,26 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   const performerType = resolvedSearchParams.performerType as 'solo' | 'multi' | undefined;
 
   // Get include and exclude tags
-  const includeTags = typeof resolvedSearchParams.include === 'string'
-    ? resolvedSearchParams.include.split(',').filter(Boolean)
-    : Array.isArray(resolvedSearchParams.include)
-    ? resolvedSearchParams.include
-    : [];
-  const excludeTags = typeof resolvedSearchParams.exclude === 'string'
-    ? resolvedSearchParams.exclude.split(',').filter(Boolean)
-    : Array.isArray(resolvedSearchParams.exclude)
-    ? resolvedSearchParams.exclude
-    : [];
+  const includeTags =
+    typeof resolvedSearchParams.include === 'string'
+      ? resolvedSearchParams.include.split(',').filter(Boolean)
+      : Array.isArray(resolvedSearchParams.include)
+        ? resolvedSearchParams.include
+        : [];
+  const excludeTags =
+    typeof resolvedSearchParams.exclude === 'string'
+      ? resolvedSearchParams.exclude.split(',').filter(Boolean)
+      : Array.isArray(resolvedSearchParams.exclude)
+        ? resolvedSearchParams.exclude
+        : [];
 
   // Get ASP filter
-  const includeAsps = typeof resolvedSearchParams.asp === 'string'
-    ? resolvedSearchParams.asp.split(',').filter(Boolean)
-    : Array.isArray(resolvedSearchParams.asp)
-    ? resolvedSearchParams.asp
-    : [];
+  const includeAsps =
+    typeof resolvedSearchParams.asp === 'string'
+      ? resolvedSearchParams.asp.split(',').filter(Boolean)
+      : Array.isArray(resolvedSearchParams.asp)
+        ? resolvedSearchParams.asp
+        : [];
 
   // Common filter options for products query (exactOptionalPropertyTypes対応)
   const productFilterOptions = {
@@ -256,7 +277,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     console.error(`[actress-detail] Error loading actress data for ${performerId}:`, error);
     notFound();
   }
-  const nonPrimaryAliases = aliases.filter(alias => !alias.isPrimary);
+  const nonPrimaryAliases = aliases.filter((alias) => !alias.isPrimary);
 
   const basePath = localizedHref(`/actress/${actress.id}`, locale);
 
@@ -266,13 +287,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // exactOptionalPropertyTypes対応: undefinedを含むプロパティは条件付きで追加
   // sameAs: FANZA専門サイトのURLを生成（クロスプラットフォーム連携）
   const sameAsUrls: string[] = [];
-  if (productCountByAsp.some(asp => asp.aspName.toUpperCase() === 'FANZA')) {
+  if (productCountByAsp.some((asp) => asp.aspName.toUpperCase() === 'FANZA')) {
     sameAsUrls.push(`https://www.f.adult-v.com/actress/${actress.id}`);
   }
 
   const personSchemaOptions: { workCount: number; aliases: string[]; debutYear?: number; sameAs?: string[] } = {
     workCount: total,
-    aliases: nonPrimaryAliases.map(a => a.aliasName),
+    aliases: nonPrimaryAliases.map((a) => a.aliasName),
   };
   if (careerAnalysis?.debutYear != null) {
     personSchemaOptions.debutYear = careerAnalysis.debutYear;
@@ -286,16 +307,19 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     aiReviewText,
     actress.heroImage || actress.thumbnail || '',
     basePath,
-    personSchemaOptions
+    personSchemaOptions,
   );
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: tNav('home'), url: localizedHref('/', locale) },
     { name: actress.name, url: basePath },
   ]);
-  const worksSchema = works.length > 0 ? generateItemListSchema(
-    works.map((w) => ({ name: w.title, url: localizedHref(`/products/${w.id}`, locale) })),
-    t('filmography'),
-  ) : null;
+  const worksSchema =
+    works.length > 0
+      ? generateItemListSchema(
+          works.map((w) => ({ name: w.title, url: localizedHref(`/products/${w.id}`, locale) })),
+          t('filmography'),
+        )
+      : null;
 
   // FAQ Schema生成（リッチリザルト対応）- exactOptionalPropertyTypes対応
   const actressFaqOptions: {
@@ -318,13 +342,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
     actressFaqOptions.latestReleaseDate = new Date(works[0].releaseDate).toLocaleDateString('ja-JP');
   }
   if (nonPrimaryAliases.length > 0) {
-    actressFaqOptions.aliases = nonPrimaryAliases.map(a => a.aliasName);
+    actressFaqOptions.aliases = nonPrimaryAliases.map((a) => a.aliasName);
   }
   if (genreTags.length > 0) {
-    actressFaqOptions.topGenres = genreTags.slice(0, 5).map(t => t.name);
+    actressFaqOptions.topGenres = genreTags.slice(0, 5).map((t) => t.name);
   }
   if (productCountByAsp.length > 0) {
-    actressFaqOptions.aspNames = productCountByAsp.map(a => a.aspName);
+    actressFaqOptions.aspNames = productCountByAsp.map((a) => a.aspName);
   }
   if (careerAnalysis) {
     actressFaqOptions.isRetired = !careerAnalysis.isActive;
@@ -353,16 +377,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: actress.name },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: actress.name }]}
             className="mb-4"
           />
 
           {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
@@ -373,19 +394,19 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 src={actress.heroImage || actress.thumbnail}
                 alt={actress.name}
                 size={64}
-                className="w-14 h-14 sm:w-16 sm:h-16 shrink-0"
+                className="h-14 w-14 shrink-0 sm:h-16 sm:w-16"
                 priority
               />
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl sm:text-2xl font-bold theme-text truncate">{actress.name}</h1>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="theme-text truncate text-xl font-bold sm:text-2xl">{actress.name}</h1>
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
                     thumbnail={actress.heroImage || actress.thumbnail || ''}
                   />
                 </div>
-                <p className="text-sm sm:text-base theme-text-secondary">{t('totalProducts', { count: total })}</p>
+                <p className="theme-text-secondary text-sm sm:text-base">{t('totalProducts', { count: total })}</p>
                 {/* SNSシェアボタン */}
                 <div className="mt-2">
                   <SocialShareButtons
@@ -395,15 +416,15 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   />
                 </div>
                 {nonPrimaryAliases.length > 0 && (
-                  <p className="mt-1 text-xs sm:text-sm theme-text-muted truncate">
-                    {t('aliases')}: {nonPrimaryAliases.map(a => a.aliasName).join(', ')}
+                  <p className="theme-text-muted mt-1 truncate text-xs sm:text-sm">
+                    {t('aliases')}: {nonPrimaryAliases.map((a) => a.aliasName).join(', ')}
                   </p>
                 )}
               </div>
             </div>
             {/* ASP別作品数バッジ */}
             {productCountByAsp.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-1.5 items-center">
+              <div className="mt-3 flex flex-wrap items-center gap-1.5">
                 {productCountByAsp.map((asp) => {
                   const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
                   const meta = providerId ? providerMeta[providerId] : null;
@@ -411,7 +432,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   return (
                     <span
                       key={asp.aspName}
-                      className="text-[10px] sm:text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap text-white"
+                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap text-white sm:text-xs"
                       style={{ background: `linear-gradient(to right, ${colors.from}, ${colors.to})` }}
                     >
                       {meta?.label || asp.aspName}: {asp.count}
@@ -419,13 +440,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   );
                 })}
                 {/* FANZAサイトへのクロスリンク */}
-                {productCountByAsp.some(asp => asp.aspName.toUpperCase() === 'FANZA') && (
-                  <FanzaSiteLink
-                    path={`/actress/${actress.id}`}
-                    locale={locale}
-                    label={t('viewOnFanzaSite')}
-                    compact
-                  />
+                {productCountByAsp.some((asp) => asp.aspName.toUpperCase() === 'FANZA') && (
+                  <FanzaSiteLink path={`/actress/${actress.id}`} locale={locale} label={t('viewOnFanzaSite')} compact />
                 )}
               </div>
             )}
@@ -436,10 +452,15 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   <Link
                     key={tag.id}
                     href={localizedHref(`/tags/${tag.id}`, locale)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-700/80 hover:bg-rose-600/30 text-gray-300 hover:text-rose-300 rounded-full text-[10px] sm:text-xs transition-colors border border-gray-600/50 hover:border-rose-500/50"
+                    className="inline-flex items-center gap-1 rounded-full border border-gray-600/50 bg-gray-700/80 px-2 py-0.5 text-[10px] text-gray-300 transition-colors hover:border-rose-500/50 hover:bg-rose-600/30 hover:text-rose-300 sm:text-xs"
                   >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                      />
                     </svg>
                     {tag.name}
                   </Link>
@@ -447,11 +468,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               </div>
             )}
             {/* ソートドロップダウン・表示件数 */}
-            <div className="mt-3 flex justify-end items-center gap-4">
-              <PerPageDropdown
-                perPage={perPage}
-                basePath={basePath}
-              />
+            <div className="mt-3 flex items-center justify-end gap-4">
+              <PerPageDropdown perPage={perPage} basePath={basePath} />
               <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
             </div>
           </div>
@@ -459,66 +477,101 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* 卒業/引退アラート */}
           {careerAnalysis && (
             <div className="mb-4">
-              <RetirementAlert
-                career={careerAnalysis}
-                actressName={actress.name}
-                locale={locale}
-              />
+              <RetirementAlert career={careerAnalysis} actressName={actress.name} locale={locale} />
             </div>
           )}
 
           {/* 予算サマリー */}
           {budgetSummary && budgetSummary.totalCost > 0 && (
-            <div className="mb-8 theme-card rounded-lg p-4 sm:p-6">
-              <h2 className="text-sm font-semibold theme-text-secondary mb-3 flex items-center gap-2">
-                <svg className="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <div className="theme-card mb-8 rounded-lg p-4 sm:p-6">
+              <h2 className="theme-text-secondary mb-3 flex items-center gap-2 text-sm font-semibold">
+                <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
-                {locale === 'en' ? 'Purchase Summary' : locale === 'zh' ? '购买概览' : locale === 'ko' ? '구매 요약' : '全作品購入サマリー'}
+                {locale === 'en'
+                  ? 'Purchase Summary'
+                  : locale === 'zh'
+                    ? '购买概览'
+                    : locale === 'ko'
+                      ? '구매 요약'
+                      : '全作品購入サマリー'}
               </h2>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400 mb-1">
-                    {locale === 'en' ? 'Total Cost' : locale === 'zh' ? '总价' : locale === 'ko' ? '총비용' : '合計費用'}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                  <p className="mb-1 text-xs text-gray-400">
+                    {locale === 'en'
+                      ? 'Total Cost'
+                      : locale === 'zh'
+                        ? '总价'
+                        : locale === 'ko'
+                          ? '총비용'
+                          : '合計費用'}
                   </p>
-                  <p className="text-lg sm:text-xl font-bold text-emerald-400">
+                  <p className="text-lg font-bold text-emerald-400 sm:text-xl">
                     ¥{budgetSummary.totalCost.toLocaleString()}
                   </p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">
+                  <p className="mt-0.5 text-[10px] text-gray-500">
                     {budgetSummary.pricedProducts}/{budgetSummary.totalProducts}
-                    {locale === 'en' ? ' priced' : locale === 'zh' ? ' 已知价格' : locale === 'ko' ? ' 가격확인' : '作品'}
+                    {locale === 'en'
+                      ? ' priced'
+                      : locale === 'zh'
+                        ? ' 已知价格'
+                        : locale === 'ko'
+                          ? ' 가격확인'
+                          : '作品'}
                   </p>
                 </div>
-                <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400 mb-1">
-                    {locale === 'en' ? 'Avg Price' : locale === 'zh' ? '平均单价' : locale === 'ko' ? '평균가격' : '平均単価'}
+                <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                  <p className="mb-1 text-xs text-gray-400">
+                    {locale === 'en'
+                      ? 'Avg Price'
+                      : locale === 'zh'
+                        ? '平均单价'
+                        : locale === 'ko'
+                          ? '평균가격'
+                          : '平均単価'}
                   </p>
-                  <p className="text-lg sm:text-xl font-bold theme-text">
-                    ¥{budgetSummary.avgPrice.toLocaleString()}
-                  </p>
-                  <p className="text-[10px] text-gray-500 mt-0.5">
+                  <p className="theme-text text-lg font-bold sm:text-xl">¥{budgetSummary.avgPrice.toLocaleString()}</p>
+                  <p className="mt-0.5 text-[10px] text-gray-500">
                     ¥{budgetSummary.minPrice.toLocaleString()} ~ ¥{budgetSummary.maxPrice.toLocaleString()}
                   </p>
                 </div>
                 {budgetSummary.onSaleCount > 0 && (
-                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-400 mb-1">
-                      {locale === 'en' ? 'On Sale' : locale === 'zh' ? '促销中' : locale === 'ko' ? '세일 중' : 'セール中'}
+                  <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                    <p className="mb-1 text-xs text-gray-400">
+                      {locale === 'en'
+                        ? 'On Sale'
+                        : locale === 'zh'
+                          ? '促销中'
+                          : locale === 'ko'
+                            ? '세일 중'
+                            : 'セール中'}
                     </p>
-                    <p className="text-lg sm:text-xl font-bold text-rose-400">
+                    <p className="text-lg font-bold text-rose-400 sm:text-xl">
                       {budgetSummary.onSaleCount}
-                      <span className="text-sm ml-0.5">
+                      <span className="ml-0.5 text-sm">
                         {locale === 'en' ? 'items' : locale === 'zh' ? '件' : locale === 'ko' ? '건' : '作品'}
                       </span>
                     </p>
                   </div>
                 )}
                 {budgetSummary.totalSavings > 0 && (
-                  <div className="bg-gray-800/50 rounded-lg p-3 text-center">
-                    <p className="text-xs text-gray-400 mb-1">
-                      {locale === 'en' ? 'Savings' : locale === 'zh' ? '可省' : locale === 'ko' ? '절약' : 'セール割引額'}
+                  <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                    <p className="mb-1 text-xs text-gray-400">
+                      {locale === 'en'
+                        ? 'Savings'
+                        : locale === 'zh'
+                          ? '可省'
+                          : locale === 'ko'
+                            ? '절약'
+                            : 'セール割引額'}
                     </p>
-                    <p className="text-lg sm:text-xl font-bold text-yellow-400">
+                    <p className="text-lg font-bold text-yellow-400 sm:text-xl">
                       -¥{budgetSummary.totalSavings.toLocaleString()}
                     </p>
                   </div>
@@ -543,10 +596,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* AI生成のプロフィール */}
           <div className="mb-8">
-            <AiActressProfileWrapper
-              actressId={actress.id}
-              locale={locale}
-            />
+            <AiActressProfileWrapper actressId={actress.id} locale={locale} />
           </div>
 
           {/* クロスASP情報表示 */}
@@ -567,11 +617,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {careerAnalysis && (
             <SectionVisibility sectionId="career" pageId="actress" locale={locale}>
               <div id="career" className="mb-8">
-                <ActressCareerTimeline
-                  career={careerAnalysis}
-                  actressName={actress.name}
-                  locale={locale}
-                />
+                <ActressCareerTimeline career={careerAnalysis} actressName={actress.name} locale={locale} />
               </div>
             </SectionVisibility>
           )}
@@ -623,75 +669,72 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* Tag Filters - 即時適用 */}
           <SectionVisibility sectionId="filmography" pageId="actress" locale={locale}>
-          <div id="filmography">
-          <ActressProductFilter
-            genreTags={genreTags}
-            productCountByAsp={productCountByAsp}
-            translations={{
-              filterSettings: tf('filterSettings'),
-              sampleContent: tf('sampleContent'),
-              sampleVideo: tf('sampleVideo'),
-              sampleImage: tf('sampleImage'),
-              genre: tf('genre'),
-              include: tf('include'),
-              exclude: tf('exclude'),
-              site: tf('site'),
-              clear: tf('clear'),
-              performerType: tf('performerType'),
-              solo: tf('solo'),
-              multi: tf('multi'),
-            }}
-          />
+            <div id="filmography">
+              <ActressProductFilter
+                genreTags={genreTags}
+                productCountByAsp={productCountByAsp}
+                translations={{
+                  filterSettings: tf('filterSettings'),
+                  sampleContent: tf('sampleContent'),
+                  sampleVideo: tf('sampleVideo'),
+                  sampleImage: tf('sampleImage'),
+                  genre: tf('genre'),
+                  include: tf('include'),
+                  exclude: tf('exclude'),
+                  site: tf('site'),
+                  clear: tf('clear'),
+                  performerType: tf('performerType'),
+                  solo: tf('solo'),
+                  multi: tf('multi'),
+                }}
+              />
 
-          {/* Product List */}
-          {total > 0 ? (
-            <>
-              {/* ページネーション（上部） */}
-              {total > perPage && (
-                <Pagination
-                  total={total}
-                  page={page}
-                  perPage={perPage}
-                  basePath={basePath}
-                  position="top"
-                  queryParams={{
-                    ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
-                  }}
-                />
+              {/* Product List */}
+              {total > 0 ? (
+                <>
+                  {/* ページネーション（上部） */}
+                  {total > perPage && (
+                    <Pagination
+                      total={total}
+                      page={page}
+                      perPage={perPage}
+                      basePath={basePath}
+                      position="top"
+                      queryParams={{
+                        ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
+                      }}
+                    />
+                  )}
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+                    {works.map((work) => (
+                      <ProductCard key={work.id} product={work} />
+                    ))}
+                  </div>
+                  {/* ページネーション（下部） */}
+                  {total > perPage && (
+                    <Pagination
+                      total={total}
+                      page={page}
+                      perPage={perPage}
+                      basePath={basePath}
+                      position="bottom"
+                      queryParams={{
+                        ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
+                      }}
+                    />
+                  )}
+                </>
+              ) : (
+                <p className="theme-text-muted py-12 text-center">{t('noProducts')}</p>
               )}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-                {works.map((work) => (
-                  <ProductCard key={work.id} product={work} />
-                ))}
-              </div>
-              {/* ページネーション（下部） */}
-              {total > perPage && (
-                <Pagination
-                  total={total}
-                  page={page}
-                  perPage={perPage}
-                  basePath={basePath}
-                  position="bottom"
-                  queryParams={{
-                    ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
-                  }}
-                />
-              )}
-            </>
-          ) : (
-            <p className="text-center theme-text-muted py-12">{t('noProducts')}</p>
-          )}
-          </div>
+            </div>
           </SectionVisibility>
 
           {/* 共演者マップ（インタラクティブ） */}
           <SectionVisibility sectionId="costar-network" pageId="actress" locale={locale}>
             <div id="costar-network" className="mt-12 mb-8">
-              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
-                <PerformerRelationMap
-                  performerId={parseInt(actress.id)}
-                  locale={locale}
-                />
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-800" />}>
+                <PerformerRelationMap performerId={parseInt(actress.id)} locale={locale} />
               </Suspense>
             </div>
           </SectionVisibility>
@@ -699,11 +742,8 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* 類似女優マップ（ジャンル・メーカー・プロフィール複合スコア） */}
           <SectionVisibility sectionId="similar-network" pageId="actress" locale={locale}>
             <div id="similar-network" className="mb-8">
-              <Suspense fallback={<div className="h-64 bg-gray-800 rounded-lg animate-pulse" />}>
-                <SimilarPerformerMap
-                  performerId={parseInt(actress.id)}
-                  locale={locale}
-                />
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-800" />}>
+                <SimilarPerformerMap performerId={parseInt(actress.id)} locale={locale} />
               </Suspense>
             </div>
           </SectionVisibility>

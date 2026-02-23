@@ -145,10 +145,7 @@ export function buildPerformerEmbeddingText(performer: {
 /**
  * Gemini Embedding APIを呼び出し（単一テキスト）
  */
-export async function generateEmbedding(
-  text: string,
-  _apiKey?: string
-): Promise<EmbeddingResult> {
+export async function generateEmbedding(text: string, _apiKey?: string): Promise<EmbeddingResult> {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set');
   }
@@ -173,7 +170,7 @@ export async function generateEmbedding(
     throw new Error(`Gemini Embedding API error (${response.status}): ${error}`);
   }
 
-  const data = await response.json() as {
+  const data = (await response.json()) as {
     embedding: { values: number[] };
   };
 
@@ -192,10 +189,7 @@ export async function generateEmbedding(
  * 複数テキストのembeddingをバッチ生成
  * Gemini batchEmbedContents APIを使用
  */
-export async function generateEmbeddingBatch(
-  texts: string[],
-  _apiKey?: string
-): Promise<BatchEmbeddingResult> {
+export async function generateEmbeddingBatch(texts: string[], _apiKey?: string): Promise<BatchEmbeddingResult> {
   if (!GEMINI_API_KEY) {
     throw new Error('GEMINI_API_KEY is not set');
   }
@@ -230,7 +224,7 @@ export async function generateEmbeddingBatch(
     throw new Error(`Gemini Batch Embedding API error (${response.status}): ${error}`);
   }
 
-  const data = await response.json() as {
+  const data = (await response.json()) as {
     embeddings: Array<{ values: number[] }>;
   };
 
@@ -241,7 +235,7 @@ export async function generateEmbeddingBatch(
     embeddings: data.embeddings.map((item, index) => ({
       index,
       embedding: item.values,
-      textHash: generateTextHash(truncatedTexts[index]),
+      textHash: generateTextHash(truncatedTexts[index]!),
     })),
     model: EMBEDDING_MODEL,
     usage: {
@@ -254,10 +248,7 @@ export async function generateEmbeddingBatch(
 /**
  * クエリテキストのembeddingを生成（検索用）
  */
-export async function generateQueryEmbedding(
-  query: string,
-  apiKey?: string
-): Promise<number[]> {
+export async function generateQueryEmbedding(query: string, apiKey?: string): Promise<number[]> {
   const result = await generateEmbedding(query, apiKey);
   return result.embedding;
 }
@@ -275,9 +266,9 @@ export function cosineSimilarity(a: number[], b: number[]): number {
   let normB = 0;
 
   for (let i = 0; i < a.length; i++) {
-    dotProduct += a[i] * b[i];
-    normA += a[i] * a[i];
-    normB += b[i] * b[i];
+    dotProduct += a[i]! * b[i]!;
+    normA += a[i]! * a[i]!;
+    normB += b[i]! * b[i]!;
   }
 
   return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));

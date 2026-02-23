@@ -4,15 +4,23 @@ test.setTimeout(120000);
 
 function getDomain(baseURL: string | undefined): string {
   if (!baseURL) return 'localhost';
-  try { return new URL(baseURL).hostname; } catch { return 'localhost'; }
+  try {
+    return new URL(baseURL).hostname;
+  } catch {
+    return 'localhost';
+  }
 }
 
 test.describe('5xx Error Prevention - Page Rendering', () => {
   test.beforeEach(async ({ context, baseURL }) => {
-    await context.addCookies([{
-      name: 'age-verified', value: 'true',
-      domain: getDomain(baseURL), path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: getDomain(baseURL),
+        path: '/',
+      },
+    ]);
   });
 
   test('Homepage loads without 5xx', async ({ page }) => {

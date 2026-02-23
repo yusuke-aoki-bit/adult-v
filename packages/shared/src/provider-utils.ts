@@ -37,7 +37,5 @@ export function mapLegacyProvider(provider: string): ProviderId {
  * Map an array of legacy service names to current provider IDs
  */
 export function mapLegacyServices(services: string[]): ProviderId[] {
-  return services
-    .map(mapLegacyProvider)
-    .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+  return services.map(mapLegacyProvider).filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
 }

@@ -60,7 +60,7 @@ export class CrawlerError extends Error {
       retryable?: boolean;
       context?: Record<string, unknown>;
       originalError?: Error;
-    }
+    },
   ) {
     super(message);
     this.name = 'CrawlerError';
@@ -106,7 +106,7 @@ export class NetworkError extends CrawlerError {
       url?: string;
       statusCode?: number;
       originalError?: Error;
-    }
+    },
   ) {
     const networkContext: Record<string, unknown> = {};
     if (options?.url !== undefined) networkContext['url'] = options['url'];
@@ -130,7 +130,7 @@ export class ParseError extends CrawlerError {
       productId?: string;
       field?: string;
       originalError?: Error;
-    }
+    },
   ) {
     const parseContext: Record<string, unknown> = {};
     if (options?.productId !== undefined) parseContext['productId'] = options['productId'];
@@ -155,7 +155,7 @@ export class DatabaseError extends CrawlerError {
       operation?: string;
       table?: string;
       originalError?: Error;
-    }
+    },
   ) {
     const dbContext: Record<string, unknown> = {};
     if (options?.operation !== undefined) dbContext['operation'] = options['operation'];
@@ -179,7 +179,7 @@ export class ValidationError extends CrawlerError {
       productId?: string;
       field?: string;
       value?: unknown;
-    }
+    },
   ) {
     const validationContext: Record<string, unknown> = {};
     if (options?.productId !== undefined) validationContext['productId'] = options['productId'];

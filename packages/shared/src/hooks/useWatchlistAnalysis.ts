@@ -22,10 +22,7 @@ export function useWatchlistAnalysis() {
   }, [getFavoritesByType]);
 
   // 配列の参照ではなく内容で比較するためにシリアライズ
-  const productIdsKey = useMemo(
-    () => JSON.stringify(productFavorites.map(p => p.id).sort()),
-    [productFavorites]
-  );
+  const productIdsKey = useMemo(() => JSON.stringify(productFavorites.map((p) => p.id).sort()), [productFavorites]);
   const prevProductIdsKey = useRef<string>('');
 
   // Fetch enriched product data (prices, sale info) when favorites change
@@ -46,7 +43,7 @@ export function useWatchlistAnalysis() {
 
       try {
         // Get product IDs
-        const productIds = productFavorites.map(p => String(p.id));
+        const productIds = productFavorites.map((p) => String(p.id));
 
         // Fetch current prices from API
         const response = await fetch('/api/products/prices', {
@@ -56,17 +53,20 @@ export function useWatchlistAnalysis() {
         });
 
         if (response.ok) {
-          const priceData = await response.json() as Record<string, {
-            price: number;
-            salePrice: number | null;
-            discount: number | null;
-            saleEndDate: string | null;
-            provider: string;
-            duration: number | null;
-          }>;
+          const priceData = (await response.json()) as Record<
+            string,
+            {
+              price: number;
+              salePrice: number | null;
+              discount: number | null;
+              saleEndDate: string | null;
+              provider: string;
+              duration: number | null;
+            }
+          >;
 
           // Merge price data with favorites
-          const enriched = productFavorites.map(product => ({
+          const enriched = productFavorites.map((product) => ({
             ...product,
             ...priceData[String(product['id'])],
           }));
@@ -89,18 +89,16 @@ export function useWatchlistAnalysis() {
 
   // Calculate statistics
   const stats = useMemo(() => {
-    const productsWithPrice = enrichedProducts.filter(p => p.price !== undefined);
+    const productsWithPrice = enrichedProducts.filter((p) => p.price !== undefined);
 
     const totalRegularPrice = productsWithPrice.reduce((sum, p) => sum + (p.price || 0), 0);
-    const totalSalePrice = productsWithPrice.reduce(
-      (sum, p) => sum + (p.salePrice || p.price || 0), 0
-    );
+    const totalSalePrice = productsWithPrice.reduce((sum, p) => sum + (p.salePrice || p.price || 0), 0);
     const totalSavings = totalRegularPrice - totalSalePrice;
-    const onSaleCount = enrichedProducts.filter(p => p.salePrice).length;
+    const onSaleCount = enrichedProducts.filter((p) => p.salePrice).length;
 
     // Count urgent items (sale ending in 3 days or less)
     const now = new Date();
-    const urgentCount = enrichedProducts.filter(p => {
+    const urgentCount = enrichedProducts.filter((p) => {
       if (!p.saleEndDate) return false;
       const end = new Date(p.saleEndDate);
       const diffDays = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));

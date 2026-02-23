@@ -37,12 +37,8 @@ function parseParams(request: NextRequest): OgParams | null {
   return {
     type,
     title: decodeURIComponent(title),
-    subtitle: searchParams.get('subtitle')
-      ? decodeURIComponent(searchParams.get('subtitle')!)
-      : undefined,
-    imageUrl: searchParams.get('image')
-      ? decodeURIComponent(searchParams.get('image')!)
-      : undefined,
+    subtitle: searchParams.get('subtitle') ? decodeURIComponent(searchParams.get('subtitle')!) : undefined,
+    imageUrl: searchParams.get('image') ? decodeURIComponent(searchParams.get('image')!) : undefined,
   };
 }
 
@@ -64,138 +60,136 @@ export async function GET(request: NextRequest) {
       : ['#667eea', '#764ba2']; // 商品: パープル系
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        background: `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`,
+        padding: '40px',
+      }}
+    >
+      {/* メインコンテンツエリア */}
       <div
         style={{
           width: '100%',
           height: '100%',
           display: 'flex',
-          background: `linear-gradient(135deg, ${gradientColors[0]} 0%, ${gradientColors[1]} 100%)`,
-          padding: '40px',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: '24px',
+          padding: '48px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
         }}
       >
-        {/* メインコンテンツエリア */}
-        <div
-          style={{
-            width: '100%',
-            height: '100%',
-            display: 'flex',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            borderRadius: '24px',
-            padding: '48px',
-            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
-          }}
-        >
-          {/* 画像エリア（左側） */}
-          {imageUrl && (
-            <div
-              style={{
-                width: '280px',
-                height: '100%',
-                display: 'flex',
-                flexShrink: 0,
-                marginRight: '48px',
-              }}
-            >
-              <img
-                src={imageUrl}
-                alt=""
-                style={{
-                  width: '100%',
-                  height: '100%',
-                  objectFit: 'cover',
-                  borderRadius: '16px',
-                }}
-              />
-            </div>
-          )}
-
-          {/* テキストエリア（右側） */}
+        {/* 画像エリア（左側） */}
+        {imageUrl && (
           <div
             style={{
-              flex: 1,
+              width: '280px',
+              height: '100%',
               display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
+              flexShrink: 0,
+              marginRight: '48px',
             }}
           >
-            {/* タイプラベル */}
-            <div
+            <img
+              src={imageUrl}
+              alt=""
               style={{
-                display: 'flex',
-                marginBottom: '16px',
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '16px',
               }}
-            >
-              <span
-                style={{
-                  backgroundColor: gradientColors[0],
-                  color: 'white',
-                  padding: '8px 20px',
-                  borderRadius: '20px',
-                  fontSize: '20px',
-                  fontWeight: 'bold',
-                }}
-              >
-                {type === 'actress' ? '女優情報' : '作品情報'}
-              </span>
-            </div>
+            />
+          </div>
+        )}
 
-            {/* タイトル */}
-            <h1
+        {/* テキストエリア（右側） */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center',
+          }}
+        >
+          {/* タイプラベル */}
+          <div
+            style={{
+              display: 'flex',
+              marginBottom: '16px',
+            }}
+          >
+            <span
               style={{
-                fontSize: title.length > 20 ? '48px' : '56px',
+                backgroundColor: gradientColors[0],
+                color: 'white',
+                padding: '8px 20px',
+                borderRadius: '20px',
+                fontSize: '20px',
                 fontWeight: 'bold',
-                color: '#1a1a1a',
-                lineHeight: 1.2,
-                margin: '0 0 16px 0',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-                overflow: 'hidden',
               }}
             >
-              {title}
-            </h1>
+              {type === 'actress' ? '女優情報' : '作品情報'}
+            </span>
+          </div>
 
-            {/* サブタイトル */}
-            {subtitle && (
-              <p
-                style={{
-                  fontSize: '28px',
-                  color: '#666',
-                  margin: '0 0 24px 0',
-                  lineHeight: 1.4,
-                }}
-              >
-                {subtitle}
-              </p>
-            )}
+          {/* タイトル */}
+          <h1
+            style={{
+              fontSize: title.length > 20 ? '48px' : '56px',
+              fontWeight: 'bold',
+              color: '#1a1a1a',
+              lineHeight: 1.2,
+              margin: '0 0 16px 0',
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+          >
+            {title}
+          </h1>
 
-            {/* サイト名 */}
-            <div
+          {/* サブタイトル */}
+          {subtitle && (
+            <p
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginTop: 'auto',
+                fontSize: '28px',
+                color: '#666',
+                margin: '0 0 24px 0',
+                lineHeight: 1.4,
               }}
             >
-              <span
-                style={{
-                  fontSize: '24px',
-                  color: '#999',
-                  fontWeight: 500,
-                }}
-              >
-                {SITE_NAME}
-              </span>
-            </div>
+              {subtitle}
+            </p>
+          )}
+
+          {/* サイト名 */}
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginTop: 'auto',
+            }}
+          >
+            <span
+              style={{
+                fontSize: '24px',
+                color: '#999',
+                fontWeight: 500,
+              }}
+            >
+              {SITE_NAME}
+            </span>
           </div>
         </div>
       </div>
-    ),
+    </div>,
     {
       width: OG_WIDTH,
       height: OG_HEIGHT,
-    }
+    },
   );
 }

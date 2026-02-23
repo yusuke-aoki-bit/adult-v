@@ -65,19 +65,25 @@ export function useBudget() {
   }, []);
 
   // Set monthly budget
-  const setBudget = useCallback((amount: number) => {
-    const newSettings = { ...settings, monthlyBudget: amount };
-    saveSettings(newSettings);
-  }, [settings, saveSettings]);
+  const setBudget = useCallback(
+    (amount: number) => {
+      const newSettings = { ...settings, monthlyBudget: amount };
+      saveSettings(newSettings);
+    },
+    [settings, saveSettings],
+  );
 
   // Add spending
-  const addSpending = useCallback((amount: number) => {
-    const newSettings = {
-      ...settings,
-      currentSpent: settings.currentSpent + amount,
-    };
-    saveSettings(newSettings);
-  }, [settings, saveSettings]);
+  const addSpending = useCallback(
+    (amount: number) => {
+      const newSettings = {
+        ...settings,
+        currentSpent: settings.currentSpent + amount,
+      };
+      saveSettings(newSettings);
+    },
+    [settings, saveSettings],
+  );
 
   // Reset current month spending
   const resetSpending = useCallback(() => {
@@ -87,14 +93,16 @@ export function useBudget() {
 
   // Calculate remaining budget
   const remaining = settings.monthlyBudget - settings.currentSpent;
-  const usedPercent = settings.monthlyBudget > 0
-    ? Math.round((settings.currentSpent / settings.monthlyBudget) * 100)
-    : 0;
+  const usedPercent =
+    settings.monthlyBudget > 0 ? Math.round((settings.currentSpent / settings.monthlyBudget) * 100) : 0;
 
   // Check if purchase is within budget
-  const canAfford = useCallback((price: number) => {
-    return remaining >= price;
-  }, [remaining]);
+  const canAfford = useCallback(
+    (price: number) => {
+      return remaining >= price;
+    },
+    [remaining],
+  );
 
   // Get budget status
   const getStatus = useCallback(() => {

@@ -26,7 +26,13 @@ async function main() {
     LIMIT 10
   `);
   console.log('\n2. FC2商品サンプル（10件）:');
-  for (const row of fc2Samples.rows as { id: number; normalized_product_id: string; title: string; asp_name: string; original_product_id: string }[]) {
+  for (const row of fc2Samples.rows as {
+    id: number;
+    normalized_product_id: string;
+    title: string;
+    asp_name: string;
+    original_product_id: string;
+  }[]) {
     console.log(`   - [${row['id']}] normalizedId=${row.normalized_product_id}, originalId=${row.original_product_id}`);
     console.log(`     title: ${row['title'].substring(0, 50)}...`);
   }
@@ -56,7 +62,12 @@ async function main() {
     LIMIT 10
   `);
   console.log('\n4. 「FC2動画アダルト」商品のID確認:');
-  for (const row of fc2AdultSamples.rows as { id: number; normalized_product_id: string; original_product_id: string; title: string }[]) {
+  for (const row of fc2AdultSamples.rows as {
+    id: number;
+    normalized_product_id: string;
+    original_product_id: string;
+    title: string;
+  }[]) {
     console.log(`   - [${row['id']}] normalizedId=${row.normalized_product_id}, originalId=${row.original_product_id}`);
   }
 

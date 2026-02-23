@@ -39,14 +39,7 @@ export default function robots(): MetadataRoute.Robots {
       // Specific rules for well-behaved bots (Google)
       {
         userAgent: ['Googlebot', 'Googlebot-Image'],
-        allow: [
-          '/',
-          '/*.js',
-          '/*.css',
-          '/*.png',
-          '/*.jpg',
-          '/*.webp',
-        ],
+        allow: ['/', '/*.js', '/*.css', '/*.png', '/*.jpg', '/*.webp'],
         disallow: [
           '/api/',
           '/admin/',
@@ -143,12 +136,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'Anthropic-AI', 'Claude-Web'],
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/private/',
-          '/age-verification',
-        ],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
         crawlDelay: 2,
       },
       // Block other aggressive AI scrapers

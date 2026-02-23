@@ -14,7 +14,9 @@ async function main() {
     console.log('Usage: npx tsx scripts/db-query.ts "SELECT ..."');
     console.log('');
     console.log('Examples:');
-    console.log('  npx tsx scripts/db-query.ts "SELECT asp_name, COUNT(*) FROM product_sources GROUP BY asp_name ORDER BY count DESC"');
+    console.log(
+      '  npx tsx scripts/db-query.ts "SELECT asp_name, COUNT(*) FROM product_sources GROUP BY asp_name ORDER BY count DESC"',
+    );
     console.log('  npx tsx scripts/db-query.ts "SELECT COUNT(*) FROM products"');
     console.log('  npx tsx scripts/db-query.ts "SELECT COUNT(*) FROM performers"');
     process.exit(1);

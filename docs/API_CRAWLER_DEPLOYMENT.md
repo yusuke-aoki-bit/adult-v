@@ -14,11 +14,13 @@ This document describes the deployment of DUGA and SOKMIL API crawlers to Google
 **Purpose**: Fetch new releases from DUGA API and store in database
 
 **Files**:
+
 - [Dockerfile.duga-api](../Dockerfile.duga-api) - Container definition
 - [cloudbuild-duga-api.yaml](../cloudbuild-duga-api.yaml) - Cloud Build configuration
 - [crawl-duga-api.ts](../scripts/crawlers/crawl-duga-api.ts) - Crawler implementation
 
 **Configuration**:
+
 - Image: `gcr.io/adult-v/duga-api-crawler:latest`
 - Region: `asia-northeast1`
 - Timeout: 30 minutes
@@ -26,6 +28,7 @@ This document describes the deployment of DUGA and SOKMIL API crawlers to Google
 - Default args: `--limit=200 --offset=0`
 
 **Environment Variables**:
+
 ```bash
 DATABASE_URL=postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres
 DUGA_APP_ID=WzsUOEt2124UD65BqsHU
@@ -37,11 +40,13 @@ DUGA_AGENT_ID=48611
 **Purpose**: Fetch new releases from SOKMIL API and store in database
 
 **Files**:
+
 - [Dockerfile.sokmil-api](../Dockerfile.sokmil-api) - Container definition
 - [cloudbuild-sokmil-api.yaml](../cloudbuild-sokmil-api.yaml) - Cloud Build configuration
 - [crawl-sokmil-api.ts](../scripts/crawlers/crawl-sokmil-api.ts) - Crawler implementation
 
 **Configuration**:
+
 - Image: `gcr.io/adult-v/sokmil-api-crawler:latest`
 - Region: `asia-northeast1`
 - Timeout: 30 minutes
@@ -49,6 +54,7 @@ DUGA_AGENT_ID=48611
 - Default args: `--limit=200 --page=1`
 
 **Environment Variables**:
+
 ```bash
 DATABASE_URL=postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres
 SOKMIL_API_KEY=70c75ce3a36c1f503f2515ff094d6f60
@@ -66,6 +72,7 @@ bash scripts/deploy-api-crawlers.sh
 ```
 
 This script will:
+
 1. Build and push Docker images to GCR
 2. Create Cloud Run Jobs
 3. Create Cloud Scheduler jobs
@@ -198,6 +205,7 @@ gcloud scheduler jobs describe sokmil-api-crawler-scheduler \
 Both crawlers write to the following tables:
 
 ### DUGA Tables
+
 - `duga_raw_responses` - Raw JSON from API
 - `products` - Normalized product data
 - `product_sources` - Source information (asp_name='DUGA')
@@ -207,6 +215,7 @@ Both crawlers write to the following tables:
 - `categories` - Category/tag information
 
 ### SOKMIL Tables
+
 - `sokmil_raw_responses` - Raw JSON from API
 - `products` - Normalized product data
 - `product_sources` - Source information (asp_name='ソクミル')
@@ -218,11 +227,13 @@ Both crawlers write to the following tables:
 ## API Rate Limits
 
 ### DUGA
+
 - **Rate Limit**: 60 requests / 60 seconds
 - **Crawler Delay**: 1 second between requests
 - **Recommended Limit**: 100-200 products per run
 
 ### SOKMIL
+
 - **Rate Limit**: Not specified
 - **Crawler Delay**: 500ms between requests
 - **Recommended Limit**: 100-200 products per run
@@ -232,6 +243,7 @@ Both crawlers write to the following tables:
 ### Build Failures
 
 If build fails, check:
+
 1. Dockerfile syntax
 2. cloudbuild.yaml configuration
 3. Source files exist
@@ -245,6 +257,7 @@ gcloud builds log <BUILD_ID>
 ### Job Execution Failures
 
 If job fails to execute:
+
 1. Check environment variables
 2. Verify database connectivity
 3. Check API credentials
@@ -259,6 +272,7 @@ gcloud run jobs executions describe <EXECUTION_NAME> \
 ### Scheduler Not Triggering
 
 If scheduler doesn't trigger:
+
 1. Verify scheduler is enabled
 2. Check schedule syntax
 3. Verify service account permissions
@@ -315,6 +329,7 @@ gcloud scheduler jobs update http sokmil-api-crawler-scheduler \
 ## Cost Estimation
 
 ### Cloud Run Jobs
+
 - **vCPU**: 1
 - **Memory**: 512Mi
 - **Execution time**: ~5-10 minutes per run
@@ -322,6 +337,7 @@ gcloud scheduler jobs update http sokmil-api-crawler-scheduler \
 - **Monthly cost**: ~$0.60-1.20 (60 runs/month)
 
 ### Cloud Scheduler
+
 - **Jobs**: 2
 - **Cost**: $0.10/job/month
 - **Monthly cost**: $0.20

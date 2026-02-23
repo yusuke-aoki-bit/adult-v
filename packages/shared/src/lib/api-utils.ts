@@ -31,10 +31,7 @@ export function validatePagination(searchParams: URLSearchParams): ValidationRes
   if (isNaN(limit) || isNaN(offset)) {
     return {
       valid: false,
-      error: NextResponse.json(
-        { error: 'Invalid pagination parameters' },
-        { status: 400 }
-      ),
+      error: NextResponse.json({ error: 'Invalid pagination parameters' }, { status: 400 }),
     };
   }
 
@@ -42,20 +39,14 @@ export function validatePagination(searchParams: URLSearchParams): ValidationRes
   if (limit < 12 || limit > 96) {
     return {
       valid: false,
-      error: NextResponse.json(
-        { error: 'Limit must be between 12 and 96' },
-        { status: 400 }
-      ),
+      error: NextResponse.json({ error: 'Limit must be between 12 and 96' }, { status: 400 }),
     };
   }
 
   if (offset < 0) {
     return {
       valid: false,
-      error: NextResponse.json(
-        { error: 'Offset must be greater than or equal to 0' },
-        { status: 400 }
-      ),
+      error: NextResponse.json({ error: 'Offset must be greater than or equal to 0' }, { status: 400 }),
     };
   }
 
@@ -72,10 +63,7 @@ export function validateId(id: string | undefined): ValidationResult {
   if (!id || typeof id !== 'string' || id.trim() === '') {
     return {
       valid: false,
-      error: NextResponse.json(
-        { error: 'Valid ID is required' },
-        { status: 400 }
-      ),
+      error: NextResponse.json({ error: 'Valid ID is required' }, { status: 400 }),
     };
   }
 
@@ -84,10 +72,7 @@ export function validateId(id: string | undefined): ValidationResult {
   if (!idPattern.test(id)) {
     return {
       valid: false,
-      error: NextResponse.json(
-        { error: 'Invalid ID format' },
-        { status: 400 }
-      ),
+      error: NextResponse.json({ error: 'Invalid ID format' }, { status: 400 }),
     };
   }
 
@@ -148,11 +133,7 @@ export function validatePriceRange(priceRange: string | null): PriceRange {
 /**
  * Create error response with logging
  */
-export function createErrorResponse(
-  message: string,
-  status: number = 500,
-  error?: unknown
-): NextResponse {
+export function createErrorResponse(message: string, status: number = 500, error?: unknown): NextResponse {
   if (error) {
     console.error(message, error);
   }

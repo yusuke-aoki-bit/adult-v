@@ -23,13 +23,7 @@ const Image = ({ src, alt, width, height, fill, ...props }: ImageProps) => {
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      width={width}
-      height={height}
-      {...htmlProps}
-    />
+    <img src={src} alt={alt} width={width} height={height} {...htmlProps} />
   );
 };
 

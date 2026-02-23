@@ -40,10 +40,7 @@ export interface UserReviewsHandlerDeps {
 
 // レビュー取得ハンドラー
 export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
-  return async (
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ): Promise<NextResponse> => {
+  return async (req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> => {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);
@@ -58,7 +55,10 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
       const db = deps.getDb() as {
         select: (cols?: Record<string, unknown>) => {
           from: (table: unknown) => {
-            leftJoin: (table: unknown, condition: unknown) => {
+            leftJoin: (
+              table: unknown,
+              condition: unknown,
+            ) => {
               where: (condition: unknown) => {
                 orderBy: (order: unknown) => Promise<unknown[]>;
               };
@@ -74,16 +74,11 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
       const userReviewsTable = deps.userReviews as any;
 
       // 承認済みレビューのみ取得
-      const reviews = await db
+      const reviews = (await db
         .select()
         .from(userReviewsTable)
-        .where(
-          deps.and(
-            deps.eq(userReviewsTable.productId, productId),
-            deps.eq(userReviewsTable.status, 'approved')
-          )
-        )
-        .orderBy(deps.desc(userReviewsTable.createdAt)) as UserReview[];
+        .where(deps.and(deps.eq(userReviewsTable.productId, productId), deps.eq(userReviewsTable.status, 'approved')))
+        .orderBy(deps.desc(userReviewsTable.createdAt))) as UserReview[];
 
       // ユーザーIDがあれば投票状態も取得
       let reviewsWithVotes: UserReviewWithVote[] = reviews;
@@ -91,23 +86,26 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
       if (userId && reviews.length > 0) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const votesTable = deps.userReviewVotes as any;
-        const reviewIds = reviews.map(r => r.id);
+        const reviewIds = reviews.map((r) => r.id);
 
-        const votes = await db
+        const votes = (await db
           .select()
           .from(votesTable)
           .where(
             deps.and(
               deps.eq(votesTable.voterId, userId),
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (deps.sql as any)`${votesTable.reviewId} IN (${(deps.sql as any).join(reviewIds.map((id: number) => (deps.sql as any)`${id}`), (deps.sql as any)`, `)})`
-            )
+              (deps.sql as any)`${votesTable.reviewId} IN (${(deps.sql as any).join(
+                reviewIds.map((id: number) => (deps.sql as any)`${id}`),
+                (deps.sql as any)`, `,
+              )})`,
+            ),
           )
-          .orderBy(deps.desc(votesTable.createdAt)) as { reviewId: number; voteType: string }[];
+          .orderBy(deps.desc(votesTable.createdAt))) as { reviewId: number; voteType: string }[];
 
-        const voteMap = new Map(votes.map(v => [v.reviewId, v.voteType as 'helpful' | 'not_helpful']));
+        const voteMap = new Map(votes.map((v) => [v.reviewId, v.voteType as 'helpful' | 'not_helpful']));
 
-        reviewsWithVotes = reviews.map(review => ({
+        reviewsWithVotes = reviews.map((review) => ({
           ...review,
           userVote: voteMap.get(review['id']) || null,
         }));
@@ -127,10 +125,7 @@ export function createUserReviewsGetHandler(deps: UserReviewsHandlerDeps) {
 
 // レビュー投稿ハンドラー
 export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
-  return async (
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ): Promise<NextResponse> => {
+  return async (req: NextRequest, { params }: { params: Promise<{ id: string }> }): Promise<NextResponse> => {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);
@@ -177,27 +172,22 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
       const productsTable = deps.products as any;
 
       // 商品が存在するか確認
-      const [product] = await db
+      const [product] = (await db
         .select({ id: productsTable.id, title: productsTable.title })
         .from(productsTable)
         .where(deps.eq(productsTable.id, productId))
-        .limit(1) as { id: number; title: string }[];
+        .limit(1)) as { id: number; title: string }[];
 
       if (!product) {
         return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
 
       // 既存レビューがあるかチェック
-      const [existingReview] = await db
+      const [existingReview] = (await db
         .select()
         .from(userReviewsTable)
-        .where(
-          deps.and(
-            deps.eq(userReviewsTable.productId, productId),
-            deps.eq(userReviewsTable.userId, userId)
-          )
-        )
-        .limit(1) as UserReview[];
+        .where(deps.and(deps.eq(userReviewsTable.productId, productId), deps.eq(userReviewsTable.userId, userId)))
+        .limit(1)) as UserReview[];
 
       if (existingReview) {
         return NextResponse.json({ error: 'You have already reviewed this product' }, { status: 409 });
@@ -234,7 +224,7 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
       }
 
       // レビューを保存
-      const [newReview] = await db
+      const [newReview] = (await db
         .insert(userReviewsTable)
         .values({
           productId,
@@ -247,15 +237,20 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
           moderatedAt: status !== 'pending' ? new Date() : null,
           moderatedBy,
         })
-        .returning() as UserReview[];
+        .returning()) as UserReview[];
 
-      return NextResponse.json({
-        review: newReview,
-        moderation: moderationResult ? {
-          decision: moderationResult.decision,
-          reason: moderationResult.reason,
-        } : null,
-      }, { status: 201 });
+      return NextResponse.json(
+        {
+          review: newReview,
+          moderation: moderationResult
+            ? {
+                decision: moderationResult.decision,
+                reason: moderationResult.reason,
+              }
+            : null,
+        },
+        { status: 201 },
+      );
     } catch (error) {
       return createApiErrorResponse(error, 'Failed to create review', 500, {
         endpoint: '/api/products/[id]/reviews',
@@ -268,7 +263,7 @@ export function createUserReviewsPostHandler(deps: UserReviewsHandlerDeps) {
 export function createUserReviewVoteHandler(deps: UserReviewsHandlerDeps) {
   return async (
     req: NextRequest,
-    { params }: { params: Promise<{ id: string; reviewId: string }> }
+    { params }: { params: Promise<{ id: string; reviewId: string }> },
   ): Promise<NextResponse> => {
     try {
       const { reviewId: reviewIdStr } = await params;
@@ -316,11 +311,11 @@ export function createUserReviewVoteHandler(deps: UserReviewsHandlerDeps) {
       const votesTable = deps.userReviewVotes as any;
 
       // レビューが存在するか確認
-      const [review] = await db
+      const [review] = (await db
         .select()
         .from(userReviewsTable)
         .where(deps.eq(userReviewsTable.id, reviewId))
-        .limit(1) as UserReview[];
+        .limit(1)) as UserReview[];
 
       if (!review) {
         return NextResponse.json({ error: 'Review not found' }, { status: 404 });
@@ -332,16 +327,11 @@ export function createUserReviewVoteHandler(deps: UserReviewsHandlerDeps) {
       }
 
       // 既存の投票を確認
-      const [existingVote] = await db
+      const [existingVote] = (await db
         .select()
         .from(votesTable)
-        .where(
-          deps.and(
-            deps.eq(votesTable.reviewId, reviewId),
-            deps.eq(votesTable.voterId, userId)
-          )
-        )
-        .limit(1) as { reviewId: number; voterId: string; voteType: string }[];
+        .where(deps.and(deps.eq(votesTable.reviewId, reviewId), deps.eq(votesTable.voterId, userId)))
+        .limit(1)) as { reviewId: number; voterId: string; voteType: string }[];
 
       // 投票を更新または挿入（upsert）
       await db

@@ -72,10 +72,10 @@ export async function generateMetadata({
   const alternates = {
     canonical: `${baseUrl}${localizedHref(`/makers/${makerId}`, locale)}`,
     languages: {
-      'ja': `${baseUrl}${localizedHref(`/makers/${makerId}`, 'ja')}`,
-      'en': `${baseUrl}${localizedHref(`/makers/${makerId}`, 'en')}`,
-      'zh': `${baseUrl}${localizedHref(`/makers/${makerId}`, 'zh')}`,
-      'ko': `${baseUrl}${localizedHref(`/makers/${makerId}`, 'ko')}`,
+      ja: `${baseUrl}${localizedHref(`/makers/${makerId}`, 'ja')}`,
+      en: `${baseUrl}${localizedHref(`/makers/${makerId}`, 'en')}`,
+      zh: `${baseUrl}${localizedHref(`/makers/${makerId}`, 'zh')}`,
+      ko: `${baseUrl}${localizedHref(`/makers/${makerId}`, 'ko')}`,
       'x-default': `${baseUrl}${localizedHref(`/makers/${makerId}`, 'ja')}`,
     },
   };
@@ -97,8 +97,6 @@ export async function generateMetadata({
   };
 }
 
-export default function MakerDetailLayout({
-  children,
-}: MakerLayoutProps) {
+export default function MakerDetailLayout({ children }: MakerLayoutProps) {
   return children;
 }

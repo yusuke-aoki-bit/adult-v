@@ -16,8 +16,9 @@ function getHreflangLinks(path: string): string {
   ];
 
   return languages
-    .map(({ lang, suffix }) =>
-      `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`)
+    .map(
+      ({ lang, suffix }) => `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`,
+    )
     .join('\n');
 }
 
@@ -48,13 +49,17 @@ export async function GET() {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${staticPages.map(page => `  <url>
+${staticPages
+  .map(
+    (page) => `  <url>
     <loc>${BASE_URL}${page.path}</loc>
 ${page.noHreflang ? '' : getHreflangLinks(page.path)}
     <lastmod>${today}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
-  </url>`).join('\n')}
+  </url>`,
+  )
+  .join('\n')}
 </urlset>`;
 
   return new NextResponse(xml, {

@@ -15,11 +15,7 @@ import {
   wikiCrawlData,
 } from '../db/schema';
 import { eq, inArray, and, sql } from 'drizzle-orm';
-import {
-  isValidPerformerName,
-  normalizePerformerName,
-  isValidPerformerForProduct,
-} from '../performer-validation';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../performer-validation';
 import { extractProductCodes } from '../crawler-utils';
 
 // ============================================================
@@ -29,10 +25,7 @@ import { extractProductCodes } from '../crawler-utils';
 /**
  * 出演者名を正規化・検証してフィルタリング
  */
-export function normalizeAndValidatePerformers(
-  names: string[],
-  productTitle?: string
-): string[] {
+export function normalizeAndValidatePerformers(names: string[], productTitle?: string): string[] {
   return names
     .map((name) => normalizePerformerName(name))
     .filter((name): name is string => name !== null)
@@ -47,9 +40,7 @@ export function normalizeAndValidatePerformers(
  *
  * @returns name -> id のマッピング
  */
-export async function ensurePerformers(
-  names: string[]
-): Promise<Map<string, number>> {
+export async function ensurePerformers(names: string[]): Promise<Map<string, number>> {
   if (names.length === 0) {
     return new Map();
   }
@@ -107,7 +98,7 @@ export async function ensurePerformers(
 export async function linkProductToPerformers(
   productId: number,
   performerIds: number[],
-  tx?: DbContext
+  tx?: DbContext,
 ): Promise<void> {
   if (performerIds.length === 0) {
     return;
@@ -141,10 +132,7 @@ export async function linkProductToPerformers(
  * @param aspPrefix - ASPプレフィックス（省略可能）
  * @returns 見つかった演者名の配列
  */
-async function getPerformersFromWikiData(
-  productCode: string,
-  aspPrefix?: string
-): Promise<string[]> {
+async function getPerformersFromWikiData(productCode: string, aspPrefix?: string): Promise<string[]> {
   // 品番から複数の検索用品番形式を生成
   const normalizedId = aspPrefix ? `${aspPrefix}-${productCode}` : productCode;
   const productCodes = extractProductCodes(normalizedId);
@@ -160,9 +148,14 @@ async function getPerformersFromWikiData(
   const result = await db
     .select({ performerName: wikiCrawlData.performerName })
     .from(wikiCrawlData)
-    .where(sql`UPPER(${wikiCrawlData.productCode}) = ANY(ARRAY[${sql.join(uniqueCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])`);
+    .where(
+      sql`UPPER(${wikiCrawlData.productCode}) = ANY(ARRAY[${sql.join(
+        uniqueCodes.map((c) => sql`${c.toUpperCase()}`),
+        sql`, `,
+      )}]::text[])`,
+    );
 
-  const performers = [...new Set(result.map(r => r.performerName).filter(name => name && name.length > 0))];
+  const performers = [...new Set(result.map((r) => r.performerName).filter((name) => name && name.length > 0))];
 
   if (performers.length > 0) {
     console.log(`    📚 wiki_crawl_dataから演者取得: ${performers.join(', ')}`);
@@ -188,7 +181,7 @@ export async function processProductPerformers(
   productTitle?: string,
   productCode?: string,
   aspPrefix?: string,
-  tx?: DbContext
+  tx?: DbContext,
 ): Promise<{ added: number; total: number }> {
   const dbCtx = tx || db;
   let namesToProcess: string[];
@@ -220,9 +213,7 @@ export async function processProductPerformers(
   const nameToId = await ensurePerformersWithAliases(validNames, dbCtx);
 
   // 4. 商品との関連を作成
-  const performerIds = validNames
-    .map((name) => nameToId.get(name))
-    .filter((id): id is number => id !== undefined);
+  const performerIds = validNames.map((name) => nameToId.get(name)).filter((id): id is number => id !== undefined);
 
   // 既存の関連数を取得
   const existingCount = await dbCtx
@@ -250,10 +241,7 @@ export async function processProductPerformers(
  * @param tx - オプションのトランザクションコンテキスト
  * @returns name -> id のマッピング
  */
-async function ensurePerformersWithAliases(
-  names: string[],
-  tx?: DbContext
-): Promise<Map<string, number>> {
+async function ensurePerformersWithAliases(names: string[], tx?: DbContext): Promise<Map<string, number>> {
   if (names.length === 0) {
     return new Map();
   }
@@ -329,11 +317,7 @@ async function ensurePerformersWithAliases(
  * タグをバッチで取得または作成
  * @param tx - オプションのトランザクションコンテキスト
  */
-export async function ensureTags(
-  tagNames: string[],
-  category?: string,
-  tx?: DbContext
-): Promise<Map<string, number>> {
+export async function ensureTags(tagNames: string[], category?: string, tx?: DbContext): Promise<Map<string, number>> {
   if (tagNames.length === 0) {
     return new Map();
   }
@@ -387,11 +371,7 @@ export async function ensureTags(
  * 商品とタグの関連をバッチで作成
  * @param tx - オプションのトランザクションコンテキスト
  */
-export async function linkProductToTags(
-  productId: number,
-  tagIds: number[],
-  tx?: DbContext
-): Promise<void> {
+export async function linkProductToTags(productId: number, tagIds: number[], tx?: DbContext): Promise<void> {
   if (tagIds.length === 0) {
     return;
   }
@@ -427,7 +407,7 @@ export async function saveProductImages(
   imageUrls: string[],
   aspName: string,
   imageType: string = 'sample',
-  tx?: DbContext
+  tx?: DbContext,
 ): Promise<{ added: number; skipped: number }> {
   if (imageUrls.length === 0) {
     return { added: 0, skipped: 0 };
@@ -443,8 +423,8 @@ export async function saveProductImages(
       and(
         eq(productImages.productId, productId),
         eq(productImages.aspName, aspName),
-        eq(productImages.imageType, imageType)
-      )
+        eq(productImages.imageType, imageType),
+      ),
     );
 
   const existingUrls = new Set(existing.map((e) => e.imageUrl));
@@ -464,7 +444,7 @@ export async function saveProductImages(
         imageType,
         aspName,
         displayOrder: maxOrder + index + 1,
-      }))
+      })),
     );
   }
 
@@ -483,7 +463,7 @@ export async function replaceProductImages(
   imageUrls: string[],
   aspName: string,
   imageType: string = 'sample',
-  tx?: DbContext
+  tx?: DbContext,
 ): Promise<number> {
   const dbCtx = tx || db;
 
@@ -494,8 +474,8 @@ export async function replaceProductImages(
       and(
         eq(productImages.productId, productId),
         eq(productImages.aspName, aspName),
-        eq(productImages.imageType, imageType)
-      )
+        eq(productImages.imageType, imageType),
+      ),
     );
 
   if (imageUrls.length === 0) {
@@ -513,7 +493,7 @@ export async function replaceProductImages(
       imageType,
       aspName,
       displayOrder: index + 1,
-    }))
+    })),
   );
 
   return uniqueUrls.length;

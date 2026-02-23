@@ -13,12 +13,32 @@
 
 /** ASPプレフィックス一覧（検索時に除去して検索に含める） */
 const ASP_PREFIXES = [
-  'FANZA', 'MGS', 'DUGA', 'SOKMIL', 'B10F', 'FC2', 'JAPANSKA',
-  'CARIBBEAN', 'CARIBBEANCOMPR', '1PONDO', 'HEYZO', '10MUSUME',
-  'PACOPACOMAMA', 'H4610', 'H0930', 'C0930', 'GACHINCO',
-  'KIN8TENGOKU', 'NYOSHIN',
-  'HEYDOUGA', 'X1X', 'ENKOU55', 'UREKKO', 'XXXURABI',
-  'TOKYOHOT', 'TVDEAV',
+  'FANZA',
+  'MGS',
+  'DUGA',
+  'SOKMIL',
+  'B10F',
+  'FC2',
+  'JAPANSKA',
+  'CARIBBEAN',
+  'CARIBBEANCOMPR',
+  '1PONDO',
+  'HEYZO',
+  '10MUSUME',
+  'PACOPACOMAMA',
+  'H4610',
+  'H0930',
+  'C0930',
+  'GACHINCO',
+  'KIN8TENGOKU',
+  'NYOSHIN',
+  'HEYDOUGA',
+  'X1X',
+  'ENKOU55',
+  'UREKKO',
+  'XXXURABI',
+  'TOKYOHOT',
+  'TVDEAV',
 ];
 
 /**

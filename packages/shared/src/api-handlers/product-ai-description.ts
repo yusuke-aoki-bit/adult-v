@@ -7,10 +7,7 @@ export interface ProductAiDescriptionHandlerDeps {
 }
 
 export function createProductAiDescriptionHandler(deps: ProductAiDescriptionHandlerDeps) {
-  return async function GET(
-    _request: NextRequest,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
       const productId = parseInt(id);

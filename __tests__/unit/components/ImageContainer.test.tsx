@@ -12,22 +12,33 @@ import React from 'react';
 
 // Mock next/image - filter out Next.js specific props
 vi.mock('next/image', () => ({
-  default: ({ src, alt, fill, blurDataURL: _blur, priority: _priority, placeholder: _placeholder, loader: _loader, quality: _quality, sizes: _sizes, unoptimized: _unoptimized, onLoadingComplete: _onLoadingComplete, ...props }: { src: string; alt: string; fill?: boolean; [key: string]: unknown }) => (
+  default: ({
+    src,
+    alt,
+    fill,
+    blurDataURL: _blur,
+    priority: _priority,
+    placeholder: _placeholder,
+    loader: _loader,
+    quality: _quality,
+    sizes: _sizes,
+    unoptimized: _unoptimized,
+    onLoadingComplete: _onLoadingComplete,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    fill?: boolean;
+    [key: string]: unknown;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={src}
-      alt={alt}
-      data-fill={fill ? 'true' : undefined}
-      {...props}
-    />
+    <img src={src} alt={alt} data-fill={fill ? 'true' : undefined} {...props} />
   ),
 }));
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  ),
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
 // Mock next-intl
@@ -72,14 +83,14 @@ describe('Image Container Styles', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       // 画像コンテナが height: 18rem を持っていることを確認
       const imageContainers = container.querySelectorAll('[style*="height"]');
       expect(imageContainers.length).toBeGreaterThan(0);
 
-      const hasCorrectHeight = Array.from(imageContainers).some(el => {
+      const hasCorrectHeight = Array.from(imageContainers).some((el) => {
         const style = (el as HTMLElement).style.height;
         return style === '18rem';
       });
@@ -111,14 +122,14 @@ describe('Image Container Styles', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       // 画像コンテナが aspectRatio: 2/3 を持っていることを確認
       const aspectContainers = container.querySelectorAll('[style*="aspect"]');
       expect(aspectContainers.length).toBeGreaterThan(0);
 
-      const hasCorrectAspect = Array.from(aspectContainers).some(el => {
+      const hasCorrectAspect = Array.from(aspectContainers).some((el) => {
         const style = (el as HTMLElement).style.aspectRatio;
         return style === '2 / 3' || style === '2/3';
       });
@@ -136,7 +147,7 @@ describe('Image Container Styles', () => {
       const skeletonImages = container.querySelectorAll('[style*="height"]');
       expect(skeletonImages.length).toBeGreaterThan(0);
 
-      const hasCorrectHeight = Array.from(skeletonImages).some(el => {
+      const hasCorrectHeight = Array.from(skeletonImages).some((el) => {
         const style = (el as HTMLElement).style.height;
         return style === '18rem';
       });
@@ -152,7 +163,7 @@ describe('Image Container Styles', () => {
       const aspectContainers = container.querySelectorAll('[style*="aspect"]');
       expect(aspectContainers.length).toBeGreaterThan(0);
 
-      const hasCorrectAspect = Array.from(aspectContainers).some(el => {
+      const hasCorrectAspect = Array.from(aspectContainers).some((el) => {
         const style = (el as HTMLElement).style.aspectRatio;
         return style === '2 / 3' || style === '2/3';
       });
@@ -169,7 +180,7 @@ describe('Image Container Styles', () => {
       const aspectContainers = container.querySelectorAll('[style*="aspect"]');
       expect(aspectContainers.length).toBeGreaterThan(0);
 
-      const hasCorrectAspect = Array.from(aspectContainers).some(el => {
+      const hasCorrectAspect = Array.from(aspectContainers).some((el) => {
         const style = (el as HTMLElement).style.aspectRatio;
         return style === '3 / 4' || style === '3/4';
       });
@@ -184,7 +195,7 @@ describe('Image Container Styles', () => {
       const aspectContainers = container.querySelectorAll('[style*="aspect"]');
       expect(aspectContainers.length).toBeGreaterThan(0);
 
-      const hasCorrectAspect = Array.from(aspectContainers).some(el => {
+      const hasCorrectAspect = Array.from(aspectContainers).some((el) => {
         const style = (el as HTMLElement).style.aspectRatio;
         return style === '4 / 5' || style === '4/5';
       });
@@ -235,7 +246,7 @@ describe('No Arbitrary Tailwind Classes', () => {
 
     if (violations.length > 0) {
       console.log('Found aspect-[x/y] classes that should be converted to inline styles:');
-      violations.forEach(v => console.log(`  - ${v}`));
+      violations.forEach((v) => console.log(`  - ${v}`));
     }
 
     expect(violations.length).toBe(0);
@@ -285,7 +296,7 @@ describe('No Arbitrary Tailwind Classes', () => {
 
     if (violations.length > 0) {
       console.log('Found h-72 class that should be converted to inline styles:');
-      violations.forEach(v => console.log(`  - ${v}`));
+      violations.forEach((v) => console.log(`  - ${v}`));
     }
 
     expect(violations.length).toBe(0);

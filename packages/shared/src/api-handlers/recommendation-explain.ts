@@ -14,17 +14,11 @@ export async function POST(request: NextRequest) {
     const { originalProduct, recommendedProduct } = body;
 
     if (!originalProduct || !recommendedProduct) {
-      return NextResponse.json(
-        { error: '元の作品とおすすめ作品の情報が必要です' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '元の作品とおすすめ作品の情報が必要です' }, { status: 400 });
     }
 
     if (!originalProduct.title || !recommendedProduct.title) {
-      return NextResponse.json(
-        { error: '作品タイトルが必要です' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: '作品タイトルが必要です' }, { status: 400 });
     }
 
     const explanation = await generateRecommendationExplanation({

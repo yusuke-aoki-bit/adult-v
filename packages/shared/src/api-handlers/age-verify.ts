@@ -1,15 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export interface AgeVerifyHandlerDeps {
-  checkRateLimit: (key: string, limits: { maxRequests: number; windowMs: number }) => Promise<{
-    allowed: boolean;
-    remaining: number;
-    resetTime: number;
-  }> | {
-    allowed: boolean;
-    remaining: number;
-    resetTime: number;
-  };
+  checkRateLimit: (
+    key: string,
+    limits: { maxRequests: number; windowMs: number },
+  ) =>
+    | Promise<{
+        allowed: boolean;
+        remaining: number;
+        resetTime: number;
+      }>
+    | {
+        allowed: boolean;
+        remaining: number;
+        resetTime: number;
+      };
   getClientIP: (request: NextRequest) => string;
   RATE_LIMITS: { strict: { maxRequests: number; windowMs: number } };
   detectBot: (request: NextRequest) => { isBot: boolean; reason?: string; score: number };
@@ -24,10 +29,7 @@ export function createAgeVerifyPostHandler(deps: AgeVerifyHandlerDeps) {
       // Only block known bot UAs (score >= 80), allow suspicious but potentially legitimate requests
       if (botResult.score >= 80) {
         console.warn('[age-verify] Known bot blocked:', botResult.reason, 'score:', botResult.score);
-        return NextResponse.json(
-          { error: 'Access denied' },
-          { status: 403 }
-        );
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
       }
       // Log suspicious requests but don't block - CDN/proxy may strip headers
       console.info('[age-verify] Suspicious request (allowed):', botResult.reason, 'score:', botResult.score);
@@ -35,10 +37,7 @@ export function createAgeVerifyPostHandler(deps: AgeVerifyHandlerDeps) {
 
     // 2. Rate limiting
     const clientIP = deps.getClientIP(request);
-    const rateLimitResult = await deps.checkRateLimit(
-      `age-verify:${clientIP}`,
-      deps.RATE_LIMITS.strict
-    );
+    const rateLimitResult = await deps.checkRateLimit(`age-verify:${clientIP}`, deps.RATE_LIMITS.strict);
 
     if (!rateLimitResult.allowed) {
       console.warn('[age-verify] Rate limit exceeded for IP:', clientIP);
@@ -51,7 +50,7 @@ export function createAgeVerifyPostHandler(deps: AgeVerifyHandlerDeps) {
             'X-RateLimit-Remaining': '0',
             'X-RateLimit-Reset': String(rateLimitResult.resetTime),
           },
-        }
+        },
       );
     }
 
@@ -87,16 +86,10 @@ export function createAgeVerifyDeleteHandler(deps: AgeVerifyHandlerDeps) {
   return async function DELETE(request: NextRequest) {
     // Rate limiting for delete as well
     const clientIP = deps.getClientIP(request);
-    const rateLimitResult = await deps.checkRateLimit(
-      `age-verify:${clientIP}`,
-      deps.RATE_LIMITS.strict
-    );
+    const rateLimitResult = await deps.checkRateLimit(`age-verify:${clientIP}`, deps.RATE_LIMITS.strict);
 
     if (!rateLimitResult.allowed) {
-      return NextResponse.json(
-        { error: 'Too many requests' },
-        { status: 429 }
-      );
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
     }
 
     const response = NextResponse.json({ success: true });

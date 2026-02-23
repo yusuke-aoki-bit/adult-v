@@ -62,14 +62,14 @@ function generateDateRanges(startYear: number, endYear: number): Array<{ start: 
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const offsetArg = args.find(arg => arg.startsWith('--offset='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const offsetArg = args.find((arg) => arg.startsWith('--offset='));
   const skipReviews = args.includes('--skip-reviews');
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
   const fullScan = args.includes('--full-scan');
-  const yearArg = args.find(arg => arg.startsWith('--year='));
-  const monthArg = args.find(arg => arg.startsWith('--month='));
+  const yearArg = args.find((arg) => arg.startsWith('--year='));
+  const monthArg = args.find((arg) => arg.startsWith('--month='));
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]!) : 100;
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1]!) : 0;
@@ -118,10 +118,12 @@ async function main() {
       if (targetYear && targetMonth) {
         // 特定の年月のみ
         const lastDay = new Date(targetYear, targetMonth, 0).getDate();
-        dateRanges = [{
-          start: `${targetYear}${targetMonth.toString().padStart(2, '0')}01`,
-          end: `${targetYear}${targetMonth.toString().padStart(2, '0')}${lastDay}`,
-        }];
+        dateRanges = [
+          {
+            start: `${targetYear}${targetMonth.toString().padStart(2, '0')}01`,
+            end: `${targetYear}${targetMonth.toString().padStart(2, '0')}${lastDay}`,
+          },
+        ];
       } else if (targetYear) {
         // 特定の年のみ
         dateRanges = generateDateRanges(targetYear, targetYear);
@@ -179,7 +181,7 @@ async function main() {
           }
 
           // レートリミット対策
-          await new Promise(resolve => setTimeout(resolve, 1100));
+          await new Promise((resolve) => setTimeout(resolve, 1100));
 
           response = await dugaClient.searchProducts({
             releasestt: range.start,
@@ -195,9 +197,8 @@ async function main() {
         console.log(`  📦 期間合計: ${periodItems.length}件 (全体累計: ${allItems.length.toLocaleString()}件)`);
 
         // レートリミット対策: 期間ごとに少し待機
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        await new Promise((resolve) => setTimeout(resolve, 2000));
       }
-
     } else {
       // 通常モード: 新着順で取得
       console.log('🔄 DUGA APIから新着作品を取得中...\n');
@@ -215,9 +216,8 @@ async function main() {
 
       // ページネーションループ
       while (totalProcessed < limit) {
-        const response = totalProcessed === 0
-          ? firstResponse
-          : await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
+        const response =
+          totalProcessed === 0 ? firstResponse : await dugaClient.getNewReleases(PAGE_SIZE, currentOffset);
 
         if (response.items.length === 0) {
           console.log('📭 取得可能な商品がなくなりました');
@@ -228,7 +228,9 @@ async function main() {
         totalProcessed += response.items.length;
         currentOffset += PAGE_SIZE;
 
-        console.log(`✅ ページ取得: ${response.items.length}件 (累計: ${totalProcessed.toLocaleString()}件 / offset: ${currentOffset})`);
+        console.log(
+          `✅ ページ取得: ${response.items.length}件 (累計: ${totalProcessed.toLocaleString()}件 / offset: ${currentOffset})`,
+        );
 
         // limitに達したら終了
         if (totalProcessed >= limit || response.items.length < PAGE_SIZE) {
@@ -238,7 +240,7 @@ async function main() {
         // レートリミット対策: 100リクエストごとに短い休憩
         if (totalProcessed % 10000 === 0) {
           console.log('⏳ レートリミット対策: 5秒待機...');
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise((resolve) => setTimeout(resolve, 5000));
         }
       }
     }
@@ -368,13 +370,7 @@ async function main() {
         console.log(`  ✓ product_sources 保存完了`);
 
         // 4. 商品と生データをリンク
-        await linkProductToRawData(
-          productId,
-          'duga',
-          rawDataId,
-          'duga_raw_responses',
-          gcsUrl || `hash:${rawDataId}`
-        );
+        await linkProductToRawData(productId, 'duga', rawDataId, 'duga_raw_responses', gcsUrl || `hash:${rawDataId}`);
         console.log(`  ✓ リカバリーリンク作成完了`);
 
         // 5. サンプル画像を保存（バッチINSERT）
@@ -568,7 +564,9 @@ async function main() {
             });
             if (saved) {
               stats.salesSaved++;
-              console.log(`  💰 セール情報保存: ¥${item.saleInfo.regularPrice.toLocaleString()} → ¥${item.saleInfo.salePrice.toLocaleString()} (${item.saleInfo.discountPercent}% OFF)`);
+              console.log(
+                `  💰 セール情報保存: ¥${item.saleInfo.regularPrice.toLocaleString()} → ¥${item.saleInfo.salePrice.toLocaleString()} (${item.saleInfo.discountPercent}% OFF)`,
+              );
             }
           } catch (saleError: unknown) {
             console.log(`  ⚠️ セール情報保存失敗: ${saleError instanceof Error ? saleError.message : saleError}`);
@@ -612,7 +610,9 @@ async function main() {
                   last_updated = NOW()
               `);
 
-              console.log(`  ✓ 評価サマリー保存完了 (${pageData.aggregateRating.averageRating}点, ${pageData.aggregateRating.reviewCount}件)`);
+              console.log(
+                `  ✓ 評価サマリー保存完了 (${pageData.aggregateRating.averageRating}点, ${pageData.aggregateRating.reviewCount}件)`,
+              );
             }
 
             // 個別レビューを保存（バッチ処理）
@@ -624,7 +624,9 @@ async function main() {
               const ratings = pageData.reviews.map((r: { rating: number }) => r.rating);
               const titles = pageData.reviews.map((r: { title?: string }) => r.title || null);
               const contents = pageData.reviews.map((r: { content?: string }) => r.content || null);
-              const reviewDates = pageData.reviews.map((r: { date?: string }) => r.date ? new Date(r.date).toISOString() : null);
+              const reviewDates = pageData.reviews.map((r: { date?: string }) =>
+                r.date ? new Date(r.date).toISOString() : null,
+              );
               const helpfuls = pageData.reviews.map((r: { helpfulYes?: number }) => r.helpfulYes ?? 0);
               const sourceReviewIds = pageData.reviews.map((r: { reviewId?: string }) => r.reviewId || null);
 
@@ -673,8 +675,7 @@ async function main() {
             }
 
             // ページスクレイピング後は追加で待機
-            await new Promise(resolve => setTimeout(resolve, 500));
-
+            await new Promise((resolve) => setTimeout(resolve, 500));
           } catch (reviewError: unknown) {
             console.log(`  ⚠️ レビュー取得失敗: ${reviewError instanceof Error ? reviewError.message : reviewError}`);
           }
@@ -702,7 +703,7 @@ async function main() {
                 extractTags: true,
                 translate: true,
                 generateDescription: true,
-              }
+              },
             );
 
             // エラーがあれば警告
@@ -772,7 +773,6 @@ async function main() {
                 // カラム未作成の場合はスキップ
               }
             }
-
           } catch (aiError: unknown) {
             console.log(`    ⚠️ AI機能エラー: ${aiError instanceof Error ? aiError.message : aiError}`);
           }
@@ -784,8 +784,7 @@ async function main() {
         console.log();
 
         // レート制限対策: 1秒待機
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`  ❌ エラー: ${errorMessage}\n`);
@@ -811,7 +810,6 @@ async function main() {
 
     console.log('\nデータベース状態:');
     console.table(finalCounts.rows);
-
   } catch (error: unknown) {
     console.error('❌ クローラーエラー:', error);
     process.exit(1);

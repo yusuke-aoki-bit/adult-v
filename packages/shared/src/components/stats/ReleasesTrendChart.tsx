@@ -1,15 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface MonthlyReleaseStats {
   month: string;
@@ -22,7 +14,7 @@ interface Props {
 
 export default function ReleasesTrendChart({ data }: Props) {
   const formattedData = useMemo(() => {
-    return data.map(item => ({
+    return data.map((item) => ({
       ...item,
       // YYYY-MM を MM月 形式に変換
       displayMonth: item.month.slice(5) + '月',
@@ -30,12 +22,9 @@ export default function ReleasesTrendChart({ data }: Props) {
   }, [data]);
 
   return (
-    <div className="w-full h-[300px] md:h-[400px]">
+    <div className="h-[300px] w-full md:h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={formattedData}
-          margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
-        >
+        <LineChart data={formattedData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
           <XAxis
             dataKey="month"

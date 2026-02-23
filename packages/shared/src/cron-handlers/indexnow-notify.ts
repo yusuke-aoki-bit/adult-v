@@ -27,7 +27,7 @@ export function createIndexNowNotifyHandler(deps: IndexNowNotifyDeps) {
   const CRON_SECRET = process.env['CRON_SECRET'];
 
   async function POST(request: NextRequest) {
-    if (!await verifyCronRequest(request)) {
+    if (!(await verifyCronRequest(request))) {
       return unauthorizedResponse();
     }
 
@@ -109,15 +109,12 @@ export function createIndexNowNotifyHandler(deps: IndexNowNotifyDeps) {
       });
     } catch (error) {
       console.error('[IndexNow Cron] Error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error', details: String(error) },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error', details: String(error) }, { status: 500 });
     }
   }
 
   async function GET(request: NextRequest) {
-    if (!await verifyCronRequest(request)) {
+    if (!(await verifyCronRequest(request))) {
       return unauthorizedResponse();
     }
 
@@ -136,10 +133,7 @@ export function createIndexNowNotifyHandler(deps: IndexNowNotifyDeps) {
         windowHours: 2,
       });
     } catch (error) {
-      return NextResponse.json(
-        { error: 'Database error', details: String(error) },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database error', details: String(error) }, { status: 500 });
     }
   }
 

@@ -1,7 +1,14 @@
 import { Metadata } from 'next';
 import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
-import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateFAQSchema, getCategoryPageFAQs, generateItemListSchema } from '@/lib/seo';
+import {
+  generateBaseMetadata,
+  generateBreadcrumbSchema,
+  generateCollectionPageSchema,
+  generateFAQSchema,
+  getCategoryPageFAQs,
+  generateItemListSchema,
+} from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { getPopularTags } from '@/lib/db/queries';
@@ -17,7 +24,7 @@ const getCachedPopularTags = unstable_cache(
     return getPopularTags(options);
   },
   ['categories-popular-tags'],
-  { revalidate: 3600, tags: ['categories'] }
+  { revalidate: 3600, tags: ['categories'] },
 );
 
 interface PageProps {
@@ -57,11 +64,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     alternates: {
       canonical: `${baseUrl}/categories`,
       languages: {
-        'ja': `${baseUrl}/categories`,
-        'en': `${baseUrl}/categories?hl=en`,
-        'zh': `${baseUrl}/categories?hl=zh`,
+        ja: `${baseUrl}/categories`,
+        en: `${baseUrl}/categories?hl=en`,
+        zh: `${baseUrl}/categories?hl=zh`,
         'zh-TW': `${baseUrl}/categories?hl=zh-TW`,
-        'ko': `${baseUrl}/categories?hl=ko`,
+        ko: `${baseUrl}/categories?hl=ko`,
         'x-default': `${baseUrl}/categories`,
       },
     },
@@ -81,14 +88,17 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   const tags = await getCachedPopularTags(tagsOptions);
 
   // カテゴリ別にグループ化
-  const tagsByCategory = tags.reduce((acc, tag) => {
-    const cat = tag.category || 'other';
-    if (!acc[cat]) {
-      acc[cat] = [];
-    }
-    acc[cat].push(tag);
-    return acc;
-  }, {} as Record<string, typeof tags>);
+  const tagsByCategory = tags.reduce(
+    (acc, tag) => {
+      const cat = tag.category || 'other';
+      if (!acc[cat]) {
+        acc[cat] = [];
+      }
+      acc[cat].push(tag);
+      return acc;
+    },
+    {} as Record<string, typeof tags>,
+  );
 
   // カテゴリの表示順序
   const categoryOrder = ['genre', 'situation', 'play', 'body', 'costume', 'other'];
@@ -121,38 +131,28 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
       <JsonLD
         data={[
           generateBreadcrumbSchema(breadcrumbItems),
-          generateCollectionPageSchema(
-            t('title'),
-            t('metaDescription'),
-            localizedHref('/categories', locale),
-            locale,
-          ),
+          generateCollectionPageSchema(t('title'), t('metaDescription'), localizedHref('/categories', locale), locale),
           generateFAQSchema(categoryFAQs),
           generateItemListSchema(itemListData, t('title')),
         ]}
       />
 
-      <section id="categories" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
+      <section id="categories" className="scroll-mt-20 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t('title') },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t('title') }]}
             className="mb-2 sm:mb-3"
           />
 
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">{t('title')}</h1>
-          <p className="text-gray-400 mb-6">{t('description')}</p>
+          <h1 className="mb-2 text-xl font-bold text-white sm:text-2xl md:text-3xl">{t('title')}</h1>
+          <p className="mb-6 text-gray-400">{t('description')}</p>
 
           {/* カテゴリフィルター */}
-          <div className="flex flex-wrap gap-2 mb-6">
+          <div className="mb-6 flex flex-wrap gap-2">
             <Link
               href={localizedHref('/categories', locale)}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                !selectedCategory
-                  ? 'bg-rose-600 text-white'
-                  : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                !selectedCategory ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
               }`}
             >
               {t('allCategories')}
@@ -161,10 +161,8 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
               <Link
                 key={cat}
                 href={localizedHref(`/categories?category=${cat}`, locale)}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
-                  selectedCategory === cat
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                  selectedCategory === cat ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 {categoryLabels[cat]}
@@ -173,22 +171,20 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
           </div>
 
           {tags.length === 0 ? (
-            <p className="text-gray-400 text-center py-12">{t('noCategories')}</p>
+            <p className="py-12 text-center text-gray-400">{t('noCategories')}</p>
           ) : selectedCategory ? (
             // 特定カテゴリのみ表示
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               {tags.map((tag) => (
                 <Link
                   key={tag.id}
                   href={localizedHref(`/products?include=${tag.id}`, locale)}
-                  className="group bg-gray-800 rounded-lg p-4 hover:bg-gray-700 transition-colors"
+                  className="group rounded-lg bg-gray-800 p-4 transition-colors hover:bg-gray-700"
                 >
-                  <h3 className="text-white font-medium group-hover:text-rose-400 transition-colors mb-1">
+                  <h3 className="mb-1 font-medium text-white transition-colors group-hover:text-rose-400">
                     {tag.name}
                   </h3>
-                  <p className="text-sm text-gray-400">
-                    {t('productCount', { count: tag.count })}
-                  </p>
+                  <p className="text-sm text-gray-400">{t('productCount', { count: tag.count })}</p>
                 </Link>
               ))}
             </div>
@@ -201,7 +197,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
 
                 return (
                   <section key={cat}>
-                    <div className="flex items-center justify-between mb-4">
+                    <div className="mb-4 flex items-center justify-between">
                       <h2 className="text-xl font-bold text-white">{categoryLabels[cat]}</h2>
                       <Link
                         href={localizedHref(`/categories?category=${cat}`, locale)}
@@ -210,19 +206,17 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                         {t('viewProducts')} →
                       </Link>
                     </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                       {catTags.slice(0, 12).map((tag) => (
                         <Link
                           key={tag.id}
                           href={localizedHref(`/products?include=${tag.id}`, locale)}
-                          className="group bg-gray-800 rounded-lg p-3 hover:bg-gray-700 transition-colors"
+                          className="group rounded-lg bg-gray-800 p-3 transition-colors hover:bg-gray-700"
                         >
-                          <h3 className="text-white text-sm font-medium group-hover:text-rose-400 transition-colors truncate">
+                          <h3 className="truncate text-sm font-medium text-white transition-colors group-hover:text-rose-400">
                             {tag.name}
                           </h3>
-                          <p className="text-xs text-gray-400">
-                            {t('productCount', { count: tag.count })}
-                          </p>
+                          <p className="text-xs text-gray-400">{t('productCount', { count: tag.count })}</p>
                         </Link>
                       ))}
                     </div>

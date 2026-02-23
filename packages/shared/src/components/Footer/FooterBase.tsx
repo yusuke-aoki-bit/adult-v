@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { localizedHref, locales, defaultLocale, type Locale } from '../../i18n';
+import { getTranslation as getT, footerTranslations } from '../../lib/translations';
 
 interface FooterActress {
   id: number;
@@ -133,11 +134,6 @@ export interface FooterBaseProps {
   isFanzaSite?: boolean;
 }
 
-const footerTexts = {
-  ja: { popularGenres: '人気ジャンル', discoverContent: 'コンテンツを探す', todaysPick: '今日の1本', birthdays: '誕生日カレンダー', annualBest: '年間ベスト', weeklyTrends: '週間トレンド', rookies: '新人デビュー', hiddenGems: '隠れた名作', aiSearch: 'AI検索', discover: '発見', community: 'コミュニティ', publicLists: '公開リスト', listRankings: 'リストランキング', reviewers: 'レビュアー', voteRankings: 'ランキング投票', statistics: '統計', legalCompliance: '法的コンプライアンス', popularSeries: '人気シリーズ', popularMakers: '人気メーカー' },
-  en: { popularGenres: 'Popular Genres', discoverContent: 'Discover Content', todaysPick: "Today's Pick", birthdays: 'Birthdays', annualBest: 'Annual Best', weeklyTrends: 'Weekly Trends', rookies: 'Rookies', hiddenGems: 'Hidden Gems', aiSearch: 'AI Search', discover: 'Discover', community: 'Community', publicLists: 'Public Lists', listRankings: 'List Rankings', reviewers: 'Reviewers', voteRankings: 'Vote Rankings', statistics: 'Statistics', legalCompliance: 'Legal Compliance', popularSeries: 'Popular Series', popularMakers: 'Popular Studios' },
-} as const;
-function getFooterText(locale: string) { return footerTexts[locale as keyof typeof footerTexts] || footerTexts.ja; }
 
 /**
  * 共有Footerベースコンポーネント
@@ -158,14 +154,12 @@ export function FooterBase({
   const hlParam = searchParams.get('hl');
   const locale = (hlParam && locales.includes(hlParam as Locale) ? hlParam : defaultLocale) as string;
   const t = getTranslation(locale);
-  const ft = getFooterText(locale);
+  const ft = getT(footerTranslations, locale);
 
   const { actresses, isReady: actressesReady } = useFooterActresses();
   const { links: footerLinks, isReady: linksReady } = useFooterLinks();
 
-  const gridCols = columns === 4
-    ? 'grid-cols-1 md:grid-cols-4'
-    : 'grid-cols-1 md:grid-cols-3';
+  const gridCols = columns === 4 ? 'grid-cols-1 md:grid-cols-4' : 'grid-cols-1 md:grid-cols-3';
 
   return (
     <footer className="theme-footer mt-auto">
@@ -173,16 +167,14 @@ export function FooterBase({
         {/* サイト情報 */}
         <div className={`grid ${gridCols} gap-8`}>
           <div>
-            <h2 className="theme-footer-heading font-bold text-lg mb-2">{t.siteName}</h2>
-            <p className="text-sm theme-text-muted">
-              {t.description}
-            </p>
+            <h2 className="theme-footer-heading mb-2 text-lg font-bold">{t.siteName}</h2>
+            <p className="theme-text-muted text-sm">{t.description}</p>
           </div>
 
           {/* 人気女優リンク（SEO用内部リンク強化・GSCデータで動的更新） */}
           {showActressList && t.popularActresses && actressesReady && actresses.length > 0 && (
             <div>
-              <h3 className="theme-footer-heading font-semibold mb-3">{t.popularActresses}</h3>
+              <h3 className="theme-footer-heading mb-3 font-semibold">{t.popularActresses}</h3>
               <ul className="space-y-1.5 text-sm">
                 {actresses.slice(0, 8).map((actress) => (
                   <li key={actress['id']}>
@@ -201,9 +193,7 @@ export function FooterBase({
           {/* 人気ジャンルリンク（SEO内部リンク強化） */}
           {showInternalLinks && linksReady && footerLinks.genres.length > 0 && (
             <div>
-              <h3 className="theme-footer-heading font-semibold mb-3">
-                {t.popularGenres || ft.popularGenres}
-              </h3>
+              <h3 className="theme-footer-heading mb-3 font-semibold">{t.popularGenres || ft.popularGenres}</h3>
               <ul className="space-y-1.5 text-sm">
                 {footerLinks.genres.slice(0, 8).map((genre) => (
                   <li key={genre['id']}>
@@ -221,9 +211,7 @@ export function FooterBase({
 
           {/* コンテンツ発見セクション */}
           <div>
-            <h3 className="theme-footer-heading font-semibold mb-3">
-              {t.discoverContent || ft.discoverContent}
-            </h3>
+            <h3 className="theme-footer-heading mb-3 font-semibold">{t.discoverContent || ft.discoverContent}</h3>
             <ul className="space-y-1.5 text-xs">
               {!isFanzaSite && (
                 <>
@@ -238,12 +226,18 @@ export function FooterBase({
                     </Link>
                   </li>
                   <li>
-                    <Link href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)} className="theme-footer-link transition-colors">
+                    <Link
+                      href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)}
+                      className="theme-footer-link transition-colors"
+                    >
                       {ft.annualBest}
                     </Link>
                   </li>
                   <li>
-                    <Link href={localizedHref('/weekly-report', locale)} className="theme-footer-link transition-colors">
+                    <Link
+                      href={localizedHref('/weekly-report', locale)}
+                      className="theme-footer-link transition-colors"
+                    >
                       {ft.weeklyTrends}
                     </Link>
                   </li>
@@ -274,9 +268,7 @@ export function FooterBase({
 
           {/* コミュニティセクション */}
           <div>
-            <h3 className="theme-footer-heading font-semibold mb-3">
-              {ft.community}
-            </h3>
+            <h3 className="theme-footer-heading mb-3 font-semibold">{ft.community}</h3>
             <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href={localizedHref('/lists', locale)} className="theme-footer-link transition-colors">
@@ -286,7 +278,10 @@ export function FooterBase({
               {!isFanzaSite && (
                 <>
                   <li>
-                    <Link href={localizedHref('/lists/ranking', locale)} className="theme-footer-link transition-colors">
+                    <Link
+                      href={localizedHref('/lists/ranking', locale)}
+                      className="theme-footer-link transition-colors"
+                    >
                       {ft.listRankings}
                     </Link>
                   </li>
@@ -312,7 +307,7 @@ export function FooterBase({
 
           {/* 法的ページリンク */}
           <div>
-            <h3 className="theme-footer-heading font-semibold mb-3">{t.legal}</h3>
+            <h3 className="theme-footer-heading mb-3 font-semibold">{t.legal}</h3>
             <ul className="space-y-1.5 text-xs">
               <li>
                 <Link href={localizedHref('/privacy', locale)} className="theme-footer-link transition-colors">
@@ -334,14 +329,9 @@ export function FooterBase({
 
           {/* お問い合わせ */}
           <div>
-            <h3 className="theme-footer-heading font-semibold mb-3">{t.contact}</h3>
-            <p className="text-sm theme-text-muted">
-              {t.contactDescription}
-            </p>
-            <a
-              href="mailto:adult.vvvv@gmail.com"
-              className="text-sm theme-footer-email transition-colors"
-            >
+            <h3 className="theme-footer-heading mb-3 font-semibold">{t.contact}</h3>
+            <p className="theme-text-muted text-sm">{t.contactDescription}</p>
+            <a href="mailto:adult.vvvv@gmail.com" className="theme-footer-email text-sm transition-colors">
               adult.vvvv@gmail.com
             </a>
           </div>
@@ -349,20 +339,18 @@ export function FooterBase({
 
         {/* 人気シリーズ・メーカーセクション（SEO内部リンク強化） */}
         {showInternalLinks && linksReady && (footerLinks.series.length > 0 || footerLinks.makers.length > 0) && (
-          <div className="border-t theme-footer-border mt-6 pt-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="theme-footer-border mt-6 border-t pt-6">
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* 人気シリーズ */}
               {footerLinks.series.length > 0 && (
                 <div>
-                  <h3 className="theme-footer-heading font-semibold mb-3">
-                    {t.popularSeries || ft.popularSeries}
-                  </h3>
+                  <h3 className="theme-footer-heading mb-3 font-semibold">{t.popularSeries || ft.popularSeries}</h3>
                   <div className="flex flex-wrap gap-2">
                     {footerLinks.series.slice(0, 5).map((series) => (
                       <Link
                         key={series['id']}
                         href={localizedHref(`/series/${series['id']}`, locale)}
-                        className="text-xs px-2 py-1 rounded theme-footer-link theme-footer-tag transition-colors"
+                        className="theme-footer-link theme-footer-tag rounded px-2 py-1 text-xs transition-colors"
                       >
                         {series['name']}
                       </Link>
@@ -374,15 +362,13 @@ export function FooterBase({
               {/* 人気メーカー */}
               {footerLinks.makers.length > 0 && (
                 <div>
-                  <h3 className="theme-footer-heading font-semibold mb-3">
-                    {t.popularMakers || ft.popularMakers}
-                  </h3>
+                  <h3 className="theme-footer-heading mb-3 font-semibold">{t.popularMakers || ft.popularMakers}</h3>
                   <div className="flex flex-wrap gap-2">
                     {footerLinks.makers.slice(0, 5).map((maker) => (
                       <Link
                         key={maker['id']}
                         href={localizedHref(`/makers/${maker['id']}`, locale)}
-                        className="text-xs px-2 py-1 rounded theme-footer-link theme-footer-tag transition-colors"
+                        className="theme-footer-link theme-footer-tag rounded px-2 py-1 text-xs transition-colors"
                       >
                         {maker['name']}
                       </Link>
@@ -395,35 +381,22 @@ export function FooterBase({
         )}
 
         {/* アフィリエイト開示 or 著作権通知 & 2257免責 */}
-        <div className="border-t theme-footer-border mt-8 pt-6 text-xs theme-text-muted space-y-3">
-          {t.affiliateNotice && (
-            <p className="leading-relaxed">
-              {t.affiliateNotice}
-            </p>
-          )}
-          {t.copyrightNotice && (
-            <p className="leading-relaxed">
-              {t.copyrightNotice}
-            </p>
-          )}
-          <p className="leading-relaxed">
-            {t.disclaimer2257}
-          </p>
+        <div className="theme-footer-border theme-text-muted mt-8 space-y-3 border-t pt-6 text-xs">
+          {t.affiliateNotice && <p className="leading-relaxed">{t.affiliateNotice}</p>}
+          {t.copyrightNotice && <p className="leading-relaxed">{t.copyrightNotice}</p>}
+          <p className="leading-relaxed">{t.disclaimer2257}</p>
         </div>
 
         {/* パートナーバナー表示 */}
         {showPartnerBanners && PartnerBanners && (
-          <div className="border-t theme-footer-border mt-6 pt-6">
+          <div className="theme-footer-border mt-6 border-t pt-6">
             <PartnerBanners />
           </div>
         )}
 
         {/* 管理ページ・コピーライト */}
-        <div className="mt-6 flex flex-col md:flex-row items-center justify-center gap-4 text-sm theme-text-muted">
-          <Link
-            href="/admin/stats"
-            className="theme-footer-link transition-colors"
-          >
+        <div className="theme-text-muted mt-6 flex flex-col items-center justify-center gap-4 text-sm md:flex-row">
+          <Link href="/admin/stats" className="theme-footer-link transition-colors">
             {t.admin}
           </Link>
           <span className="hidden md:inline">|</span>

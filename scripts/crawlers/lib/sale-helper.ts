@@ -23,11 +23,7 @@ export interface SaleInfo {
  * @param saleInfo セール情報
  * @returns 保存成功したかどうか
  */
-export async function saveSaleInfo(
-  aspName: string,
-  originalProductId: string,
-  saleInfo: SaleInfo
-): Promise<boolean> {
+export async function saveSaleInfo(aspName: string, originalProductId: string, saleInfo: SaleInfo): Promise<boolean> {
   const db = getDb();
 
   try {
@@ -37,8 +33,8 @@ export async function saveSaleInfo(
     }
 
     // 割引率を計算
-    const discountPercent = saleInfo.discountPercent ||
-      Math.round((1 - saleInfo.salePrice / saleInfo.regularPrice) * 100);
+    const discountPercent =
+      saleInfo.discountPercent || Math.round((1 - saleInfo.salePrice / saleInfo.regularPrice) * 100);
 
     // product_sourceを検索
     const sourceResult = await db.execute(sql`
@@ -139,10 +135,7 @@ export async function saveSaleInfo(
  * @param aspName ASP名
  * @param originalProductId 元の商品ID
  */
-export async function deactivateSale(
-  aspName: string,
-  originalProductId: string
-): Promise<void> {
+export async function deactivateSale(aspName: string, originalProductId: string): Promise<void> {
   const db = getDb();
 
   try {

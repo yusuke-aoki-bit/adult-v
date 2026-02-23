@@ -1,0 +1,42 @@
+{
+  "$schema": "https://unpkg.com/syncpack/dist/schema.json",
+  "sortFirst": [
+    "name",
+    "version",
+    "private",
+    "packageManager",
+    "main",
+    "types",
+    "exports",
+    "scripts",
+    "dependencies",
+    "devDependencies",
+    "peerDependencies"
+  ],
+  "versionGroups": [
+    {
+      "label": "Ensure consistent React versions",
+      "packages": ["**"],
+      "dependencies": ["react", "react-dom", "@types/react", "@types/react-dom"],
+      "policy": "sameRange"
+    },
+    {
+      "label": "Ensure consistent Next.js version",
+      "packages": ["**"],
+      "dependencies": ["next"],
+      "policy": "sameRange"
+    },
+    {
+      "label": "Ensure consistent Drizzle ORM version",
+      "packages": ["**"],
+      "dependencies": ["drizzle-orm", "drizzle-kit"],
+      "policy": "sameRange"
+    },
+    {
+      "label": "Ensure consistent TypeScript version",
+      "packages": ["**"],
+      "dependencies": ["typescript"],
+      "policy": "sameRange"
+    }
+  ]
+}

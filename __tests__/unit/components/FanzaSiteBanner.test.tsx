@@ -136,9 +136,7 @@ describe('FanzaSiteBanner Component', () => {
 
   describe('Custom className', () => {
     it('applies custom className', () => {
-      const { container } = render(
-        <FanzaSiteBanner locale="ja" variant="footer" className="custom-class" />
-      );
+      const { container } = render(<FanzaSiteBanner locale="ja" variant="footer" className="custom-class" />);
 
       const link = container.querySelector('a');
       expect(link?.className).toContain('custom-class');

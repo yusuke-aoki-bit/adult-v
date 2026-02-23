@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface GenreTrend {
   genreId: number;
@@ -22,35 +13,40 @@ interface Props {
 }
 
 const COLORS = [
-  '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
-  '#f43f5e', '#ef4444', '#f97316', '#f59e0b', '#22c55e',
+  '#6366f1',
+  '#8b5cf6',
+  '#a855f7',
+  '#d946ef',
+  '#ec4899',
+  '#f43f5e',
+  '#ef4444',
+  '#f97316',
+  '#f59e0b',
+  '#22c55e',
 ];
 
 export default function GenreTrendChart({ data }: Props) {
   // 月のリストを取得（全ジャンルで共通のX軸）
   const allMonths = new Set<string>();
-  data.forEach(genre => {
-    genre.months.forEach(m => allMonths.add(m.month));
+  data.forEach((genre) => {
+    genre.months.forEach((m) => allMonths.add(m.month));
   });
   const sortedMonths = Array.from(allMonths).sort();
 
   // データを変換: 各月に対して全ジャンルのカウントを持つオブジェクト
-  const chartData = sortedMonths.map(month => {
+  const chartData = sortedMonths.map((month) => {
     const point: Record<string, string | number> = { month };
-    data.forEach(genre => {
-      const monthData = genre.months.find(m => m.month === month);
+    data.forEach((genre) => {
+      const monthData = genre.months.find((m) => m.month === month);
       point[genre.genreName] = monthData?.count || 0;
     });
     return point;
   });
 
   return (
-    <div className="w-full h-[400px]">
+    <div className="h-[400px] w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <LineChart
-          data={chartData}
-          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-        >
+        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
           <XAxis
             dataKey="month"
@@ -72,9 +68,7 @@ export default function GenreTrendChart({ data }: Props) {
             formatter={(value: number) => [value.toLocaleString() + '作品', '']}
             labelFormatter={(label) => `${label}`}
           />
-          <Legend
-            wrapperStyle={{ fontSize: '11px' }}
-          />
+          <Legend wrapperStyle={{ fontSize: '11px' }} />
           {data.map((genre, index) => (
             <Line
               key={genre.genreId}

@@ -3,12 +3,14 @@ import { test, expect } from '@playwright/test';
 test.describe('Local Server Tests', () => {
   test.beforeEach(async ({ context }) => {
     // Set age verification cookie to bypass age gate
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage loads successfully', async ({ page }) => {
@@ -99,7 +101,7 @@ test.describe('Local Server Tests', () => {
   test('API endpoints respond', async ({ page, baseURL }) => {
     // Test recommendations API
     const response = await page.request.post(`${baseURL}/api/recommendations`, {
-      data: { productIds: [] }
+      data: { productIds: [] },
     });
     expect(response.status()).toBeLessThan(500);
 
@@ -125,12 +127,14 @@ test.describe('Local Server Tests', () => {
 
 test.describe('Filter Component Tests', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('sort dropdown renders with correct theme', async ({ page }) => {
@@ -168,18 +172,20 @@ test.describe('Filter Component Tests', () => {
 
 test.describe('CSP and Security Tests', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('page loads without CSP violations', async ({ page }) => {
     const cspViolations: string[] = [];
 
-    page.on('console', msg => {
+    page.on('console', (msg) => {
       if (msg.type() === 'error' && msg.text().includes('Content Security Policy')) {
         cspViolations.push(msg.text());
       }
@@ -190,11 +196,12 @@ test.describe('CSP and Security Tests', () => {
     await page.waitForTimeout(3000);
 
     // No CSP violations should be logged (for domains we added)
-    const adDomainViolations = cspViolations.filter(v =>
-      v.includes('ad.duga.jp') ||
-      v.includes('sokmil-ad.com') ||
-      v.includes('pixelarchivenow.com') ||
-      v.includes('golden-gateway.com')
+    const adDomainViolations = cspViolations.filter(
+      (v) =>
+        v.includes('ad.duga.jp') ||
+        v.includes('sokmil-ad.com') ||
+        v.includes('pixelarchivenow.com') ||
+        v.includes('golden-gateway.com'),
     );
 
     expect(adDomainViolations).toHaveLength(0);

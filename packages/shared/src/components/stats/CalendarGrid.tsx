@@ -67,24 +67,37 @@ export default function CalendarGrid({
   const [lightboxProduct, setLightboxProduct] = useState<CalendarProduct | null>(null);
   const searchParams = useSearchParams();
 
-  const weekdays = WEEKDAYS_MAP[locale] || WEEKDAYS_MAP['en'];
+  const weekdays = WEEKDAYS_MAP[locale] ?? WEEKDAYS_MAP['en']!;
 
   // 現在のフィルターパラメータを保持して商品リンクに追加
-  const buildProductLink = useCallback((dateStr: string) => {
-    const params = new URLSearchParams();
-    params.set('releaseDate', dateStr);
+  const buildProductLink = useCallback(
+    (dateStr: string) => {
+      const params = new URLSearchParams();
+      params.set('releaseDate', dateStr);
 
-    // フィルターパラメータを保持（year, monthは除外）
-    const filterKeys = ['includeAsp', 'excludeAsp', 'hasVideo', 'hasImage', 'onSale', 'include', 'exclude', 'performerType', 'hl'];
-    filterKeys.forEach(key => {
-      const value = searchParams.get(key);
-      if (value) {
-        params.set(key, value);
-      }
-    });
+      // フィルターパラメータを保持（year, monthは除外）
+      const filterKeys = [
+        'includeAsp',
+        'excludeAsp',
+        'hasVideo',
+        'hasImage',
+        'onSale',
+        'include',
+        'exclude',
+        'performerType',
+        'hl',
+      ];
+      filterKeys.forEach((key) => {
+        const value = searchParams.get(key);
+        if (value) {
+          params.set(key, value);
+        }
+      });
 
-    return `${productLinkPrefix}?${params.toString()}`;
-  }, [productLinkPrefix, searchParams]);
+      return `${productLinkPrefix}?${params.toString()}`;
+    },
+    [productLinkPrefix, searchParams],
+  );
 
   const handleProductClick = useCallback((product: CalendarProduct) => {
     setLightboxProduct(product);
@@ -96,14 +109,11 @@ export default function CalendarGrid({
     setLightboxProduct(null);
   }, []);
 
-  const years = Array.from(
-    { length: maxYear - minYear + 1 },
-    (_, i) => maxYear - i
-  );
+  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
 
   const dateMap = useMemo(() => {
     const map = new Map<string, CalendarDayData>();
-    data.forEach(d => map.set(d.date, d));
+    data.forEach((d) => map.set(d.date, d));
     return map;
   }, [data]);
 
@@ -166,18 +176,16 @@ export default function CalendarGrid({
   return (
     <div className="w-full">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <button
           onClick={handlePrevMonth}
           disabled={!canGoPrev()}
-          className={`p-3 rounded-lg transition-colors ${
-            canGoPrev()
-              ? 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              : 'opacity-30 cursor-not-allowed'
+          className={`rounded-lg p-3 transition-colors ${
+            canGoPrev() ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-30'
           }`}
           aria-label="前月"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -185,24 +193,24 @@ export default function CalendarGrid({
         <div className="relative">
           <button
             onClick={() => setShowYearPicker(!showYearPicker)}
-            className="text-2xl font-bold hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-2"
+            className="flex items-center gap-2 text-2xl font-bold transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             {year}年{month}月
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
 
           {showYearPicker && (
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20 p-4 min-w-[300px]">
+            <div className="absolute top-full left-1/2 z-20 mt-2 min-w-[300px] -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-4 shadow-lg dark:border-gray-700 dark:bg-gray-800">
               <div className="mb-4">
-                <p className="text-xs text-gray-500 mb-2">年を選択</p>
-                <div className="grid grid-cols-4 gap-1 max-h-32 overflow-y-auto">
+                <p className="mb-2 text-xs text-gray-500">年を選択</p>
+                <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto">
                   {years.map((y) => (
                     <button
                       key={y}
                       onClick={() => handleYearChange(y)}
-                      className={`px-2 py-1 text-sm rounded transition-colors ${
+                      className={`rounded px-2 py-1 text-sm transition-colors ${
                         y === year ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
@@ -212,13 +220,13 @@ export default function CalendarGrid({
                 </div>
               </div>
               <div>
-                <p className="text-xs text-gray-500 mb-2">月を選択</p>
+                <p className="mb-2 text-xs text-gray-500">月を選択</p>
                 <div className="grid grid-cols-4 gap-1">
                   {months.map((m) => (
                     <button
                       key={m}
                       onClick={() => handleMonthSelect(m)}
-                      className={`px-2 py-1 text-sm rounded transition-colors ${
+                      className={`rounded px-2 py-1 text-sm transition-colors ${
                         m === month ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
@@ -240,25 +248,23 @@ export default function CalendarGrid({
         <button
           onClick={handleNextMonth}
           disabled={!canGoNext()}
-          className={`p-3 rounded-lg transition-colors ${
-            canGoNext()
-              ? 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              : 'opacity-30 cursor-not-allowed'
+          className={`rounded-lg p-3 transition-colors ${
+            canGoNext() ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-30'
           }`}
           aria-label="次月"
         >
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
       {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 gap-2 mb-2">
+      <div className="mb-2 grid grid-cols-7 gap-2">
         {weekdays.map((day, index) => (
           <div
             key={day}
-            className={`text-center text-sm font-medium py-2 ${
+            className={`py-2 text-center text-sm font-medium ${
               index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -281,30 +287,36 @@ export default function CalendarGrid({
           return (
             <div
               key={dateStr}
-              className="min-h-[180px] bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-2 hover:shadow-md transition-shadow"
+              className="min-h-[180px] rounded-lg border border-gray-200 bg-white p-2 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
             >
               {/* 日付ヘッダー */}
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex items-center justify-between">
                 {dateData && dateData.releaseCount > 0 ? (
                   <Link
                     href={buildProductLink(dateStr)}
                     className={`text-lg font-bold hover:underline ${
-                      dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : 'text-indigo-600 dark:text-indigo-400'
+                      dayOfWeek === 0
+                        ? 'text-red-500'
+                        : dayOfWeek === 6
+                          ? 'text-blue-500'
+                          : 'text-indigo-600 dark:text-indigo-400'
                     }`}
                   >
                     {day}
                   </Link>
                 ) : (
-                  <span className={`text-lg font-bold ${
-                    dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : ''
-                  }`}>
+                  <span
+                    className={`text-lg font-bold ${
+                      dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : ''
+                    }`}
+                  >
                     {day}
                   </span>
                 )}
                 {dateData && dateData.releaseCount > 0 && (
                   <Link
                     href={buildProductLink(dateStr)}
-                    className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline"
+                    className="text-xs text-indigo-600 hover:underline dark:text-indigo-400"
                   >
                     {dateData.releaseCount}作品
                   </Link>
@@ -322,7 +334,7 @@ export default function CalendarGrid({
                           key={product['id']}
                           type="button"
                           onClick={() => handleProductClick(product)}
-                          className="block relative rounded overflow-hidden hover:ring-2 hover:ring-indigo-400 transition-all cursor-pointer"
+                          className="relative block cursor-pointer overflow-hidden rounded transition-all hover:ring-2 hover:ring-indigo-400"
                           style={{ aspectRatio: '3/4' }}
                           title={product['title']}
                         >
@@ -340,12 +352,12 @@ export default function CalendarGrid({
 
                   {/* 女優アイコン */}
                   {dateData.performers.length > 0 && (
-                    <div className="flex gap-1 flex-wrap">
+                    <div className="flex flex-wrap gap-1">
                       {dateData.performers.slice(0, 2).map((performer) => (
                         <Link
                           key={performer['id']}
                           href={`${actressLinkPrefix}/${performer['id']}`}
-                          className="flex items-center gap-1 px-1.5 py-0.5 bg-gray-100 dark:bg-gray-700 rounded-full text-[10px] hover:bg-indigo-100 dark:hover:bg-indigo-900/30 transition-colors"
+                          className="flex items-center gap-1 rounded-full bg-gray-100 px-1.5 py-0.5 text-[10px] transition-colors hover:bg-indigo-100 dark:bg-gray-700 dark:hover:bg-indigo-900/30"
                           title={performer['name']}
                         >
                           {performer.imageUrl && normalizeImageUrl(performer.imageUrl) !== PLACEHOLDER_URL && (
@@ -355,17 +367,17 @@ export default function CalendarGrid({
                               alt={performer['name']}
                               width={16}
                               height={16}
-                              className="rounded-full object-cover w-4 h-4"
+                              className="h-4 w-4 rounded-full object-cover"
                             />
                           )}
-                          <span className="truncate max-w-[50px]">{performer['name']}</span>
+                          <span className="max-w-[50px] truncate">{performer['name']}</span>
                         </Link>
                       ))}
                     </div>
                   )}
                 </div>
               ) : (
-                <div className="h-full flex items-center justify-center text-gray-300 dark:text-gray-600 text-xs">
+                <div className="flex h-full items-center justify-center text-xs text-gray-300 dark:text-gray-600">
                   -
                 </div>
               )}

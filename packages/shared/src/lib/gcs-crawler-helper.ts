@@ -38,7 +38,7 @@ export async function saveRawHtml(
   source: string,
   productId: string,
   html: string,
-  options: { forceDb?: boolean } = {}
+  options: { forceDb?: boolean } = {},
 ): Promise<{ gcsUrl: string | null; htmlContent: string | null }> {
   // GCSに保存を試みる
   if (!options.forceDb && isGcsEnabled()) {
@@ -64,7 +64,7 @@ export async function saveRawJson(
   source: string,
   productId: string,
   data: object,
-  options: { forceDb?: boolean } = {}
+  options: { forceDb?: boolean } = {},
 ): Promise<{ gcsUrl: string | null; rawData: object | null }> {
   // GCSに保存を試みる
   if (!options.forceDb && isGcsEnabled()) {
@@ -87,10 +87,7 @@ export async function saveRawJson(
  * @param gcsUrl GCS URL（nullの場合はDBから取得を想定）
  * @param dbContent DBに保存されたコンテンツ
  */
-export async function getRawContent(
-  gcsUrl: string | null,
-  dbContent: string | null
-): Promise<string | null> {
+export async function getRawContent(gcsUrl: string | null, dbContent: string | null): Promise<string | null> {
   // GCS URLがある場合はGCSから取得
   if (gcsUrl) {
     try {
@@ -111,12 +108,7 @@ export async function getRawContent(
 /**
  * クローラー統計用のログ出力
  */
-export function logGcsStats(stats: {
-  total: number;
-  gcsSuccess: number;
-  dbFallback: number;
-  errors: number;
-}) {
+export function logGcsStats(stats: { total: number; gcsSuccess: number; dbFallback: number; errors: number }) {
   console.log('\n=== GCS Storage Stats ===');
   console.log(`Total processed: ${stats.total}`);
   console.log(`GCS saved: ${stats.gcsSuccess} (${((stats.gcsSuccess / stats.total) * 100).toFixed(1)}%)`);

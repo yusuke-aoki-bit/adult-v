@@ -1,0 +1,73 @@
+name: バグ報告
+description: バグや不具合の報告
+labels: ['bug']
+body:
+  - type: input
+    id: title
+    attributes:
+      label: タイトル
+      description: バグの概要を簡潔に
+      placeholder: 例）商品ページで価格が表示されない
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: 説明
+      description: バグの詳細を説明してください
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: バグを再現するための手順
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待される動作
+      description: 本来どう動くべきか
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 実際の動作
+      description: 実際に何が起きたか
+    validations:
+      required: true
+
+  - type: dropdown
+    id: app
+    attributes:
+      label: 対象アプリ
+      options:
+        - apps/web
+        - apps/fanza
+        - packages/shared
+        - packages/database
+        - その他
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境
+      description: ブラウザ、OS、デバイスなど
+      placeholder: |
+        ブラウザ: Chrome 120
+        OS: Windows 11
+        デバイス: デスクトップ
+    validations:
+      required: false

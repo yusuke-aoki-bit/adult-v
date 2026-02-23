@@ -9,9 +9,7 @@ async function addColumn() {
   console.log('Column added.');
 
   // コメント追加
-  await db.execute(
-    sql`COMMENT ON COLUMN wiki_crawl_data.gcs_url IS 'GCSに保存した場合のURL (gs://bucket/path)'`
-  );
+  await db.execute(sql`COMMENT ON COLUMN wiki_crawl_data.gcs_url IS 'GCSに保存した場合のURL (gs://bucket/path)'`);
   console.log('Comment added.');
 
   // 確認

@@ -28,8 +28,7 @@ describe('mappers', () => {
       getProviderLabel: (aspName: string) => aspName.toUpperCase(),
       getLocalizedPerformerName: (performer: PerformerData, locale: string) =>
         locale === 'en' && performer.nameEn ? performer.nameEn : performer.name,
-      getLocalizedTagName: (tag: TagData, locale: string) =>
-        locale === 'en' && tag.nameEn ? tag.nameEn : tag.name,
+      getLocalizedTagName: (tag: TagData, locale: string) => (locale === 'en' && tag.nameEn ? tag.nameEn : tag.name),
       getLocalizedTitle: (product: DbProduct, locale: string) =>
         locale === 'en' && product.titleEn ? product.titleEn : product.title,
       getLocalizedDescription: (product: DbProduct, locale: string) =>
@@ -87,9 +86,7 @@ describe('mappers', () => {
     });
 
     it('英語ロケールで出演者名をローカライズ', () => {
-      const performers: PerformerData[] = [
-        { id: 1, name: '女優A', nameKana: 'ジョユウA', nameEn: 'Actress A' },
-      ];
+      const performers: PerformerData[] = [{ id: 1, name: '女優A', nameKana: 'ジョユウA', nameEn: 'Actress A' }];
 
       const result = mapProductToType(baseProduct, mockDeps, performers, [], null, null, undefined, undefined, 'en');
 
@@ -337,8 +334,32 @@ describe('mappers', () => {
         videosMap: new Map(),
         salesMap: new Map(),
         sourcesMap: new Map([
-          [1, { id: 1, productId: 1, aspName: 'FANZA', originalProductId: null, affiliateUrl: 'https://example1.com', price: 1000, currency: 'JPY', productType: null }],
-          [2, { id: 2, productId: 2, aspName: 'MGS', originalProductId: null, affiliateUrl: 'https://example2.com', price: 2000, currency: 'JPY', productType: null }],
+          [
+            1,
+            {
+              id: 1,
+              productId: 1,
+              aspName: 'FANZA',
+              originalProductId: null,
+              affiliateUrl: 'https://example1.com',
+              price: 1000,
+              currency: 'JPY',
+              productType: null,
+            },
+          ],
+          [
+            2,
+            {
+              id: 2,
+              productId: 2,
+              aspName: 'MGS',
+              originalProductId: null,
+              affiliateUrl: 'https://example2.com',
+              price: 2000,
+              currency: 'JPY',
+              productType: null,
+            },
+          ],
         ]),
         allSourcesMap: new Map(),
       };
@@ -363,14 +384,56 @@ describe('mappers', () => {
         videosMap: new Map(),
         salesMap: new Map(),
         sourcesMap: new Map([
-          [1, { id: 1, productId: 1, aspName: 'DUGA', originalProductId: null, affiliateUrl: 'https://duga.com', price: 1000, currency: 'JPY', productType: null }],
+          [
+            1,
+            {
+              id: 1,
+              productId: 1,
+              aspName: 'DUGA',
+              originalProductId: null,
+              affiliateUrl: 'https://duga.com',
+              price: 1000,
+              currency: 'JPY',
+              productType: null,
+            },
+          ],
         ]),
         allSourcesMap: new Map([
-          [1, [
-            { id: 1, productId: 1, aspName: 'DUGA', originalProductId: null, affiliateUrl: 'https://duga.com', price: 1000, currency: 'JPY', productType: null },
-            { id: 2, productId: 1, aspName: 'FANZA', originalProductId: null, affiliateUrl: 'https://fanza.com', price: 1200, currency: 'JPY', productType: null },
-            { id: 3, productId: 1, aspName: 'MGS', originalProductId: null, affiliateUrl: 'https://mgs.com', price: 1100, currency: 'JPY', productType: null },
-          ]],
+          [
+            1,
+            [
+              {
+                id: 1,
+                productId: 1,
+                aspName: 'DUGA',
+                originalProductId: null,
+                affiliateUrl: 'https://duga.com',
+                price: 1000,
+                currency: 'JPY',
+                productType: null,
+              },
+              {
+                id: 2,
+                productId: 1,
+                aspName: 'FANZA',
+                originalProductId: null,
+                affiliateUrl: 'https://fanza.com',
+                price: 1200,
+                currency: 'JPY',
+                productType: null,
+              },
+              {
+                id: 3,
+                productId: 1,
+                aspName: 'MGS',
+                originalProductId: null,
+                affiliateUrl: 'https://mgs.com',
+                price: 1100,
+                currency: 'JPY',
+                productType: null,
+              },
+            ],
+          ],
         ]),
       };
 
@@ -379,17 +442,20 @@ describe('mappers', () => {
       expect(result[0]!.alternativeSources).toBeDefined();
       expect(result[0]!.alternativeSources).toHaveLength(2);
       // FANZAは特別処理でf.adult-v.comへのリンクに変換
-      const fanzaSource = result[0]!.alternativeSources?.find(s => s.aspName === 'FANZA');
+      const fanzaSource = result[0]!.alternativeSources?.find((s) => s.aspName === 'FANZA');
       expect(fanzaSource?.affiliateUrl).toContain('f.adult-v.com');
     });
 
     it('無効な出演者をフィルタリング', () => {
       const batchData: BatchRelatedDataResult = {
         performersMap: new Map([
-          [1, [
-            { id: 1, name: '女優A', nameKana: null },
-            { id: 2, name: '', nameKana: null }, // 空の名前 → フィルタリングされる
-          ]],
+          [
+            1,
+            [
+              { id: 1, name: '女優A', nameKana: null },
+              { id: 2, name: '', nameKana: null }, // 空の名前 → フィルタリングされる
+            ],
+          ],
         ]),
         tagsMap: new Map(),
         imagesMap: new Map(),

@@ -25,7 +25,7 @@ interface MakerConfig {
 }
 
 const PRODUCTION_IDS: Record<string, MakerConfig> = {
-  'tokyo247': { productionId: 1296, startPage: 9 },
+  tokyo247: { productionId: 1296, startPage: 9 },
   // G-AREAのIDは後で追加（要調査）
 };
 
@@ -42,10 +42,15 @@ const RATE_LIMIT_MS = 1500;
  * ページから出演者情報を抽出
  * メタディスクリプションから「MAYUMI / IKUKO / ...」形式で名前を取得
  */
-async function fetchPerformersFromPage(makerName: string, productionId: number, page: number): Promise<PerformerEntry[]> {
-  const url = page === 1
-    ? `https://erodougazo.com/av/search/production__${productionId}/`
-    : `https://erodougazo.com/av/search/production__${productionId}/page__${page}/`;
+async function fetchPerformersFromPage(
+  makerName: string,
+  productionId: number,
+  page: number,
+): Promise<PerformerEntry[]> {
+  const url =
+    page === 1
+      ? `https://erodougazo.com/av/search/production__${productionId}/`
+      : `https://erodougazo.com/av/search/production__${productionId}/page__${page}/`;
 
   console.log(`  Fetching: ${url}`);
 
@@ -77,14 +82,20 @@ async function fetchPerformersFromPage(makerName: string, productionId: number, 
   if (namesMatch) {
     const namesStr = namesMatch[1];
     // スラッシュ区切りで分割
-    const names = namesStr.split(' / ').map(n => n.trim()).filter(n => {
-      // 英字（全大文字or先頭大文字）または日本語（ひらがな・カタカナ）の名前（2-15文字）をフィルタ
-      return n.length >= 2 && n.length <= 15 &&
-        (/^[A-Z]+$/.test(n) || /^[A-Z][a-z]+$/.test(n) || /^[\u3040-\u309F\u30A0-\u30FF]+$/.test(n));
-    });
+    const names = namesStr
+      .split(' / ')
+      .map((n) => n.trim())
+      .filter((n) => {
+        // 英字（全大文字or先頭大文字）または日本語（ひらがな・カタカナ）の名前（2-15文字）をフィルタ
+        return (
+          n.length >= 2 &&
+          n.length <= 15 &&
+          (/^[A-Z]+$/.test(n) || /^[A-Z][a-z]+$/.test(n) || /^[\u3040-\u309F\u30A0-\u30FF]+$/.test(n))
+        );
+      });
 
     for (const name of names) {
-      if (!performers.find(p => p.performerName === name)) {
+      if (!performers.find((p) => p.performerName === name)) {
         performers.push({
           makerName,
           performerName: name,
@@ -101,16 +112,18 @@ async function fetchPerformersFromPage(makerName: string, productionId: number, 
     const title = $(el).attr('title') || $(el).text().trim();
 
     // 出演者名として妥当なものをフィルタ（英字またはひらがな・カタカナ 2-15文字）
-    const isUpperEnglish = /^[A-Z]+$/.test(title);  // MAYUMI
-    const isCapitalizedEnglish = /^[A-Z][a-z]+$/.test(title);  // Mayumi
+    const isUpperEnglish = /^[A-Z]+$/.test(title); // MAYUMI
+    const isCapitalizedEnglish = /^[A-Z][a-z]+$/.test(title); // Mayumi
     const isEnglishName = isUpperEnglish || isCapitalizedEnglish;
     const isJapaneseName = /^[\u3040-\u309F\u30A0-\u30FF]+$/.test(title);
     const normalizedName = isEnglishName ? title.toUpperCase() : title;
-    if (title &&
-        title.length >= 2 &&
-        title.length <= 15 &&
-        (isEnglishName || isJapaneseName) &&
-        !performers.find(p => p.performerName === normalizedName)) {
+    if (
+      title &&
+      title.length >= 2 &&
+      title.length <= 15 &&
+      (isEnglishName || isJapaneseName) &&
+      !performers.find((p) => p.performerName === normalizedName)
+    ) {
       performers.push({
         makerName,
         performerName: normalizedName,
@@ -127,7 +140,9 @@ async function fetchPerformersFromPage(makerName: string, productionId: number, 
  * メーカーの全ページをクロール
  */
 async function crawlMaker(makerName: string, config: MakerConfig, maxPages: number = 50): Promise<PerformerEntry[]> {
-  console.log(`\n=== Crawling ${makerName} (production__${config.productionId}, starting from page ${config.startPage}) ===`);
+  console.log(
+    `\n=== Crawling ${makerName} (production__${config.productionId}, starting from page ${config.startPage}) ===`,
+  );
 
   const allPerformers: PerformerEntry[] = [];
 
@@ -143,7 +158,7 @@ async function crawlMaker(makerName: string, config: MakerConfig, maxPages: numb
       console.log(`  Page ${page}: Found ${performers.length} performers`);
       allPerformers.push(...performers);
 
-      await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+      await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
     } catch (error) {
       console.error(`  Page ${page}: Error - ${error}`);
       break;
@@ -160,28 +175,103 @@ async function crawlMaker(makerName: string, config: MakerConfig, maxPages: numb
 function generateJapaneseVariants(englishName: string): string[] {
   // ローマ字→ひらがな変換マップ（基本的なもの）
   const romajiMap: Record<string, string> = {
-    'a': 'あ', 'i': 'い', 'u': 'う', 'e': 'え', 'o': 'お',
-    'ka': 'か', 'ki': 'き', 'ku': 'く', 'ke': 'け', 'ko': 'こ',
-    'sa': 'さ', 'si': 'し', 'shi': 'し', 'su': 'す', 'se': 'せ', 'so': 'そ',
-    'ta': 'た', 'ti': 'ち', 'chi': 'ち', 'tu': 'つ', 'tsu': 'つ', 'te': 'て', 'to': 'と',
-    'na': 'な', 'ni': 'に', 'nu': 'ぬ', 'ne': 'ね', 'no': 'の',
-    'ha': 'は', 'hi': 'ひ', 'hu': 'ふ', 'fu': 'ふ', 'he': 'へ', 'ho': 'ほ',
-    'ma': 'ま', 'mi': 'み', 'mu': 'む', 'me': 'め', 'mo': 'も',
-    'ya': 'や', 'yu': 'ゆ', 'yo': 'よ',
-    'ra': 'ら', 'ri': 'り', 'ru': 'る', 're': 'れ', 'ro': 'ろ',
-    'wa': 'わ', 'wo': 'を', 'n': 'ん',
-    'ga': 'が', 'gi': 'ぎ', 'gu': 'ぐ', 'ge': 'げ', 'go': 'ご',
-    'za': 'ざ', 'zi': 'じ', 'ji': 'じ', 'zu': 'ず', 'ze': 'ぜ', 'zo': 'ぞ',
-    'da': 'だ', 'di': 'ぢ', 'du': 'づ', 'de': 'で', 'do': 'ど',
-    'ba': 'ば', 'bi': 'び', 'bu': 'ぶ', 'be': 'べ', 'bo': 'ぼ',
-    'pa': 'ぱ', 'pi': 'ぴ', 'pu': 'ぷ', 'pe': 'ぺ', 'po': 'ぽ',
-    'kya': 'きゃ', 'kyu': 'きゅ', 'kyo': 'きょ',
-    'sha': 'しゃ', 'shu': 'しゅ', 'sho': 'しょ',
-    'cha': 'ちゃ', 'chu': 'ちゅ', 'cho': 'ちょ',
-    'nya': 'にゃ', 'nyu': 'にゅ', 'nyo': 'にょ',
-    'hya': 'ひゃ', 'hyu': 'ひゅ', 'hyo': 'ひょ',
-    'mya': 'みゃ', 'myu': 'みゅ', 'myo': 'みょ',
-    'rya': 'りゃ', 'ryu': 'りゅ', 'ryo': 'りょ',
+    a: 'あ',
+    i: 'い',
+    u: 'う',
+    e: 'え',
+    o: 'お',
+    ka: 'か',
+    ki: 'き',
+    ku: 'く',
+    ke: 'け',
+    ko: 'こ',
+    sa: 'さ',
+    si: 'し',
+    shi: 'し',
+    su: 'す',
+    se: 'せ',
+    so: 'そ',
+    ta: 'た',
+    ti: 'ち',
+    chi: 'ち',
+    tu: 'つ',
+    tsu: 'つ',
+    te: 'て',
+    to: 'と',
+    na: 'な',
+    ni: 'に',
+    nu: 'ぬ',
+    ne: 'ね',
+    no: 'の',
+    ha: 'は',
+    hi: 'ひ',
+    hu: 'ふ',
+    fu: 'ふ',
+    he: 'へ',
+    ho: 'ほ',
+    ma: 'ま',
+    mi: 'み',
+    mu: 'む',
+    me: 'め',
+    mo: 'も',
+    ya: 'や',
+    yu: 'ゆ',
+    yo: 'よ',
+    ra: 'ら',
+    ri: 'り',
+    ru: 'る',
+    re: 'れ',
+    ro: 'ろ',
+    wa: 'わ',
+    wo: 'を',
+    n: 'ん',
+    ga: 'が',
+    gi: 'ぎ',
+    gu: 'ぐ',
+    ge: 'げ',
+    go: 'ご',
+    za: 'ざ',
+    zi: 'じ',
+    ji: 'じ',
+    zu: 'ず',
+    ze: 'ぜ',
+    zo: 'ぞ',
+    da: 'だ',
+    di: 'ぢ',
+    du: 'づ',
+    de: 'で',
+    do: 'ど',
+    ba: 'ば',
+    bi: 'び',
+    bu: 'ぶ',
+    be: 'べ',
+    bo: 'ぼ',
+    pa: 'ぱ',
+    pi: 'ぴ',
+    pu: 'ぷ',
+    pe: 'ぺ',
+    po: 'ぽ',
+    kya: 'きゃ',
+    kyu: 'きゅ',
+    kyo: 'きょ',
+    sha: 'しゃ',
+    shu: 'しゅ',
+    sho: 'しょ',
+    cha: 'ちゃ',
+    chu: 'ちゅ',
+    cho: 'ちょ',
+    nya: 'にゃ',
+    nyu: 'にゅ',
+    nyo: 'にょ',
+    hya: 'ひゃ',
+    hyu: 'ひゅ',
+    hyo: 'ひょ',
+    mya: 'みゃ',
+    myu: 'みゅ',
+    myo: 'みょ',
+    rya: 'りゃ',
+    ryu: 'りゅ',
+    ryo: 'りょ',
   };
 
   const name = englishName.toLowerCase();
@@ -208,21 +298,24 @@ function generateJapaneseVariants(englishName: string): string[] {
   if (!hiragana) return [];
 
   // ひらがな→カタカナ変換
-  const katakana = hiragana.split('').map(c => {
-    const code = c.charCodeAt(0);
-    if (code >= 0x3041 && code <= 0x3096) {
-      return String.fromCharCode(code + 0x60);
-    }
-    return c;
-  }).join('');
+  const katakana = hiragana
+    .split('')
+    .map((c) => {
+      const code = c.charCodeAt(0);
+      if (code >= 0x3041 && code <= 0x3096) {
+        return String.fromCharCode(code + 0x60);
+      }
+      return c;
+    })
+    .join('');
 
-  return [hiragana, katakana].filter(s => s.length >= 2);
+  return [hiragana, katakana].filter((s) => s.length >= 2);
 }
 
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const makerArg = args.find(a => a.startsWith('--maker='));
+  const makerArg = args.find((a) => a.startsWith('--maker='));
   const targetMaker = makerArg ? makerArg.split('=')[1] : null;
 
   console.log('=== erodougazo.com 出演者クローラー ===');
@@ -266,9 +359,10 @@ async function main() {
     for (const [, p] of uniquePerformers) {
       const japaneseNames = generateJapaneseVariants(p.performerName);
       const isEnglishName = /^[A-Z]+$/.test(p.performerName);
-      const performerDisplayName = isEnglishName && japaneseNames.length > 0
-        ? japaneseNames[0]  // 日本語名がある場合はそちらを使用
-        : p.performerName;
+      const performerDisplayName =
+        isEnglishName && japaneseNames.length > 0
+          ? japaneseNames[0] // 日本語名がある場合はそちらを使用
+          : p.performerName;
 
       try {
         await db

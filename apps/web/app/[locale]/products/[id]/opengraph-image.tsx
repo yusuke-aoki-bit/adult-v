@@ -57,138 +57,134 @@ export default async function Image({ params }: { params: Promise<{ id: string }
   }
 
   // タイトルが長すぎる場合は省略
-  const displayTitle = productTitle.length > 50
-    ? productTitle.substring(0, 47) + '...'
-    : productTitle;
+  const displayTitle = productTitle.length > 50 ? productTitle.substring(0, 47) + '...' : productTitle;
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        padding: '40px',
+      }}
+    >
+      {/* 左側：サムネイル画像 */}
       <div
         style={{
-          background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-          width: '100%',
-          height: '100%',
+          width: '400px',
+          height: '550px',
           display: 'flex',
-          padding: '40px',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: '40px',
+          borderRadius: '12px',
+          overflow: 'hidden',
+          backgroundColor: '#2a2a4a',
         }}
       >
-        {/* 左側：サムネイル画像 */}
-        <div
-          style={{
-            width: '400px',
-            height: '550px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            marginRight: '40px',
-            borderRadius: '12px',
-            overflow: 'hidden',
-            backgroundColor: '#2a2a4a',
-          }}
-        >
-          {productImage ? (
-            <img
-              src={productImage}
-              alt={productTitle}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-              }}
-            />
-          ) : (
-            <div
-              style={{
-                fontSize: 48,
-                color: '#6b7280',
-                display: 'flex',
-              }}
-            >
-              🎬
-            </div>
-          )}
-        </div>
-
-        {/* 右側：商品情報 */}
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center',
-          }}
-        >
-          {/* プロバイダーバッジ */}
-          {providerName && (
-            <div
-              style={{
-                display: 'flex',
-                marginBottom: '16px',
-              }}
-            >
-              <span
-                style={{
-                  background: 'linear-gradient(90deg, #e91e63, #9c27b0)',
-                  color: 'white',
-                  padding: '8px 20px',
-                  borderRadius: '20px',
-                  fontSize: 24,
-                  fontWeight: 'bold',
-                }}
-              >
-                {providerName}
-              </span>
-            </div>
-          )}
-
-          {/* タイトル */}
+        {productImage ? (
+          <img
+            src={productImage}
+            alt={productTitle}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+            }}
+          />
+        ) : (
           <div
             style={{
               fontSize: 48,
-              fontWeight: 'bold',
-              color: 'white',
-              lineHeight: 1.3,
-              marginBottom: '24px',
+              color: '#6b7280',
               display: 'flex',
-              flexWrap: 'wrap',
             }}
           >
-            {displayTitle}
+            🎬
           </div>
+        )}
+      </div>
 
-          {/* 価格 */}
-          {price && price > 0 && (
-            <div
-              style={{
-                fontSize: 40,
-                color: '#4ade80',
-                fontWeight: 'bold',
-                marginBottom: '24px',
-                display: 'flex',
-              }}
-            >
-              ¥{price.toLocaleString()}
-            </div>
-          )}
-
-          {/* サイト名 */}
+      {/* 右側：商品情報 */}
+      <div
+        style={{
+          flex: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+        }}
+      >
+        {/* プロバイダーバッジ */}
+        {providerName && (
           <div
             style={{
-              fontSize: 28,
-              color: '#9ca3af',
               display: 'flex',
-              alignItems: 'center',
-              marginTop: 'auto',
+              marginBottom: '16px',
             }}
           >
-            <span style={{ marginRight: '12px' }}>🔍</span>
-            ADULT VIEWER LAB
+            <span
+              style={{
+                background: 'linear-gradient(90deg, #e91e63, #9c27b0)',
+                color: 'white',
+                padding: '8px 20px',
+                borderRadius: '20px',
+                fontSize: 24,
+                fontWeight: 'bold',
+              }}
+            >
+              {providerName}
+            </span>
           </div>
+        )}
+
+        {/* タイトル */}
+        <div
+          style={{
+            fontSize: 48,
+            fontWeight: 'bold',
+            color: 'white',
+            lineHeight: 1.3,
+            marginBottom: '24px',
+            display: 'flex',
+            flexWrap: 'wrap',
+          }}
+        >
+          {displayTitle}
+        </div>
+
+        {/* 価格 */}
+        {price && price > 0 && (
+          <div
+            style={{
+              fontSize: 40,
+              color: '#4ade80',
+              fontWeight: 'bold',
+              marginBottom: '24px',
+              display: 'flex',
+            }}
+          >
+            ¥{price.toLocaleString()}
+          </div>
+        )}
+
+        {/* サイト名 */}
+        <div
+          style={{
+            fontSize: 28,
+            color: '#9ca3af',
+            display: 'flex',
+            alignItems: 'center',
+            marginTop: 'auto',
+          }}
+        >
+          <span style={{ marginRight: '12px' }}>🔍</span>
+          ADULT VIEWER LAB
         </div>
       </div>
-    ),
+    </div>,
     {
       ...size,
-    }
+    },
   );
 }

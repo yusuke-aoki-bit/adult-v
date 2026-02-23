@@ -13,29 +13,29 @@
 
 ## ユーザー向け機能
 
-| 機能 | 説明 | データ保存 |
-|------|------|-----------|
-| 作品比較 | 複数作品を並べて価格・スペック比較 | LocalStorage |
-| 一括選択 | チェックボックスで複数選択→まとめて比較/お気に入り追加 | LocalStorage |
-| ホームカスタマイズ | トップページの表示セクション並び替え・表示/非表示 | LocalStorage |
-| スワイプUI | Tinder風の作品発見インターフェース | LocalStorage |
-| お気に入り | 作品・女優をお気に入り登録 | LocalStorage |
-| あとで見る | ウォッチリスト機能 | LocalStorage |
-| 価格アラート | 価格下落時の通知設定 | LocalStorage |
-| レビュー投稿 | 作品へのレビュー・評価投稿（AI審査付き） | DB (Firebase) |
-| タグ提案 | 作品へのタグ提案・投票 | DB |
-| 出演者提案 | 作品への出演者情報提案・投票 | DB |
-| 公開リスト | お気に入りリストの作成・公開・共有 | DB |
+| 機能               | 説明                                                   | データ保存    |
+| ------------------ | ------------------------------------------------------ | ------------- |
+| 作品比較           | 複数作品を並べて価格・スペック比較                     | LocalStorage  |
+| 一括選択           | チェックボックスで複数選択→まとめて比較/お気に入り追加 | LocalStorage  |
+| ホームカスタマイズ | トップページの表示セクション並び替え・表示/非表示      | LocalStorage  |
+| スワイプUI         | Tinder風の作品発見インターフェース                     | LocalStorage  |
+| お気に入り         | 作品・女優をお気に入り登録                             | LocalStorage  |
+| あとで見る         | ウォッチリスト機能                                     | LocalStorage  |
+| 価格アラート       | 価格下落時の通知設定                                   | LocalStorage  |
+| レビュー投稿       | 作品へのレビュー・評価投稿（AI審査付き）               | DB (Firebase) |
+| タグ提案           | 作品へのタグ提案・投票                                 | DB            |
+| 出演者提案         | 作品への出演者情報提案・投票                           | DB            |
+| 公開リスト         | お気に入りリストの作成・公開・共有                     | DB            |
 
 ## パフォーマンス・SEO
 
-| 最適化項目 | 効果 |
-|-----------|------|
-| Dynamic Import (recharts) | バンドル~70KB削減 |
-| Firebase遅延初期化 | FCP ~300ms改善 |
-| LCP画像priority | LCP ~500ms改善 |
+| 最適化項目                   | 効果                 |
+| ---------------------------- | -------------------- |
+| Dynamic Import (recharts)    | バンドル~70KB削減    |
+| Firebase遅延初期化           | FCP ~300ms改善       |
+| LCP画像priority              | LCP ~500ms改善       |
 | HowTo/AggregateOfferスキーマ | リッチスニペット表示 |
-| 多言語メタディスクリプション | 言語別CTR最適化 |
+| 多言語メタディスクリプション | 言語別CTR最適化      |
 
 ## 技術スタック
 
@@ -113,13 +113,13 @@ npm run dev:fanza  # FANZA版 (localhost:3000)
 
 言語はGETパラメータ `hl` で指定します：
 
-| 言語 | URL |
-|------|-----|
-| 日本語 | http://localhost:3000?hl=ja |
-| 英語 | http://localhost:3000?hl=en |
-| 中国語(簡体) | http://localhost:3000?hl=zh |
+| 言語         | URL                            |
+| ------------ | ------------------------------ |
+| 日本語       | http://localhost:3000?hl=ja    |
+| 英語         | http://localhost:3000?hl=en    |
+| 中国語(簡体) | http://localhost:3000?hl=zh    |
 | 中国語(繁体) | http://localhost:3000?hl=zh-TW |
-| 韓国語 | http://localhost:3000?hl=ko |
+| 韓国語       | http://localhost:3000?hl=ko    |
 
 **例**: `http://localhost:3000/products/123?hl=en` で英語表示
 
@@ -141,14 +141,15 @@ npm test -- __tests__/unit/db-queries/price-history.test.ts
 
 ### テストファイル構成
 
-| カテゴリ | テスト数 | 内容 |
-|---------|---------|------|
-| ユニットテスト | 400+ | hooks, components, lib, db-queries |
-| 統合テスト | 50+ | API handlers, DB queries |
-| E2Eテスト | 150+ | ページ遷移, UI操作, パフォーマンス |
-| **合計** | **600+** | |
+| カテゴリ       | テスト数 | 内容                               |
+| -------------- | -------- | ---------------------------------- |
+| ユニットテスト | 400+     | hooks, components, lib, db-queries |
+| 統合テスト     | 50+      | API handlers, DB queries           |
+| E2Eテスト      | 150+     | ページ遷移, UI操作, パフォーマンス |
+| **合計**       | **600+** |                                    |
 
 **主要テストファイル:**
+
 - `useCompareList.test.ts` - 比較機能
 - `useBulkSelection.test.ts` - 一括選択
 - `useHomeSections.test.ts` - ホームカスタマイズ
@@ -197,13 +198,13 @@ gcloud builds submit --config=cloud-build/cloudbuild-crawler.yaml
 
 ## アフィリエイト対応ASP
 
-| ASP | 用途 |
-|-----|------|
+| ASP       | 用途           |
+| --------- | -------------- |
 | DMM/FANZA | 主要コンテンツ |
-| MGS | 主要コンテンツ |
-| APEX | サブスク |
-| SOKMIL | サブスク |
-| DTI | 配信 |
+| MGS       | 主要コンテンツ |
+| APEX      | サブスク       |
+| SOKMIL    | サブスク       |
+| DTI       | 配信           |
 
 ## ライセンス
 

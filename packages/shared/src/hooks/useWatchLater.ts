@@ -70,8 +70,8 @@ export function useWatchLater() {
         }
 
         // マージ: Firestoreにあるものをローカルに追加
-        const localProductIds = new Set(localItems.map(i => i.productId));
-        const firestoreProductIds = new Set(firestoreItems.map(i => i.productId));
+        const localProductIds = new Set(localItems.map((i) => i.productId));
+        const firestoreProductIds = new Set(firestoreItems.map((i) => i.productId));
 
         // Firestoreにしかないアイテムをローカルに追加
         const mergedItems = [...localItems];
@@ -100,9 +100,7 @@ export function useWatchLater() {
         }
 
         // 最大件数を超える場合は古いものを削除
-        const sortedItems = mergedItems
-          .sort((a, b) => b.addedAt - a.addedAt)
-          .slice(0, MAX_ITEMS);
+        const sortedItems = mergedItems.sort((a, b) => b.addedAt - a.addedAt).slice(0, MAX_ITEMS);
 
         // localStorageを更新
         localStorage.setItem(STORAGE_KEY, JSON.stringify(sortedItems));
@@ -131,9 +129,9 @@ export function useWatchLater() {
   // アイテムを追加
   const addItem = useCallback(
     (item: Omit<WatchLaterItem, 'addedAt'>) => {
-      setItems(prev => {
+      setItems((prev) => {
         // 既に存在する場合は追加しない
-        if (prev.some(i => i.productId === item['productId'])) {
+        if (prev.some((i) => i.productId === item['productId'])) {
           return prev;
         }
 
@@ -159,14 +157,14 @@ export function useWatchLater() {
         return newItems;
       });
     },
-    [saveItems, isAuthenticated, userId]
+    [saveItems, isAuthenticated, userId],
   );
 
   // アイテムを削除
   const removeItem = useCallback(
     (productId: string) => {
-      setItems(prev => {
-        const newItems = prev.filter(i => i.productId !== productId);
+      setItems((prev) => {
+        const newItems = prev.filter((i) => i.productId !== productId);
         saveItems(newItems);
 
         // Firestoreからも削除（ログイン済みの場合）
@@ -177,15 +175,15 @@ export function useWatchLater() {
         return newItems;
       });
     },
-    [saveItems, isAuthenticated, userId]
+    [saveItems, isAuthenticated, userId],
   );
 
   // アイテムが存在するかチェック
   const hasItem = useCallback(
     (productId: string) => {
-      return items.some(i => i.productId === productId);
+      return items.some((i) => i.productId === productId);
     },
-    [items]
+    [items],
   );
 
   // トグル（追加/削除）
@@ -197,7 +195,7 @@ export function useWatchLater() {
         addItem(item);
       }
     },
-    [hasItem, addItem, removeItem]
+    [hasItem, addItem, removeItem],
   );
 
   // すべてクリア
@@ -236,7 +234,7 @@ export function useWatchLaterItem(productId: string) {
     (item: Omit<WatchLaterItem, 'addedAt' | 'productId'>) => {
       toggleItem({ ...item, productId });
     },
-    [toggleItem, productId]
+    [toggleItem, productId],
   );
 
   return {

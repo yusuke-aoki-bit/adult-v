@@ -108,7 +108,7 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
             console.log(`  ℹ️  レビューなし - スキップ`);
             stats.skipped++;
             // レート制限対策
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             continue;
           }
 
@@ -116,7 +116,7 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
           if (minReviewCount > 0 && (pageData.aggregateRating?.reviewCount || 0) < minReviewCount) {
             console.log(`  ℹ️  レビュー数が${minReviewCount}件未満 - スキップ`);
             stats.skipped++;
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             continue;
           }
 
@@ -152,7 +152,9 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
             `);
             stats.ratingSummariesSaved++;
 
-            console.log(`  ✓ 評価サマリー保存: ${pageData.aggregateRating.averageRating}点 (${pageData.aggregateRating.reviewCount}件)`);
+            console.log(
+              `  ✓ 評価サマリー保存: ${pageData.aggregateRating.averageRating}点 (${pageData.aggregateRating.reviewCount}件)`,
+            );
           }
 
           // 個別レビューを保存（バッチ処理）
@@ -160,13 +162,13 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
             console.log(`  📝 個別レビュー保存中 (${pageData.reviews.length}件)...`);
 
             // レビューデータを配列に変換
-            const reviewerNames = pageData.reviews.map(r => r.reviewerName || null);
-            const ratings = pageData.reviews.map(r => r.rating);
-            const titles = pageData.reviews.map(r => r.title || null);
-            const contents = pageData.reviews.map(r => r.content || null);
-            const reviewDates = pageData.reviews.map(r => r.date ? new Date(r.date).toISOString() : null);
-            const helpfuls = pageData.reviews.map(r => r.helpfulYes ?? 0);
-            const sourceReviewIds = pageData.reviews.map(r => r.reviewId || null);
+            const reviewerNames = pageData.reviews.map((r) => r.reviewerName || null);
+            const ratings = pageData.reviews.map((r) => r.rating);
+            const titles = pageData.reviews.map((r) => r.title || null);
+            const contents = pageData.reviews.map((r) => r.content || null);
+            const reviewDates = pageData.reviews.map((r) => (r.date ? new Date(r.date).toISOString() : null));
+            const helpfuls = pageData.reviews.map((r) => r.helpfulYes ?? 0);
+            const sourceReviewIds = pageData.reviews.map((r) => r.reviewId || null);
 
             await db.execute(sql`
               INSERT INTO product_reviews (
@@ -211,13 +213,12 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
           }
 
           // レート制限対策（1秒待機）
-          await new Promise(resolve => setTimeout(resolve, 1000));
-
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         } catch (error) {
           stats.failed++;
           console.error(`  ❌ エラー: ${product.original_product_id}`, error);
           // エラー時も待機
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
       }
 
@@ -230,7 +231,6 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
         stats,
         duration,
       });
-
     } catch (error) {
       console.error('[backfill-reviews] Fatal error:', error);
       return NextResponse.json(
@@ -239,7 +239,7 @@ export function createBackfillReviewsHandler(deps: BackfillReviewsHandlerDeps) {
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

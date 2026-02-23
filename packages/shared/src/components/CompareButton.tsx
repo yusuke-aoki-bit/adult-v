@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useCompareList, CompareItem } from '../hooks/useCompareList';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, compareButtonTranslations } from '../lib/translations';
 
 interface CompareButtonProps {
   product: Omit<CompareItem, 'addedAt'>;
@@ -43,11 +44,7 @@ export function CompareButton({
     lg: 'w-6 h-6',
   };
 
-  const texts = {
-    ja: { addToCompare: '比較に追加', removeFromCompare: '比較から削除', compareFull: `比較リストが満杯（${maxItems}件）`, added: '比較リストに追加しました', removed: '比較リストから削除しました', checkBottom: '画面下部で比較できます' },
-    en: { addToCompare: 'Add to compare', removeFromCompare: 'Remove from compare', compareFull: `Compare list full (${maxItems} items)`, added: 'Added to compare list', removed: 'Removed from compare list', checkBottom: 'Compare at the bottom of screen' },
-  } as const;
-  const t = texts[locale as keyof typeof texts] || texts.ja;
+  const t = getTranslation(compareButtonTranslations, locale);
 
   const showToastMessage = useCallback((message: string, type: 'success' | 'info') => {
     setToast({ message, type });
@@ -70,7 +67,7 @@ export function CompareButton({
     }
   };
 
-  const label = isInList ? t.removeFromCompare : (isFull ? t.compareFull : t.addToCompare);
+  const label = isInList ? t.removeFromCompare : isFull ? t.compareFull(maxItems) : t.addToCompare;
 
   return (
     <button
@@ -78,21 +75,15 @@ export function CompareButton({
       onClick={handleClick}
       title={label}
       aria-label={label}
-      className={`
-        relative
-        ${sizeClasses[size]}
-        ${showLabel ? 'flex items-center gap-1.5 px-3' : ''}
-        rounded-lg transition-all duration-200
-        ${isInList
+      className={`relative ${sizeClasses[size]} ${showLabel ? 'flex items-center gap-1.5 px-3' : ''} rounded-lg transition-all duration-200 ${
+        isInList
           ? isDark
             ? 'bg-blue-600 text-white hover:bg-blue-700'
             : 'bg-pink-600 text-white hover:bg-pink-700'
           : isDark
             ? 'bg-gray-700/80 text-gray-300 hover:bg-gray-600 hover:text-white'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
-        }
-        ${className}
-      `}
+      } ${className} `}
     >
       {isInList ? (
         <svg className={iconSizes[size]} fill="currentColor" viewBox="0 0 24 24">
@@ -100,19 +91,22 @@ export function CompareButton({
         </svg>
       ) : (
         <svg className={iconSizes[size]} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3v18h6V3H9zm-2 0H3v18h4V3zm12 0h-4v18h4V3z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 3v18h6V3H9zm-2 0H3v18h4V3zm12 0h-4v18h4V3z"
+          />
         </svg>
       )}
       {showLabel && (
-        <span className="text-sm font-medium whitespace-nowrap">
-          {isInList ? t.removeFromCompare : t.addToCompare}
-        </span>
+        <span className="text-sm font-medium whitespace-nowrap">{isInList ? t.removeFromCompare : t.addToCompare}</span>
       )}
 
       {/* インライントースト通知 */}
       {toast && (
         <div
-          className={`absolute -top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 rounded-lg text-sm font-medium shadow-lg animate-fade-in z-50 ${
+          className={`animate-fade-in absolute -top-12 left-1/2 z-50 -translate-x-1/2 rounded-lg px-3 py-1.5 text-sm font-medium whitespace-nowrap shadow-lg ${
             toast.type === 'success'
               ? isDark
                 ? 'bg-green-600 text-white'

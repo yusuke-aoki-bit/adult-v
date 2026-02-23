@@ -5,15 +5,7 @@ import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import { SelectableCard } from './SelectableCard';
 import { PerformerCompareFloatingBar } from './PerformerCompareFloatingBar';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
-
-const performerListTexts = {
-  ja: { selectToCompare: '比較選択モード', exitSelection: '選択終了', selected: '選択中', maxReachedPrefix: '最大', maxReachedSuffix: '名まで選択可能', loading: '読み込み中...' },
-  en: { selectToCompare: 'Select to Compare', exitSelection: 'Exit Selection', selected: 'Selected', maxReachedPrefix: 'Max ', maxReachedSuffix: ' performers', loading: 'Loading...' },
-  zh: { selectToCompare: '比较选择模式', exitSelection: '结束选择', selected: '已选择', maxReachedPrefix: '最多', maxReachedSuffix: '人可选', loading: '加载中...' },
-  'zh-TW': { selectToCompare: '比較選擇模式', exitSelection: '結束選擇', selected: '已選擇', maxReachedPrefix: '最多', maxReachedSuffix: '人可選', loading: '載入中...' },
-  ko: { selectToCompare: '비교 선택 모드', exitSelection: '선택 종료', selected: '선택 중', maxReachedPrefix: '최대 ', maxReachedSuffix: '명까지 선택 가능', loading: '로딩 중...' },
-} as const;
-function getPerformerListText(locale: string) { return performerListTexts[locale as keyof typeof performerListTexts] || performerListTexts.ja; }
+import { getTranslation, performerListWithSelectionTranslations } from '../lib/translations';
 
 interface Performer {
   id: number | string;
@@ -45,60 +37,55 @@ interface PerformerItemProps {
   renderChild: (performer: Performer, index: number) => ReactNode;
 }
 
-const PerformerItem = memo(function PerformerItem({
-  performer,
-  index,
-  isSelected,
-  isSelectionMode,
-  theme,
-  onToggle,
-  renderChild,
-}: PerformerItemProps) {
-  const handleToggle = useCallback(() => {
-    onToggle(performer);
-  }, [onToggle, performer]);
+const PerformerItem = memo(
+  function PerformerItem({
+    performer,
+    index,
+    isSelected,
+    isSelectionMode,
+    theme,
+    onToggle,
+    renderChild,
+  }: PerformerItemProps) {
+    const handleToggle = useCallback(() => {
+      onToggle(performer);
+    }, [onToggle, performer]);
 
-  // 選択モードでない場合はSelectableCardをスキップ
-  if (!isSelectionMode) {
-    return <>{renderChild(performer, index)}</>;
-  }
+    // 選択モードでない場合はSelectableCardをスキップ
+    if (!isSelectionMode) {
+      return <>{renderChild(performer, index)}</>;
+    }
 
-  return (
-    <SelectableCard
-      isSelected={isSelected}
-      isSelectionMode={isSelectionMode}
-      onToggle={handleToggle}
-      theme={theme}
-    >
-      {renderChild(performer, index)}
-    </SelectableCard>
-  );
-}, (prevProps, nextProps) => {
-  return (
-    prevProps.isSelected === nextProps.isSelected &&
-    prevProps.isSelectionMode === nextProps.isSelectionMode &&
-    prevProps.theme === nextProps.theme &&
-    prevProps.performer === nextProps.performer &&
-    prevProps.index === nextProps.index &&
-    prevProps.renderChild === nextProps.renderChild
-  );
-});
+    return (
+      <SelectableCard isSelected={isSelected} isSelectionMode={isSelectionMode} onToggle={handleToggle} theme={theme}>
+        {renderChild(performer, index)}
+      </SelectableCard>
+    );
+  },
+  (prevProps, nextProps) => {
+    return (
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.isSelectionMode === nextProps.isSelectionMode &&
+      prevProps.theme === nextProps.theme &&
+      prevProps.performer === nextProps.performer &&
+      prevProps.index === nextProps.index &&
+      prevProps.renderChild === nextProps.renderChild
+    );
+  },
+);
 
 // プレースホルダーコンポーネント（スケルトン）
 const PerformerPlaceholder = memo(function PerformerPlaceholder() {
   return (
     <div className="animate-pulse">
-      <div className="bg-gray-700 rounded-lg aspect-2/3" />
-      <div className="mt-2 h-4 bg-gray-700 rounded w-3/4" />
+      <div className="aspect-2/3 rounded-lg bg-gray-700" />
+      <div className="mt-2 h-4 w-3/4 rounded bg-gray-700" />
     </div>
   );
 });
 
 // Intersection Observer フック
-function useIntersectionObserver(
-  callback: () => void,
-  options?: IntersectionObserverInit
-) {
+function useIntersectionObserver(callback: () => void, options?: IntersectionObserverInit) {
   const targetRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -111,7 +98,7 @@ function useIntersectionObserver(
           callback();
         }
       },
-      { rootMargin: '200px', ...options }
+      { rootMargin: '200px', ...options },
     );
 
     observer.observe(target);
@@ -144,7 +131,7 @@ export function PerformerListWithSelection({
   // 追加読み込みコールバック
   const loadMore = useCallback(() => {
     if (hasMore) {
-      setVisibleCount(prev => Math.min(prev + loadMoreItems, performers.length));
+      setVisibleCount((prev) => Math.min(prev + loadMoreItems, performers.length));
     }
   }, [hasMore, loadMoreItems, performers.length]);
 
@@ -152,14 +139,11 @@ export function PerformerListWithSelection({
   const loadMoreRef = useIntersectionObserver(loadMore);
 
   // 表示するアイテム
-  const visiblePerformers = useMemo(
-    () => performers.slice(0, visibleCount),
-    [performers, visibleCount]
-  );
+  const visiblePerformers = useMemo(() => performers.slice(0, visibleCount), [performers, visibleCount]);
 
   // 翻訳オブジェクトをメモ化
   const t = useMemo(() => {
-    const texts = getPerformerListText(locale);
+    const texts = getTranslation(performerListWithSelectionTranslations, locale);
     return {
       ...texts,
       maxReached: `${texts.maxReachedPrefix}${maxItems}${texts.maxReachedSuffix}`,
@@ -167,39 +151,47 @@ export function PerformerListWithSelection({
   }, [locale, maxItems]);
 
   // コールバックをメモ化
-  const handleTogglePerformer = useCallback((performer: Performer) => {
-    toggleItem({
-      id: performer['id'],
-      name: performer['name'],
-      imageUrl: performer.imageUrl || null,
-      ...(performer.productCount !== undefined && { productCount: performer.productCount }),
-    });
-  }, [toggleItem]);
+  const handleTogglePerformer = useCallback(
+    (performer: Performer) => {
+      toggleItem({
+        id: performer['id'],
+        name: performer['name'],
+        imageUrl: performer.imageUrl || null,
+        ...(performer.productCount !== undefined && { productCount: performer.productCount }),
+      });
+    },
+    [toggleItem],
+  );
 
   const handleToggleSelectionMode = useCallback(() => {
-    setIsSelectionMode(prev => !prev);
+    setIsSelectionMode((prev) => !prev);
   }, []);
 
   return (
     <>
       {/* 比較選択モード切替ボタン */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleToggleSelectionMode}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               isSelectionMode
                 ? isDark
                   ? 'bg-purple-600 text-white'
                   : 'bg-pink-600 text-white'
                 : isDark
-                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                  ? 'border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  : 'border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+              />
             </svg>
             {isSelectionMode ? t.exitSelection : t.selectToCompare}
           </button>
@@ -212,9 +204,7 @@ export function PerformerListWithSelection({
         </div>
 
         {isSelectionMode && isFull && (
-          <span className={`text-sm ${isDark ? 'text-yellow-500' : 'text-yellow-600'}`}>
-            {t.maxReached}
-          </span>
+          <span className={`text-sm ${isDark ? 'text-yellow-500' : 'text-yellow-600'}`}>{t.maxReached}</span>
         )}
       </div>
 
@@ -237,9 +227,13 @@ export function PerformerListWithSelection({
         {hasMore && (
           <div ref={loadMoreRef} className="col-span-full flex justify-center py-4">
             <div className="flex items-center gap-2 text-gray-400">
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+              <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                <path
+                  className="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                />
               </svg>
               <span className="text-sm">{t.loading}</span>
             </div>

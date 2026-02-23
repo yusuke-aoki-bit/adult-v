@@ -17,7 +17,11 @@
 
 import { spawn, execSync } from 'child_process';
 import { parseArgs } from 'util';
-import { notifyPipelineComplete, type CrawlerSummary, type CrawlPipelineSummary } from '../../packages/crawlers/src/lib/notifications';
+import {
+  notifyPipelineComplete,
+  type CrawlerSummary,
+  type CrawlPipelineSummary,
+} from '../../packages/crawlers/src/lib/notifications';
 
 interface CrawlerConfig {
   name: string;
@@ -229,7 +233,7 @@ async function runCrawlersParallel(crawlers: CrawlerConfig[]): Promise<CrawlResu
     });
 
     for (const [groupKey, groupCrawlers] of sortedScrapeGroups) {
-      console.log(`\n--- Subgroup ${groupKey}: ${groupCrawlers.map(c => c.name).join(', ')} ---\n`);
+      console.log(`\n--- Subgroup ${groupKey}: ${groupCrawlers.map((c) => c.name).join(', ')} ---\n`);
       const groupResults = await Promise.all(groupCrawlers.map(runCrawler));
       allResults.push(...groupResults);
     }
@@ -306,23 +310,21 @@ async function main() {
   let targetCrawlers = CRAWLERS;
 
   if (aspFilter) {
-    targetCrawlers = CRAWLERS.filter(c => c.name.toLowerCase().includes(aspFilter));
+    targetCrawlers = CRAWLERS.filter((c) => c.name.toLowerCase().includes(aspFilter));
   } else if (groupFilter !== 'all') {
-    targetCrawlers = CRAWLERS.filter(c => c.group === groupFilter);
+    targetCrawlers = CRAWLERS.filter((c) => c.group === groupFilter);
   }
 
   if (targetCrawlers.length === 0) {
     console.error(`No crawlers found for filter: group=${groupFilter}, asp=${aspFilter}`);
-    console.log('Available crawlers:', CRAWLERS.map(c => c.name).join(', '));
+    console.log('Available crawlers:', CRAWLERS.map((c) => c.name).join(', '));
     process.exit(1);
   }
 
   console.log(`Running ${targetCrawlers.length} crawlers...\n`);
 
   // 並列または順次実行
-  const results = useParallel
-    ? await runCrawlersParallel(targetCrawlers)
-    : await runCrawlersSequential(targetCrawlers);
+  const results = useParallel ? await runCrawlersParallel(targetCrawlers) : await runCrawlersSequential(targetCrawlers);
 
   // サマリー出力
   const totalDuration = Date.now() - startTime;
@@ -332,10 +334,10 @@ async function main() {
 
   // グループ別に結果を表示
   for (const group of ['api', 'scrape']) {
-    const groupResults = results.filter(r => r.group === group);
+    const groupResults = results.filter((r) => r.group === group);
     if (groupResults.length === 0) continue;
 
-    const successCount = groupResults.filter(r => r.success).length;
+    const successCount = groupResults.filter((r) => r.success).length;
     console.log(`\n${group.toUpperCase()} (${successCount}/${groupResults.length}):`);
 
     for (const r of groupResults) {
@@ -349,8 +351,8 @@ async function main() {
   }
 
   // 全体統計
-  const successTotal = results.filter(r => r.success).length;
-  const failureTotal = results.filter(r => !r.success).length;
+  const successTotal = results.filter((r) => r.success).length;
+  const failureTotal = results.filter((r) => !r.success).length;
 
   console.log('\n----------------------------------------');
   console.log(`Total: ${successTotal} succeeded, ${failureTotal} failed`);
@@ -362,12 +364,14 @@ async function main() {
     pipelineName: 'All ASP Crawler Pipeline',
     startTime: new Date(startTime),
     endTime: new Date(),
-    crawlers: results.map((r): CrawlerSummary => ({
-      name: r.name,
-      success: r.success,
-      duration: r.duration,
-      error: r.error,
-    })),
+    crawlers: results.map(
+      (r): CrawlerSummary => ({
+        name: r.name,
+        success: r.success,
+        duration: r.duration,
+        error: r.error,
+      }),
+    ),
   };
 
   try {

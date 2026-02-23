@@ -160,7 +160,9 @@ export function generateHEYZOLink(movieId: string): string {
 export function generateCaribbeancomPrLink(movieId: string): string {
   const affiliateCode = DTI_AFFILIATE_CODES.caribbeancompr;
   if (!affiliateCode) {
-    console.warn('[Affiliate] CaribbeancomPR affiliate ID not configured. Set NEXT_PUBLIC_DTI_CARIBBEANCOMPR_AFFILIATE_ID in .env.local');
+    console.warn(
+      '[Affiliate] CaribbeancomPR affiliate ID not configured. Set NEXT_PUBLIC_DTI_CARIBBEANCOMPR_AFFILIATE_ID in .env.local',
+    );
     return `https://www.caribbeancompr.com/moviepages/${movieId}/index.html`;
   }
   return `https://clear-tv.com/Direct/${affiliateCode}/moviepages/${movieId}/index.html`;
@@ -214,7 +216,9 @@ export function generateDTILink(originalUrl: string): string {
   const affiliateCode = DTI_AFFILIATE_CODES[site];
   // アフィリエイトIDが設定されていない場合は元のURLを返す
   if (!affiliateCode) {
-    console.warn(`[Affiliate] DTI ${site} affiliate ID not configured. Set NEXT_PUBLIC_DTI_${site.toUpperCase()}_AFFILIATE_ID in .env.local`);
+    console.warn(
+      `[Affiliate] DTI ${site} affiliate ID not configured. Set NEXT_PUBLIC_DTI_${site.toUpperCase()}_AFFILIATE_ID in .env.local`,
+    );
     return originalUrl;
   }
   return `https://clear-tv.com/Direct/${affiliateCode}/moviepages/${movieId}/index.html`;

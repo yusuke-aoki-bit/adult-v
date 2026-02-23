@@ -35,24 +35,27 @@ async function OverviewWidget({ theme }: { theme: string }) {
   const isDark = theme === 'dark';
 
   return (
-    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-      <h3 className="text-lg font-bold mb-4">AV業界統計</h3>
+    <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+      <h3 className="mb-4 text-lg font-bold">AV業界統計</h3>
       <div className="grid grid-cols-3 gap-2 text-center">
-        <div className={`p-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <div className={`rounded p-3 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
           <p className="text-2xl font-bold text-indigo-500">{stats.totalProducts.toLocaleString()}</p>
           <p className="text-xs text-gray-500">作品数</p>
         </div>
-        <div className={`p-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <div className={`rounded p-3 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
           <p className="text-2xl font-bold text-pink-500">{stats.totalPerformers.toLocaleString()}</p>
           <p className="text-xs text-gray-500">女優数</p>
         </div>
-        <div className={`p-3 rounded ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <div className={`rounded p-3 ${isDark ? 'bg-gray-700' : 'bg-gray-100'}`}>
           <p className="text-2xl font-bold text-purple-500">{stats.totalGenres.toLocaleString()}</p>
           <p className="text-xs text-gray-500">ジャンル</p>
         </div>
       </div>
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">AVVIEWER LAB</a>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        Powered by{' '}
+        <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">
+          AVVIEWER LAB
+        </a>
       </p>
     </div>
   );
@@ -63,25 +66,30 @@ async function TopPerformersWidget({ theme, limit }: { theme: string; limit: num
   const isDark = theme === 'dark';
 
   return (
-    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-      <h3 className="text-lg font-bold mb-3">人気女優ランキング</h3>
+    <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+      <h3 className="mb-3 text-lg font-bold">人気女優ランキング</h3>
       <ol className="space-y-2">
         {performers.slice(0, limit).map((performer, index) => (
           <li key={performer.id} className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
-                index < 3 ? 'bg-yellow-500 text-white' : isDark ? 'bg-gray-700' : 'bg-gray-200'
-              }`}>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                  index < 3 ? 'bg-yellow-500 text-white' : isDark ? 'bg-gray-700' : 'bg-gray-200'
+                }`}
+              >
                 {index + 1}
               </span>
-              <span className="text-sm truncate">{performer.name}</span>
+              <span className="truncate text-sm">{performer.name}</span>
             </div>
             <span className="text-xs text-gray-500">{performer.productCount}作品</span>
           </li>
         ))}
       </ol>
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">AVVIEWER LAB</a>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        Powered by{' '}
+        <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">
+          AVVIEWER LAB
+        </a>
       </p>
     </div>
   );
@@ -93,26 +101,29 @@ async function TopGenresWidget({ theme, limit }: { theme: string; limit: number 
   const maxCount = genres[0]?.productCount || 1;
 
   return (
-    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-      <h3 className="text-lg font-bold mb-3">人気ジャンルTOP{limit}</h3>
+    <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+      <h3 className="mb-3 text-lg font-bold">人気ジャンルTOP{limit}</h3>
       <div className="space-y-2">
         {genres.slice(0, limit).map((genre) => (
           <div key={genre.id}>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="mb-1 flex justify-between text-sm">
               <span className="truncate">{genre.name}</span>
               <span className="text-gray-500">{genre.productCount.toLocaleString()}</span>
             </div>
             <div className={`h-2 rounded-full ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}>
               <div
-                className="h-full bg-linear-to-r from-indigo-500 to-purple-500 rounded-full"
+                className="h-full rounded-full bg-linear-to-r from-indigo-500 to-purple-500"
                 style={{ width: `${(genre.productCount / maxCount) * 100}%` }}
               />
             </div>
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">AVVIEWER LAB</a>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        Powered by{' '}
+        <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">
+          AVVIEWER LAB
+        </a>
       </p>
     </div>
   );
@@ -121,24 +132,27 @@ async function TopGenresWidget({ theme, limit }: { theme: string; limit: number 
 async function MonthlyReleasesWidget({ theme }: { theme: string }) {
   const releases = await getMonthlyReleaseStats(6);
   const isDark = theme === 'dark';
-  const maxCount = Math.max(...releases.map(r => r.releaseCount)) || 1;
+  const maxCount = Math.max(...releases.map((r) => r.releaseCount)) || 1;
 
   return (
-    <div className={`p-4 rounded-lg ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
-      <h3 className="text-lg font-bold mb-3">月別リリース数推移</h3>
-      <div className="flex items-end justify-between h-24 gap-1">
+    <div className={`rounded-lg p-4 ${isDark ? 'bg-gray-800 text-white' : 'bg-white text-gray-900'}`}>
+      <h3 className="mb-3 text-lg font-bold">月別リリース数推移</h3>
+      <div className="flex h-24 items-end justify-between gap-1">
         {releases.map((month) => (
-          <div key={month.month} className="flex-1 flex flex-col items-center">
+          <div key={month.month} className="flex flex-1 flex-col items-center">
             <div
-              className="w-full bg-linear-to-t from-indigo-500 to-purple-500 rounded-t"
+              className="w-full rounded-t bg-linear-to-t from-indigo-500 to-purple-500"
               style={{ height: `${(month.releaseCount / maxCount) * 100}%`, minHeight: '4px' }}
             />
-            <span className="text-xs text-gray-500 mt-1">{month.month.slice(5)}</span>
+            <span className="mt-1 text-xs text-gray-500">{month.month.slice(5)}</span>
           </div>
         ))}
       </div>
-      <p className="text-xs text-gray-400 mt-3 text-center">
-        Powered by <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">AVVIEWER LAB</a>
+      <p className="mt-3 text-center text-xs text-gray-400">
+        Powered by{' '}
+        <a href={process.env.NEXT_PUBLIC_SITE_URL || '/'} target="_blank" rel="noopener" className="underline">
+          AVVIEWER LAB
+        </a>
       </p>
     </div>
   );
@@ -146,12 +160,12 @@ async function MonthlyReleasesWidget({ theme }: { theme: string }) {
 
 function LoadingWidget() {
   return (
-    <div className="p-4 rounded-lg bg-gray-100 animate-pulse">
-      <div className="h-6 bg-gray-200 rounded w-1/2 mb-4" />
+    <div className="animate-pulse rounded-lg bg-gray-100 p-4">
+      <div className="mb-4 h-6 w-1/2 rounded bg-gray-200" />
       <div className="space-y-2">
-        <div className="h-4 bg-gray-200 rounded" />
-        <div className="h-4 bg-gray-200 rounded w-3/4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-4 rounded bg-gray-200" />
+        <div className="h-4 w-3/4 rounded bg-gray-200" />
+        <div className="h-4 w-1/2 rounded bg-gray-200" />
       </div>
     </div>
   );

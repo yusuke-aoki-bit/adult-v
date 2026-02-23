@@ -5,10 +5,22 @@ import { createApiErrorResponse } from '../lib/api-logger';
 
 export type ActressSortOption = 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
 
-const VALID_SORT_OPTIONS: ActressSortOption[] = ['nameAsc', 'nameDesc', 'productCountDesc', 'productCountAsc', 'recent'];
+const VALID_SORT_OPTIONS: ActressSortOption[] = [
+  'nameAsc',
+  'nameDesc',
+  'productCountDesc',
+  'productCountAsc',
+  'recent',
+];
 
 export interface ActressesHandlerDeps {
-  getActresses: (params: { limit: number; offset: number; query?: string; ids?: number[]; sortBy?: ActressSortOption }) => Promise<unknown[]>;
+  getActresses: (params: {
+    limit: number;
+    offset: number;
+    query?: string;
+    ids?: number[];
+    sortBy?: ActressSortOption;
+  }) => Promise<unknown[]>;
   getActressesCount?: (params?: { query?: string }) => Promise<number>;
   getFeaturedActresses: (limit: number) => Promise<unknown[]>;
 }
@@ -25,7 +37,7 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
         const actresses = await deps.getFeaturedActresses(limit);
         return NextResponse.json(
           { actresses, total: actresses.length },
-          { headers: { 'Cache-Control': CACHE.ONE_HOUR } }
+          { headers: { 'Cache-Control': CACHE.ONE_HOUR } },
         );
       }
 
@@ -33,7 +45,10 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
       const idsParam = searchParams.get('ids');
       let ids: number[] | undefined;
       if (idsParam) {
-        ids = idsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+        ids = idsParam
+          .split(',')
+          .map((id) => parseInt(id.trim(), 10))
+          .filter((id) => !isNaN(id));
         if (ids.length === 0) {
           ids = undefined;
         }
@@ -44,7 +59,7 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
         const actresses = await deps.getActresses({ limit: ids.length, offset: 0, ids });
         return NextResponse.json(
           { actresses, total: actresses.length },
-          { headers: { 'Cache-Control': CACHE.ONE_HOUR } }
+          { headers: { 'Cache-Control': CACHE.ONE_HOUR } },
         );
       }
 
@@ -59,9 +74,10 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
 
       // sortByパラメータを解析
       const sortByParam = searchParams.get('sort');
-      const sortBy: ActressSortOption | undefined = sortByParam && VALID_SORT_OPTIONS.includes(sortByParam as ActressSortOption)
-        ? (sortByParam as ActressSortOption)
-        : undefined;
+      const sortBy: ActressSortOption | undefined =
+        sortByParam && VALID_SORT_OPTIONS.includes(sortByParam as ActressSortOption)
+          ? (sortByParam as ActressSortOption)
+          : undefined;
 
       const actresses = await deps.getActresses({
         limit,
@@ -78,10 +94,7 @@ export function createActressesHandler(deps: ActressesHandlerDeps) {
       // Search results cache shorter, static lists cache longer
       const cacheControl = query ? CACHE.FIVE_MIN : CACHE.ONE_HOUR;
 
-      return NextResponse.json(
-        { actresses, total, limit, offset },
-        { headers: { 'Cache-Control': cacheControl } }
-      );
+      return NextResponse.json({ actresses, total, limit, offset }, { headers: { 'Cache-Control': cacheControl } });
     } catch (error) {
       return createApiErrorResponse(error, 'Failed to fetch actresses', 500, {
         endpoint: '/api/actresses',

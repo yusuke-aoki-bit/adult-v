@@ -53,16 +53,20 @@ function getDb() {
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // SSL設定: 無効化条件に該当しない本番環境のみSSL有効
-        ssl: shouldDisableSsl ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
+        ssl: shouldDisableSsl
+          ? false
+          : process.env['NODE_ENV'] === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
         // 環境に応じた接続プール設定
-        max: isDev ? 5 : (isCloudRunJob ? 8 : 10), // 開発: 5, ジョブ: 8, Webサーバー: 10（Cloud SQL接続数削減）
-        min: isDev ? 0 : (isCloudRunJob ? 1 : 1), // 開発: 0, ジョブ: 1, Webサーバー: 1
+        max: isDev ? 5 : isCloudRunJob ? 8 : 10, // 開発: 5, ジョブ: 8, Webサーバー: 10（Cloud SQL接続数削減）
+        min: isDev ? 0 : isCloudRunJob ? 1 : 1, // 開発: 0, ジョブ: 1, Webサーバー: 1
         idleTimeoutMillis: isDev ? 10000 : 60000, // 開発: 10秒, 本番: 60秒（アイドル接続を速やかに解放）
         connectionTimeoutMillis: isDev ? 10000 : 30000, // 接続タイムアウト: 開発10秒, 本番30秒
         allowExitOnIdle: isDev || isCloudRunJob, // 開発・ジョブ環境では終了を許可
         // クエリタイムアウト
-        query_timeout: isDev ? 30000 : (isCloudRunJob ? 120000 : 45000), // 開発: 30秒, ジョブ: 120秒, Web: 45秒
-        statement_timeout: isDev ? 30000 : (isCloudRunJob ? 120000 : 45000),
+        query_timeout: isDev ? 30000 : isCloudRunJob ? 120000 : 45000, // 開発: 30秒, ジョブ: 120秒, Web: 45秒
+        statement_timeout: isDev ? 30000 : isCloudRunJob ? 120000 : 45000,
       });
 
       // 接続エラー時のハンドリング

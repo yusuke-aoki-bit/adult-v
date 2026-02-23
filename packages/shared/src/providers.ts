@@ -216,7 +216,7 @@ export const SUBSCRIPTION_PROVIDERS = [
  */
 export function isSubscriptionProvider(aspName: string): boolean {
   const name = aspName.toLowerCase();
-  return SUBSCRIPTION_PROVIDERS.includes(name as typeof SUBSCRIPTION_PROVIDERS[number]);
+  return SUBSCRIPTION_PROVIDERS.includes(name as (typeof SUBSCRIPTION_PROVIDERS)[number]);
 }
 
 /**

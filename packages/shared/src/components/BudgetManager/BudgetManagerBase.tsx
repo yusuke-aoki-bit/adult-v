@@ -2,6 +2,7 @@
 
 import { useState, memo } from 'react';
 import { Wallet, AlertTriangle, Check, Edit2 } from 'lucide-react';
+import { getTranslation, budgetManagerTranslations } from '../../lib/translations';
 
 export type BudgetStatus = 'good' | 'caution' | 'warning' | 'critical' | 'exceeded';
 
@@ -47,111 +48,6 @@ export interface BudgetManagerBaseProps {
   getStatus: () => BudgetStatus;
 }
 
-export const budgetManagerTranslations = {
-  ja: {
-    title: '今月の予算',
-    budget: '予算',
-    spent: '使用済み',
-    remaining: '残り',
-    status: {
-      good: '余裕あり',
-      caution: '注意',
-      warning: '警告',
-      critical: '危険',
-      exceeded: '超過',
-    },
-    editBudget: '予算を編集',
-    save: '保存',
-    cancel: 'キャンセル',
-    reset: 'リセット',
-    withinBudget: '予算内で購入可能',
-    overBudget: '予算超過します',
-    yen: '円',
-    recommended: 'おすすめ購入順',
-    saleSoon: 'セール終了間近',
-    bestValue: 'コスパ良し',
-    waitForSale: 'セール待ち推奨',
-    watchlistTotal: 'ウォッチリスト合計',
-  },
-  en: {
-    title: 'Monthly Budget',
-    budget: 'Budget',
-    spent: 'Spent',
-    remaining: 'Remaining',
-    status: {
-      good: 'Good',
-      caution: 'Caution',
-      warning: 'Warning',
-      critical: 'Critical',
-      exceeded: 'Exceeded',
-    },
-    editBudget: 'Edit Budget',
-    save: 'Save',
-    cancel: 'Cancel',
-    reset: 'Reset',
-    withinBudget: 'Within budget',
-    overBudget: 'Over budget',
-    yen: 'JPY',
-    recommended: 'Recommended Order',
-    saleSoon: 'Sale ending soon',
-    bestValue: 'Best value',
-    waitForSale: 'Wait for sale',
-    watchlistTotal: 'Watchlist Total',
-  },
-  zh: {
-    title: '本月预算',
-    budget: '预算',
-    spent: '已花费',
-    remaining: '剩余',
-    status: {
-      good: '充足',
-      caution: '注意',
-      warning: '警告',
-      critical: '危险',
-      exceeded: '超支',
-    },
-    editBudget: '编辑预算',
-    save: '保存',
-    cancel: '取消',
-    reset: '重置',
-    withinBudget: '预算内可购买',
-    overBudget: '将超出预算',
-    yen: '日元',
-    recommended: '推荐购买顺序',
-    saleSoon: '促销即将结束',
-    bestValue: '性价比高',
-    waitForSale: '建议等待促销',
-    watchlistTotal: '愿望单总计',
-  },
-  ko: {
-    title: '이번 달 예산',
-    budget: '예산',
-    spent: '사용',
-    remaining: '남은',
-    status: {
-      good: '여유',
-      caution: '주의',
-      warning: '경고',
-      critical: '위험',
-      exceeded: '초과',
-    },
-    editBudget: '예산 편집',
-    save: '저장',
-    cancel: '취소',
-    reset: '초기화',
-    withinBudget: '예산 내',
-    overBudget: '예산 초과',
-    yen: '엔',
-    recommended: '추천 구매 순서',
-    saleSoon: '세일 종료 임박',
-    bestValue: '가성비 좋음',
-    waitForSale: '세일 대기 추천',
-    watchlistTotal: '관심 목록 합계',
-  },
-} as const;
-
-type TranslationKey = keyof typeof budgetManagerTranslations;
-
 // Static color mappings - status badge colors (same across themes)
 export const statusColors = {
   good: 'text-green-400 bg-green-900/30',
@@ -182,16 +78,16 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
   usedPercent,
   getStatus,
 }: BudgetManagerBaseProps) {
-  const t = budgetManagerTranslations[locale as TranslationKey] || budgetManagerTranslations.ja;
+  const t = getTranslation(budgetManagerTranslations, locale);
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
 
   if (!isLoaded) {
     return (
       <div className={`${theme.container} animate-pulse`}>
-        <div className={`h-6 ${theme.skeletonBar} rounded w-1/3 mb-4`} />
-        <div className={`h-4 ${theme.skeletonBar} rounded w-full mb-2`} />
-        <div className={`h-4 ${theme.skeletonBar} rounded w-2/3`} />
+        <div className={`h-6 ${theme.skeletonBar} mb-4 w-1/3 rounded`} />
+        <div className={`h-4 ${theme.skeletonBar} mb-2 w-full rounded`} />
+        <div className={`h-4 ${theme.skeletonBar} w-2/3 rounded`} />
       </div>
     );
   }
@@ -209,9 +105,9 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
   return (
     <div className={theme.container}>
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <h3 className={`font-semibold ${theme.title} flex items-center gap-2`}>
-          <Wallet className={`w-5 h-5 ${theme.walletIcon}`} />
+          <Wallet className={`h-5 w-5 ${theme.walletIcon}`} />
           {t.title}
         </h3>
         {!isEditing && (
@@ -222,20 +118,20 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
             }}
             className={`${theme.editButton} ${theme.editButtonHover}`}
           >
-            <Edit2 className="w-4 h-4" />
+            <Edit2 className="h-4 w-4" />
           </button>
         )}
       </div>
 
       {/* Budget Edit */}
       {isEditing ? (
-        <div className="space-y-3 mb-4">
+        <div className="mb-4 space-y-3">
           <div className="flex gap-2">
             <input
               type="number"
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
-              className={`flex-1 px-3 py-2 rounded-lg focus:outline-none ${theme.input} ${theme.inputFocus}`}
+              className={`flex-1 rounded-lg px-3 py-2 focus:outline-none ${theme.input} ${theme.inputFocus}`}
               placeholder="10000"
             />
             <span className={`flex items-center ${theme.yenText}`}>{t.yen}</span>
@@ -243,13 +139,13 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
           <div className="flex gap-2">
             <button
               onClick={handleSave}
-              className={`flex-1 py-2 rounded-lg font-medium ${theme.saveButton} ${theme.saveButtonHover}`}
+              className={`flex-1 rounded-lg py-2 font-medium ${theme.saveButton} ${theme.saveButtonHover}`}
             >
               {t.save}
             </button>
             <button
               onClick={() => setIsEditing(false)}
-              className={`flex-1 py-2 rounded-lg ${theme.cancelButton} ${theme.cancelButtonHover}`}
+              className={`flex-1 rounded-lg py-2 ${theme.cancelButton} ${theme.cancelButtonHover}`}
             >
               {t.cancel}
             </button>
@@ -258,18 +154,14 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
       ) : (
         <>
           {/* Budget Stats */}
-          <div className="grid grid-cols-3 gap-2 mb-4 text-center text-sm">
+          <div className="mb-4 grid grid-cols-3 gap-2 text-center text-sm">
             <div className={`${theme.statBox} rounded-lg p-2`}>
               <p className={theme.statLabel}>{t.budget}</p>
-              <p className={`${theme.statValue} font-semibold`}>
-                ¥{settings.monthlyBudget.toLocaleString()}
-              </p>
+              <p className={`${theme.statValue} font-semibold`}>¥{settings.monthlyBudget.toLocaleString()}</p>
             </div>
             <div className={`${theme.statBox} rounded-lg p-2`}>
               <p className={theme.statLabel}>{t.spent}</p>
-              <p className={`${theme.statValue} font-semibold`}>
-                ¥{settings.currentSpent.toLocaleString()}
-              </p>
+              <p className={`${theme.statValue} font-semibold`}>¥{settings.currentSpent.toLocaleString()}</p>
             </div>
             <div className={`${theme.statBox} rounded-lg p-2`}>
               <p className={theme.statLabel}>{t.remaining}</p>
@@ -281,13 +173,11 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
 
           {/* Progress Bar */}
           <div className="mb-4">
-            <div className="flex items-center justify-between mb-1">
-              <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[status]}`}>
-                {t.status[status]}
-              </span>
+            <div className="mb-1 flex items-center justify-between">
+              <span className={`rounded-full px-2 py-0.5 text-xs ${statusColors[status]}`}>{t.status[status]}</span>
               <span className={`text-sm ${theme.percentText}`}>{usedPercent}%</span>
             </div>
-            <div className={`h-2 ${theme.progressBg} rounded-full overflow-hidden`}>
+            <div className={`h-2 ${theme.progressBg} overflow-hidden rounded-full`}>
               <div
                 className={`h-full transition-all ${progressColors[status]}`}
                 style={{ width: `${Math.min(usedPercent, 100)}%` }}
@@ -300,19 +190,17 @@ export const BudgetManagerBase = memo(function BudgetManagerBase({
             <div className={`border-t ${theme.watchlistBorder} pt-4`}>
               <div className="flex items-center justify-between text-sm">
                 <span className={theme.watchlistLabel}>{t.watchlistTotal}</span>
-                <span className={`${theme.watchlistValue} font-medium`}>
-                  ¥{watchlistTotal.toLocaleString()}
-                </span>
+                <span className={`${theme.watchlistValue} font-medium`}>¥{watchlistTotal.toLocaleString()}</span>
               </div>
-              <div className="flex items-center gap-2 mt-2">
+              <div className="mt-2 flex items-center gap-2">
                 {watchlistTotal <= remaining ? (
                   <>
-                    <Check className="w-4 h-4 text-green-400" />
+                    <Check className="h-4 w-4 text-green-400" />
                     <span className="text-sm text-green-400">{t.withinBudget}</span>
                   </>
                 ) : (
                   <>
-                    <AlertTriangle className="w-4 h-4 text-red-400" />
+                    <AlertTriangle className="h-4 w-4 text-red-400" />
                     <span className="text-sm text-red-400">
                       {t.overBudget} (¥{(watchlistTotal - remaining).toLocaleString()})
                     </span>

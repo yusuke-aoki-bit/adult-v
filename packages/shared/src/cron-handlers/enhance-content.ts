@@ -66,7 +66,7 @@ async function enhanceWithVisionAPI(
   limit: number,
   deps: EnhanceContentHandlerDeps,
   startTime?: number,
-  timeLimit?: number
+  timeLimit?: number,
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -91,22 +91,28 @@ async function enhanceWithVisionAPI(
 
   const concurrencyLimit = pLimit(3);
 
-  await Promise.all(products.map(product => concurrencyLimit(async () => {
-    if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
-    stats.totalProcessed++;
+  await Promise.all(
+    products.map((product) =>
+      concurrencyLimit(async () => {
+        if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
+        stats.totalProcessed++;
 
-    try {
-      const faces = await deps.detectFaces(product.image_url);
-      const labels = await deps.labelImage(product.image_url);
+        try {
+          const faces = await deps.detectFaces(product.image_url);
+          const labels = await deps.labelImage(product.image_url);
 
-      if (faces.length > 0 || labels.length > 0) {
-        const labelArray = labels.map(l => l.description);
-        // パラメータ化されたARRAY構文で安全にPostgreSQL配列を構築（文字列結合を排除）
-        const labelsArraySql = labelArray.length > 0
-          ? sql`ARRAY[${sql.join(labelArray.map(l => sql`${l}`), sql`, `)}]::text[]`
-          : sql`'{}'::text[]`;
+          if (faces.length > 0 || labels.length > 0) {
+            const labelArray = labels.map((l) => l.description);
+            // パラメータ化されたARRAY構文で安全にPostgreSQL配列を構築（文字列結合を排除）
+            const labelsArraySql =
+              labelArray.length > 0
+                ? sql`ARRAY[${sql.join(
+                    labelArray.map((l) => sql`${l}`),
+                    sql`, `,
+                  )}]::text[]`
+                : sql`'{}'::text[]`;
 
-        await db.execute(sql`
+            await db.execute(sql`
           INSERT INTO product_image_metadata (
             product_id,
             face_count,
@@ -126,23 +132,25 @@ async function enhanceWithVisionAPI(
             analyzed_at = NOW()
         `);
 
-        stats.success++;
-        results.push({
-          productId: product['id'],
-          normalizedProductId: product.normalized_product_id,
-          faceCount: faces.length,
-          labels: labels.slice(0, 5).map(l => l.description),
-        });
-      } else {
-        stats.skipped++;
-      }
+            stats.success++;
+            results.push({
+              productId: product['id'],
+              normalizedProductId: product.normalized_product_id,
+              faceCount: faces.length,
+              labels: labels.slice(0, 5).map((l) => l.description),
+            });
+          } else {
+            stats.skipped++;
+          }
 
-      await new Promise(r => setTimeout(r, 500));
-    } catch (error) {
-      console.error(`[enhance-content] Vision error for ${product['id']}:`, error);
-      stats.errors++;
-    }
-  })));
+          await new Promise((r) => setTimeout(r, 500));
+        } catch (error) {
+          console.error(`[enhance-content] Vision error for ${product['id']}:`, error);
+          stats.errors++;
+        }
+      }),
+    ),
+  );
 
   return { stats, results };
 }
@@ -155,7 +163,7 @@ async function enhanceWithTranslation(
   limit: number,
   deps: EnhanceContentHandlerDeps,
   startTime?: number,
-  timeLimit?: number
+  timeLimit?: number,
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -181,23 +189,25 @@ async function enhanceWithTranslation(
 
   const concurrencyLimit = pLimit(5);
 
-  await Promise.all(products.map(product => concurrencyLimit(async () => {
-    if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
-    stats.totalProcessed++;
+  await Promise.all(
+    products.map((product) =>
+      concurrencyLimit(async () => {
+        if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
+        stats.totalProcessed++;
 
-    try {
-      const translations: Record<string, string> = {};
+        try {
+          const translations: Record<string, string> = {};
 
-      for (const lang of targetLanguages) {
-        const result = await deps.translateText(product['title'], lang, 'ja');
-        if (result) {
-          translations[lang] = result.translatedText;
-        }
-        await new Promise(r => setTimeout(r, 200));
-      }
+          for (const lang of targetLanguages) {
+            const result = await deps.translateText(product['title'], lang, 'ja');
+            if (result) {
+              translations[lang] = result.translatedText;
+            }
+            await new Promise((r) => setTimeout(r, 200));
+          }
 
-      if (Object.keys(translations).length > 0) {
-        await db.execute(sql`
+          if (Object.keys(translations).length > 0) {
+            await db.execute(sql`
           INSERT INTO product_translations (
             product_id,
             title_en,
@@ -220,20 +230,22 @@ async function enhanceWithTranslation(
             translated_at = NOW()
         `);
 
-        stats.success++;
-        results.push({
-          productId: product['id'],
-          normalizedProductId: product.normalized_product_id,
-          translations,
-        });
-      } else {
-        stats.skipped++;
-      }
-    } catch (error) {
-      console.error(`[enhance-content] Translation error for ${product['id']}:`, error);
-      stats.errors++;
-    }
-  })));
+            stats.success++;
+            results.push({
+              productId: product['id'],
+              normalizedProductId: product.normalized_product_id,
+              translations,
+            });
+          } else {
+            stats.skipped++;
+          }
+        } catch (error) {
+          console.error(`[enhance-content] Translation error for ${product['id']}:`, error);
+          stats.errors++;
+        }
+      }),
+    ),
+  );
 
   return { stats, results };
 }
@@ -246,7 +258,7 @@ async function enhanceWithYouTube(
   limit: number,
   deps: EnhanceContentHandlerDeps,
   startTime?: number,
-  timeLimit?: number
+  timeLimit?: number,
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -268,29 +280,29 @@ async function enhanceWithYouTube(
 
   const concurrencyLimit = pLimit(3);
 
-  await Promise.all(products.map(product => concurrencyLimit(async () => {
-    if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
-    stats.totalProcessed++;
+  await Promise.all(
+    products.map((product) =>
+      concurrencyLimit(async () => {
+        if (startTime && timeLimit && Date.now() - startTime > timeLimit) return;
+        stats.totalProcessed++;
 
-    try {
-      let videos = await deps.searchYouTubeVideos(product.normalized_product_id, 3);
+        try {
+          let videos = await deps.searchYouTubeVideos(product.normalized_product_id, 3);
 
-      if (videos.length === 0 && product['title']) {
-        const nameMatch = product['title'].match(/[\u4E00-\u9FAF\u3040-\u309F\u30A0-\u30FF]{2,8}/g);
-        if (nameMatch && nameMatch.length > 0) {
-          const keywords = nameMatch.filter(w =>
-            !['無料', '動画', '女優', '作品', '収録', '出演'].includes(w)
-          );
-          if (keywords.length > 0) {
-            const searchQuery = `${keywords[0]} AV`;
-            videos = await deps.searchYouTubeVideos(searchQuery, 3);
+          if (videos.length === 0 && product['title']) {
+            const nameMatch = product['title'].match(/[\u4E00-\u9FAF\u3040-\u309F\u30A0-\u30FF]{2,8}/g);
+            if (nameMatch && nameMatch.length > 0) {
+              const keywords = nameMatch.filter((w) => !['無料', '動画', '女優', '作品', '収録', '出演'].includes(w));
+              if (keywords.length > 0) {
+                const searchQuery = `${keywords[0]} AV`;
+                videos = await deps.searchYouTubeVideos(searchQuery, 3);
+              }
+            }
           }
-        }
-      }
 
-      const video = videos[0];
-      if (video) {
-        await db.execute(sql`
+          const video = videos[0];
+          if (video) {
+            await db.execute(sql`
           INSERT INTO product_youtube_videos (
             product_id,
             video_id,
@@ -314,25 +326,27 @@ async function enhanceWithYouTube(
             linked_at = NOW()
         `);
 
-        stats.success++;
-        results.push({
-          productId: product['id'],
-          normalizedProductId: product.normalized_product_id,
-          video: {
-            id: video.id,
-            title: video.title,
-          },
-        });
-      } else {
-        stats.skipped++;
-      }
+            stats.success++;
+            results.push({
+              productId: product['id'],
+              normalizedProductId: product.normalized_product_id,
+              video: {
+                id: video.id,
+                title: video.title,
+              },
+            });
+          } else {
+            stats.skipped++;
+          }
 
-      await new Promise(r => setTimeout(r, 1000));
-    } catch (error) {
-      console.error(`[enhance-content] YouTube error for ${product['id']}:`, error);
-      stats.errors++;
-    }
-  })));
+          await new Promise((r) => setTimeout(r, 1000));
+        } catch (error) {
+          console.error(`[enhance-content] YouTube error for ${product['id']}:`, error);
+          stats.errors++;
+        }
+      }),
+    ),
+  );
 
   return { stats, results };
 }
@@ -359,43 +373,55 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
       switch (type) {
         case 'vision':
           if (!apiConfig.vision) {
-            return NextResponse.json({
-              success: false,
-              error: 'Vision API not configured',
-              config: apiConfig,
-            }, { status: 400 });
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Vision API not configured',
+                config: apiConfig,
+              },
+              { status: 400 },
+            );
           }
           result = await enhanceWithVisionAPI(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         case 'translate':
           if (!apiConfig.translation) {
-            return NextResponse.json({
-              success: false,
-              error: 'Translation API not configured',
-              config: apiConfig,
-            }, { status: 400 });
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'Translation API not configured',
+                config: apiConfig,
+              },
+              { status: 400 },
+            );
           }
           result = await enhanceWithTranslation(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         case 'youtube':
           if (!apiConfig.youtube) {
-            return NextResponse.json({
-              success: false,
-              error: 'YouTube API not configured',
-              config: apiConfig,
-            }, { status: 400 });
+            return NextResponse.json(
+              {
+                success: false,
+                error: 'YouTube API not configured',
+                config: apiConfig,
+              },
+              { status: 400 },
+            );
           }
           result = await enhanceWithYouTube(db, limit, deps, startTime, TIME_LIMIT);
           break;
 
         default:
-          return NextResponse.json({
-            success: false,
-            error: `Unknown enhancement type: ${type}`,
-            availableTypes: ['vision', 'translate', 'youtube'],
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Unknown enhancement type: ${type}`,
+              availableTypes: ['vision', 'translate', 'youtube'],
+            },
+            { status: 400 },
+          );
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);
@@ -416,7 +442,7 @@ export function createEnhanceContentHandler(deps: EnhanceContentHandlerDeps) {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

@@ -10,13 +10,10 @@ interface SokmilCreditProps {
 }
 
 export function SokmilCredit({ variant = '88x31', className = '' }: SokmilCreditProps) {
-  const imageUrl = variant === '88x31'
-    ? 'https://sokmil-ad.com/api/credit/88x31.gif'
-    : 'https://sokmil-ad.com/api/credit/135x18.gif';
+  const imageUrl =
+    variant === '88x31' ? 'https://sokmil-ad.com/api/credit/88x31.gif' : 'https://sokmil-ad.com/api/credit/135x18.gif';
 
-  const dimensions = variant === '88x31'
-    ? { width: 88, height: 31 }
-    : { width: 135, height: 18 };
+  const dimensions = variant === '88x31' ? { width: 88, height: 31 } : { width: 135, height: 18 };
 
   return (
     <a
@@ -26,14 +23,14 @@ export function SokmilCredit({ variant = '88x31', className = '' }: SokmilCredit
       className={`inline-block ${className}`}
       aria-label="WEB SERVICE BY SOKMIL"
     >
-      { }
+      {}
       <img
         src={imageUrl}
         alt="WEB SERVICE BY SOKMIL"
         width={dimensions.width}
         height={dimensions.height}
         loading="lazy"
-        className={`block ${variant === '88x31' ? 'w-auto h-[50px] max-w-[180px] object-contain' : 'w-[135px] h-[18px]'}`}
+        className={`block ${variant === '88x31' ? 'h-[50px] w-auto max-w-[180px] object-contain' : 'h-[18px] w-[135px]'}`}
         style={{ aspectRatio: `${dimensions.width}/${dimensions.height}` }}
       />
     </a>

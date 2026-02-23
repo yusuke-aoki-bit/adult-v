@@ -30,17 +30,17 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const showToast = useCallback((message: string, type: ToastType = 'info', duration?: number) => {
     const id = Date.now().toString();
-    setToasts(prev => [...prev, { id, message, type }]);
+    setToasts((prev) => [...prev, { id, message, type }]);
 
     // エラー時は5秒、それ以外は3秒で自動消去
     const defaultDuration = type === 'error' ? 5000 : 3000;
     setTimeout(() => {
-      setToasts(prev => prev.filter(toast => toast.id !== id));
+      setToasts((prev) => prev.filter((toast) => toast.id !== id));
     }, duration ?? defaultDuration);
   }, []);
 
   const removeToast = useCallback((id: string) => {
-    setToasts(prev => prev.filter(toast => toast.id !== id));
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
   }, []);
 
   return (
@@ -55,8 +55,8 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
   if (toasts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-20 right-6 z-50 flex flex-col gap-2">
-      {toasts.map(toast => (
+    <div className="fixed right-6 bottom-20 z-50 flex flex-col gap-2">
+      {toasts.map((toast) => (
         <ToastItem key={toast.id} toast={toast} onRemove={onRemove} />
       ))}
     </div>
@@ -65,10 +65,10 @@ function ToastContainer({ toasts, onRemove }: { toasts: Toast[]; onRemove: (id: 
 
 function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) => void }) {
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-green-400" />,
-    error: <AlertCircle className="w-5 h-5 text-red-400" />,
-    info: <Info className="w-5 h-5 text-blue-400" />,
-    favorite: <Heart className="w-5 h-5 text-rose-400 fill-rose-400" />,
+    success: <CheckCircle className="h-5 w-5 text-green-400" />,
+    error: <AlertCircle className="h-5 w-5 text-red-400" />,
+    info: <Info className="h-5 w-5 text-blue-400" />,
+    favorite: <Heart className="h-5 w-5 fill-rose-400 text-rose-400" />,
   };
 
   const bgColors = {
@@ -80,17 +80,17 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: (id: string) =
 
   return (
     <div
-      className={`flex items-center gap-3 px-4 py-3 rounded-lg border shadow-lg backdrop-blur-sm animate-slide-in ${bgColors[toast.type]}`}
+      className={`animate-slide-in flex items-center gap-3 rounded-lg border px-4 py-3 shadow-lg backdrop-blur-sm ${bgColors[toast.type]}`}
       role="alert"
     >
       {icons[toast.type]}
-      <span className="text-white text-sm">{toast.message}</span>
+      <span className="text-sm text-white">{toast.message}</span>
       <button
         onClick={() => onRemove(toast.id)}
-        className="ml-2 text-gray-400 hover:text-white transition-colors"
+        className="ml-2 text-gray-400 transition-colors hover:text-white"
         aria-label="閉じる"
       >
-        <X className="w-4 h-4" />
+        <X className="h-4 w-4" />
       </button>
     </div>
   );

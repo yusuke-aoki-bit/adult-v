@@ -20,10 +20,7 @@ function getCorsHeaders() {
   };
 }
 
-export function createEmbedStatsHandler(
-  deps: EmbedStatsHandlerDeps,
-  options: EmbedStatsHandlerOptions = {},
-) {
+export function createEmbedStatsHandler(deps: EmbedStatsHandlerDeps, options: EmbedStatsHandlerOptions = {}) {
   const sourceLabel = options.sourceLabel || 'Adult Viewer Lab';
 
   async function OPTIONS() {

@@ -5,15 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { localizedHref } from '@adult-v/shared/i18n';
-import {
-  Wallet,
-  TrendingDown,
-  AlertTriangle,
-  Check,
-  Clock,
-  Sparkles,
-  ShoppingCart,
-} from 'lucide-react';
+import { Wallet, TrendingDown, AlertTriangle, Check, Clock, Sparkles, ShoppingCart } from 'lucide-react';
 import { useBudget, useWatchlistAnalysis } from '@/hooks';
 import type { EnrichedProduct } from '@adult-v/shared/hooks';
 import BudgetManager from '@/components/BudgetManager';
@@ -215,30 +207,26 @@ export default function BudgetPage() {
   };
 
   return (
-    <div className="min-h-screen theme-body">
+    <div className="theme-body min-h-screen">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
-            <Wallet className="w-7 h-7 text-rose-400" />
+          <h1 className="flex items-center gap-2 text-2xl font-bold text-white sm:text-3xl">
+            <Wallet className="h-7 w-7 text-rose-400" />
             {t.title}
           </h1>
-          <p className="text-gray-400 mt-2">{t.description}</p>
+          <p className="mt-2 text-gray-400">{t.description}</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Budget Manager */}
           <div className="lg:col-span-1">
-            <BudgetManager
-              locale={locale}
-              showRecommendations={true}
-              watchlistTotal={stats.totalSalePrice}
-            />
+            <BudgetManager locale={locale} showRecommendations={true} watchlistTotal={stats.totalSalePrice} />
 
             {/* Stats */}
             {products.length > 0 && (
-              <div className="bg-gray-800 rounded-xl p-4 mt-4">
-                <h3 className="font-semibold text-white mb-3">{t.stats}</h3>
+              <div className="mt-4 rounded-xl bg-gray-800 p-4">
+                <h3 className="mb-3 font-semibold text-white">{t.stats}</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-400">{t.onSaleCount}</span>
@@ -248,9 +236,7 @@ export default function BudgetPage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">{t.potentialSavings}</span>
-                    <span className="text-green-400">
-                      ¥{stats.totalSavings.toLocaleString()}
-                    </span>
+                    <span className="text-green-400">¥{stats.totalSavings.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">{t.urgentItems}</span>
@@ -265,23 +251,23 @@ export default function BudgetPage() {
 
           {/* Purchase Plan */}
           <div className="lg:col-span-2">
-            <div className="bg-gray-800 rounded-xl p-6">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                <ShoppingCart className="w-5 h-5 text-rose-400" />
+            <div className="rounded-xl bg-gray-800 p-6">
+              <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+                <ShoppingCart className="h-5 w-5 text-rose-400" />
                 {t.purchasePlan}
               </h2>
 
               {isLoading ? (
-                <div className="text-center py-12">
-                  <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto" />
+                <div className="py-12 text-center">
+                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-rose-500 border-t-transparent" />
                 </div>
               ) : products.length === 0 ? (
-                <div className="text-center py-12">
-                  <Sparkles className="w-12 h-12 text-gray-600 mx-auto" />
-                  <p className="text-gray-400 mt-4">{t.empty}</p>
+                <div className="py-12 text-center">
+                  <Sparkles className="mx-auto h-12 w-12 text-gray-600" />
+                  <p className="mt-4 text-gray-400">{t.empty}</p>
                   <Link
                     href={localizedHref('/products', locale)}
-                    className="inline-block mt-4 px-6 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg"
+                    className="mt-4 inline-block rounded-lg bg-rose-600 px-6 py-2 text-white hover:bg-rose-500"
                   >
                     {t.browseProducts}
                   </Link>
@@ -291,8 +277,8 @@ export default function BudgetPage() {
                   {/* Urgent Items */}
                   {categorizedProducts.urgent.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-red-400 mb-2 flex items-center gap-1">
-                        <AlertTriangle className="w-4 h-4" />
+                      <h3 className="mb-2 flex items-center gap-1 text-sm font-medium text-red-400">
+                        <AlertTriangle className="h-4 w-4" />
                         {t.saleSoon} ({categorizedProducts.urgent.length})
                       </h3>
                       <div className="space-y-2">
@@ -314,8 +300,8 @@ export default function BudgetPage() {
                   {/* On Sale Items */}
                   {categorizedProducts.onSale.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-green-400 mb-2 flex items-center gap-1">
-                        <TrendingDown className="w-4 h-4" />
+                      <h3 className="mb-2 flex items-center gap-1 text-sm font-medium text-green-400">
+                        <TrendingDown className="h-4 w-4" />
                         {t.onSale} ({categorizedProducts.onSale.length})
                       </h3>
                       <div className="space-y-2">
@@ -337,7 +323,7 @@ export default function BudgetPage() {
                   {/* Regular Items */}
                   {categorizedProducts.regular.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-gray-400 mb-2">
+                      <h3 className="mb-2 text-sm font-medium text-gray-400">
                         {t.regular} ({categorizedProducts.regular.length})
                       </h3>
                       <div className="space-y-2">
@@ -359,8 +345,8 @@ export default function BudgetPage() {
                   {/* Wait for Sale */}
                   {categorizedProducts.waitForSale.length > 0 && (
                     <div>
-                      <h3 className="text-sm font-medium text-yellow-400 mb-2 flex items-center gap-1">
-                        <Clock className="w-4 h-4" />
+                      <h3 className="mb-2 flex items-center gap-1 text-sm font-medium text-yellow-400">
+                        <Clock className="h-4 w-4" />
                         {t.waitForSale} ({categorizedProducts.waitForSale.length})
                       </h3>
                       <div className="space-y-2">
@@ -384,9 +370,7 @@ export default function BudgetPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-gray-400">{t.total}</span>
                       <div className="text-right">
-                        <p className="text-xl font-bold text-white">
-                          ¥{stats.totalSalePrice.toLocaleString()}
-                        </p>
+                        <p className="text-xl font-bold text-white">¥{stats.totalSalePrice.toLocaleString()}</p>
                         {stats.totalSavings > 0 && (
                           <p className="text-sm text-green-400">
                             -{stats.totalSavings.toLocaleString()} ({t.potentialSavings})
@@ -394,15 +378,15 @@ export default function BudgetPage() {
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="mt-2 flex items-center gap-2">
                       {stats.totalSalePrice <= remaining ? (
                         <>
-                          <Check className="w-4 h-4 text-green-400" />
+                          <Check className="h-4 w-4 text-green-400" />
                           <span className="text-green-400">{t.withinBudget}</span>
                         </>
                       ) : (
                         <>
-                          <AlertTriangle className="w-4 h-4 text-red-400" />
+                          <AlertTriangle className="h-4 w-4 text-red-400" />
                           <span className="text-red-400">
                             {t.overBudget} (¥{(stats.totalSalePrice - remaining).toLocaleString()})
                           </span>
@@ -446,26 +430,21 @@ function ProductRow({
   return (
     <Link
       href={localizedHref(`/products/${product.id}`, locale)}
-      className="flex items-center gap-3 p-3 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors"
+      className="flex items-center gap-3 rounded-lg bg-gray-700/50 p-3 transition-colors hover:bg-gray-700"
     >
       {/* Thumbnail */}
-      <div className="w-12 h-16 relative rounded overflow-hidden bg-gray-600 shrink-0">
+      <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded bg-gray-600">
         {product.thumbnail ? (
-          <Image
-            src={product.thumbnail}
-            alt={product.title || ''}
-            fill
-            className="object-cover"
-          />
+          <Image src={product.thumbnail} alt={product.title || ''} fill className="object-cover" />
         ) : null}
       </div>
 
       {/* Info */}
-      <div className="flex-1 min-w-0">
-        <p className="text-white text-sm line-clamp-1">{product.title}</p>
-        <div className="flex items-center gap-2 mt-1">
+      <div className="min-w-0 flex-1">
+        <p className="line-clamp-1 text-sm text-white">{product.title}</p>
+        <div className="mt-1 flex items-center gap-2">
           {product.saleEndDate && category === 'urgent' && (
-            <span className="text-xs px-1.5 py-0.5 bg-red-900 text-red-300 rounded">
+            <span className="rounded bg-red-900 px-1.5 py-0.5 text-xs text-red-300">
               {getDaysRemaining(product.saleEndDate)}
             </span>
           )}
@@ -476,12 +455,10 @@ function ProductRow({
       </div>
 
       {/* Price */}
-      <div className="text-right shrink-0">
-        <p className="text-white font-semibold">¥{effectivePrice.toLocaleString()}</p>
+      <div className="shrink-0 text-right">
+        <p className="font-semibold text-white">¥{effectivePrice.toLocaleString()}</p>
         {product.salePrice && product.price && product.salePrice < product.price && (
-          <p className="text-xs text-gray-500 line-through">
-            ¥{product.price.toLocaleString()}
-          </p>
+          <p className="text-xs text-gray-500 line-through">¥{product.price.toLocaleString()}</p>
         )}
       </div>
     </Link>

@@ -25,29 +25,29 @@ function PartnerBanners() {
       <FanzaSiteBanner locale={locale} variant="footer" />
 
       {/* ASPパートナーバナー */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-4 justify-items-center">
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+      <div className="grid grid-cols-2 justify-items-center gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <DugaCredit />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <SokmilCredit variant="88x31" />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <MgsCredit />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <DtiCredit />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <B10fCredit />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <Fc2Credit />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <JapanskaCredit />
         </div>
-        <div className="w-[180px] h-[50px] flex items-center justify-center">
+        <div className="flex h-[50px] w-[180px] items-center justify-center">
           <DxliveCredit />
         </div>
       </div>

@@ -22,22 +22,24 @@ interface ImageRow {
  * 小さいサイズのURLを大きいサイズに変換
  */
 function convertToLargeSize(url: string): string {
-  return url
-    // サイズ指定パターン
-    .replace(/_100x142_/g, '_250x356_')
-    .replace(/_200x284_/g, '_250x356_')
-    // capture -> content
-    .replace(/\/capture\//g, '/content/')
-    // /s/ -> /l/
-    .replace(/\/s\//g, '/l/')
-    // /small/ -> /large/
-    .replace(/\/small\//g, '/large/')
-    // /thumb/ -> /large/
-    .replace(/\/thumb\//g, '/large/')
-    // _s. -> _l.
-    .replace(/_s\./g, '_l.')
-    // -s. -> -l.
-    .replace(/-s\./g, '-l.');
+  return (
+    url
+      // サイズ指定パターン
+      .replace(/_100x142_/g, '_250x356_')
+      .replace(/_200x284_/g, '_250x356_')
+      // capture -> content
+      .replace(/\/capture\//g, '/content/')
+      // /s/ -> /l/
+      .replace(/\/s\//g, '/l/')
+      // /small/ -> /large/
+      .replace(/\/small\//g, '/large/')
+      // /thumb/ -> /large/
+      .replace(/\/thumb\//g, '/large/')
+      // _s. -> _l.
+      .replace(/_s\./g, '_l.')
+      // -s. -> -l.
+      .replace(/-s\./g, '-l.')
+  );
 }
 
 /**

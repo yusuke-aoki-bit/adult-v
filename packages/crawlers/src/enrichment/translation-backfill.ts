@@ -23,8 +23,8 @@ import { getDb, closeDb } from '../lib/db';
 import { translateBatch, translateToAll, delay } from '@adult-v/shared/lib/translate';
 
 const args = process.argv.slice(2);
-const limitArg = args.find(arg => arg.startsWith('--limit='));
-const typeArg = args.find(arg => arg.startsWith('--type='));
+const limitArg = args.find((arg) => arg.startsWith('--limit='));
+const typeArg = args.find((arg) => arg.startsWith('--type='));
 
 const BATCH_SIZE = parseInt(limitArg?.split('=')[1] || '100');
 const TYPE = typeArg?.split('=')[1] || 'all';
@@ -56,11 +56,13 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
 
   for (let i = 0; i < productList.length; i += PARALLEL_BATCH_SIZE) {
     const batch = productList.slice(i, i + PARALLEL_BATCH_SIZE);
-    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(productList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+    console.log(
+      `    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(productList.length / PARALLEL_BATCH_SIZE)} 処理中...`,
+    );
 
     // バッチ内で並列に翻訳
-    const titles = batch.map(p => p.title);
-    const descriptions = batch.map(p => p.description || '');
+    const titles = batch.map((p) => p.title);
+    const descriptions = batch.map((p) => p.description || '');
 
     try {
       // タイトルをバッチで翻訳（3言語同時）
@@ -71,7 +73,7 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
       ]);
 
       // 説明文があるものだけバッチで翻訳
-      const descriptionsWithContent = descriptions.filter(d => d.length > 0);
+      const descriptionsWithContent = descriptions.filter((d) => d.length > 0);
       let descsEn: string[] = [];
       let descsZh: string[] = [];
       let descsKo: string[] = [];
@@ -87,14 +89,15 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
 
       // DB更新（並列）
       let descIndex = 0;
-      await Promise.all(batch.map(async (product, idx) => {
-        const hasDesc = product['description'] && product['description'].length > 0;
-        const descEn = hasDesc ? descsEn[descIndex] : null;
-        const descZh = hasDesc ? descsZh[descIndex] : null;
-        const descKo = hasDesc ? descsKo[descIndex] : null;
-        if (hasDesc) descIndex++;
+      await Promise.all(
+        batch.map(async (product, idx) => {
+          const hasDesc = product['description'] && product['description'].length > 0;
+          const descEn = hasDesc ? descsEn[descIndex] : null;
+          const descZh = hasDesc ? descsZh[descIndex] : null;
+          const descKo = hasDesc ? descsKo[descIndex] : null;
+          if (hasDesc) descIndex++;
 
-        await db.execute(sql`
+          await db.execute(sql`
           UPDATE products
           SET
             title_en = ${titlesEn[idx] || null},
@@ -106,14 +109,14 @@ async function translateProducts(db: ReturnType<typeof getDb>, limit: number) {
             updated_at = NOW()
           WHERE id = ${product['id']}
         `);
-      }));
+        }),
+      );
 
       translated += batch.length;
       console.log(`    ✅ ${translated}件完了`);
 
       // レート制限対策（バッチ間のディレイ）
       await delay(DELAY_MS * 2);
-
     } catch (error: unknown) {
       console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
       failed += batch.length;
@@ -157,11 +160,12 @@ async function translatePerformers(db: ReturnType<typeof getDb>, limit: number) 
         const translatedName = translations[i];
 
         if (translatedName) {
-          const updateQuery = lang === 'en'
-            ? sql`UPDATE performers SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`
-            : lang === 'zh'
-            ? sql`UPDATE performers SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`
-            : sql`UPDATE performers SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`;
+          const updateQuery =
+            lang === 'en'
+              ? sql`UPDATE performers SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`
+              : lang === 'zh'
+                ? sql`UPDATE performers SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`
+                : sql`UPDATE performers SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${performer['id']}`;
 
           await db.execute(updateQuery);
           translated++;
@@ -170,7 +174,6 @@ async function translatePerformers(db: ReturnType<typeof getDb>, limit: number) 
 
       // レート制限対策
       await delay(DELAY_MS * 2);
-
     } catch (error: unknown) {
       console.error(`    ❌ ${lang}翻訳エラー: ${error instanceof Error ? error.message : error}`);
       failed++;
@@ -212,11 +215,12 @@ async function translateTags(db: ReturnType<typeof getDb>, limit: number) {
         const translatedName = translations[i];
 
         if (translatedName) {
-          const updateQuery = lang === 'en'
-            ? sql`UPDATE tags SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`
-            : lang === 'zh'
-            ? sql`UPDATE tags SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`
-            : sql`UPDATE tags SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`;
+          const updateQuery =
+            lang === 'en'
+              ? sql`UPDATE tags SET name_en = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`
+              : lang === 'zh'
+                ? sql`UPDATE tags SET name_zh = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`
+                : sql`UPDATE tags SET name_ko = ${translatedName}, updated_at = NOW() WHERE id = ${tag['id']}`;
 
           await db.execute(updateQuery);
           translated++;
@@ -225,7 +229,6 @@ async function translateTags(db: ReturnType<typeof getDb>, limit: number) {
 
       // レート制限対策
       await delay(DELAY_MS * 2);
-
     } catch (error: unknown) {
       console.error(`    ❌ ${lang}翻訳エラー: ${error instanceof Error ? error.message : error}`);
       failed++;
@@ -258,10 +261,12 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
 
   for (let i = 0; i < reviewList.length; i += PARALLEL_BATCH_SIZE) {
     const batch = reviewList.slice(i, i + PARALLEL_BATCH_SIZE);
-    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(reviewList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+    console.log(
+      `    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(reviewList.length / PARALLEL_BATCH_SIZE)} 処理中...`,
+    );
 
-    const contents = batch.map(r => r.content);
-    const titles = batch.map(r => r.title || '');
+    const contents = batch.map((r) => r.content);
+    const titles = batch.map((r) => r.title || '');
 
     try {
       // コンテンツをバッチで翻訳（3言語同時）
@@ -272,7 +277,7 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
       ]);
 
       // タイトルがあるものだけバッチで翻訳
-      const titlesWithContent = titles.filter(t => t.length > 0);
+      const titlesWithContent = titles.filter((t) => t.length > 0);
       let titlesEn: string[] = [];
       let titlesZh: string[] = [];
       let titlesKo: string[] = [];
@@ -288,14 +293,15 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
 
       // DB更新（並列）
       let titleIndex = 0;
-      await Promise.all(batch.map(async (review, idx) => {
-        const hasTitle = review['title'] && review['title'].length > 0;
-        const titleEn = hasTitle ? titlesEn[titleIndex] : null;
-        const titleZh = hasTitle ? titlesZh[titleIndex] : null;
-        const titleKo = hasTitle ? titlesKo[titleIndex] : null;
-        if (hasTitle) titleIndex++;
+      await Promise.all(
+        batch.map(async (review, idx) => {
+          const hasTitle = review['title'] && review['title'].length > 0;
+          const titleEn = hasTitle ? titlesEn[titleIndex] : null;
+          const titleZh = hasTitle ? titlesZh[titleIndex] : null;
+          const titleKo = hasTitle ? titlesKo[titleIndex] : null;
+          if (hasTitle) titleIndex++;
 
-        await db.execute(sql`
+          await db.execute(sql`
           UPDATE product_reviews
           SET
             title_en = ${titleEn || null},
@@ -307,14 +313,14 @@ async function translateReviews(db: ReturnType<typeof getDb>, limit: number) {
             updated_at = NOW()
           WHERE id = ${review['id']}
         `);
-      }));
+        }),
+      );
 
       translated += batch.length;
       console.log(`    ✅ ${translated}件完了`);
 
       // レート制限対策（バッチ間のディレイ）
       await delay(DELAY_MS * 2);
-
     } catch (error: unknown) {
       console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
       failed += batch.length;
@@ -349,9 +355,11 @@ async function translateAiReviews(db: ReturnType<typeof getDb>, limit: number) {
 
   for (let i = 0; i < productList.length; i += PARALLEL_BATCH_SIZE) {
     const batch = productList.slice(i, i + PARALLEL_BATCH_SIZE);
-    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(productList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+    console.log(
+      `    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(productList.length / PARALLEL_BATCH_SIZE)} 処理中...`,
+    );
 
-    const aiReviews = batch.map(p => p.ai_review);
+    const aiReviews = batch.map((p) => p.ai_review);
 
     try {
       // AIレビューをバッチで翻訳（3言語同時）
@@ -362,8 +370,9 @@ async function translateAiReviews(db: ReturnType<typeof getDb>, limit: number) {
       ]);
 
       // DB更新（並列）
-      await Promise.all(batch.map(async (product, idx) => {
-        await db.execute(sql`
+      await Promise.all(
+        batch.map(async (product, idx) => {
+          await db.execute(sql`
           UPDATE products
           SET
             ai_review_en = ${reviewsEn[idx] || null},
@@ -372,14 +381,14 @@ async function translateAiReviews(db: ReturnType<typeof getDb>, limit: number) {
             updated_at = NOW()
           WHERE id = ${product['id']}
         `);
-      }));
+        }),
+      );
 
       translated += batch.length;
       console.log(`    ✅ ${translated}件完了`);
 
       // レート制限対策（バッチ間のディレイ）
       await delay(DELAY_MS * 2);
-
     } catch (error: unknown) {
       console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
       failed += batch.length;
@@ -414,9 +423,11 @@ async function translatePerformerAiReviews(db: ReturnType<typeof getDb>, limit: 
 
   for (let i = 0; i < performerList.length; i += PARALLEL_BATCH_SIZE) {
     const batch = performerList.slice(i, i + PARALLEL_BATCH_SIZE);
-    console.log(`    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(performerList.length / PARALLEL_BATCH_SIZE)} 処理中...`);
+    console.log(
+      `    🔄 バッチ ${Math.floor(i / PARALLEL_BATCH_SIZE) + 1}/${Math.ceil(performerList.length / PARALLEL_BATCH_SIZE)} 処理中...`,
+    );
 
-    const aiReviews = batch.map(p => p.ai_review);
+    const aiReviews = batch.map((p) => p.ai_review);
 
     try {
       // AIレビューをバッチで翻訳（3言語同時）
@@ -427,8 +438,9 @@ async function translatePerformerAiReviews(db: ReturnType<typeof getDb>, limit: 
       ]);
 
       // DB更新（並列）
-      await Promise.all(batch.map(async (performer, idx) => {
-        await db.execute(sql`
+      await Promise.all(
+        batch.map(async (performer, idx) => {
+          await db.execute(sql`
           UPDATE performers
           SET
             ai_review_en = ${reviewsEn[idx] || null},
@@ -437,14 +449,14 @@ async function translatePerformerAiReviews(db: ReturnType<typeof getDb>, limit: 
             updated_at = NOW()
           WHERE id = ${performer['id']}
         `);
-      }));
+        }),
+      );
 
       translated += batch.length;
       console.log(`    ✅ ${translated}件完了`);
 
       // レート制限対策（バッチ間のディレイ）
       await delay(DELAY_MS * 2);
-
     } catch (error: unknown) {
       console.error(`    ❌ バッチ処理エラー: ${error instanceof Error ? error.message : error}`);
       failed += batch.length;
@@ -515,7 +527,7 @@ async function main() {
   }
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error('❌ エラー:', e);
   process.exit(1);
 });

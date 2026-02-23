@@ -25,4 +25,7 @@ async function main() {
   console.log(JSON.stringify(result.rows || result, null, 2));
   await pool.end();
 }
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

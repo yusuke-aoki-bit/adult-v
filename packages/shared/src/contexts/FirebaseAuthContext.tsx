@@ -1,14 +1,6 @@
 'use client';
 
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useMemo,
-  type ReactNode,
-} from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo, type ReactNode } from 'react';
 import type { User } from 'firebase/auth';
 import {
   isFirebaseConfigured,
@@ -49,10 +41,7 @@ interface FirebaseAuthProviderProps {
   autoSignIn?: boolean; // Auto sign in anonymously on mount
 }
 
-export function FirebaseAuthProvider({
-  children,
-  autoSignIn = true,
-}: FirebaseAuthProviderProps) {
+export function FirebaseAuthProvider({ children, autoSignIn = true }: FirebaseAuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [remoteConfig, setRemoteConfig] = useState<RemoteConfigDefaults | null>(null);
@@ -116,7 +105,7 @@ export function FirebaseAuthProvider({
     if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
       idleCallbackId = window.requestIdleCallback(
         () => loadRemoteConfig(),
-        { timeout: 5000 } // Max wait 5 seconds
+        { timeout: 5000 }, // Max wait 5 seconds
       );
     } else {
       // Fallback: delay 3 seconds after mount
@@ -193,14 +182,10 @@ export function FirebaseAuthProvider({
       handleLogout,
       remoteConfig,
       refreshRemoteConfig,
-    ]
+    ],
   );
 
-  return (
-    <FirebaseAuthContext.Provider value={value}>
-      {children}
-    </FirebaseAuthContext.Provider>
-  );
+  return <FirebaseAuthContext.Provider value={value}>{children}</FirebaseAuthContext.Provider>;
 }
 
 export function useFirebaseAuth() {
@@ -212,9 +197,7 @@ export function useFirebaseAuth() {
 }
 
 // Hook for remote config values
-export function useRemoteConfig<K extends keyof RemoteConfigDefaults>(
-  key: K
-): RemoteConfigDefaults[K] | undefined {
+export function useRemoteConfig<K extends keyof RemoteConfigDefaults>(key: K): RemoteConfigDefaults[K] | undefined {
   const { remoteConfig } = useFirebaseAuth();
   return remoteConfig?.[key];
 }

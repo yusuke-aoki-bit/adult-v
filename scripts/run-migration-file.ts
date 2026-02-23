@@ -19,13 +19,13 @@ dotenv.config({ path: '.env.local' });
 function splitStatements(sql: string): string[] {
   // コメント行を削除してからセミコロンで分割
   const lines = sql.split('\n');
-  const cleanedLines = lines.filter(line => !line.trim().startsWith('--'));
+  const cleanedLines = lines.filter((line) => !line.trim().startsWith('--'));
   const cleanedSql = cleanedLines.join('\n');
 
   return cleanedSql
     .split(';')
-    .map(s => s.trim())
-    .filter(s => s.length > 0);
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 async function main() {

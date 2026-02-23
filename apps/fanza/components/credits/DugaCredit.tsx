@@ -18,14 +18,14 @@ export function DugaCredit({ className = '' }: DugaCreditProps) {
       className={`inline-block ${className}`}
       aria-label="DUGAウェブサービス"
     >
-      { }
+      {}
       <img
         src="https://ad.duga.jp/img/webservice_88.gif"
         alt="DUGAウェブサービス"
         width="88"
         height="31"
         loading="lazy"
-        className="block w-auto h-[50px] max-w-[180px] object-contain"
+        className="block h-[50px] w-auto max-w-[180px] object-contain"
         style={{ aspectRatio: '88/31' }}
       />
     </a>

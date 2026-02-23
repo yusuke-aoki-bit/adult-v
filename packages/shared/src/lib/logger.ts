@@ -8,7 +8,7 @@
 // 型定義
 // ============================================================
 
-export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error' | 'fatal';
 
 export interface LogContext {
   /** リクエストID */
@@ -62,6 +62,7 @@ const LOG_LEVELS: Record<LogLevel, number> = {
   info: 1,
   warn: 2,
   error: 3,
+  fatal: 4,
 };
 
 // Cloud Logging用のseverityマッピング
@@ -70,6 +71,7 @@ const SEVERITY_MAP: Record<LogLevel, string> = {
   info: 'INFO',
   warn: 'WARNING',
   error: 'ERROR',
+  fatal: 'CRITICAL',
 };
 
 // ============================================================
@@ -97,12 +99,7 @@ function formatError(error: unknown): LogEntry['error'] | undefined {
   };
 }
 
-function createLogEntry(
-  level: LogLevel,
-  message: string,
-  context?: LogContext,
-  error?: unknown
-): LogEntry {
+function createLogEntry(level: LogLevel, message: string, context?: LogContext, error?: unknown): LogEntry {
   const entry: LogEntry = {
     severity: SEVERITY_MAP[level],
     timestamp: new Date().toISOString(),
@@ -120,11 +117,7 @@ function createLogEntry(
 
 function formatForConsole(entry: LogEntry): string {
   const timePart = entry.timestamp.split('T')[1] ?? '';
-  const parts = [
-    `[${entry.severity}]`,
-    timePart.replace('Z', ''),
-    entry.message,
-  ];
+  const parts = [`[${entry.severity}]`, timePart.replace('Z', ''), entry.message];
 
   if (entry.context?.['operation']) {
     parts.push(`(${entry.context['operation']})`);
@@ -140,16 +133,11 @@ function formatForConsole(entry: LogEntry): string {
 function output(entry: LogEntry, level: LogLevel): void {
   if (IS_PRODUCTION) {
     // 本番: JSON形式（Cloud Logging互換）
-    const output = level === 'error' ? console.error : console.log;
+    const output = level === 'error' || level === 'fatal' ? console.error : console.log;
     output(JSON.stringify(entry));
   } else {
     // 開発: 可読性重視
-    const output =
-      level === 'error'
-        ? console.error
-        : level === 'warn'
-          ? console.warn
-          : console.log;
+    const output = level === 'error' || level === 'fatal' ? console.error : level === 'warn' ? console.warn : console.log;
 
     output(formatForConsole(entry));
 
@@ -225,23 +213,23 @@ export class Logger {
    */
   error(message: string, error?: unknown, context?: LogContext): void {
     if (!shouldLog('error')) return;
-    const entry = createLogEntry(
-      'error',
-      message,
-      { ...this.defaultContext, ...context },
-      error
-    );
+    const entry = createLogEntry('error', message, { ...this.defaultContext, ...context }, error);
     output(entry, 'error');
+  }
+
+  /**
+   * 致命的エラーログ（CRITICAL severity for Cloud Run）
+   */
+  fatal(message: string, error?: unknown, context?: LogContext): void {
+    if (!shouldLog('fatal')) return;
+    const entry = createLogEntry('fatal', message, { ...this.defaultContext, ...context }, error);
+    output(entry, 'fatal');
   }
 
   /**
    * 処理時間を計測してログ出力
    */
-  async time<T>(
-    operation: string,
-    fn: () => Promise<T>,
-    context?: LogContext
-  ): Promise<T> {
+  async time<T>(operation: string, fn: () => Promise<T>, context?: LogContext): Promise<T> {
     const start = Date.now();
     try {
       const result = await fn();
@@ -304,4 +292,19 @@ export function createCrawlerLogger(crawlerName: string): Logger {
  */
 export function createApiLogger(endpoint: string): Logger {
   return new Logger({ operation: `api:${endpoint}` });
+}
+
+/**
+ * モジュール用ロガーを作成
+ * 任意のモジュール名でchildロガーを作成する汎用ヘルパー
+ *
+ * @example
+ * ```typescript
+ * const log = createModuleLogger('health-check');
+ * log.info('Health check started');
+ * log.error('Database unreachable', error, { latencyMs: 500 });
+ * ```
+ */
+export function createModuleLogger(module: string): Logger {
+  return logger.child({ module });
 }

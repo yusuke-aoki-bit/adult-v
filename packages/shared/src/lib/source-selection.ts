@@ -57,7 +57,7 @@ export interface SourceSelectionResult<T> {
  */
 export function selectProductSources<T extends { aspName: string; productId: number }>(
   sourcesByProduct: Map<number, T[]>,
-  options: SourceSelectionOptions
+  options: SourceSelectionOptions,
 ): SourceSelectionResult<T> {
   const { siteMode, preferredProviders, debug = false } = options;
   const sourcesMap = new Map<number, T>();
@@ -66,7 +66,7 @@ export function selectProductSources<T extends { aspName: string; productId: num
   if (siteMode === 'fanza-only') {
     // FANZAサイト: FANZAソースを優先
     for (const [productId, sources] of sourcesByProduct) {
-      const fanzaSource = sources.find(s => s.aspName.toUpperCase() === 'FANZA');
+      const fanzaSource = sources.find((s) => s.aspName.toUpperCase() === 'FANZA');
       if (fanzaSource) {
         sourcesMap.set(productId, fanzaSource);
         stats.matched++;
@@ -82,11 +82,11 @@ export function selectProductSources<T extends { aspName: string; productId: num
     }
   } else {
     // adult-v (all): FANZAソースを除外し、優先プロバイダーを考慮
-    const preferredProvidersUpper = preferredProviders?.map(p => p.toUpperCase()) || [];
+    const preferredProvidersUpper = preferredProviders?.map((p) => p.toUpperCase()) || [];
 
     for (const [productId, sources] of sourcesByProduct) {
       // FANZAソースを除外
-      const nonFanzaSources = sources.filter(s => s.aspName.toUpperCase() !== 'FANZA');
+      const nonFanzaSources = sources.filter((s) => s.aspName.toUpperCase() !== 'FANZA');
 
       // FANZAのみの商品はスキップ
       if (nonFanzaSources.length === 0) {
@@ -96,9 +96,7 @@ export function selectProductSources<T extends { aspName: string; productId: num
 
       if (preferredProvidersUpper.length > 0) {
         // 優先プロバイダーに一致するソースを探す
-        const preferredSource = nonFanzaSources.find(s =>
-          preferredProvidersUpper.includes(s.aspName.toUpperCase())
-        );
+        const preferredSource = nonFanzaSources.find((s) => preferredProvidersUpper.includes(s.aspName.toUpperCase()));
         if (preferredSource) {
           sourcesMap.set(productId, preferredSource);
           stats.matched++;
@@ -112,7 +110,9 @@ export function selectProductSources<T extends { aspName: string; productId: num
     }
 
     if (debug && (preferredProvidersUpper.length > 0 || stats.skipped > 0)) {
-      console.log(`[sourceSelection] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${stats.matched}, fallback: ${stats.fallback}, skipped FANZA-only: ${stats.skipped}`);
+      console.log(
+        `[sourceSelection] Provider filter: ${preferredProvidersUpper.join(',') || 'none'} - matched: ${stats.matched}, fallback: ${stats.fallback}, skipped FANZA-only: ${stats.skipped}`,
+      );
     }
   }
 
@@ -124,9 +124,7 @@ export function selectProductSources<T extends { aspName: string; productId: num
  * @param sources - ソース配列
  * @returns 商品IDごとにグループ化されたマップ
  */
-export function groupSourcesByProduct<T extends { productId: number }>(
-  sources: T[]
-): Map<number, T[]> {
+export function groupSourcesByProduct<T extends { productId: number }>(sources: T[]): Map<number, T[]> {
   const grouped = new Map<number, T[]>();
   for (const source of sources) {
     if (!grouped.has(source.productId)) {

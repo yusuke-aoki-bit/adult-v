@@ -27,14 +27,10 @@ const getCachedCalendarData = unstable_cache(
     return { calendarData, dailyReleases, aspStats, popularTags };
   },
   ['calendar-data'],
-  { revalidate: 300, tags: ['calendar'] }
+  { revalidate: 300, tags: ['calendar'] },
 );
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
 
   const titles: Record<string, string> = {
@@ -80,7 +76,11 @@ export default async function CalendarPage({
   const isFanzaSite = await isServerFanzaSite();
 
   // カレンダー詳細データ、日別リリース数、フィルター用データを並列取得（キャッシュ付き）
-  const { calendarData, dailyReleases, aspStats, popularTags } = await getCachedCalendarData(targetYear, targetMonth, isFanzaSite);
+  const { calendarData, dailyReleases, aspStats, popularTags } = await getCachedCalendarData(
+    targetYear,
+    targetMonth,
+    isFanzaSite,
+  );
 
   const structuredData = {
     '@context': 'https://schema.org',
@@ -111,13 +111,13 @@ export default async function CalendarPage({
   };
 
   // ASP統計をProductListFilter用に変換
-  const aspStatsForFilter = aspStats.map(stat => ({
+  const aspStatsForFilter = aspStats.map((stat) => ({
     aspName: stat.aspName,
     count: stat.productCount,
   }));
 
   // タグをProductListFilter用に変換
-  const genreTagsForFilter = popularTags.map(tag => ({
+  const genreTagsForFilter = popularTags.map((tag) => ({
     id: tag.id,
     name: tag.name,
     count: tag.count,
@@ -128,7 +128,7 @@ export default async function CalendarPage({
       {/* 構造化データ */}
       <JsonLD data={structuredData} />
 
-      <section id="calendar" className="py-3 sm:py-4 md:py-6 scroll-mt-20">
+      <section id="calendar" className="scroll-mt-20 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
@@ -139,7 +139,7 @@ export default async function CalendarPage({
           />
 
           <div className="mb-2 sm:mb-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-0.5">
+            <h1 className="mb-0.5 text-xl font-bold text-white sm:text-2xl md:text-3xl">
               {pageTitle[locale] || pageTitle['ja']}
             </h1>
           </div>

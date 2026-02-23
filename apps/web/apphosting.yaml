@@ -55,7 +55,7 @@ env:
       - BUILD
       - RUNTIME
   - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
-    value: "646431984228"
+    value: '646431984228'
     availability:
       - BUILD
       - RUNTIME

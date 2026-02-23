@@ -84,7 +84,7 @@ export interface GetAffiliateUrlOptions {
  */
 export function getAffiliateUrl(
   affiliateUrl: string | undefined | null,
-  options: GetAffiliateUrlOptions = {}
+  options: GetAffiliateUrlOptions = {},
 ): string | null {
   if (!affiliateUrl) return null;
 

@@ -78,10 +78,12 @@ async function main() {
   console.log('既存の自動生成別名を削除しました\n');
 
   // 全女優を取得
-  const allPerformers = await db.select({
-    id: performers.id,
-    name: performers.name,
-  }).from(performers);
+  const allPerformers = await db
+    .select({
+      id: performers.id,
+      name: performers.name,
+    })
+    .from(performers);
   console.log(`対象女優数: ${allPerformers.length}\n`);
 
   // 全ての別名候補を生成
@@ -93,10 +95,10 @@ async function main() {
   console.log(`生成した候補数: ${allCandidates.length}\n`);
 
   // 既存の女優名を取得（重複チェック用）
-  const existingNames = new Set(allPerformers.map(p => p.name));
+  const existingNames = new Set(allPerformers.map((p) => p.name));
 
   // 重複しない候補のみをフィルタ
-  const validCandidates = allCandidates.filter(c => !existingNames.has(c.aliasName));
+  const validCandidates = allCandidates.filter((c) => !existingNames.has(c.aliasName));
   console.log(`有効な候補数（既存名と重複しない）: ${validCandidates.length}\n`);
 
   // バッチ挿入（1000件ずつ）
@@ -107,9 +109,7 @@ async function main() {
     const batch = validCandidates.slice(i, i + BATCH_SIZE);
 
     // VALUES句を構築
-    const values = batch.map(c =>
-      sql`(${c.performerId}, ${c.aliasName}, 'auto_generated', false)`
-    );
+    const values = batch.map((c) => sql`(${c.performerId}, ${c.aliasName}, 'auto_generated', false)`);
 
     if (values.length === 0) continue;
 

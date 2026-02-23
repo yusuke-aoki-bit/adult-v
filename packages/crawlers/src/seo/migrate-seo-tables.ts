@@ -48,7 +48,9 @@ async function main() {
     await client.query(`CREATE INDEX IF NOT EXISTS idx_seo_metrics_position ON seo_metrics(position)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_seo_metrics_impressions ON seo_metrics(impressions)`);
     await client.query(`CREATE INDEX IF NOT EXISTS idx_seo_metrics_date ON seo_metrics(date_start, date_end)`);
-    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_seo_metrics_query_url_date ON seo_metrics(query_type, query_or_url, date_start, date_end)`);
+    await client.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_seo_metrics_query_url_date ON seo_metrics(query_type, query_or_url, date_start, date_end)`,
+    );
     console.log('✅ seo_metrics indexes created');
 
     // footer_featured_actresses テーブル作成
@@ -66,8 +68,12 @@ async function main() {
     console.log('✅ footer_featured_actresses table created');
 
     // footer_featured_actresses インデックス作成
-    await client.query(`CREATE UNIQUE INDEX IF NOT EXISTS idx_footer_featured_performer ON footer_featured_actresses(performer_id)`);
-    await client.query(`CREATE INDEX IF NOT EXISTS idx_footer_featured_priority ON footer_featured_actresses(priority_score)`);
+    await client.query(
+      `CREATE UNIQUE INDEX IF NOT EXISTS idx_footer_featured_performer ON footer_featured_actresses(performer_id)`,
+    );
+    await client.query(
+      `CREATE INDEX IF NOT EXISTS idx_footer_featured_priority ON footer_featured_actresses(priority_score)`,
+    );
     console.log('✅ footer_featured_actresses indexes created');
 
     // 確認

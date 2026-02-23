@@ -49,9 +49,8 @@ async function createTable() {
     `);
     console.log('Table structure:');
     result.rows.forEach((r: { column_name: string; data_type: string }) =>
-      console.log(`  ${r.column_name}: ${r.data_type}`)
+      console.log(`  ${r.column_name}: ${r.data_type}`),
     );
-
   } finally {
     client.release();
     await pool.end();

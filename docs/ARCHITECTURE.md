@@ -136,11 +136,11 @@ adult-v/
 
 ```typescript
 // 品番ベース名寄せ
-normalizedProductId = normalize(originalProductId)
+normalizedProductId = normalize(originalProductId);
 // 例: "SSIS-865" → "ssis865"
 
 // タイトルベース名寄せ (品番が異なる場合)
-normalizedTitle = REGEXP_REPLACE(title, '[[:space:]　]+', '', 'g')
+normalizedTitle = REGEXP_REPLACE(title, '[[:space:]　]+', '', 'g');
 // 同一タイトルの商品を統合
 ```
 
@@ -221,10 +221,10 @@ const product = await queries.getProductById(id);
 
 ```typescript
 // Cron API
-verifyCronRequest(request) // OIDCトークン or X-Cron-Secret
+verifyCronRequest(request); // OIDCトークン or X-Cron-Secret
 
 // Admin API
-verifyAdminRequest(request) // Bearer token or X-Admin-Secret
+verifyAdminRequest(request); // Bearer token or X-Admin-Secret
 ```
 
 ### 環境変数

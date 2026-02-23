@@ -15,14 +15,14 @@ export function JapanskaCredit({ className = '' }: JapanskaCreditProps) {
       className={`inline-block ${className}`}
       aria-label="JAPANSKA-ヤパンスカ"
     >
-      { }
+      {}
       <img
         src="https://wimg2.golden-gateway.com/ad/10035_01.jpg"
         alt="無修正アダルト動画 JAPANSKA-ヤパンスカ"
         width="468"
         height="60"
         loading="lazy"
-        className="block w-auto h-[50px] max-w-[180px] object-contain"
+        className="block h-[50px] w-auto max-w-[180px] object-contain"
         style={{ aspectRatio: '468/60' }}
       />
     </a>

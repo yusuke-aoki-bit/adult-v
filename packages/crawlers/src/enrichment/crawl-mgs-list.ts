@@ -14,7 +14,19 @@
 
 import * as cheerio from 'cheerio';
 import { getDb } from '../lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
+import {
+  rawHtmlData,
+  productSources,
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productImages,
+  productVideos,
+  productReviews,
+  productRatingSummary,
+} from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { validateProductData, isTopPageHtml } from '../lib/crawler-utils';
@@ -33,26 +45,96 @@ const ITEMS_PER_PAGE = 120;
 // これらのシリーズプレフィックスで検索することで、新着順だけでなく過去の商品も取得
 const MGS_SERIES_PREFIXES = [
   // プレステージ
-  'ABW', 'ABP', 'ABS', 'ABF', 'CHN', 'TEM', 'SGA', 'SABA', 'KBI', 'GAV',
-  'AOI', 'EDD', 'YRH', 'SRS', 'MBM', 'FIV', 'BXH', 'RDT', 'MAN', 'MGT',
+  'ABW',
+  'ABP',
+  'ABS',
+  'ABF',
+  'CHN',
+  'TEM',
+  'SGA',
+  'SABA',
+  'KBI',
+  'GAV',
+  'AOI',
+  'EDD',
+  'YRH',
+  'SRS',
+  'MBM',
+  'FIV',
+  'BXH',
+  'RDT',
+  'MAN',
+  'MGT',
   // SODクリエイト
-  'STARS', 'SDAB', 'SDJS', 'SDDE', 'SDAM', 'SDMU', 'SDNT', 'SDNM', 'SDEN',
-  'SDMF', 'SDMM', 'JUFE', 'JUSD', 'JUNY',
+  'STARS',
+  'SDAB',
+  'SDJS',
+  'SDDE',
+  'SDAM',
+  'SDMU',
+  'SDNT',
+  'SDNM',
+  'SDEN',
+  'SDMF',
+  'SDMM',
+  'JUFE',
+  'JUSD',
+  'JUNY',
   // kawaii
-  'CAWD', 'KAVR', 'KWBD', 'KAWD',
+  'CAWD',
+  'KAVR',
+  'KWBD',
+  'KAWD',
   // ムーディーズ
-  'MIAA', 'MIDE', 'MIRD', 'MIDD', 'MIMK', 'PRED', 'PPPD', 'SNIS', 'SSNI',
+  'MIAA',
+  'MIDE',
+  'MIRD',
+  'MIDD',
+  'MIMK',
+  'PRED',
+  'PPPD',
+  'SNIS',
+  'SSNI',
   // S1
-  'SSIS', 'SONE', 'SIVR', 'OFJE', 'SOE', 'MSFH',
+  'SSIS',
+  'SONE',
+  'SIVR',
+  'OFJE',
+  'SOE',
+  'MSFH',
   // アイデアポケット
-  'IPX', 'IPZ', 'IPVR', 'SUPD', 'HODV',
+  'IPX',
+  'IPZ',
+  'IPVR',
+  'SUPD',
+  'HODV',
   // 素人系
-  '261ARA', '259LUXU', '300MIUM', '300MAAN', '300NTK', '300ORETD', '261SIRO',
-  '230OREC', '230ORETV', '390JAC', '336KNB', '200GANA', '320MMGH', '345SIMM',
+  '261ARA',
+  '259LUXU',
+  '300MIUM',
+  '300MAAN',
+  '300NTK',
+  '300ORETD',
+  '261SIRO',
+  '230OREC',
+  '230ORETV',
+  '390JAC',
+  '336KNB',
+  '200GANA',
+  '320MMGH',
+  '345SIMM',
   // FALENOstar
-  'FSDSS', 'FLNS', 'MFCS', 'FADSS',
+  'FSDSS',
+  'FLNS',
+  'MFCS',
+  'FADSS',
   // その他人気
-  'GVH', 'JUL', 'ROE', 'MOND', 'MEYD', 'ENGSUB',
+  'GVH',
+  'JUL',
+  'ROE',
+  'MOND',
+  'MEYD',
+  'ENGSUB',
 ];
 
 // 日付ソートオプション（古い順、新しい順）
@@ -60,7 +142,11 @@ type SortOrder = 'new' | 'old' | 'popular';
 
 // MGSカテゴリ設定（動画配信、DVD、月額チャンネル）
 const MGS_CATEGORIES = [
-  { name: '動画配信', type: 'haishin', url: 'https://www.mgstage.com/search/cSearch.php?sort=new&list_cnt=120&type=haishin' },
+  {
+    name: '動画配信',
+    type: 'haishin',
+    url: 'https://www.mgstage.com/search/cSearch.php?sort=new&list_cnt=120&type=haishin',
+  },
   { name: 'DVD', type: 'dvd', url: 'https://www.mgstage.com/ppv/dvd/' },
 ];
 
@@ -113,11 +199,7 @@ interface CrawlResult {
 /**
  * 単一商品をクロール（並列処理用）
  */
-async function crawlSingleProduct(
-  url: string,
-  productType: MgsProductType,
-  enableAI: boolean,
-): Promise<CrawlResult> {
+async function crawlSingleProduct(url: string, productType: MgsProductType, enableAI: boolean): Promise<CrawlResult> {
   const productIdMatch = url.match(/product_detail\/([^\/]+)/);
   const productId = productIdMatch ? productIdMatch[1] : 'unknown';
 
@@ -155,7 +237,6 @@ async function crawlSingleProduct(
       isUpdated: stats.updatedProducts > 0,
       isSkipped: stats.skippedUnchanged > 0,
     };
-
   } catch (error) {
     return { success: false, isNew: false, isUpdated: false, isSkipped: false, error: String(error) };
   }
@@ -202,7 +283,7 @@ async function processBatchParallel(
         }
 
         return result;
-      })
+      }),
     );
 
     // 統計を集計
@@ -216,7 +297,7 @@ async function processBatchParallel(
 
     // バッチ間の待機（レート制限）
     if (chunkIdx < chunks.length - 1) {
-      await new Promise(resolve => setTimeout(resolve, BATCH_DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, BATCH_DELAY_MS));
     }
   }
 }
@@ -396,9 +477,7 @@ async function runCategoryCrawl(
   const allProcessedUrls = new Set<string>();
 
   // カテゴリをクロール（動画配信、DVD）
-  const categoriesToCrawl = targetCategory
-    ? MGS_CATEGORIES.filter(c => c.type === targetCategory)
-    : MGS_CATEGORIES;
+  const categoriesToCrawl = targetCategory ? MGS_CATEGORIES.filter((c) => c.type === targetCategory) : MGS_CATEGORIES;
 
   for (const category of categoriesToCrawl) {
     console.log(`\n========================================`);
@@ -409,7 +488,9 @@ async function runCategoryCrawl(
       // 最初のページを取得して総ページ数を確認
       const firstResult = await fetchProductUrlsFromCategory(category.url, startPage);
       console.log(`  📊 Total count: ${firstResult.totalCount?.toLocaleString() || 'unknown'}`);
-      console.log(`  📄 Total pages: ${firstResult.totalPages} (crawling up to page ${Math.min(firstResult.totalPages, startPage + maxPages - 1)})`);
+      console.log(
+        `  📄 Total pages: ${firstResult.totalPages} (crawling up to page ${Math.min(firstResult.totalPages, startPage + maxPages - 1)})`,
+      );
 
       const seenUrls = new Set<string>();
       for (const url of firstResult.urls) {
@@ -421,7 +502,7 @@ async function runCategoryCrawl(
       // 2ページ目以降を取得
       for (let page = startPage + 1; page <= actualMaxPage; page++) {
         try {
-          await new Promise(resolve => setTimeout(resolve, 500));
+          await new Promise((resolve) => setTimeout(resolve, 500));
           const result = await fetchProductUrlsFromCategory(category.url, page);
 
           if (result.urls.length === 0) {
@@ -434,7 +515,6 @@ async function runCategoryCrawl(
           }
 
           console.log(`    ✅ Page ${page}/${actualMaxPage}: ${result.urls.length} products (total: ${seenUrls.size})`);
-
         } catch (error) {
           console.error(`  ❌ Error at page ${page}:`, error);
           break;
@@ -442,7 +522,7 @@ async function runCategoryCrawl(
       }
 
       // 重複を除外
-      const newUrls = Array.from(seenUrls).filter(url => !allProcessedUrls.has(url));
+      const newUrls = Array.from(seenUrls).filter((url) => !allProcessedUrls.has(url));
       console.log(`\n  📦 Unique URLs for ${category.name}: ${seenUrls.size}`);
       console.log(`  📦 New URLs (excluding previous): ${newUrls.length}`);
       console.log(`  🚀 Processing with ${CONCURRENCY} parallel workers...`);
@@ -462,14 +542,7 @@ async function runCategoryCrawl(
       }
 
       // 並列処理でクロール
-      await processBatchParallel(
-        newUrls,
-        category.type as MgsProductType,
-        enableAI,
-        stats,
-        0,
-        newUrls.length,
-      );
+      await processBatchParallel(newUrls, category.type as MgsProductType, enableAI, stats, 0, newUrls.length);
 
       // 統計を累積
       overallStats.totalFetched += stats.totalFetched;
@@ -480,7 +553,6 @@ async function runCategoryCrawl(
 
       console.log(`\n  📊 Category ${category.name} stats:`);
       console.table(stats);
-
     } catch (error) {
       console.error(`\n  ❌ Error processing category ${category.name}:`, error);
     }
@@ -506,7 +578,7 @@ async function runCategoryCrawl(
 
         for (let page = 2; page <= actualMaxPage; page++) {
           try {
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise((resolve) => setTimeout(resolve, 500));
             const result = await fetchProductUrlsFromChannel(channel.shopId, page);
 
             if (result.urls.length === 0) break;
@@ -515,15 +587,16 @@ async function runCategoryCrawl(
               if (!seenUrls.has(url)) seenUrls.add(url);
             }
 
-            console.log(`    ✅ Page ${page}/${actualMaxPage}: ${result.urls.length} products (total: ${seenUrls.size})`);
-
+            console.log(
+              `    ✅ Page ${page}/${actualMaxPage}: ${result.urls.length} products (total: ${seenUrls.size})`,
+            );
           } catch (error) {
             console.error(`  ❌ Error at page ${page}:`, error);
             break;
           }
         }
 
-        const newUrls = Array.from(seenUrls).filter(url => !allProcessedUrls.has(url));
+        const newUrls = Array.from(seenUrls).filter((url) => !allProcessedUrls.has(url));
         console.log(`\n  📦 New URLs for ${channel.name}: ${newUrls.length}`);
         console.log(`  🚀 Processing with ${CONCURRENCY} parallel workers...`);
 
@@ -541,14 +614,7 @@ async function runCategoryCrawl(
         }
 
         // 並列処理でクロール
-        await processBatchParallel(
-          newUrls,
-          'monthly',
-          enableAI,
-          stats,
-          0,
-          newUrls.length,
-        );
+        await processBatchParallel(newUrls, 'monthly', enableAI, stats, 0, newUrls.length);
 
         overallStats.totalFetched += stats.totalFetched;
         overallStats.newProducts += stats.newProducts;
@@ -558,7 +624,6 @@ async function runCategoryCrawl(
 
         console.log(`\n  📊 Channel ${channel.name} stats:`);
         console.table(stats);
-
       } catch (error) {
         console.error(`\n  ❌ Error processing channel ${channel.name}:`, error);
       }
@@ -657,7 +722,9 @@ async function crawlSeriesFull(
     const firstResult = await fetchProductUrlsBySeries(seriesKeyword, 1, sortOrder);
     const totalPages = Math.min(firstResult.totalPages, maxPages);
 
-    console.log(`  📊 Total pages for ${seriesKeyword} (${sortOrder}): ${firstResult.totalPages} (crawling up to ${totalPages})`);
+    console.log(
+      `  📊 Total pages for ${seriesKeyword} (${sortOrder}): ${firstResult.totalPages} (crawling up to ${totalPages})`,
+    );
 
     let newInThisSort = 0;
     for (const url of firstResult.urls) {
@@ -672,7 +739,7 @@ async function crawlSeriesFull(
     let consecutiveNoNew = 0;
     for (let page = 2; page <= totalPages; page++) {
       try {
-        await new Promise(resolve => setTimeout(resolve, delayMs));
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
 
         const result = await fetchProductUrlsBySeries(seriesKeyword, page, sortOrder);
 
@@ -691,7 +758,9 @@ async function crawlSeriesFull(
           }
         }
 
-        console.log(`    ✅ Page ${page}/${totalPages}: ${result.urls.length} products, ${newOnThisPage} new (total: ${allUrls.length})`);
+        console.log(
+          `    ✅ Page ${page}/${totalPages}: ${result.urls.length} products, ${newOnThisPage} new (total: ${allUrls.length})`,
+        );
 
         // 連続して新規が0の場合は早期終了（ページがループしている可能性）
         if (newOnThisPage === 0) {
@@ -703,7 +772,6 @@ async function crawlSeriesFull(
         } else {
           consecutiveNoNew = 0;
         }
-
       } catch (error) {
         console.error(`  ❌ Error at page ${page}:`, error);
         break;
@@ -774,15 +842,16 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   const title = $('h1.tag').text().trim() || $('title').text().trim();
 
   // トップページ検出
-  if (isTopPageHtml(html, 'MGS') ||
-      title.includes('エロ動画・アダルトビデオ -MGS動画') ||
-      title.includes('MGS動画＜プレステージ グループ＞')) {
+  if (
+    isTopPageHtml(html, 'MGS') ||
+    title.includes('エロ動画・アダルトビデオ -MGS動画') ||
+    title.includes('MGS動画＜プレステージ グループ＞')
+  ) {
     return null;
   }
 
   // 商品詳細ページチェック
-  const hasProductDetails = $('th:contains("配信開始日")').length > 0 ||
-                            $('th:contains("出演")').length > 0;
+  const hasProductDetails = $('th:contains("配信開始日")').length > 0 || $('th:contains("出演")').length > 0;
   if (!hasProductDetails) return null;
 
   // リリース日
@@ -791,10 +860,13 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 
   // 出演者
   const rawPerformerNames: string[] = [];
-  $('th:contains("出演")').next('td').find('a').each((_, elem) => {
-    const name = $(elem).text().trim();
-    if (name) rawPerformerNames.push(name);
-  });
+  $('th:contains("出演")')
+    .next('td')
+    .find('a')
+    .each((_, elem) => {
+      const name = $(elem).text().trim();
+      if (name) rawPerformerNames.push(name);
+    });
 
   if (rawPerformerNames.length === 0) {
     const performerText = $('th:contains("出演")').next('td').text().trim();
@@ -807,7 +879,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   }
 
   const performerNames = rawPerformerNames
-    .map(name => normalizePerformerName(name))
+    .map((name) => normalizePerformerName(name))
     .filter((name): name is string => name !== null && isValidPerformerForProduct(name, title));
 
   // サムネイル
@@ -820,9 +892,13 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
   // サンプル画像
   const sampleImages: string[] = [];
   const shouldExcludeImage = (url: string): boolean => {
-    return url.includes('sample_button') || url.includes('sample-button') ||
-           url.includes('samplemovie') || url.includes('sample_movie') ||
-           url.includes('btn_sample');
+    return (
+      url.includes('sample_button') ||
+      url.includes('sample-button') ||
+      url.includes('samplemovie') ||
+      url.includes('sample_movie') ||
+      url.includes('btn_sample')
+    );
   };
 
   // パターン1: #sample-photo 内のaタグのhrefから拡大画像URLを取得
@@ -902,9 +978,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
     if (scriptContent) {
       const sampleUrlMatch = scriptContent.match(/sample_url['":\s]+['"]([^'"]+)['"]/);
       if (sampleUrlMatch?.[1]) {
-        sampleVideoUrl = sampleUrlMatch[1].startsWith('http')
-          ? sampleUrlMatch[1]
-          : `${BASE_URL}${sampleUrlMatch[1]}`;
+        sampleVideoUrl = sampleUrlMatch[1].startsWith('http') ? sampleUrlMatch[1] : `${BASE_URL}${sampleUrlMatch[1]}`;
       }
     }
   }
@@ -986,10 +1060,13 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 
   // ジャンル
   const genres: string[] = [];
-  $('th:contains("ジャンル")').next('td').find('a').each((_, elem) => {
-    const genre = $(elem).text().trim();
-    if (genre) genres.push(genre);
-  });
+  $('th:contains("ジャンル")')
+    .next('td')
+    .find('a')
+    .each((_, elem) => {
+      const genre = $(elem).text().trim();
+      if (genre) genres.push(genre);
+    });
 
   const result: MgsProduct = {
     productId,
@@ -1013,12 +1090,7 @@ function parseMgsProductPage(html: string, productUrl: string): MgsProduct | nul
 /**
  * 商品データをDBに保存
  */
-async function saveProduct(
-  mgsProduct: MgsProduct,
-  html: string,
-  enableAI: boolean,
-  stats: CrawlStats,
-): Promise<void> {
+async function saveProduct(mgsProduct: MgsProduct, html: string, enableAI: boolean, stats: CrawlStats): Promise<void> {
   const db = getDb();
   const normalizedProductId = mgsProduct.productId.toLowerCase();
 
@@ -1142,11 +1214,7 @@ async function saveProduct(
     // 出演者保存
     if (mgsProduct.performerNames && mgsProduct.performerNames.length > 0) {
       for (const name of mgsProduct.performerNames) {
-        const performerRecord = await db
-          .select()
-          .from(performers)
-          .where(eq(performers['name'], name))
-          .limit(1);
+        const performerRecord = await db.select().from(performers).where(eq(performers['name'], name)).limit(1);
 
         let performerId: number;
         if (performerRecord.length === 0) {
@@ -1218,13 +1286,15 @@ async function saveProduct(
         .limit(1);
 
       if (existing.length === 0) {
-        await db['insert'](productVideos).values({
-          productId,
-          videoUrl: mgsProduct.sampleVideoUrl,
-          videoType: 'sample',
-          displayOrder: 0,
-          aspName: SOURCE_NAME,
-        }).onConflictDoNothing();
+        await db['insert'](productVideos)
+          .values({
+            productId,
+            videoUrl: mgsProduct.sampleVideoUrl,
+            videoType: 'sample',
+            displayOrder: 0,
+            aspName: SOURCE_NAME,
+          })
+          .onConflictDoNothing();
       }
     }
 
@@ -1249,7 +1319,7 @@ async function saveProduct(
             extractTags: true,
             translate: true,
             generateDescription: true,
-          }
+          },
         );
 
         // エラーがあれば警告
@@ -1265,7 +1335,10 @@ async function saveProduct(
               aiDescription: aiResult.description ? JSON.stringify(aiResult.description) : undefined,
               aiCatchphrase: aiResult.description?.catchphrase,
               aiShortDescription: aiResult.description?.shortDescription,
-              aiTags: (aiResult.tags && (aiResult.tags.genres.length > 0 || aiResult.tags.attributes.length > 0)) ? JSON.stringify(aiResult.tags) : undefined,
+              aiTags:
+                aiResult.tags && (aiResult.tags.genres.length > 0 || aiResult.tags.attributes.length > 0)
+                  ? JSON.stringify(aiResult.tags)
+                  : undefined,
             })
             .where(eq(products['id'], productId));
         }
@@ -1322,10 +1395,7 @@ async function saveProduct(
 
         let genreTagId: number;
         if (existingGenreTag.length === 0) {
-          const [newGenreTag] = await db
-            .insert(tags)
-            .values({ name: genreName, category: 'genre' })
-            .returning();
+          const [newGenreTag] = await db.insert(tags).values({ name: genreName, category: 'genre' }).returning();
           genreTagId = newGenreTag!.id;
         } else {
           genreTagId = existingGenreTag[0]!.id;
@@ -1343,7 +1413,6 @@ async function saveProduct(
         }
       }
     }
-
   } catch (error) {
     console.error(`    ❌ Error:`, error);
     stats.errors++;
@@ -1353,18 +1422,12 @@ async function saveProduct(
 /**
  * フルスキャンモード: 全シリーズをクロール
  */
-async function runFullScan(
-  enableAI: boolean,
-  targetSeries?: string,
-  maxPagesPerSeries: number = 500,
-): Promise<void> {
+async function runFullScan(enableAI: boolean, targetSeries?: string, maxPagesPerSeries: number = 500): Promise<void> {
   console.log('=== MGSフルスキャンモード ===');
   console.log(`AI: ${enableAI ? 'enabled' : 'disabled'}`);
   console.log(`Max pages per series: ${maxPagesPerSeries}`);
 
-  const seriesToCrawl = targetSeries
-    ? [targetSeries]
-    : MGS_SERIES_PREFIXES;
+  const seriesToCrawl = targetSeries ? [targetSeries] : MGS_SERIES_PREFIXES;
 
   console.log(`\n📋 Series to crawl: ${seriesToCrawl.length}`);
   if (targetSeries) {
@@ -1393,7 +1456,7 @@ async function runFullScan(
       const seriesUrls = await crawlSeriesFull(series, maxPagesPerSeries);
 
       // 重複を除外
-      const newUrls = seriesUrls.filter(url => !allProcessedUrls.has(url));
+      const newUrls = seriesUrls.filter((url) => !allProcessedUrls.has(url));
       console.log(`  📊 New URLs (excluding duplicates): ${newUrls.length}`);
       console.log(`  🚀 Processing with ${CONCURRENCY} parallel workers...`);
 
@@ -1412,14 +1475,7 @@ async function runFullScan(
       }
 
       // 並列処理でクロール（フルスキャンはhaishinタイプとして扱う）
-      await processBatchParallel(
-        newUrls,
-        'haishin',
-        enableAI,
-        stats,
-        0,
-        newUrls.length,
-      );
+      await processBatchParallel(newUrls, 'haishin', enableAI, stats, 0, newUrls.length);
 
       // シリーズ統計を累積
       overallStats.totalFetched += stats.totalFetched;
@@ -1432,8 +1488,7 @@ async function runFullScan(
       console.table(stats);
 
       // シリーズ間の待機
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
       console.error(`\n  ❌ Error processing series ${series}:`, error);
     }
@@ -1449,12 +1504,12 @@ async function runFullScan(
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const pagesArg = args.find(arg => arg.startsWith('--pages='));
-  const startPageArg = args.find(arg => arg.startsWith('--start-page='));
-  const seriesArg = args.find(arg => arg.startsWith('--series='));
-  const maxPagesArg = args.find(arg => arg.startsWith('--max-pages='));
-  const categoryArg = args.find(arg => arg.startsWith('--category='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const pagesArg = args.find((arg) => arg.startsWith('--pages='));
+  const startPageArg = args.find((arg) => arg.startsWith('--start-page='));
+  const seriesArg = args.find((arg) => arg.startsWith('--series='));
+  const maxPagesArg = args.find((arg) => arg.startsWith('--max-pages='));
+  const categoryArg = args.find((arg) => arg.startsWith('--category='));
   const enableAI = !args.includes('--no-ai');
   const fullScan = args.includes('--full-scan');
   const categoryCrawl = args.includes('--category-crawl');
@@ -1523,7 +1578,7 @@ async function main() {
       }
 
       // レート制限
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.error(`  ❌ Error fetching page ${page}:`, error);
       break;
@@ -1535,14 +1590,7 @@ async function main() {
   console.log(`🚀 Processing with ${CONCURRENCY} parallel workers...\n`);
 
   // 各商品をクロール（並列処理）
-  await processBatchParallel(
-    productUrls,
-    'haishin',
-    enableAI,
-    stats,
-    0,
-    productUrls.length,
-  );
+  await processBatchParallel(productUrls, 'haishin', enableAI, stats, 0, productUrls.length);
 
   console.log('\n=== Crawl Complete ===\n');
   console.log('Statistics:');

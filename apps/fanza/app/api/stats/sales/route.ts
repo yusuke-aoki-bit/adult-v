@@ -5,7 +5,4 @@ import { createStatsSalesHandler } from '@adult-v/shared/api-handlers';
 export const revalidate = 300;
 
 // FANZAサイトはFANZAのみのセール数を返す
-export const GET = createStatsSalesHandler(
-  { getSaleStats },
-  { aspFilter: 'FANZA' }
-);
+export const GET = createStatsSalesHandler({ getSaleStats }, { aspFilter: 'FANZA' });

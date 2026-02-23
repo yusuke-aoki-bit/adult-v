@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { products, productSources, productPerformers, performers, productTags, tags, productSales, productRatingSummary } from '@/lib/db/schema';
+import {
+  products,
+  productSources,
+  productPerformers,
+  performers,
+  productTags,
+  tags,
+  productSales,
+  productRatingSummary,
+} from '@/lib/db/schema';
 import { sql, inArray } from 'drizzle-orm';
 import { getCache, setCache, generateCacheKey } from '@adult-v/shared/lib/cache';
 
@@ -41,24 +50,18 @@ export async function GET(request: NextRequest) {
     const idsParam = searchParams.get('ids');
 
     if (!idsParam) {
-      return NextResponse.json(
-        { error: 'Product IDs are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Product IDs are required' }, { status: 400 });
     }
 
     const idsInput = idsParam.split(',').slice(0, 4); // 最大4件
 
     if (idsInput.length < 2) {
-      return NextResponse.json(
-        { error: 'At least 2 products are required for comparison' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'At least 2 products are required for comparison' }, { status: 400 });
     }
 
     // 数値IDかnormalizedProductIdかを判定
-    const isNumericIds = idsInput.every(id => /^\d+$/.test(id));
-    const numericIds = isNumericIds ? idsInput.map(id => parseInt(id, 10)) : [];
+    const isNumericIds = idsInput.every((id) => /^\d+$/.test(id));
+    const numericIds = isNumericIds ? idsInput.map((id) => parseInt(id, 10)) : [];
 
     // キャッシュチェック
     const cacheKey = generateCacheKey('compare:fanza', { ids: idsInput.sort().join(',') });
@@ -84,17 +87,14 @@ export async function GET(request: NextRequest) {
       .where(
         isNumericIds
           ? sql`${inArray(products.id, numericIds)} AND ${productSources.aspName} = 'FANZA'`
-          : sql`${inArray(products.normalizedProductId, idsInput)} AND ${productSources.aspName} = 'FANZA'`
+          : sql`${inArray(products.normalizedProductId, idsInput)} AND ${productSources.aspName} = 'FANZA'`,
       );
 
     if (productsData.length === 0) {
-      return NextResponse.json(
-        { error: 'No products found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'No products found' }, { status: 404 });
     }
 
-    const productIds = productsData.map(p => p.id);
+    const productIds = productsData.map((p) => p.id);
 
     // 出演者を取得
     const performersData = await db
@@ -157,7 +157,7 @@ export async function GET(request: NextRequest) {
         sql`${inArray(productSources.productId, productIds)}
           AND ${productSources.aspName} = 'FANZA'
           AND ${productSales.isActive} = true
-          AND (${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
+          AND (${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
       );
 
     const salesByProductAsp = new Map<string, { salePrice: number; discountPercent: number | null }>();
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 結果を組み立て
-    const compareProducts: CompareProduct[] = productsData.map(p => ({
+    const compareProducts: CompareProduct[] = productsData.map((p) => ({
       id: p.id,
       normalizedProductId: p.normalizedProductId,
       title: p.title,
@@ -216,24 +216,26 @@ export async function GET(request: NextRequest) {
 
     // リクエストされた順序で並べ替え
     const orderedProducts = idsInput
-      .map(id => {
+      .map((id) => {
         if (isNumericIds) {
-          return compareProducts.find(p => p.id === parseInt(id, 10));
+          return compareProducts.find((p) => p.id === parseInt(id, 10));
         }
-        return compareProducts.find(p => p.normalizedProductId === id);
+        return compareProducts.find((p) => p.normalizedProductId === id);
       })
       .filter((p): p is CompareProduct => p !== undefined);
 
     // 共通タグと共通出演者を計算
-    const allTags = orderedProducts.map(p => new Set(p.tags));
-    const commonTags = allTags.length > 0
-      ? allTags.reduce((acc, set) => new Set([...acc].filter(x => set.has(x))))
-      : new Set<string>();
+    const allTags = orderedProducts.map((p) => new Set(p.tags));
+    const commonTags =
+      allTags.length > 0
+        ? allTags.reduce((acc, set) => new Set([...acc].filter((x) => set.has(x))))
+        : new Set<string>();
 
-    const allPerformers = orderedProducts.map(p => new Set(p.performers));
-    const commonPerformers = allPerformers.length > 0
-      ? allPerformers.reduce((acc, set) => new Set([...acc].filter(x => set.has(x))))
-      : new Set<string>();
+    const allPerformers = orderedProducts.map((p) => new Set(p.performers));
+    const commonPerformers =
+      allPerformers.length > 0
+        ? allPerformers.reduce((acc, set) => new Set([...acc].filter((x) => set.has(x))))
+        : new Set<string>();
 
     const response = {
       success: true,
@@ -242,12 +244,12 @@ export async function GET(request: NextRequest) {
         commonTags: Array.from(commonTags),
         commonPerformers: Array.from(commonPerformers),
         priceRange: {
-          min: Math.min(...orderedProducts.flatMap(p =>
-            p.sources.map(s => s.salePrice || s.price || Infinity)
-          ).filter(p => p !== Infinity)),
-          max: Math.max(...orderedProducts.flatMap(p =>
-            p.sources.map(s => s.price || 0)
-          )),
+          min: Math.min(
+            ...orderedProducts
+              .flatMap((p) => p.sources.map((s) => s.salePrice || s.price || Infinity))
+              .filter((p) => p !== Infinity),
+          ),
+          max: Math.max(...orderedProducts.flatMap((p) => p.sources.map((s) => s.price || 0))),
         },
       },
     };
@@ -256,7 +258,6 @@ export async function GET(request: NextRequest) {
     await setCache(cacheKey, response, CACHE_TTL);
 
     return NextResponse.json(response);
-
   } catch (error) {
     console.error('[Compare API] Error:', error);
     return NextResponse.json({

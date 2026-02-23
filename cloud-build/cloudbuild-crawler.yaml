@@ -1,4 +1,12 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest', '-f', 'docker/Dockerfile.crawler', '.']
+    args:
+      [
+        'build',
+        '-t',
+        'asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest',
+        '-f',
+        'docker/Dockerfile.crawler',
+        '.',
+      ]
 images: ['asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest']

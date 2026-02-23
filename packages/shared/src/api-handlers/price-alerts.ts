@@ -14,7 +14,7 @@ export interface PriceAlertsHandlerDeps {
 }
 
 export interface PriceAlertInput {
-  endpoint: string;  // プッシュ通知のエンドポイント
+  endpoint: string; // プッシュ通知のエンドポイント
   productId: number;
   targetPrice?: number;
   notifyOnAnySale?: boolean;
@@ -31,10 +31,10 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
     const { getDb, priceAlerts, pushSubscriptions, products, productSources, eq, and, sql } = deps;
 
     try {
-      const db = await getDb() as Record<string, unknown>;
+      const db = (await getDb()) as Record<string, unknown>;
 
       if (request.method === 'POST') {
-        const body = await request.json() as PriceAlertInput;
+        const body = (await request.json()) as PriceAlertInput;
         const { endpoint, productId, targetPrice, notifyOnAnySale = true } = body;
 
         if (!endpoint || !productId) {
@@ -59,8 +59,8 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
           .where(
             and(
               eq((priceAlerts as Record<string, unknown>)['subscriptionId'], subscriptionId),
-              eq((priceAlerts as Record<string, unknown>)['productId'], productId)
-            )
+              eq((priceAlerts as Record<string, unknown>)['productId'], productId),
+            ),
           )
           .limit(1);
 
@@ -125,20 +125,20 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
           .from(priceAlerts)
           .innerJoin(
             products,
-            eq((priceAlerts as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id'])
+            eq((priceAlerts as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id']),
           )
           .where(
             and(
               eq((priceAlerts as Record<string, unknown>)['subscriptionId'], subscriptionId),
-              eq((priceAlerts as Record<string, unknown>)['isActive'], true)
-            )
+              eq((priceAlerts as Record<string, unknown>)['isActive'], true),
+            ),
           );
 
         return NextResponse.json({ alerts });
       }
 
       if (request.method === 'DELETE') {
-        const body = await request.json() as { endpoint: string; productId: number };
+        const body = (await request.json()) as { endpoint: string; productId: number };
         const { endpoint, productId } = body;
 
         if (!endpoint || !productId) {
@@ -152,7 +152,7 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
           .limit(1);
 
         if (subscriptionResult.length === 0) {
-          return NextResponse.json({ success: true });  // 購読がなければ何もしない
+          return NextResponse.json({ success: true }); // 購読がなければ何もしない
         }
 
         const subscriptionId = subscriptionResult[0]['id'];
@@ -163,8 +163,8 @@ export function createPriceAlertsHandler(deps: PriceAlertsHandlerDeps) {
           .where(
             and(
               eq((priceAlerts as Record<string, unknown>)['subscriptionId'], subscriptionId),
-              eq((priceAlerts as Record<string, unknown>)['productId'], productId)
-            )
+              eq((priceAlerts as Record<string, unknown>)['productId'], productId),
+            ),
           );
 
         return NextResponse.json({ success: true });

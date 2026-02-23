@@ -34,6 +34,48 @@ const alertPageTexts = {
     view: 'View',
     remove: 'Remove',
   },
+  zh: {
+    loading: '加载中...',
+    pageTitle: '价格提醒',
+    alertsCount: (count: number) => `已设置${count}个提醒`,
+    clearAll: '全部删除',
+    confirmClearAll: '确定删除所有提醒吗？',
+    noAlerts: '暂无提醒',
+    noAlertsDescription: '在作品页面点击铃铛图标即可设置价格提醒',
+    targetPrice: '目标价格: ',
+    currentPrice: '当前价格: ',
+    setDate: '设置日期: ',
+    view: '查看',
+    remove: '删除',
+  },
+  'zh-TW': {
+    loading: '載入中...',
+    pageTitle: '價格提醒',
+    alertsCount: (count: number) => `已設定${count}個提醒`,
+    clearAll: '全部刪除',
+    confirmClearAll: '確定刪除所有提醒嗎？',
+    noAlerts: '暫無提醒',
+    noAlertsDescription: '在作品頁面點擊鈴鐺圖示即可設定價格提醒',
+    targetPrice: '目標價格: ',
+    currentPrice: '目前價格: ',
+    setDate: '設定日期: ',
+    view: '查看',
+    remove: '刪除',
+  },
+  ko: {
+    loading: '로딩 중...',
+    pageTitle: '가격 알림',
+    alertsCount: (count: number) => `${count}개의 알림이 설정되어 있습니다`,
+    clearAll: '모두 삭제',
+    confirmClearAll: '모든 알림을 삭제하시겠습니까?',
+    noAlerts: '알림 없음',
+    noAlertsDescription: '작품 페이지에서 벨 아이콘을 눌러 가격 알림을 설정하세요',
+    targetPrice: '목표 가격: ',
+    currentPrice: '현재 가격: ',
+    setDate: '설정일: ',
+    view: '보기',
+    remove: '삭제',
+  },
 } as const;
 
 function getAlertPageText(locale: string) {
@@ -56,9 +98,12 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
     setIsLoaded(true);
   }, []);
 
-  const handleProductClick = useCallback((id: string | number) => {
-    router.push(`/${locale}/products/${id}`);
-  }, [router, locale]);
+  const handleProductClick = useCallback(
+    (id: string | number) => {
+      router.push(`/${locale}/products/${id}`);
+    },
+    [router, locale],
+  );
 
   const formatDate = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -81,16 +126,18 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
 
   if (!isLoaded) {
     return (
-      <main className="min-h-screen theme-body">
+      <main className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center gap-2">
-            <svg className="animate-spin w-5 h-5 theme-text" fill="none" viewBox="0 0 24 24">
+            <svg className="theme-text h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              />
             </svg>
-            <span className="theme-text">
-              {pt.loading}
-            </span>
+            <span className="theme-text">{pt.loading}</span>
           </div>
         </div>
       </main>
@@ -98,28 +145,31 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
   }
 
   return (
-    <main className="min-h-screen theme-body">
+    <main className="theme-body min-h-screen">
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold theme-text mb-1 flex items-center gap-2">
-              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <h1 className="theme-text mb-1 flex items-center gap-2 text-2xl font-bold sm:text-3xl">
+              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
               </svg>
               {pt.pageTitle}
             </h1>
-            <p className="theme-text-secondary">
-              {pt.alertsCount(alerts.length)}
-            </p>
+            <p className="theme-text-secondary">{pt.alertsCount(alerts.length)}</p>
           </div>
 
           {/* Actions */}
           {alerts.length > 0 && (
-            <div className="flex justify-end mb-4">
+            <div className="mb-4 flex justify-end">
               <button
                 onClick={handleClearAll}
-                className="px-3 py-2 text-sm text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg transition-colors"
+                className="rounded-lg px-3 py-2 text-sm text-red-400 transition-colors hover:bg-red-900/20 hover:text-red-300"
               >
                 {pt.clearAll}
               </button>
@@ -128,48 +178,59 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
 
           {/* Alert List */}
           {alerts.length === 0 ? (
-            <div className="text-center py-16 theme-content rounded-lg border theme-border">
-              <svg className="w-16 h-16 mx-auto mb-4 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+            <div className="theme-content theme-border rounded-lg border py-16 text-center">
+              <svg
+                className="theme-text-muted mx-auto mb-4 h-16 w-16"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
               </svg>
-              <p className="theme-text-secondary text-lg mb-2">
-                {pt.noAlerts}
-              </p>
-              <p className="theme-text-muted text-sm">
-                {pt.noAlertsDescription}
-              </p>
+              <p className="theme-text-secondary mb-2 text-lg">{pt.noAlerts}</p>
+              <p className="theme-text-muted text-sm">{pt.noAlertsDescription}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {alerts.map((alert: PriceAlert) => (
                 <div
                   key={alert.productId}
-                  className="flex gap-4 p-4 theme-content rounded-lg border theme-border hover:opacity-90 transition-colors"
+                  className="theme-content theme-border flex gap-4 rounded-lg border p-4 transition-colors hover:opacity-90"
                 >
                   {/* Thumbnail */}
                   <div
-                    className="w-20 sm:w-24 shrink-0 cursor-pointer"
+                    className="w-20 shrink-0 cursor-pointer sm:w-24"
                     onClick={() => handleProductClick(alert.productId)}
                   >
                     {alert.thumbnailUrl ? (
                       <img
                         src={alert.thumbnailUrl}
                         alt={alert.title}
-                        className="w-full aspect-3/4 object-cover rounded"
+                        className="aspect-3/4 w-full rounded object-cover"
                       />
                     ) : (
-                      <div className="w-full aspect-3/4 theme-card rounded flex items-center justify-center">
-                        <svg className="w-8 h-8 theme-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      <div className="theme-card flex aspect-3/4 w-full items-center justify-center rounded">
+                        <svg className="theme-text-muted h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
                         </svg>
                       </div>
                     )}
                   </div>
 
                   {/* Info */}
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h3
-                      className="font-medium theme-text line-clamp-2 cursor-pointer theme-link transition-colors"
+                      className="theme-text theme-link line-clamp-2 cursor-pointer font-medium transition-colors"
                       onClick={() => handleProductClick(alert.productId)}
                     >
                       {alert.title}
@@ -178,25 +239,17 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                     <div className="mt-2 space-y-1">
                       {alert.targetPrice && (
                         <p className="text-sm">
-                          <span className="theme-text-muted">
-                            {pt.targetPrice}
-                          </span>
-                          <span className="text-yellow-400 font-semibold">
-                            {formatPrice(alert.targetPrice)}
-                          </span>
+                          <span className="theme-text-muted">{pt.targetPrice}</span>
+                          <span className="font-semibold text-yellow-400">{formatPrice(alert.targetPrice)}</span>
                         </p>
                       )}
                       {alert.currentPrice !== undefined && (
                         <p className="text-sm">
-                          <span className="theme-text-muted">
-                            {pt.currentPrice}
-                          </span>
-                          <span className="theme-text">
-                            {formatPrice(alert.currentPrice)}
-                          </span>
+                          <span className="theme-text-muted">{pt.currentPrice}</span>
+                          <span className="theme-text">{formatPrice(alert.currentPrice)}</span>
                         </p>
                       )}
-                      <p className="text-sm theme-text-muted">
+                      <p className="theme-text-muted text-sm">
                         {pt.setDate}
                         {formatDate(alert.createdAt)}
                       </p>
@@ -207,13 +260,13 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => handleProductClick(alert.productId)}
-                      className="px-3 py-1.5 text-sm bg-(--btn-primary-bg) hover:bg-(--btn-primary-hover) text-white rounded transition-colors"
+                      className="rounded bg-(--btn-primary-bg) px-3 py-1.5 text-sm text-white transition-colors hover:bg-(--btn-primary-hover)"
                     >
                       {pt.view}
                     </button>
                     <button
                       onClick={() => removeAlert(alert.productId)}
-                      className="px-3 py-1.5 text-sm theme-text-muted hover:text-red-400 hover:bg-red-900/20 rounded transition-colors"
+                      className="theme-text-muted rounded px-3 py-1.5 text-sm transition-colors hover:bg-red-900/20 hover:text-red-400"
                     >
                       {pt.remove}
                     </button>

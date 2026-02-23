@@ -3,7 +3,13 @@
  * 両アプリ（web/fanza）で共通使用
  */
 
-import type { Actress as ActressType, ProviderId, ActressAiReview, Product as ProductType, ProductCategory } from '../types/product';
+import type {
+  Actress as ActressType,
+  ProviderId,
+  ActressAiReview,
+  Product as ProductType,
+  ProductCategory,
+} from '../types/product';
 import type { BatchRelatedDataResult } from './core-queries';
 import { ACTRESS_PLACEHOLDER, PRODUCT_PLACEHOLDER } from '../constants/app';
 import { ASP_TO_PROVIDER_ID } from '../constants/filters';
@@ -59,7 +65,7 @@ export interface MapperDeps {
 export interface DbProduct {
   id: number;
   normalizedProductId?: string | null;
-  makerProductCode?: string | null;  // メーカー品番 (例: SSIS-865, START-470)
+  makerProductCode?: string | null; // メーカー品番 (例: SSIS-865, START-470)
   title: string;
   releaseDate?: string | null;
   description?: string | null;
@@ -176,7 +182,7 @@ export function mapProductToType(
   imagesData?: ImageData[],
   videosData?: VideoData[],
   locale: string = 'ja',
-  saleData?: SaleData
+  saleData?: SaleData,
 ): ProductType {
   const {
     mapLegacyProvider,
@@ -203,7 +209,7 @@ export function mapProductToType(
   let imageUrl = cache?.thumbnailUrl || product['defaultThumbnailUrl'];
   if (!imageUrl && imagesData && imagesData.length > 0) {
     // thumbnailタイプの画像を優先、なければ最初の画像
-    const thumbnailImg = imagesData.find(img => img.imageType === 'thumbnail');
+    const thumbnailImg = imagesData.find((img) => img.imageType === 'thumbnail');
     imageUrl = thumbnailImg?.imageUrl || imagesData[0]!.imageUrl;
   }
   if (!imageUrl) {
@@ -215,9 +221,10 @@ export function mapProductToType(
   const affiliateUrl = rawAffiliateUrl.startsWith('http') ? rawAffiliateUrl : '';
 
   // サンプル画像を取得（product_imagesテーブルまたはcache）
-  const sampleImages = imagesData && imagesData.length > 0
-    ? imagesData.map(img => img.imageUrl)
-    : (cache?.sampleImages as string[] | undefined);
+  const sampleImages =
+    imagesData && imagesData.length > 0
+      ? imagesData.map((img) => img.imageUrl)
+      : (cache?.sampleImages as string[] | undefined);
 
   // タグからカテゴリを推定（仮実装）
   const category: ProductCategory = 'premium';
@@ -228,40 +235,43 @@ export function mapProductToType(
   const actressName = firstPerformer ? getLocalizedPerformerName(firstPerformer, locale) : undefined;
 
   // 全出演者情報 - ローカライズ対応
-  const performersList = performerData.map(p => ({
+  const performersList = performerData.map((p) => ({
     id: String(p.id),
-    name: getLocalizedPerformerName(p, locale)
+    name: getLocalizedPerformerName(p, locale),
   }));
 
   // タグ名の配列 - ローカライズ対応
-  const tagsList = tagData.map(t => getLocalizedTagName(t, locale));
+  const tagsList = tagData.map((t) => getLocalizedTagName(t, locale));
 
   // 新作判定・発売予定判定
-  const { isNew, isFuture } = product['releaseDate'] ? (() => {
-    const releaseDate = new Date(product['releaseDate']);
-    const now = new Date();
-    const diffTime = now.getTime() - releaseDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    // 未来の日付 = 発売予定
-    if (diffDays < 0) {
-      return { isNew: false, isFuture: true };
-    }
-    // 過去7日以内 = 新作
-    return { isNew: diffDays <= 7, isFuture: false };
-  })() : { isNew: false, isFuture: false };
+  const { isNew, isFuture } = product['releaseDate']
+    ? (() => {
+        const releaseDate = new Date(product['releaseDate']);
+        const now = new Date();
+        const diffTime = now.getTime() - releaseDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // 未来の日付 = 発売予定
+        if (diffDays < 0) {
+          return { isNew: false, isFuture: true };
+        }
+        // 過去7日以内 = 新作
+        return { isNew: diffDays <= 7, isFuture: false };
+      })()
+    : { isNew: false, isFuture: false };
 
   // サンプル動画を整形
-  const sampleVideos = videosData && videosData.length > 0
-    ? videosData.map(video => {
-        const item: { url: string; type: string; quality?: string; duration?: number } = {
-          url: video.videoUrl,
-          type: video.videoType || 'sample',
-        };
-        if (video.quality) item.quality = video.quality;
-        if (video.duration) item.duration = video.duration;
-        return item;
-      })
-    : undefined;
+  const sampleVideos =
+    videosData && videosData.length > 0
+      ? videosData.map((video) => {
+          const item: { url: string; type: string; quality?: string; duration?: number } = {
+            url: video.videoUrl,
+            type: video.videoType || 'sample',
+          };
+          if (video.quality) item.quality = video.quality;
+          if (video.duration) item.duration = video.duration;
+          return item;
+        })
+      : undefined;
 
   // 必須プロパティで基本オブジェクトを作成
   const result: ProductType = {
@@ -327,7 +337,7 @@ export function mapPerformerToActressTypeSync(
     services?: string[];
     aliases?: string[];
     locale?: string;
-  } = {}
+  } = {},
 ): ActressType {
   const { thumbnailUrl, services, aliases, locale = 'ja' } = options;
   const { getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedAiReview } = deps;
@@ -338,7 +348,7 @@ export function mapPerformerToActressTypeSync(
 
   // ASP名をProviderId型に変換（共通定数を使用）
   const providerIds = (services || [])
-    .map(s => ASP_TO_PROVIDER_ID[s])
+    .map((s) => ASP_TO_PROVIDER_ID[s])
     .filter((p): p is ProviderId => p !== undefined);
 
   // AIレビューをパース（ローカライズ対応）
@@ -397,7 +407,7 @@ export function mapProductsWithBatchData(
   productList: DbProduct[],
   batchData: BatchRelatedDataResult,
   deps: MapProductsWithBatchDataDeps,
-  locale: string = 'ja'
+  locale: string = 'ja',
 ): ProductType[] {
   const { isValidPerformer, ...productMapperDeps } = deps;
 
@@ -419,7 +429,7 @@ export function mapProductsWithBatchData(
       imagesData,
       videosData,
       locale,
-      saleData
+      saleData,
     );
 
     // 他ASPソースを alternativeSources として追加
@@ -429,20 +439,21 @@ export function mapProductsWithBatchData(
       // メインソース以外のソースをalternativeSourcesに追加
       // FANZAは含めるが、リンク先はf.adult-v.comの商品詳細ページにする
       const alternatives = allSources
-        .filter(s => s.aspName.toUpperCase() !== mainAspName)
-        .map(s => {
+        .filter((s) => s.aspName.toUpperCase() !== mainAspName)
+        .map((s) => {
           const isFanza = s.aspName.toUpperCase() === 'FANZA';
           // FANZAの場合はf.adult-v.comの商品詳細ページへのリンクを生成
           // localeはgetパラメータ（?hl=）で渡す
           const affiliateUrl = isFanza
             ? `https://www.f.adult-v.com/products/${product['id']}${locale !== 'ja' ? `?hl=${locale}` : ''}`
-            : (s.affiliateUrl || '');
-          const item: { aspName: string; price: number; salePrice?: number; affiliateUrl: string; productId: number } = {
-            aspName: s.aspName,
-            price: s.price ?? 0,
-            affiliateUrl,
-            productId: product['id'],
-          };
+            : s.affiliateUrl || '';
+          const item: { aspName: string; price: number; salePrice?: number; affiliateUrl: string; productId: number } =
+            {
+              aspName: s.aspName,
+              price: s.price ?? 0,
+              affiliateUrl,
+              productId: product['id'],
+            };
           // salePriceは値がある場合のみ設定（exactOptionalPropertyTypes対応）
           return item;
         });

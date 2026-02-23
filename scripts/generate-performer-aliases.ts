@@ -24,13 +24,13 @@ interface AliasCandidate {
  */
 function toHalfWidth(str: string): string {
   return str.replace(/[Ａ-Ｚａ-ｚ０-９]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) - 0xFEE0);
+    return String.fromCharCode(s.charCodeAt(0) - 0xfee0);
   });
 }
 
 function toFullWidth(str: string): string {
   return str.replace(/[A-Za-z0-9]/g, (s) => {
-    return String.fromCharCode(s.charCodeAt(0) + 0xFEE0);
+    return String.fromCharCode(s.charCodeAt(0) + 0xfee0);
   });
 }
 
@@ -211,7 +211,6 @@ async function main() {
         if (generatedCount <= 10) {
           console.log(`  生成: "${candidate.performerName}" → "${candidate.aliasName}" (${candidate.reason})`);
         }
-
       } catch (error: any) {
         // 重複エラーは無視
         if (error.code === '23505') {

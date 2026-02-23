@@ -47,12 +47,7 @@ export function normalizeTitle(title: string): string {
  * 同一タイトルで別動画が多いプロバイダー
  * これらのプロバイダーでは originalProductId をキーに使用
  */
-const PROVIDERS_WITH_DUPLICATE_TITLES = new Set([
-  'fc2',
-  'FC2',
-  'duga',
-  'DUGA',
-]);
+const PROVIDERS_WITH_DUPLICATE_TITLES = new Set(['fc2', 'FC2', 'duga', 'DUGA']);
 
 /**
  * 重複排除キーを生成
@@ -82,10 +77,7 @@ function getDeduplicationKey(product: DeduplicatableProduct): string {
  * @param siteMode - サイトモード ('all': 代替ソース保持, 'fanza-only': シンプル重複排除)
  * @returns 重複排除済みの商品配列（元の順序を維持）
  */
-export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
-  products: T[],
-  siteMode: SiteMode
-): T[] {
+export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(products: T[], siteMode: SiteMode): T[] {
   if (products.length === 0) return [];
 
   // siteMode === 'all' の場合: 異なるプロバイダー間のみ重複排除し、代替ソースを保持
@@ -122,10 +114,10 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
         const cheapest = sorted[0];
         if (!cheapest) continue;
 
-        const alternatives = sorted.slice(1).filter(p => p.provider !== cheapest.provider);
+        const alternatives = sorted.slice(1).filter((p) => p.provider !== cheapest.provider);
 
         if (alternatives.length > 0 && !cheapest.alternativeSources) {
-          cheapest.alternativeSources = alternatives.map(p => ({
+          cheapest.alternativeSources = alternatives.map((p) => ({
             aspName: p.provider || 'unknown',
             price: p.price,
             salePrice: p.salePrice,
@@ -155,7 +147,7 @@ export function deduplicateProductsByTitle<T extends DeduplicatableProduct>(
   // siteMode === 'fanza-only' の場合: シンプル重複排除（代替ソースなし）
   // 同じプロバイダー内の同タイトルは別商品として扱う
   const seenKeys = new Set<string>();
-  return products.filter(product => {
+  return products.filter((product) => {
     const key = getDeduplicationKey(product);
 
     if (seenKeys.has(key)) {

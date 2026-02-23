@@ -26,10 +26,7 @@ import { eq, and, sql } from 'drizzle-orm';
 import iconv from 'iconv-lite';
 import { isValidPerformerName } from './lib/performer-validation.js';
 import { getFirstRow, getRows, IdRow } from './lib/crawler/index.js';
-import {
-  upsertRawHtmlDataWithGcs,
-  markRawDataAsProcessed,
-} from './lib/crawler/dedup-helper.js';
+import { upsertRawHtmlDataWithGcs, markRawDataAsProcessed } from './lib/crawler/dedup-helper.js';
 
 interface PerformerData {
   name: string;
@@ -103,7 +100,7 @@ async function fetchHtml(url: string): Promise<string | null> {
     const html = iconv.decode(buffer, encoding);
 
     // Rate limiting: 3000ms between requests
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     return html;
   } catch (error) {
@@ -115,7 +112,7 @@ async function fetchHtml(url: string): Promise<string | null> {
 /**
  * Parse av-wiki.net article pages
  */
-function parseAvWiki(html: string, url: string): { performers: PerformerData[], products: ProductData[] } {
+function parseAvWiki(html: string, url: string): { performers: PerformerData[]; products: ProductData[] } {
   const performerResults: PerformerData[] = [];
   const productResults: ProductData[] = [];
 
@@ -149,7 +146,7 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
           title: currentTitle || undefined,
           releaseDate: currentReleaseDate || undefined,
           performers: currentPerformers,
-          source: 'av-wiki'
+          source: 'av-wiki',
         });
 
         // Add performer data
@@ -157,7 +154,7 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
           performerResults.push({
             name,
             productId: currentProductId,
-            source: 'av-wiki'
+            source: 'av-wiki',
           });
         }
       }
@@ -183,11 +180,13 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
       for (const match of nameMatches) {
         const name = match.replace(/>/g, '').replace(/</g, '').trim();
         // Skip labels and IDs
-        if (name &&
-            !name.match(/出演|女優|AV/) &&
-            !name.match(/^[A-Z0-9]+-\d+$/) &&
-            name.length > 1 &&
-            name.length < 30) {
+        if (
+          name &&
+          !name.match(/出演|女優|AV/) &&
+          !name.match(/^[A-Z0-9]+-\d+$/) &&
+          name.length > 1 &&
+          name.length < 30
+        ) {
           currentPerformers.push(name);
         }
       }
@@ -209,14 +208,14 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
       title: currentTitle || undefined,
       releaseDate: currentReleaseDate || undefined,
       performers: currentPerformers,
-      source: 'av-wiki'
+      source: 'av-wiki',
     });
 
     for (const name of currentPerformers) {
       performerResults.push({
         name,
         productId: currentProductId,
-        source: 'av-wiki'
+        source: 'av-wiki',
       });
     }
   }
@@ -229,7 +228,7 @@ function parseAvWiki(html: string, url: string): { performers: PerformerData[], 
 /**
  * Parse seesaawiki.jp article pages
  */
-function parseSeesaawiki(html: string, url: string): { performers: PerformerData[], products: ProductData[] } {
+function parseSeesaawiki(html: string, url: string): { performers: PerformerData[]; products: ProductData[] } {
   const performerResults: PerformerData[] = [];
   const productResults: ProductData[] = [];
 
@@ -262,14 +261,14 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
           title: currentTitle || undefined,
           releaseDate: currentReleaseDate || undefined,
           performers: currentPerformers,
-          source: 'seesaawiki'
+          source: 'seesaawiki',
         });
 
         for (const name of currentPerformers) {
           performerResults.push({
             name,
             productId: currentProductId,
-            source: 'seesaawiki'
+            source: 'seesaawiki',
           });
         }
       }
@@ -294,11 +293,7 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
       const nameMatches = row.match(/>([^<>]{2,30})</g) || [];
       for (const match of nameMatches) {
         const name = match.replace(/>/g, '').replace(/</g, '').trim();
-        if (name &&
-            !name.match(/出演|女優/) &&
-            !name.match(/^[A-Z0-9]+-\d+$/) &&
-            name.length > 1 &&
-            name.length < 30) {
+        if (name && !name.match(/出演|女優/) && !name.match(/^[A-Z0-9]+-\d+$/) && name.length > 1 && name.length < 30) {
           currentPerformers.push(name);
         }
       }
@@ -320,14 +315,14 @@ function parseSeesaawiki(html: string, url: string): { performers: PerformerData
       title: currentTitle || undefined,
       releaseDate: currentReleaseDate || undefined,
       performers: currentPerformers,
-      source: 'seesaawiki'
+      source: 'seesaawiki',
     });
 
     for (const name of currentPerformers) {
       performerResults.push({
         name,
         productId: currentProductId,
-        source: 'seesaawiki'
+        source: 'seesaawiki',
       });
     }
   }
@@ -345,21 +340,20 @@ async function getOrCreatePerformer(db: any, name: string): Promise<number> {
   const normalizedName = name.trim();
 
   // Check if performer exists
-  const existing = await db.select()
-    .from(performers)
-    .where(eq(performers.name, normalizedName))
-    .limit(1);
+  const existing = await db.select().from(performers).where(eq(performers.name, normalizedName)).limit(1);
 
   if (existing.length > 0) {
     return existing[0].id;
   }
 
   // Create new performer
-  const slug = normalizedName.toLowerCase()
+  const slug = normalizedName
+    .toLowerCase()
     .replace(/\s+/g, '-')
     .replace(/[^\w\-]/g, '');
 
-  const result = await db.insert(performers)
+  const result = await db
+    .insert(performers)
     .values({
       name: normalizedName,
       slug: slug + '-' + Date.now(),
@@ -377,10 +371,7 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
   const normalizedId = productData.productId.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
   // Check if product exists by normalizedProductId
-  const existing = await db.select()
-    .from(products)
-    .where(eq(products.normalizedProductId, normalizedId))
-    .limit(1);
+  const existing = await db.select().from(products).where(eq(products.normalizedProductId, normalizedId)).limit(1);
 
   if (existing.length > 0) {
     // Update product if we have new information
@@ -390,9 +381,7 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
       if (productData.releaseDate) updateData.releaseDate = new Date(productData.releaseDate);
 
       if (Object.keys(updateData).length > 0) {
-        await db.update(products)
-          .set(updateData)
-          .where(eq(products.id, existing[0].id));
+        await db.update(products).set(updateData).where(eq(products.id, existing[0].id));
         console.log(`  📝 Updated product: ${productData.productId}`);
       }
     }
@@ -400,7 +389,8 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
   }
 
   // Create new product
-  const newProduct = await db.insert(products)
+  const newProduct = await db
+    .insert(products)
     .values({
       id: productData.productId,
       normalizedProductId: normalizedId,
@@ -417,18 +407,12 @@ async function getOrCreateProduct(db: any, productData: ProductData): Promise<nu
 /**
  * Link performer to product
  */
-async function linkPerformerToProduct(
-  db: any,
-  performerId: number,
-  productId: number
-): Promise<void> {
+async function linkPerformerToProduct(db: any, performerId: number, productId: number): Promise<void> {
   // Check if link already exists
-  const existingLink = await db.select()
+  const existingLink = await db
+    .select()
     .from(productPerformers)
-    .where(and(
-      eq(productPerformers.productId, productId),
-      eq(productPerformers.performerId, performerId)
-    ))
+    .where(and(eq(productPerformers.productId, productId), eq(productPerformers.performerId, performerId)))
     .limit(1);
 
   if (existingLink.length > 0) {
@@ -436,11 +420,10 @@ async function linkPerformerToProduct(
   }
 
   // Create link
-  await db.insert(productPerformers)
-    .values({
-      productId,
-      performerId,
-    });
+  await db.insert(productPerformers).values({
+    productId,
+    performerId,
+  });
 
   console.log(`  🔗 Linked performer ${performerId} to product ${productId}`);
 }
@@ -454,7 +437,7 @@ async function saveRawHtml(
   url: string,
   html: string,
   source: string,
-  forceReprocess: boolean = false
+  forceReprocess: boolean = false,
 ): Promise<{ rawDataId: number | null; shouldSkip: boolean }> {
   // Extract product ID from URL or use hash as fallback
   const productIdMatch = url.match(/\/([^\/]+)\/?$/);
@@ -467,12 +450,7 @@ async function saveRawHtml(
 
   try {
     // 統一されたdedup-helperを使用
-    const upsertResult = await upsertRawHtmlDataWithGcs(
-      `wiki-${source.toLowerCase()}`,
-      productId,
-      url,
-      html
-    );
+    const upsertResult = await upsertRawHtmlDataWithGcs(`wiki-${source.toLowerCase()}`, productId, url, html);
 
     // 重複チェック: 変更なし＆処理済みならスキップ
     if (upsertResult.shouldSkip && !forceReprocess) {
@@ -513,7 +491,7 @@ async function crawlAvWikiSitemap(db: any, limit: number = 100, forceReprocess: 
       link: string;
       title: { rendered: string };
     }
-    const posts = await response.json() as AvWikiPost[];
+    const posts = (await response.json()) as AvWikiPost[];
     console.log(`Found ${posts.length} posts`);
 
     let processed = 0;
@@ -638,52 +616,187 @@ async function crawlSeesaawiki(db: any, limit: number = 100, forceReprocess: boo
 
 // 除外ワード（出演者名ではないもの）
 const EXCLUDE_TERMS = new Set([
-  '素人', '巨乳', '爆乳', '美乳', '貧乳', '巨尻', '美尻', '美脚',
-  'NTR', 'NTRリバース', '寝取り', '寝取られ',
-  '中出し', '生中出し', '顔射', 'フェラ', 'パイズリ', '手コキ',
-  'MGS動画', 'FANZA', 'DMM', 'PRESTIGE', 'プレステージ',
-  'シロウトTV', 'ナンパTV', 'ARA', 'SIRO',
-  '女子大生', '人妻', '熟女', 'OL', 'ギャル', '清楚',
-  '痴女', '淫乱', '変態', 'ロリ', '美少女',
-  '続きを読む', 'more', '詳細', '作品詳細',
-  'AV男優の電話帳', '電話帳', 'シリーズ',
+  '素人',
+  '巨乳',
+  '爆乳',
+  '美乳',
+  '貧乳',
+  '巨尻',
+  '美尻',
+  '美脚',
+  'NTR',
+  'NTRリバース',
+  '寝取り',
+  '寝取られ',
+  '中出し',
+  '生中出し',
+  '顔射',
+  'フェラ',
+  'パイズリ',
+  '手コキ',
+  'MGS動画',
+  'FANZA',
+  'DMM',
+  'PRESTIGE',
+  'プレステージ',
+  'シロウトTV',
+  'ナンパTV',
+  'ARA',
+  'SIRO',
+  '女子大生',
+  '人妻',
+  '熟女',
+  'OL',
+  'ギャル',
+  '清楚',
+  '痴女',
+  '淫乱',
+  '変態',
+  'ロリ',
+  '美少女',
+  '続きを読む',
+  'more',
+  '詳細',
+  '作品詳細',
+  'AV男優の電話帳',
+  '電話帳',
+  'シリーズ',
   // サイト系
-  'FANZA動画', 'Twitter', 'はてブ', 'Pocket', 'ホーム', 'お問い合わせ',
-  '白昼夢', 'AV女優の名前が知りたい！', 'Facebook', 'LINE', 'Instagram',
-  'Amazon', '楽天', 'Yahoo', 'Google', 'YouTube',
+  'FANZA動画',
+  'Twitter',
+  'はてブ',
+  'Pocket',
+  'ホーム',
+  'お問い合わせ',
+  '白昼夢',
+  'AV女優の名前が知りたい！',
+  'Facebook',
+  'LINE',
+  'Instagram',
+  'Amazon',
+  '楽天',
+  'Yahoo',
+  'Google',
+  'YouTube',
   // av-wiki.net特有のレーベル/メーカータグ
-  'エスワン - SNIS', 'ティッシュ - IPZ', 'MOODYZ ACID', 'MOODYZ DIVA', 'MOODYZ Gati',
-  'Hunter - HUNTA', 'JET映像 - NDRA', 'JET映像 - NGOD', 'Fitch - JUFD',
-  'ディープス - DVDMS', 'アパッチ', 'ナチュラルハイ - NHDTA',
-  'お夜食カンパニー - OYC', 'ゲッツ!! - GETS', '肛門訪問 - SOAN',
-  '山と空 - SORA', 'INCEST', '女神', 'まんげつ', 'おっぱいん',
-  '美女神 Queen', 'temptation', '雪月花', '只管', '口説き術',
-  '素人専科', 'ジェントルマン', 'Real-file', 'ちちくりジョニー',
-  'パコッター', 'NAMADORE本舗', '舞ワイフ', '未満 - MMND', 'S-Cute KIRAY',
-  'S-CUTE', 'MADAM MANIAC', 'NITRO', 'e-kiss',
+  'エスワン - SNIS',
+  'ティッシュ - IPZ',
+  'MOODYZ ACID',
+  'MOODYZ DIVA',
+  'MOODYZ Gati',
+  'Hunter - HUNTA',
+  'JET映像 - NDRA',
+  'JET映像 - NGOD',
+  'Fitch - JUFD',
+  'ディープス - DVDMS',
+  'アパッチ',
+  'ナチュラルハイ - NHDTA',
+  'お夜食カンパニー - OYC',
+  'ゲッツ!! - GETS',
+  '肛門訪問 - SOAN',
+  '山と空 - SORA',
+  'INCEST',
+  '女神',
+  'まんげつ',
+  'おっぱいん',
+  '美女神 Queen',
+  'temptation',
+  '雪月花',
+  '只管',
+  '口説き術',
+  '素人専科',
+  'ジェントルマン',
+  'Real-file',
+  'ちちくりジョニー',
+  'パコッター',
+  'NAMADORE本舗',
+  '舞ワイフ',
+  '未満 - MMND',
+  'S-Cute KIRAY',
+  'S-CUTE',
+  'MADAM MANIAC',
+  'NITRO',
+  'e-kiss',
   // レーベル・メーカー関連
-  'メーカー', 'レーベル', 'ジャンル',
-  'メーカー：', 'レーベル：', 'AV女優名：',
-  'ワンズファクトリー', 'ムーディーズ', 'アイデアポケット', 'クリスタル映像',
-  'VENUS', 'unfinished', 'MEGAMI', 'Hunter', 'MUTEKI',
+  'メーカー',
+  'レーベル',
+  'ジャンル',
+  'メーカー：',
+  'レーベル：',
+  'AV女優名：',
+  'ワンズファクトリー',
+  'ムーディーズ',
+  'アイデアポケット',
+  'クリスタル映像',
+  'VENUS',
+  'unfinished',
+  'MEGAMI',
+  'Hunter',
+  'MUTEKI',
   // 一般的なナビゲーション
-  'コメント', '関連記事', '人気記事', '新着記事', 'カテゴリ', 'タグ',
-  'サイトマップ', 'プライバシーポリシー', '免責事項', '運営者情報',
-  'メニュー', 'トップ', '検索', 'RSS', 'サイト内検索',
+  'コメント',
+  '関連記事',
+  '人気記事',
+  '新着記事',
+  'カテゴリ',
+  'タグ',
+  'サイトマップ',
+  'プライバシーポリシー',
+  '免責事項',
+  '運営者情報',
+  'メニュー',
+  'トップ',
+  '検索',
+  'RSS',
+  'サイト内検索',
   // 動画サイト関連
-  'DUGAで見る', 'FANZAで見る', 'MGSで見る', '公式サイト',
-  'ダウンロード', 'ストリーミング', '無料動画', 'サンプル動画',
+  'DUGAで見る',
+  'FANZAで見る',
+  'MGSで見る',
+  '公式サイト',
+  'ダウンロード',
+  'ストリーミング',
+  '無料動画',
+  'サンプル動画',
   // 属性系
-  '美女', '美人', '可愛い', 'かわいい', '綺麗', 'きれい',
-  '若い', '大人', '年上', '年下', '処女', '童貞',
+  '美女',
+  '美人',
+  '可愛い',
+  'かわいい',
+  '綺麗',
+  'きれい',
+  '若い',
+  '大人',
+  '年上',
+  '年下',
+  '処女',
+  '童貞',
   // 顔文字・記号
-  '(≥o≤)', '(>_<)', '(^^)', '(*^^*)', '(´・ω・`)', '(;_;)',
-  '（≥o≤）', '（>_<）', '(≧▽≦)', '(*´ω｀*)', '(^_^)', '(^^;)',
-  '＊＊＊', '***', '？？？', '???',
+  '(≥o≤)',
+  '(>_<)',
+  '(^^)',
+  '(*^^*)',
+  '(´・ω・`)',
+  '(;_;)',
+  '（≥o≤）',
+  '（>_<）',
+  '(≧▽≦)',
+  '(*´ω｀*)',
+  '(^_^)',
+  '(^^;)',
+  '＊＊＊',
+  '***',
+  '？？？',
+  '???',
   // 記号のみ
-  '...', '>>>', '---', '___',
+  '...',
+  '>>>',
+  '---',
+  '___',
   // FC2ブログ特有
-  '枚', '計', 'コメントを書く',
+  '枚',
+  '計',
+  'コメントを書く',
 ]);
 
 /**
@@ -704,7 +817,7 @@ async function searchAvWiki(productCode: string): Promise<string[]> {
     if (!response.ok) return [];
 
     const buffer = Buffer.from(await response.arrayBuffer());
-      const html = iconv.decode(buffer, 'euc-jp');
+    const html = iconv.decode(buffer, 'euc-jp');
     const $ = cheerio.load(html);
     const performers: string[] = [];
 
@@ -746,7 +859,7 @@ async function searchShiroutoname(productCode: string): Promise<string[]> {
     if (!response.ok) return [];
 
     const buffer = Buffer.from(await response.arrayBuffer());
-      const html = iconv.decode(buffer, 'euc-jp');
+    const html = iconv.decode(buffer, 'euc-jp');
     const $ = cheerio.load(html);
     const performers: string[] = [];
 
@@ -760,7 +873,7 @@ async function searchShiroutoname(productCode: string): Promise<string[]> {
     });
 
     if (detailUrl) {
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       const detailResponse = await fetch(detailUrl, {
         headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
       });
@@ -799,7 +912,7 @@ async function saveToWikiCrawlData(
   source: string,
   productCode: string,
   performerNames: string[],
-  sourceUrl: string
+  sourceUrl: string,
 ): Promise<number> {
   let saved = 0;
   for (const name of performerNames) {
@@ -820,7 +933,10 @@ async function saveToWikiCrawlData(
     } catch (error: unknown) {
       // DB制約違反は無視（重複データ）
       if (process.env.DEBUG) {
-        console.warn(`[saveToWikiCrawlData] Insert failed for ${name}:`, error instanceof Error ? error.message : error);
+        console.warn(
+          `[saveToWikiCrawlData] Insert failed for ${name}:`,
+          error instanceof Error ? error.message : error,
+        );
       }
     }
   }
@@ -944,7 +1060,7 @@ async function crawlShiroutoname(db: any, limit: number = 100): Promise<void> {
     }
 
     processed++;
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
   }
 
   console.log(`\n✅ shiroutoname.com crawl complete: ${found}/${processed} found`);
@@ -997,7 +1113,7 @@ async function crawlAvWikiBatch(db: ReturnType<typeof getDb>, limit: number = 10
     }
 
     processed++;
-    await new Promise(r => setTimeout(r, 800)); // Rate limiting
+    await new Promise((r) => setTimeout(r, 800)); // Rate limiting
   }
 
   console.log(`\n✅ av-wiki.net batch search complete: ${found}/${processed} found`);
@@ -1129,10 +1245,12 @@ async function crawlAvWikiAllPages(db: any, limit: number = 10000): Promise<void
 
     // 進捗表示
     if (processed % 50 === 0) {
-      console.log(`\n📊 Progress: ${processed}/${uniqueUrls.length} pages, ${totalProducts} products, ${totalPerformers} performers\n`);
+      console.log(
+        `\n📊 Progress: ${processed}/${uniqueUrls.length} pages, ${totalProducts} products, ${totalPerformers} performers\n`,
+      );
     }
 
-    await new Promise(r => setTimeout(r, 500)); // Rate limiting
+    await new Promise((r) => setTimeout(r, 500)); // Rate limiting
   }
 
   console.log(`\n✅ av-wiki.net full crawl complete!`);
@@ -1144,7 +1262,10 @@ async function crawlAvWikiAllPages(db: any, limit: number = 10000): Promise<void
 /**
  * av-wiki.netのページから品番と出演者を抽出
  */
-function extractAvWikiPageData($: cheerio.CheerioAPI, url: string): { products: Array<{ code: string; performers: string[] }> } {
+function extractAvWikiPageData(
+  $: cheerio.CheerioAPI,
+  url: string,
+): { products: Array<{ code: string; performers: string[] }> } {
   const products: Array<{ code: string; performers: string[] }> = [];
 
   // 品番パターン: 300MIUM-XXX, SIRO-XXX, etc.
@@ -1271,7 +1392,7 @@ async function crawlSeesaawikiAllPages(db: any, limit: number = 10000): Promise<
       if (!hasNext) break;
 
       page++;
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     } catch (error) {
       console.error(`  Error fetching page ${page}:`, error);
       break;
@@ -1325,10 +1446,12 @@ async function crawlSeesaawikiAllPages(db: any, limit: number = 10000): Promise<
     processed++;
 
     if (processed % 50 === 0) {
-      console.log(`\n📊 Progress: ${processed}/${Math.min(allPageUrls.length, limit)} pages, ${totalProducts} products, ${totalPerformers} performers\n`);
+      console.log(
+        `\n📊 Progress: ${processed}/${Math.min(allPageUrls.length, limit)} pages, ${totalProducts} products, ${totalPerformers} performers\n`,
+      );
     }
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   console.log(`\n✅ seesaawiki.jp crawl complete!`);
@@ -1342,11 +1465,17 @@ async function crawlSeesaawikiAllPages(db: any, limit: number = 10000): Promise<
  * seesaawikiは「女優ページ→品番リスト」形式
  * ページタイトル = 女優名、見出しに品番が含まれる
  */
-function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { products: Array<{ code: string; performers: string[] }> } {
+function extractSeesaawikiPageData(
+  $: cheerio.CheerioAPI,
+  url: string,
+): { products: Array<{ code: string; performers: string[] }> } {
   const products: Array<{ code: string; performers: string[] }> = [];
 
   // ページタイトルから女優名を抽出
-  const pageTitle = $('h2').first().text().trim()
+  const pageTitle = $('h2')
+    .first()
+    .text()
+    .trim()
     .replace(/\s*編集する?\s*/g, '')
     .replace(/\s*<.*$/g, '')
     .trim();
@@ -1360,7 +1489,12 @@ function extractSeesaawikiPageData($: cheerio.CheerioAPI, url: string): { produc
   let performerName = '';
   if (pageTitle && pageTitle.length >= 2 && pageTitle.length <= 20 && isValidPerformerName(pageTitle)) {
     performerName = pageTitle;
-  } else if (performerFromTitle && performerFromTitle.length >= 2 && performerFromTitle.length <= 20 && isValidPerformerName(performerFromTitle)) {
+  } else if (
+    performerFromTitle &&
+    performerFromTitle.length >= 2 &&
+    performerFromTitle.length <= 20 &&
+    isValidPerformerName(performerFromTitle)
+  ) {
     performerName = performerFromTitle;
   }
 
@@ -1446,7 +1580,7 @@ async function crawlShiroutonameAllPages(db: any, limit: number = 10000): Promis
       }
 
       console.log(`    - Found ${urlMatches.length} URLs (total: ${allUrls.length})`);
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 200));
     } catch (error) {
       console.error(`  Error fetching sitemap ${i}:`, error);
     }
@@ -1531,10 +1665,12 @@ async function crawlShiroutonameAllPages(db: any, limit: number = 10000): Promis
     processed++;
 
     if (processed % 50 === 0) {
-      console.log(`\n📊 Progress: ${processed}/${Math.min(allUrls.length, limit)} pages, ${totalProducts} products, ${totalPerformers} performers\n`);
+      console.log(
+        `\n📊 Progress: ${processed}/${Math.min(allUrls.length, limit)} pages, ${totalProducts} products, ${totalPerformers} performers\n`,
+      );
     }
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   console.log(`\n✅ shiroutoname.com full crawl complete!`);
@@ -1587,9 +1723,11 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
       $('a[href*="blog-entry-"]').each((_, elem) => {
         const href = $(elem).attr('href') || '';
         // FC2ブログドメイン内のリンクのみ（はてなブックマーク等は除外）
-        if (href.includes('mankowomiseruavzyoyu.blog.fc2.com/blog-entry-') &&
-            !href.includes('hatena') &&
-            !indexUrls.includes(href)) {
+        if (
+          href.includes('mankowomiseruavzyoyu.blog.fc2.com/blog-entry-') &&
+          !href.includes('hatena') &&
+          !indexUrls.includes(href)
+        ) {
           const fullUrl = href.startsWith('http') ? href : `https://mankowomiseruavzyoyu.blog.fc2.com${href}`;
           if (!allArticleUrls.includes(fullUrl) && fullUrl.includes('mankowomiseruavzyoyu.blog.fc2.com')) {
             allArticleUrls.push(fullUrl);
@@ -1598,7 +1736,7 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
       });
 
       console.log(`    - Collected ${allArticleUrls.length} article URLs`);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
     } catch (error) {
       console.error(`  Error: ${error}`);
     }
@@ -1689,10 +1827,12 @@ async function crawlFc2BlogAllPages(db: any, limit: number = 10000): Promise<voi
     processed++;
 
     if (processed % 50 === 0) {
-      console.log(`\n📊 Progress: ${processed}/${Math.min(allArticleUrls.length, limit)} pages, ${totalProducts} products, ${totalPerformers} performers\n`);
+      console.log(
+        `\n📊 Progress: ${processed}/${Math.min(allArticleUrls.length, limit)} pages, ${totalProducts} products, ${totalPerformers} performers\n`,
+      );
     }
 
-    await new Promise(r => setTimeout(r, 1000)); // FC2ブログはレート制限が厳しいので長め
+    await new Promise((r) => setTimeout(r, 1000)); // FC2ブログはレート制限が厳しいので長め
   }
 
   console.log(`\n✅ FC2 blog crawl complete!`);
@@ -1734,7 +1874,7 @@ async function main() {
   }
 
   // --forceを除いた引数を取得
-  const nonFlagArgs = args.filter(arg => !arg.startsWith('--'));
+  const nonFlagArgs = args.filter((arg) => !arg.startsWith('--'));
   const site = nonFlagArgs[0] || 'both'; // av-wiki, seesaawiki, shiroutoname, av-wiki-batch, av-wiki-all, or both
   const limit = parseInt(nonFlagArgs[1]) || 100;
 

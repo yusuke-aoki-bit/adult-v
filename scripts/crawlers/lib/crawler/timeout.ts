@@ -8,7 +8,10 @@
  * タイムアウトエラー
  */
 export class TimeoutError extends Error {
-  constructor(message: string, public readonly timeoutMs: number) {
+  constructor(
+    message: string,
+    public readonly timeoutMs: number,
+  ) {
     super(message);
     this.name = 'TimeoutError';
   }
@@ -41,11 +44,7 @@ function createTimeout(ms: number, message?: string): Promise<never> {
  * );
  * ```
  */
-export async function withTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  message?: string
-): Promise<T> {
+export async function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message?: string): Promise<T> {
   return Promise.race([promise, createTimeout(timeoutMs, message)]);
 }
 
@@ -70,7 +69,7 @@ export async function withTimeout<T>(
 export async function fetchWithTimeout(
   url: string,
   options: RequestInit = {},
-  timeoutMs: number = 30000
+  timeoutMs: number = 30000,
 ): Promise<Response> {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);

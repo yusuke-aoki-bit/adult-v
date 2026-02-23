@@ -470,17 +470,17 @@ export interface ProductQueryOptions extends PaginationOptions, SortOptions {
  * ソートオプション
  */
 export type ProductSortOption =
-  | 'releaseDateDesc'    // リリース日（新しい順）
-  | 'releaseDateAsc'     // リリース日（古い順）
-  | 'priceDesc'          // 価格（高い順）
-  | 'priceAsc'           // 価格（安い順）
-  | 'ratingDesc'         // 評価（高い順）
-  | 'ratingAsc'          // 評価（低い順）
-  | 'reviewCountDesc'    // レビュー数（多い順）
-  | 'durationDesc'       // 再生時間（長い順）
-  | 'durationAsc'        // 再生時間（短い順）
-  | 'titleAsc'           // タイトル（あいうえお順）
-  | 'random';            // ランダム
+  | 'releaseDateDesc' // リリース日（新しい順）
+  | 'releaseDateAsc' // リリース日（古い順）
+  | 'priceDesc' // 価格（高い順）
+  | 'priceAsc' // 価格（安い順）
+  | 'ratingDesc' // 評価（高い順）
+  | 'ratingAsc' // 評価（低い順）
+  | 'reviewCountDesc' // レビュー数（多い順）
+  | 'durationDesc' // 再生時間（長い順）
+  | 'durationAsc' // 再生時間（短い順）
+  | 'titleAsc' // タイトル（あいうえお順）
+  | 'random'; // ランダム
 
 /**
  * getProducts関数用オプション

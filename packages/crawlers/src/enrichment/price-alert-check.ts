@@ -102,7 +102,7 @@ async function main() {
     }
 
     // 2. 対象商品の価格を取得
-    const productIds = [...new Set(activeAlerts.rows.map(a => a.productId))];
+    const productIds = [...new Set(activeAlerts.rows.map((a) => a.productId))];
     console.log(`\n2. ${productIds.length}件の商品価格を取得中...`);
 
     const productPrices = await db.execute<ProductPrice>(sql`
@@ -118,7 +118,10 @@ async function main() {
       INNER JOIN product_sources ps ON ps.product_id = p.id
       LEFT JOIN product_prices pp ON pp.product_source_id = ps.id
         AND pp.price_type = 'download'
-      WHERE p.id = ANY(ARRAY[${sql.join(productIds.map(id => sql`${id}`), sql`, `)}]::int[])
+      WHERE p.id = ANY(ARRAY[${sql.join(
+        productIds.map((id) => sql`${id}`),
+        sql`, `,
+      )}]::int[])
     `);
 
     // 商品ごとに最安値を取得
@@ -133,7 +136,7 @@ async function main() {
     }
 
     // 3. 購読情報を取得
-    const subscriptionIds = [...new Set(activeAlerts.rows.map(a => a.subscriptionId))];
+    const subscriptionIds = [...new Set(activeAlerts.rows.map((a) => a.subscriptionId))];
     console.log(`\n3. ${subscriptionIds.length}件の購読情報を取得中...`);
 
     const subscriptions = await db.execute<Subscription>(sql`
@@ -142,7 +145,10 @@ async function main() {
         endpoint,
         keys
       FROM push_subscriptions
-      WHERE id = ANY(ARRAY[${sql.join(subscriptionIds.map(id => sql`${id}`), sql`, `)}]::int[])
+      WHERE id = ANY(ARRAY[${sql.join(
+        subscriptionIds.map((id) => sql`${id}`),
+        sql`, `,
+      )}]::int[])
     `);
 
     const subscriptionById = new Map<number, Subscription>();
@@ -179,7 +185,7 @@ async function main() {
           alert['targetPrice'],
           effectivePrice,
           `/ja/products/${price.productId}`,
-          'ja'
+          'ja',
         );
       }
       // セール通知チェック
@@ -190,7 +196,7 @@ async function main() {
           price.originalPrice,
           price.salePrice!,
           `/ja/products/${price.productId}`,
-          'ja'
+          'ja',
         );
       }
 
@@ -281,7 +287,6 @@ async function main() {
     console.log(`  通知送信: ${notificationsSent}件`);
     console.log(`  スキップ: ${notificationsSkipped}件`);
     console.log(`  無効購読削除: ${expiredSubscriptions.length}件`);
-
   } catch (error) {
     console.error('エラー:', error);
     throw error;

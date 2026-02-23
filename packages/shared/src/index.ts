@@ -190,12 +190,7 @@ export {
 } from './db-queries/create-app-queries';
 
 // DB Query types
-export type {
-  RawProductRow,
-  ProductRow,
-  ProductSortOption,
-  GetProductsOptions,
-} from './db-queries/types';
+export type { RawProductRow, ProductRow, ProductSortOption, GetProductsOptions } from './db-queries/types';
 
 // LLM Service
 export {
@@ -224,3 +219,27 @@ export {
   type EmbeddingResult,
   type BatchEmbeddingResult,
 } from './lib/embedding-service';
+
+// API Validation Schemas (Zod)
+export {
+  paginationSchema,
+  idSchema,
+  searchQuerySchema,
+  priceRangeSchema,
+  sortOrderSchema,
+  localeSchema,
+  productListParamsSchema,
+  userReviewSchema,
+  userCorrectionSchema,
+  userTagSuggestionSchema,
+  priceAlertSchema,
+  parseSearchParams,
+  parseRequestBody,
+  type PaginationInput,
+  type PriceRangeInput,
+  type ProductListParams,
+  type UserReviewInput,
+  type UserCorrectionInput,
+  type UserTagSuggestionInput,
+  type PriceAlertInput,
+} from './lib/api-schemas';

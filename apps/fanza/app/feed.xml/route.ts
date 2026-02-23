@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest) {
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
           AND ps.asp_name = 'DTI'
-        )`
+        )`,
       )
       .orderBy(desc(products.releaseDate))
       .limit(50);
@@ -58,9 +58,9 @@ export async function GET(_request: NextRequest) {
 
         return {
           ...product,
-          performers: productPerformerList.map(p => p.name),
+          performers: productPerformerList.map((p) => p.name),
         };
-      })
+      }),
     );
 
     const lastBuildDate = new Date().toUTCString();
@@ -95,13 +95,9 @@ ${productsWithPerformers
       ? new Date(product.releaseDate).toUTCString()
       : new Date(product.createdAt).toUTCString();
 
-    const description = product.description
-      ? escapeXml(product.description.substring(0, 300)) + '...'
-      : '';
+    const description = product.description ? escapeXml(product.description.substring(0, 300)) + '...' : '';
 
-    const performersText = product.performers.length > 0
-      ? ` | 出演: ${product.performers.join(', ')}`
-      : '';
+    const performersText = product.performers.length > 0 ? ` | 出演: ${product.performers.join(', ')}` : '';
 
     const title = escapeXml(product.title + performersText);
 
@@ -111,9 +107,13 @@ ${productsWithPerformers
       <guid isPermaLink="true">${link}</guid>
       <pubDate>${pubDate}</pubDate>
       <description>${description}</description>
-      ${product.thumbnailUrl ? `<media:thumbnail url="${escapeXml(product.thumbnailUrl)}" />
-      <media:content url="${escapeXml(product.thumbnailUrl)}" type="image/jpeg" />` : ''}
-      ${product.performers.map(p => `<dc:creator>${escapeXml(p)}</dc:creator>`).join('\n      ')}
+      ${
+        product.thumbnailUrl
+          ? `<media:thumbnail url="${escapeXml(product.thumbnailUrl)}" />
+      <media:content url="${escapeXml(product.thumbnailUrl)}" type="image/jpeg" />`
+          : ''
+      }
+      ${product.performers.map((p) => `<dc:creator>${escapeXml(p)}</dc:creator>`).join('\n      ')}
     </item>`;
   })
   .join('\n')}

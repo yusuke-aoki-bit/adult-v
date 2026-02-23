@@ -3,10 +3,7 @@
  * seo-utils.ts の画像Alt属性生成関数のテスト
  */
 import { describe, it, expect } from 'vitest';
-import {
-  generateActressAltText,
-  generateSampleImageAltText,
-} from '@adult-v/shared/lib/seo-utils';
+import { generateActressAltText, generateSampleImageAltText } from '@adult-v/shared/lib/seo-utils';
 
 describe('generateActressAltText', () => {
   it('should generate alt text with name only', () => {
@@ -72,61 +69,40 @@ describe('generateActressAltText', () => {
 
 describe('generateSampleImageAltText', () => {
   it('should generate alt text with title and index', () => {
-    const alt = generateSampleImageAltText(
-      { title: 'テスト動画タイトル' },
-      0
-    );
+    const alt = generateSampleImageAltText({ title: 'テスト動画タイトル' }, 0);
     expect(alt).toBe('テスト動画タイトル - サンプル画像1');
   });
 
   it('should include actress name when provided', () => {
-    const alt = generateSampleImageAltText(
-      { title: 'テスト動画', actressName: '三上悠亜' },
-      0
-    );
+    const alt = generateSampleImageAltText({ title: 'テスト動画', actressName: '三上悠亜' }, 0);
     expect(alt).toBe('テスト動画 - 三上悠亜 - サンプル画像1');
   });
 
   it('should use 1-indexed image numbers', () => {
-    const alt = generateSampleImageAltText(
-      { title: 'テスト' },
-      4
-    );
+    const alt = generateSampleImageAltText({ title: 'テスト' }, 4);
     expect(alt).toContain('サンプル画像5');
   });
 
   it('should handle index 0 correctly', () => {
-    const alt = generateSampleImageAltText(
-      { title: 'テスト' },
-      0
-    );
+    const alt = generateSampleImageAltText({ title: 'テスト' }, 0);
     expect(alt).toContain('サンプル画像1');
   });
 
   it('should handle large index values', () => {
-    const alt = generateSampleImageAltText(
-      { title: 'テスト' },
-      99
-    );
+    const alt = generateSampleImageAltText({ title: 'テスト' }, 99);
     expect(alt).toContain('サンプル画像100');
   });
 
   it('should handle long titles', () => {
     const longTitle = 'これは非常に長いタイトルです'.repeat(10);
-    const alt = generateSampleImageAltText(
-      { title: longTitle, actressName: '女優名' },
-      0
-    );
+    const alt = generateSampleImageAltText({ title: longTitle, actressName: '女優名' }, 0);
     expect(alt).toContain(longTitle);
     expect(alt).toContain('女優名');
     expect(alt).toContain('サンプル画像1');
   });
 
   it('should handle empty actress name', () => {
-    const alt = generateSampleImageAltText(
-      { title: 'テスト', actressName: '' },
-      0
-    );
+    const alt = generateSampleImageAltText({ title: 'テスト', actressName: '' }, 0);
     // Empty string should not add extra separator
     expect(alt).toBe('テスト - サンプル画像1');
   });

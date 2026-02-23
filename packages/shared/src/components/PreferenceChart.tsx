@@ -54,12 +54,7 @@ const themeConfig = {
  * SVGベースのレーダーチャート
  * 好みの傾向を視覚化
  */
-function PreferenceChartComponent({
-  data,
-  size = 300,
-  className = '',
-  theme: themeProp,
-}: PreferenceChartProps) {
+function PreferenceChartComponent({ data, size = 300, className = '', theme: themeProp }: PreferenceChartProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = (themeProp ?? contextTheme) as PreferenceChartTheme;
   const center = size / 2;
@@ -68,19 +63,25 @@ function PreferenceChartComponent({
   const colors = themeConfig[theme];
 
   // 角度計算（上から時計回り）
-  const getAngle = useCallback((index: number) => {
-    return (index * 2 * Math.PI) / numPoints - Math.PI / 2;
-  }, [numPoints]);
+  const getAngle = useCallback(
+    (index: number) => {
+      return (index * 2 * Math.PI) / numPoints - Math.PI / 2;
+    },
+    [numPoints],
+  );
 
   // 座標計算
-  const getPoint = useCallback((index: number, value: number) => {
-    const angle = getAngle(index);
-    const radius = (value / 100) * maxRadius;
-    return {
-      x: center + radius * Math.cos(angle),
-      y: center + radius * Math.sin(angle),
-    };
-  }, [getAngle, center, maxRadius]);
+  const getPoint = useCallback(
+    (index: number, value: number) => {
+      const angle = getAngle(index);
+      const radius = (value / 100) * maxRadius;
+      return {
+        x: center + radius * Math.cos(angle),
+        y: center + radius * Math.sin(angle),
+      };
+    },
+    [getAngle, center, maxRadius],
+  );
 
   // 背景グリッドの生成
   const gridLevels = useMemo(() => [20, 40, 60, 80, 100], []);
@@ -140,13 +141,7 @@ function PreferenceChartComponent({
     <svg width={size} height={size} className={className}>
       {/* 背景グリッド */}
       {gridPaths.map((path, i) => (
-        <path
-          key={`grid-${i}`}
-          d={path}
-          fill="none"
-          stroke={colors.gridStroke}
-          strokeWidth={1}
-        />
+        <path key={`grid-${i}`} d={path} fill="none" stroke={colors.gridStroke} strokeWidth={1} />
       ))}
 
       {/* 軸線 */}
@@ -163,25 +158,12 @@ function PreferenceChartComponent({
       ))}
 
       {/* データエリア */}
-      <path
-        d={dataPath}
-        fill={colors.dataFill}
-        stroke={colors.dataStroke}
-        strokeWidth={2}
-      />
+      <path d={dataPath} fill={colors.dataFill} stroke={colors.dataStroke} strokeWidth={2} />
 
       {/* データポイント */}
       {data.map((item, i) => {
         const point = getPoint(i, item['value']);
-        return (
-          <circle
-            key={`point-${i}`}
-            cx={point.x}
-            cy={point.y}
-            r={4}
-            fill={colors.pointFill}
-          />
-        );
+        return <circle key={`point-${i}`} cx={point.x} cy={point.y} r={4} fill={colors.pointFill} />;
       })}
 
       {/* ラベル */}
@@ -222,11 +204,7 @@ interface PreferenceBarChartProps {
 /**
  * 棒グラフスタイルの好み表示
  */
-function PreferenceBarChartComponent({
-  data,
-  className = '',
-  theme: themeProp2,
-}: PreferenceBarChartProps) {
+function PreferenceBarChartComponent({ data, className = '', theme: themeProp2 }: PreferenceBarChartProps) {
   const { theme: contextTheme2 } = useSiteTheme();
   const theme = (themeProp2 ?? contextTheme2) as PreferenceChartTheme;
   const colors = themeConfig[theme];
@@ -235,11 +213,11 @@ function PreferenceBarChartComponent({
     <div className={`space-y-3 ${className}`}>
       {data.map((item) => (
         <div key={item.label}>
-          <div className="flex justify-between text-sm mb-1">
+          <div className="mb-1 flex justify-between text-sm">
             <span className={colors.barLabelClass}>{item.label}</span>
             <span className={`${colors.barValueClass} font-medium`}>{item['value']}%</span>
           </div>
-          <div className={`h-2 ${colors.barBgClass} rounded-full overflow-hidden`}>
+          <div className={`h-2 ${colors.barBgClass} overflow-hidden rounded-full`}>
             <div
               className={`h-full ${colors.barFillClass} rounded-full transition-all duration-500`}
               style={{ width: `${item['value']}%` }}

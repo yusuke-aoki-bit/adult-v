@@ -5,7 +5,8 @@ import { setSeoConfig } from '@adult-v/shared/lib/seo';
 setSeoConfig({
   siteName: 'Adult Viewer Lab',
   alternateName: 'アダルトビューアーラボ',
-  defaultDescription: '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
+  defaultDescription:
+    '複数のプラットフォームを横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
 });
 
 export {

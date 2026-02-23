@@ -36,9 +36,7 @@ export interface OnlineStatus {
 export function useOnlineStatus(options: OnlineStatusOptions = {}): OnlineStatus {
   const { onOffline, onOnline, pollingInterval = 0, pingUrl } = options;
 
-  const [isOnline, setIsOnline] = useState<boolean>(
-    typeof navigator !== 'undefined' ? navigator.onLine : true
-  );
+  const [isOnline, setIsOnline] = useState<boolean>(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [lastOfflineAt, setLastOfflineAt] = useState<Date | null>(null);
   const [offlineDuration, setOfflineDuration] = useState<number | null>(null);
 

@@ -12,10 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -48,11 +45,12 @@ interface FanzaProduct {
 const AFFILIATE_ID = 'minpri-001';
 
 const FETCH_HEADERS: Record<string, string> = {
-  'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+  'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
   'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-  'Cookie': 'age_check_done=1; cklg=ja; ckcy=1',
-  'Referer': 'https://www.dmm.co.jp/',
+  Cookie: 'age_check_done=1; cklg=ja; ckcy=1',
+  Referer: 'https://www.dmm.co.jp/',
 };
 
 const FETCH_TIMEOUT = 15_000;
@@ -160,7 +158,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
   if (jsonLdMatch) {
     try {
       jsonLdData = JSON.parse(jsonLdMatch[1]!);
-    } catch { /* fallback to HTML parsing */ }
+    } catch {
+      /* fallback to HTML parsing */
+    }
   }
 
   // タイトル
@@ -168,8 +168,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
   if (jsonLdData && typeof jsonLdData['name'] === 'string') {
     title = jsonLdData['name'];
   } else {
-    const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-      || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
+    const titleMatch =
+      html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
     title = titleMatch?.[1]?.trim() ?? '';
   }
   if (!title || title.length < 3) return null;
@@ -255,10 +255,10 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
   let price: number | undefined;
   const priceMatches = [...html.matchAll(/(\d{1,3}(?:,\d{3})*)円/g)];
   const validPrices = priceMatches
-    .map(m => parseInt(m[1]?.replace(/,/g, '') ?? '0', 10))
-    .filter(p => p >= 500 && p <= 10000);
+    .map((m) => parseInt(m[1]?.replace(/,/g, '') ?? '0', 10))
+    .filter((p) => p >= 500 && p <= 10000);
   if (validPrices.length > 0) {
-    const typicalPrices = validPrices.filter(p => p >= 800 && p <= 3500);
+    const typicalPrices = validPrices.filter((p) => p >= 800 && p <= 3500);
     price = typicalPrices.length > 0 ? Math.max(...typicalPrices) : Math.max(...validPrices);
   }
 
@@ -354,9 +354,9 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
 
       async function flushPerformerBatch() {
         if (allPerformerNames.size === 0) return;
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
           for (const name of performerNames) {
@@ -370,10 +370,7 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
       }
 
       // リストページからCIDを取得して詳細ページを処理
-      while (
-        Date.now() - startTime < TIME_LIMIT &&
-        stats.totalFetched < limit
-      ) {
+      while (Date.now() - startTime < TIME_LIMIT && stats.totalFetched < limit) {
         console.log(`[crawl-fanza] Fetching list page ${currentPage}...`);
 
         const cids = await fetchCidsFromListPage(currentPage);
@@ -388,13 +385,16 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
         console.log(`[crawl-fanza] Found ${cids.length} CIDs on page ${currentPage}`);
 
         // バッチ既存チェック: 全CIDを一括クエリ
-        const cidValues = sql.join(cids.map(c => sql`${c}`), sql`, `);
+        const cidValues = sql.join(
+          cids.map((c) => sql`${c}`),
+          sql`, `,
+        );
         const existingResult = await db.execute(sql`
           SELECT original_product_id FROM product_sources
           WHERE asp_name = 'FANZA' AND original_product_id IN (${cidValues})
         `);
         const existingCids = new Set(
-          (existingResult.rows as { original_product_id: string }[]).map(r => r.original_product_id)
+          (existingResult.rows as { original_product_id: string }[]).map((r) => r.original_product_id),
         );
 
         for (const cid of cids) {
@@ -408,7 +408,7 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
           }
 
           // レート制限（3秒 + ジッター）
-          await new Promise(r => setTimeout(r, 2000 + Math.random() * 1500));
+          await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1500));
 
           const html = await fetchDetailHtml(cid);
           if (!html) {
@@ -494,7 +494,6 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
                 if (videoResult.rowCount && videoResult.rowCount > 0) stats.videosAdded++;
               }
             }
-
           } catch (error) {
             stats.errors++;
             console.error(`[crawl-fanza] Error processing ${cid}:`, error);
@@ -507,7 +506,7 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
         currentPage++;
 
         // ページ間レート制限
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, 3000));
       }
 
       // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
@@ -526,12 +525,11 @@ export function createCrawlFanzaHandler(deps: CrawlFanzaHandlerDeps) {
         },
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('[crawl-fanza] Error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

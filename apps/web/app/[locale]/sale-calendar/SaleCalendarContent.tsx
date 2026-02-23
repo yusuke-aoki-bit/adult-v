@@ -136,6 +136,39 @@ const TRANSLATIONS = {
     noData: '暂无数据',
     backToHome: '返回首页',
   },
+  'zh-TW': {
+    title: '促銷日曆',
+    subtitle: '年度促銷時間表和趨勢分析',
+    monthNames: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    dayNames: ['日', '一', '二', '三', '四', '五', '六'],
+    summary: {
+      totalSaleDays: '年度促銷天數',
+      avgDiscount: '平均折扣',
+      peakMonth: '高峰月',
+      days: '天',
+    },
+    monthStats: {
+      title: '月度趨勢',
+      saleDays: '促銷天數',
+      avgDiscount: '平均折扣',
+      products: '商品數/天',
+    },
+    predicted: {
+      title: '下次大促預測',
+      basedOn: '基於歷史資料預測',
+      around: '左右',
+    },
+    legend: {
+      title: '圖例',
+      noSale: '無促銷',
+      lowSale: '小型促銷',
+      mediumSale: '中型促銷',
+      bigSale: '大型促銷',
+    },
+    loading: '載入中...',
+    noData: '暫無資料',
+    backToHome: '返回首頁',
+  },
   ko: {
     title: '세일 캘린더',
     subtitle: '연간 세일 일정 및 트렌드 분석',
@@ -202,7 +235,7 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
   const getSaleIntensity = (date: string): 'none' | 'low' | 'medium' | 'high' => {
     if (!data) return 'none';
-    const event = data.saleEvents.find(e => e.date === date);
+    const event = data.saleEvents.find((e) => e.date === date);
     if (!event) return 'none';
     if (event.productCount >= 100) return 'high';
     if (event.productCount >= 30) return 'medium';
@@ -211,10 +244,14 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
   const getIntensityColor = (intensity: 'none' | 'low' | 'medium' | 'high') => {
     switch (intensity) {
-      case 'high': return 'bg-red-500';
-      case 'medium': return 'bg-orange-500';
-      case 'low': return 'bg-yellow-500';
-      default: return 'bg-gray-700';
+      case 'high':
+        return 'bg-red-500';
+      case 'medium':
+        return 'bg-orange-500';
+      case 'low':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-gray-700';
     }
   };
 
@@ -238,29 +275,25 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
       days.push(
         <div
           key={day}
-          className={`h-8 w-8 flex items-center justify-center text-xs rounded ${getIntensityColor(intensity)} ${
+          className={`flex h-8 w-8 items-center justify-center rounded text-xs ${getIntensityColor(intensity)} ${
             isToday ? 'ring-2 ring-white' : ''
-          } ${intensity !== 'none' ? 'text-white font-medium' : 'text-gray-400'}`}
+          } ${intensity !== 'none' ? 'font-medium text-white' : 'text-gray-400'}`}
           title={intensity !== 'none' ? `${dateStr}: セール` : undefined}
         >
           {day}
-        </div>
+        </div>,
       );
     }
 
     return (
-      <div className="bg-gray-800 rounded-lg p-4">
-        <h3 className="text-center font-bold text-white mb-3">
-          {t.monthNames[monthIndex]}
-        </h3>
-        <div className="grid grid-cols-7 gap-1 text-center text-xs text-gray-500 mb-2">
-          {t.dayNames.map(day => (
+      <div className="rounded-lg bg-gray-800 p-4">
+        <h3 className="mb-3 text-center font-bold text-white">{t.monthNames[monthIndex]}</h3>
+        <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs text-gray-500">
+          {t.dayNames.map((day) => (
             <div key={day}>{day}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 gap-1">
-          {days}
-        </div>
+        <div className="grid grid-cols-7 gap-1">{days}</div>
       </div>
     );
   };
@@ -268,11 +301,11 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="h-8 bg-gray-700 rounded w-48 mb-4 animate-pulse" />
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-4 h-8 w-48 animate-pulse rounded bg-gray-700" />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <div key={i} className="h-64 bg-gray-800 rounded-lg animate-pulse" />
+              <div key={i} className="h-64 animate-pulse rounded-lg bg-gray-800" />
             ))}
           </div>
         </div>
@@ -282,44 +315,49 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
   return (
     <div className="min-h-screen bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="mx-auto max-w-7xl">
         {/* Header */}
         <div className="mb-8">
           <Link
             href={`/${locale}`}
-            className="text-sm text-gray-400 hover:text-white mb-4 inline-flex items-center gap-1"
+            className="mb-4 inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
             {t.backToHome}
           </Link>
-          <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-            <svg className="w-8 h-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <h1 className="flex items-center gap-3 text-3xl font-bold text-white">
+            <svg className="h-8 w-8 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+              />
             </svg>
             {t.title}
           </h1>
-          <p className="text-gray-400 mt-2">{t.subtitle}</p>
+          <p className="mt-2 text-gray-400">{t.subtitle}</p>
         </div>
 
         {/* Year Selector */}
-        <div className="flex items-center gap-4 mb-6">
+        <div className="mb-6 flex items-center gap-4">
           <button
-            onClick={() => setSelectedYear(y => y - 1)}
-            className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-white"
+            onClick={() => setSelectedYear((y) => y - 1)}
+            className="rounded-lg bg-gray-800 p-2 text-white hover:bg-gray-700"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
             </svg>
           </button>
           <span className="text-2xl font-bold text-white">{selectedYear}</span>
           <button
-            onClick={() => setSelectedYear(y => y + 1)}
-            className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 text-white"
+            onClick={() => setSelectedYear((y) => y + 1)}
+            className="rounded-lg bg-gray-800 p-2 text-white hover:bg-gray-700"
             disabled={selectedYear >= new Date().getFullYear()}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </button>
@@ -327,23 +365,21 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
         {/* Summary Cards */}
         {data && data.summary && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className="bg-linear-to-br from-blue-900/50 to-blue-800/30 border border-blue-700/30 rounded-lg p-6">
-              <p className="text-blue-400 text-sm">{t.summary.totalSaleDays}</p>
-              <p className="text-3xl font-bold text-white mt-1">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+            <div className="rounded-lg border border-blue-700/30 bg-linear-to-br from-blue-900/50 to-blue-800/30 p-6">
+              <p className="text-sm text-blue-400">{t.summary.totalSaleDays}</p>
+              <p className="mt-1 text-3xl font-bold text-white">
                 {data.summary.totalSaleDays}
-                <span className="text-lg text-gray-400 ml-1">{t.summary.days}</span>
+                <span className="ml-1 text-lg text-gray-400">{t.summary.days}</span>
               </p>
             </div>
-            <div className="bg-linear-to-br from-green-900/50 to-green-800/30 border border-green-700/30 rounded-lg p-6">
-              <p className="text-green-400 text-sm">{t.summary.avgDiscount}</p>
-              <p className="text-3xl font-bold text-white mt-1">
-                {data.summary.avgMonthlyDiscount}%
-              </p>
+            <div className="rounded-lg border border-green-700/30 bg-linear-to-br from-green-900/50 to-green-800/30 p-6">
+              <p className="text-sm text-green-400">{t.summary.avgDiscount}</p>
+              <p className="mt-1 text-3xl font-bold text-white">{data.summary.avgMonthlyDiscount}%</p>
             </div>
-            <div className="bg-linear-to-br from-purple-900/50 to-purple-800/30 border border-purple-700/30 rounded-lg p-6">
-              <p className="text-purple-400 text-sm">{t.summary.peakMonth}</p>
-              <p className="text-3xl font-bold text-white mt-1">
+            <div className="rounded-lg border border-purple-700/30 bg-linear-to-br from-purple-900/50 to-purple-800/30 p-6">
+              <p className="text-sm text-purple-400">{t.summary.peakMonth}</p>
+              <p className="mt-1 text-3xl font-bold text-white">
                 {data.summary.peakMonth ? t.monthNames[data.summary.peakMonth - 1] : '-'}
               </p>
             </div>
@@ -352,14 +388,14 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
         {/* Next Big Sale Prediction */}
         {data?.nextBigSale && (
-          <div className="bg-linear-to-r from-yellow-900/30 to-orange-900/30 border border-yellow-700/30 rounded-lg p-6 mb-8">
-            <h2 className="text-xl font-bold text-yellow-400 flex items-center gap-2 mb-2">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mb-8 rounded-lg border border-yellow-700/30 bg-linear-to-r from-yellow-900/30 to-orange-900/30 p-6">
+            <h2 className="mb-2 flex items-center gap-2 text-xl font-bold text-yellow-400">
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
               {t.predicted.title}
             </h2>
-            <p className="text-gray-400 text-sm mb-3">{t.predicted.basedOn}</p>
+            <p className="mb-3 text-sm text-gray-400">{t.predicted.basedOn}</p>
             <p className="text-2xl font-bold text-white">
               {t.monthNames[data.nextBigSale.month - 1]} {data.nextBigSale.day}日{t.predicted.around}
             </p>
@@ -367,30 +403,30 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
         )}
 
         {/* Legend */}
-        <div className="bg-gray-800 rounded-lg p-4 mb-6">
-          <h3 className="text-sm font-medium text-gray-400 mb-3">{t.legend.title}</h3>
+        <div className="mb-6 rounded-lg bg-gray-800 p-4">
+          <h3 className="mb-3 text-sm font-medium text-gray-400">{t.legend.title}</h3>
           <div className="flex flex-wrap gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-gray-700" />
+              <div className="h-4 w-4 rounded bg-gray-700" />
               <span className="text-sm text-gray-400">{t.legend.noSale}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-yellow-500" />
+              <div className="h-4 w-4 rounded bg-yellow-500" />
               <span className="text-sm text-gray-400">{t.legend.lowSale}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-orange-500" />
+              <div className="h-4 w-4 rounded bg-orange-500" />
               <span className="text-sm text-gray-400">{t.legend.mediumSale}</span>
             </div>
             <div className="flex items-center gap-2">
-              <div className="w-4 h-4 rounded bg-red-500" />
+              <div className="h-4 w-4 rounded bg-red-500" />
               <span className="text-sm text-gray-400">{t.legend.bigSale}</span>
             </div>
           </div>
         </div>
 
         {/* Calendar Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <div key={i}>{renderCalendarMonth(i)}</div>
           ))}
@@ -398,39 +434,40 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
 
         {/* Monthly Stats */}
         {data && data.monthStats.length > 0 && (
-          <div className="bg-gray-800 rounded-lg p-6">
-            <h2 className="text-xl font-bold text-white mb-4">{t.monthStats.title}</h2>
+          <div className="rounded-lg bg-gray-800 p-6">
+            <h2 className="mb-4 text-xl font-bold text-white">{t.monthStats.title}</h2>
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="text-gray-400 border-b border-gray-700">
-                    <th className="text-left py-3 px-4">{locale === 'en' ? 'Month' : '月'}</th>
-                    <th className="text-right py-3 px-4">{t.monthStats.saleDays}</th>
-                    <th className="text-right py-3 px-4">{t.monthStats.avgDiscount}</th>
-                    <th className="text-right py-3 px-4">{t.monthStats.products}</th>
+                  <tr className="border-b border-gray-700 text-gray-400">
+                    <th className="px-4 py-3 text-left">{locale === 'en' ? 'Month' : '月'}</th>
+                    <th className="px-4 py-3 text-right">{t.monthStats.saleDays}</th>
+                    <th className="px-4 py-3 text-right">{t.monthStats.avgDiscount}</th>
+                    <th className="px-4 py-3 text-right">{t.monthStats.products}</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {data.monthStats.map(stat => (
+                  {data.monthStats.map((stat) => (
                     <tr key={stat.month} className="border-b border-gray-700/50 hover:bg-gray-700/30">
-                      <td className="py-3 px-4 text-white font-medium">
-                        {t.monthNames[stat.month - 1]}
+                      <td className="px-4 py-3 font-medium text-white">{t.monthNames[stat.month - 1]}</td>
+                      <td className="px-4 py-3 text-right text-gray-300">
+                        {stat.saleFrequency}
+                        {t.summary.days}
                       </td>
-                      <td className="py-3 px-4 text-right text-gray-300">
-                        {stat.saleFrequency}{t.summary.days}
-                      </td>
-                      <td className="py-3 px-4 text-right">
-                        <span className={`${
-                          stat.avgDiscount >= 40 ? 'text-red-400' :
-                          stat.avgDiscount >= 25 ? 'text-orange-400' :
-                          'text-yellow-400'
-                        }`}>
+                      <td className="px-4 py-3 text-right">
+                        <span
+                          className={`${
+                            stat.avgDiscount >= 40
+                              ? 'text-red-400'
+                              : stat.avgDiscount >= 25
+                                ? 'text-orange-400'
+                                : 'text-yellow-400'
+                          }`}
+                        >
                           {stat.avgDiscount}%
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right text-gray-300">
-                        {stat.avgSaleProducts}
-                      </td>
+                      <td className="px-4 py-3 text-right text-gray-300">{stat.avgSaleProducts}</td>
                     </tr>
                   ))}
                 </tbody>

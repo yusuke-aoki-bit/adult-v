@@ -37,17 +37,39 @@ function isValidPerformerName(name: string): boolean {
   if (!/^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z・]+$/.test(name)) return false;
   // 完全一致で除外するパターン（素人系の仮名は許可するため部分一致から削除）
   const exactExcludePatterns = [
-    '素人', 'ナンパ', '企画', '熟女', '人妻', // 単体のみ除外
+    '素人',
+    'ナンパ',
+    '企画',
+    '熟女',
+    '人妻', // 単体のみ除外
   ];
   if (exactExcludePatterns.includes(name)) return false;
   // 部分一致で除外するパターン
   const partialExcludePatterns = [
-    'AV', '動画', 'サンプル', '無料',
-    '高画質', 'HD', '4K', 'VR', 'カテゴリ', 'タグ', 'ジャンル',
-    '人気', 'ランキング', '新着', '特集', 'セール', '配信',
-    'page', 'Page', 'PAGE', 'next', 'prev'
+    'AV',
+    '動画',
+    'サンプル',
+    '無料',
+    '高画質',
+    'HD',
+    '4K',
+    'VR',
+    'カテゴリ',
+    'タグ',
+    'ジャンル',
+    '人気',
+    'ランキング',
+    '新着',
+    '特集',
+    'セール',
+    '配信',
+    'page',
+    'Page',
+    'PAGE',
+    'next',
+    'prev',
   ];
-  return !partialExcludePatterns.some(p => name.includes(p));
+  return !partialExcludePatterns.some((p) => name.includes(p));
 }
 
 async function crawlNakiny(page: number): Promise<LookupEntry[]> {
@@ -88,7 +110,7 @@ async function crawlNakiny(page: number): Promise<LookupEntry[]> {
 
       const bracketMatch = title.match(/【([^】]+)】/);
       if (bracketMatch?.[1]) {
-        bracketMatch[1].split(/[,、・]/).forEach(n => {
+        bracketMatch[1].split(/[,、・]/).forEach((n) => {
           const name = n.trim();
           if (isValidPerformerName(name)) {
             performers.push(name);
@@ -106,7 +128,6 @@ async function crawlNakiny(page: number): Promise<LookupEntry[]> {
         });
       }
     });
-
   } catch (error) {
     console.error(`[crawl-performer-lookup] nakiny page ${page} error:`, error);
   }
@@ -154,7 +175,7 @@ async function crawlAVSommelier(page: number): Promise<LookupEntry[]> {
         const text = $(meta).text();
         const actressMatch = text.match(/出演[：:]\s*([^/\n]+)/);
         if (actressMatch?.[1]) {
-          actressMatch[1].split(/[,、・]/).forEach(n => {
+          actressMatch[1].split(/[,、・]/).forEach((n) => {
             const name = n.trim();
             if (isValidPerformerName(name)) {
               performers.push(name);
@@ -173,7 +194,6 @@ async function crawlAVSommelier(page: number): Promise<LookupEntry[]> {
         });
       }
     });
-
   } catch (error) {
     console.error(`[crawl-performer-lookup] av-sommelier page ${page} error:`, error);
   }
@@ -212,7 +232,7 @@ async function crawlShiroutoMatome(page: number): Promise<LookupEntry[]> {
 
       const bracketMatch = title.match(/【([^】]+)】/);
       if (bracketMatch?.[1]) {
-        bracketMatch[1].split(/[,、・]/).forEach(n => {
+        bracketMatch[1].split(/[,、・]/).forEach((n) => {
           const name = n.trim();
           if (isValidPerformerName(name)) {
             performers.push(name);
@@ -235,7 +255,6 @@ async function crawlShiroutoMatome(page: number): Promise<LookupEntry[]> {
         });
       }
     });
-
   } catch (error) {
     console.error(`[crawl-performer-lookup] shirouto-matome page ${page} error:`, error);
   }
@@ -265,8 +284,7 @@ async function crawlMinnanoAV(page: number): Promise<LookupEntry[]> {
       const title = $item.find('a[href*="product"]').first().text().trim();
       const sourceUrl = $item.find('a[href*="product"]').first().attr('href') || '';
 
-      const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i) ||
-                               sourceUrl.match(/product=([A-Z0-9-]+)/i);
+      const productCodeMatch = title.match(/([A-Z]{2,6}[-_]?\d{3,5})/i) || sourceUrl.match(/product=([A-Z0-9-]+)/i);
       if (!productCodeMatch?.[1]) return;
 
       const productCode = productCodeMatch[1].toUpperCase();
@@ -289,7 +307,6 @@ async function crawlMinnanoAV(page: number): Promise<LookupEntry[]> {
         });
       }
     });
-
   } catch (error) {
     console.error(`[crawl-performer-lookup] minnano-av page ${page} error:`, error);
   }
@@ -329,7 +346,6 @@ async function crawlSeesaaWiki(page: number): Promise<LookupEntry[]> {
         });
       }
     });
-
   } catch (error) {
     console.error(`[crawl-performer-lookup] seesaawiki page ${page} error:`, error);
   }
@@ -382,7 +398,6 @@ async function crawlAVWiki(page: number): Promise<LookupEntry[]> {
         });
       }
     });
-
   } catch (error) {
     console.error(`[crawl-performer-lookup] av-wiki page ${page} error:`, error);
   }
@@ -399,7 +414,7 @@ interface CrawlPerformerLookupHandlerDeps {
 async function saveEntries(
   db: ReturnType<CrawlPerformerLookupHandlerDeps['getDb']>,
   entries: LookupEntry[],
-  source: string
+  source: string,
 ): Promise<{ inserted: number; updated: number }> {
   let inserted = 0;
   let updated = 0;
@@ -467,20 +482,23 @@ export function createCrawlPerformerLookupHandler(deps: CrawlPerformerLookupHand
 
     try {
       const crawlFunctions: Record<string, (page: number) => Promise<LookupEntry[]>> = {
-        'nakiny': crawlNakiny,
+        nakiny: crawlNakiny,
         'av-sommelier': crawlAVSommelier,
         'shirouto-matome': crawlShiroutoMatome,
         'minnano-av': crawlMinnanoAV,
         'av-wiki': crawlAVWiki,
-        'seesaawiki': crawlSeesaaWiki,
+        seesaawiki: crawlSeesaaWiki,
       };
 
       const crawlFn = crawlFunctions[source];
       if (!crawlFn) {
-        return NextResponse.json({
-          success: false,
-          error: `Unknown source: ${source}. Available: ${Object.keys(crawlFunctions).join(', ')}`,
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Unknown source: ${source}. Available: ${Object.keys(crawlFunctions).join(', ')}`,
+          },
+          { status: 400 },
+        );
       }
 
       for (let p = page; p < page + pages; p++) {
@@ -500,7 +518,7 @@ export function createCrawlPerformerLookupHandler(deps: CrawlPerformerLookupHand
         }
 
         if (p < page + pages - 1) {
-          await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+          await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
         }
       }
 
@@ -520,14 +538,16 @@ export function createCrawlPerformerLookupHandler(deps: CrawlPerformerLookupHand
         stats,
         lookupTableStats: lookupStats.rows,
       });
-
     } catch (error) {
       console.error('[crawl-performer-lookup] Error:', error);
-      return NextResponse.json({
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        stats,
-      }, { status: 500 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: error instanceof Error ? error.message : 'Unknown error',
+          stats,
+        },
+        { status: 500 },
+      );
     }
   };
 }

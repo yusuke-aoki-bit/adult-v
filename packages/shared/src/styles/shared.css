@@ -130,7 +130,7 @@ html {
   --image-placeholder-bg: #1f2937; /* gray-800 */
 
   /* Social Share (Brand colors) */
-  --social-line-bg: #00B900;
+  --social-line-bg: #00b900;
   --social-line-hover: #00a000;
   --social-twitter-bg: #374151; /* gray-700 */
   --social-twitter-hover: #4b5563; /* gray-600 */
@@ -166,77 +166,77 @@ html {
 /* FANZA Theme (Light: FANZA official brand colors) */
 .theme-fanza {
   /* Body/Main - FANZA公式 #F5F5F5 */
-  --body-bg: #F5F5F5;
+  --body-bg: #f5f5f5;
   --content-bg: #ffffff;
   --card-bg: #ffffff;
 
   /* Text Colors - FANZA公式 */
-  --text-primary: #2C2C2C;
-  --text-secondary: #4B4B4B;
+  --text-primary: #2c2c2c;
+  --text-secondary: #4b4b4b;
   --text-muted: #595959; /* コントラスト比改善 */
-  --text-accent: #B42F5A; /* FANZA rose-700 */
+  --text-accent: #b42f5a; /* FANZA rose-700 */
 
   /* Border Colors */
-  --border-primary: #D1D5DB; /* gray-300 */
-  --border-secondary: #E5E7EB; /* gray-200 */
-  --section-border: #D1D5DB; /* gray-300 */
+  --border-primary: #d1d5db; /* gray-300 */
+  --border-secondary: #e5e7eb; /* gray-200 */
+  --section-border: #d1d5db; /* gray-300 */
 
   /* Card Styles */
   --card-ring: rgba(0, 0, 0, 0.08);
-  --card-ring-hover: #B42F5A;
+  --card-ring-hover: #b42f5a;
   --card-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
 
   /* Link/Button Colors - FANZA公式 #B42F5A */
-  --link-color: #B42F5A;
-  --link-hover: #9F2850;
-  --btn-primary-bg: #B42F5A;
-  --btn-primary-hover: #9F2850;
+  --link-color: #b42f5a;
+  --link-hover: #9f2850;
+  --btn-primary-bg: #b42f5a;
+  --btn-primary-hover: #9f2850;
 
   /* Header */
   --header-bg: #ffffff;
-  --header-text: #2C2C2C;
-  --header-border: #E5E7EB; /* gray-200 */
-  --header-notice-bg: #F9FAFB; /* gray-50 */
-  --header-notice-border: #E5E7EB;
-  --header-notice-text: #4B4B4B;
+  --header-text: #2c2c2c;
+  --header-border: #e5e7eb; /* gray-200 */
+  --header-notice-bg: #f9fafb; /* gray-50 */
+  --header-notice-border: #e5e7eb;
+  --header-notice-text: #4b4b4b;
 
   /* Logo */
-  --logo-primary: #B42F5A;
-  --logo-secondary: #2C2C2C;
-  --logo-subtitle: #6E6E6E;
+  --logo-primary: #b42f5a;
+  --logo-secondary: #2c2c2c;
+  --logo-subtitle: #6e6e6e;
 
   /* Navigation - FANZA統一カラー */
   --nav-text: #374151; /* gray-700 */
-  --nav-hover-products: #B42F5A;
-  --nav-hover-actresses: #B42F5A;
-  --nav-hover-diary: #B42F5A;
-  --nav-hover-profile: #B42F5A;
-  --nav-hover-favorites: #B42F5A;
+  --nav-hover-products: #b42f5a;
+  --nav-hover-actresses: #b42f5a;
+  --nav-hover-diary: #b42f5a;
+  --nav-hover-profile: #b42f5a;
+  --nav-hover-favorites: #b42f5a;
 
   /* ASP Stats Bar */
-  --asp-bar-bg: #F9FAFB; /* gray-50 */
-  --asp-bar-border: #E5E7EB;
-  --asp-skeleton-bg: #E5E7EB; /* gray-200 */
+  --asp-bar-bg: #f9fafb; /* gray-50 */
+  --asp-bar-border: #e5e7eb;
+  --asp-skeleton-bg: #e5e7eb; /* gray-200 */
 
   /* Footer */
-  --footer-bg: #F9FAFB; /* gray-50 */
-  --footer-text: #4B4B4B;
-  --footer-heading: #2C2C2C;
+  --footer-bg: #f9fafb; /* gray-50 */
+  --footer-text: #4b4b4b;
+  --footer-heading: #2c2c2c;
   --footer-link: #595959;
-  --footer-link-hover: #B42F5A;
-  --footer-border: #E5E7EB;
-  --footer-email: #0052D4; /* FANZA blue */
-  --footer-email-hover: #003EA1;
+  --footer-link-hover: #b42f5a;
+  --footer-border: #e5e7eb;
+  --footer-email: #0052d4; /* FANZA blue */
+  --footer-email-hover: #003ea1;
 
   /* Accordion (Light theme) */
   --accordion-bg: rgba(249, 250, 251, 1);
   --accordion-hover: rgba(243, 244, 246, 1);
 
   /* Image placeholder */
-  --image-placeholder-bg: #E5E7EB; /* gray-200 */
+  --image-placeholder-bg: #e5e7eb; /* gray-200 */
 
   /* Social Share (Brand colors - same for light theme) */
-  --social-line-bg: #00B900;
+  --social-line-bg: #00b900;
   --social-line-hover: #00a000;
   --social-twitter-bg: #ffffff;
   --social-twitter-hover: #f9fafb; /* gray-50 */
@@ -265,7 +265,7 @@ html {
 
   /* SectionNav */
   --section-nav-bg: rgba(255, 255, 255, 0.95);
-  --section-nav-active: #B42F5A; /* FANZA rose */
+  --section-nav-active: #b42f5a; /* FANZA rose */
   --section-nav-dot-inactive: #d1d5db; /* gray-300 */
 }
 
@@ -633,11 +633,11 @@ details > summary::marker {
 @media (pointer: coarse) {
   button,
   a,
-  [role="button"],
-  [type="button"],
-  [type="submit"],
-  input[type="checkbox"],
-  input[type="radio"] {
+  [role='button'],
+  [type='button'],
+  [type='submit'],
+  input[type='checkbox'],
+  input[type='radio'] {
     min-height: 44px;
     min-width: 44px;
   }

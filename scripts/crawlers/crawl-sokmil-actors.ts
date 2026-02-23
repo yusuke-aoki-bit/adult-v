@@ -139,9 +139,9 @@ function parseNumber(value: string | undefined): number | null {
  */
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const offsetArg = args.find(arg => arg.startsWith('--offset='));
-  const initialArg = args.find(arg => arg.startsWith('--initial='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const offsetArg = args.find((arg) => arg.startsWith('--offset='));
+  const initialArg = args.find((arg) => arg.startsWith('--initial='));
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1]) : 100;
   const startOffset = offsetArg ? parseInt(offsetArg.split('=')[1]) : 1;
@@ -255,10 +255,7 @@ async function main() {
 
               if (Object.keys(updateData).length > 0) {
                 updateData.updatedAt = new Date();
-                await db
-                  .update(performers)
-                  .set(updateData)
-                  .where(eq(performers.id, existing.id));
+                await db.update(performers).set(updateData).where(eq(performers.id, existing.id));
                 stats.updatedPerformers++;
                 crawlerLog.info(`更新: ${actor.name} (ID: ${existing.id})`);
               } else {
@@ -288,15 +285,13 @@ async function main() {
           crawlerLog.info('全件取得完了');
           break;
         }
-
       } catch (err) {
         crawlerLog.error('API呼び出しエラー', err);
         stats.errors++;
         // リトライのため少し待つ
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
-
   } catch (err) {
     crawlerLog.error('致命的エラー', err);
   }

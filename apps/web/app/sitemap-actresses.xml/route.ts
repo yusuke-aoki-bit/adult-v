@@ -17,8 +17,9 @@ function getHreflangLinks(path: string): string {
   ];
 
   return languages
-    .map(({ lang, suffix }) =>
-      `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`)
+    .map(
+      ({ lang, suffix }) => `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`,
+    )
     .join('\n');
 }
 
@@ -62,17 +63,19 @@ async function _legacyGetAllActresses() {
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${topPerformers.map(performer => {
-  const path = `/actress/${performer.id}`;
-  const lastmod = performer.createdAt ? new Date(performer.createdAt).toISOString() : new Date().toISOString();
-  return `  <url>
+${topPerformers
+  .map((performer) => {
+    const path = `/actress/${performer.id}`;
+    const lastmod = performer.createdAt ? new Date(performer.createdAt).toISOString() : new Date().toISOString();
+    return `  <url>
     <loc>${BASE_URL}${path}</loc>
 ${getHreflangLinks(path)}
     <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>`;
-}).join('\n')}
+  })
+  .join('\n')}
 </urlset>`;
 
     return new NextResponse(xml, {

@@ -66,69 +66,69 @@ function AccordionSection({
   }, [isOpen, onToggle]);
 
   const handleToggle = useCallback(() => {
-    setIsOpen(prev => !prev);
+    setIsOpen((prev) => !prev);
   }, []);
 
-  const handleClear = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-    // confirmメッセージが指定されていない場合は確認なしで実行
-    if (onClear && (!clearConfirmMessage || window.confirm(clearConfirmMessage))) {
-      onClear();
-    }
-  }, [onClear, clearConfirmMessage]);
+  const handleClear = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      // confirmメッセージが指定されていない場合は確認なしで実行
+      if (onClear && (!clearConfirmMessage || window.confirm(clearConfirmMessage))) {
+        onClear();
+      }
+    },
+    [onClear, clearConfirmMessage],
+  );
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      handleToggle();
-    }
-  }, [handleToggle]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        handleToggle();
+      }
+    },
+    [handleToggle],
+  );
 
   // デフォルトの背景クラス（テーマ対応）
   const defaultBgClass = bgClass || 'theme-accordion-bg';
 
   return (
-    <div className={`${defaultBgClass} rounded-lg theme-accordion-border ${className}`}>
+    <div className={`${defaultBgClass} theme-accordion-border rounded-lg ${className}`}>
       {/* アコーディオンヘッダー */}
       <div
         role="button"
         tabIndex={0}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        className="w-full flex items-center justify-between py-3 px-4 theme-accordion-hover rounded-lg transition-colors cursor-pointer"
+        className="theme-accordion-hover flex w-full cursor-pointer items-center justify-between rounded-lg px-4 py-3 transition-colors"
         aria-expanded={isOpen}
       >
         <div className="flex items-center gap-2">
           <span className={iconColorClass}>{icon}</span>
-          <h2 className="text-sm sm:text-base font-bold theme-text">{title}</h2>
-          {typeof itemCount === 'number' && (
-            <span className="text-xs sm:text-sm theme-text-muted">({itemCount})</span>
-          )}
+          <h2 className="theme-text text-sm font-bold sm:text-base">{title}</h2>
+          {typeof itemCount === 'number' && <span className="theme-text-muted text-xs sm:text-sm">({itemCount})</span>}
         </div>
         <div className="flex items-center gap-2">
           {showClear && isOpen && onClear && (
             <button
               type="button"
               onClick={handleClear}
-              className="text-xs theme-text-muted hover:text-red-500 px-2 py-1 rounded theme-accordion-clear-hover transition-colors"
+              className="theme-text-muted theme-accordion-clear-hover rounded px-2 py-1 text-xs transition-colors hover:text-red-500"
               aria-label={clearLabel}
             >
-              <X className="w-4 h-4" />
+              <X className="h-4 w-4" />
             </button>
           )}
           {isOpen ? (
-            <ChevronUp className="w-5 h-5 theme-text-muted" />
+            <ChevronUp className="theme-text-muted h-5 w-5" />
           ) : (
-            <ChevronDown className="w-5 h-5 theme-text-muted" />
+            <ChevronDown className="theme-text-muted h-5 w-5" />
           )}
         </div>
       </div>
 
       {/* アコーディオンコンテンツ */}
-      {isOpen && (
-        <div className="px-4 pb-4 animate-fade-in">
-          {children}
-        </div>
-      )}
+      {isOpen && <div className="animate-fade-in px-4 pb-4">{children}</div>}
     </div>
   );
 }

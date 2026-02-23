@@ -96,7 +96,7 @@ export function extractPriceInfo(text: string | null | undefined): PriceInfo | n
     // 割引率が未設定の場合、計算
     if (!result.discountPercent && result['originalPrice'] > result['price']) {
       result.discountPercent = Math.round(
-        ((result['originalPrice'] - result['price']) / result['originalPrice']) * 100
+        ((result['originalPrice'] - result['price']) / result['originalPrice']) * 100,
       );
     }
   }
@@ -161,7 +161,7 @@ export function parsePerformerName(text: string | null | undefined): ParsedPerfo
  */
 export function parsePerformerNames(
   text: string | null | undefined,
-  separators: RegExp = /[,、，\n]+/
+  separators: RegExp = /[,、，\n]+/,
 ): ParsedPerformer[] {
   if (!text) return [];
 
@@ -175,15 +175,17 @@ export function parsePerformerNames(
  * 出演者名を正規化（全角/半角統一、不要な空白削除など）
  */
 export function normalizePerformerName(name: string): string {
-  return name
-    .trim()
-    // 全角スペースを半角に
-    .replace(/　/g, ' ')
-    // 連続するスペースを1つに
-    .replace(/\s+/g, ' ')
-    // 名前の前後の括弧内テキストを削除
-    .replace(/[（(][^）)]*[）)]$/, '')
-    .trim();
+  return (
+    name
+      .trim()
+      // 全角スペースを半角に
+      .replace(/　/g, ' ')
+      // 連続するスペースを1つに
+      .replace(/\s+/g, ' ')
+      // 名前の前後の括弧内テキストを削除
+      .replace(/[（(][^）)]*[）)]$/, '')
+      .trim()
+  );
 }
 
 // ============================================================
@@ -268,18 +270,29 @@ function formatDate(year: string, month: string, day: string): string {
  */
 function parseEnglishMonth(monthStr: string): number | null {
   const months: Record<string, number> = {
-    jan: 1, january: 1,
-    feb: 2, february: 2,
-    mar: 3, march: 3,
-    apr: 4, april: 4,
+    jan: 1,
+    january: 1,
+    feb: 2,
+    february: 2,
+    mar: 3,
+    march: 3,
+    apr: 4,
+    april: 4,
     may: 5,
-    jun: 6, june: 6,
-    jul: 7, july: 7,
-    aug: 8, august: 8,
-    sep: 9, september: 9,
-    oct: 10, october: 10,
-    nov: 11, november: 11,
-    dec: 12, december: 12,
+    jun: 6,
+    june: 6,
+    jul: 7,
+    july: 7,
+    aug: 8,
+    august: 8,
+    sep: 9,
+    september: 9,
+    oct: 10,
+    october: 10,
+    nov: 11,
+    november: 11,
+    dec: 12,
+    december: 12,
   };
   return months[monthStr.toLowerCase()] || null;
 }
@@ -366,16 +379,16 @@ export function stripHtml(html: string | null | undefined): string {
 export function normalizeText(text: string | null | undefined): string {
   if (!text) return '';
 
-  return text
-    // 全角英数を半角に
-    .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) =>
-      String.fromCharCode(c.charCodeAt(0) - 0xfee0)
-    )
-    // 全角スペースを半角に
-    .replace(/　/g, ' ')
-    // 連続するスペースを1つに
-    .replace(/\s+/g, ' ')
-    .trim();
+  return (
+    text
+      // 全角英数を半角に
+      .replace(/[Ａ-Ｚａ-ｚ０-９]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+      // 全角スペースを半角に
+      .replace(/　/g, ' ')
+      // 連続するスペースを1つに
+      .replace(/\s+/g, ' ')
+      .trim()
+  );
 }
 
 /**

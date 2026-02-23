@@ -95,7 +95,9 @@ async function fetchPageSpeedData(db: ReturnType<typeof getDb>): Promise<TaskRes
 
     console.log(`  Recent checks (7 days): ${stats.total_checks}`);
     console.log(`  Avg Performance: ${stats.avg_performance ? parseFloat(stats.avg_performance).toFixed(1) : 'N/A'}`);
-    console.log(`  Avg Accessibility: ${stats.avg_accessibility ? parseFloat(stats.avg_accessibility).toFixed(1) : 'N/A'}`);
+    console.log(
+      `  Avg Accessibility: ${stats.avg_accessibility ? parseFloat(stats.avg_accessibility).toFixed(1) : 'N/A'}`,
+    );
     console.log(`  Last check: ${stats.last_check || 'N/A'}`);
 
     return {
@@ -150,7 +152,9 @@ async function checkPageSpeed(db: ReturnType<typeof getDb>): Promise<TaskResult>
 
     console.log(`  Low score pages found: ${issues.length}`);
     for (const issue of issues.slice(0, 5)) {
-      console.log(`    - ${issue.url}: P=${issue.performance_score}, A=${issue.accessibility_score}, S=${issue.seo_score}`);
+      console.log(
+        `    - ${issue.url}: P=${issue.performance_score}, A=${issue.accessibility_score}, S=${issue.seo_score}`,
+      );
     }
 
     return {
@@ -159,7 +163,7 @@ async function checkPageSpeed(db: ReturnType<typeof getDb>): Promise<TaskResult>
       duration: Date.now() - startTime,
       data: {
         lowScorePages: issues.length,
-        issues: issues.slice(0, 5).map(i => ({
+        issues: issues.slice(0, 5).map((i) => ({
           url: i.url,
           performance: i.performance_score,
           accessibility: i.accessibility_score,
@@ -235,8 +239,8 @@ async function main() {
   }
 
   // 全体統計
-  const successTotal = results.filter(r => r.success).length;
-  const failureTotal = results.filter(r => !r.success).length;
+  const successTotal = results.filter((r) => r.success).length;
+  const failureTotal = results.filter((r) => !r.success).length;
 
   console.log('\n----------------------------------------');
   console.log(`Total: ${successTotal} succeeded, ${failureTotal} failed`);

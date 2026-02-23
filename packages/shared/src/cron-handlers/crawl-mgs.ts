@@ -9,10 +9,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import * as cheerio from 'cheerio';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -60,7 +57,7 @@ async function getProductUrlsFromList(page: number): Promise<string[]> {
   const response = await fetchWithTimeout(listUrl, {
     headers: {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      'Cookie': 'adc=1',
+      Cookie: 'adc=1',
     },
   });
 
@@ -86,7 +83,7 @@ async function parseMgsDetailPage(productUrl: string): Promise<(MgsProduct & { r
     const response = await fetchWithTimeout(productUrl, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': 'adc=1',
+        Cookie: 'adc=1',
       },
     });
 
@@ -101,30 +98,45 @@ async function parseMgsDetailPage(productUrl: string): Promise<(MgsProduct & { r
     const productId = productIdMatch[1];
 
     // タイトル
-    const title = $('h1.tag').text().trim() || $('title').text().replace(/ - MGS動画.*$/, '').trim();
+    const title =
+      $('h1.tag').text().trim() ||
+      $('title')
+        .text()
+        .replace(/ - MGS動画.*$/, '')
+        .trim();
     if (!title || title.length < 3) return null;
 
     // 説明
-    const description = $('meta[name="description"]').attr('content') ||
-                       $('p.txt.introduction').text().trim();
+    const description = $('meta[name="description"]').attr('content') || $('p.txt.introduction').text().trim();
 
     // 出演者
     const performers: string[] = [];
-    $('th:contains("出演")').next('td').find('a').each((_, el) => {
-      const name = $(el).text().trim();
-      if (name && name.length > 1 && name.length < 30 &&
-          /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name)) {
-        performers.push(name);
-      }
-    });
+    $('th:contains("出演")')
+      .next('td')
+      .find('a')
+      .each((_, el) => {
+        const name = $(el).text().trim();
+        if (
+          name &&
+          name.length > 1 &&
+          name.length < 30 &&
+          /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name)
+        ) {
+          performers.push(name);
+        }
+      });
     // リンクなしの場合
     if (performers.length === 0) {
       const performerText = $('th:contains("出演")').next('td').text().trim();
       if (performerText) {
         performerText.split(/[、,\n]/).forEach((name) => {
           const trimmed = name.trim();
-          if (trimmed && trimmed.length > 1 && trimmed.length < 30 &&
-              /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(trimmed)) {
+          if (
+            trimmed &&
+            trimmed.length > 1 &&
+            trimmed.length < 30 &&
+            /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(trimmed)
+          ) {
             performers.push(trimmed);
           }
         });
@@ -326,8 +338,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           console.log(`[crawl-mgs] Processed: ${product['productId']} - ${product['title'].substring(0, 30)}...`);
 
           // レート制限（外部サイトアクセス用、維持必須）
-          await new Promise(r => setTimeout(r, 1000));
-
+          await new Promise((r) => setTimeout(r, 1000));
         } catch (error) {
           stats.errors++;
           console.error(`[crawl-mgs] Error processing URL:`, error);
@@ -336,9 +347,9 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
@@ -362,7 +373,6 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('[crawl-mgs] Error:', error);
       return NextResponse.json(
@@ -371,7 +381,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

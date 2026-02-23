@@ -33,7 +33,6 @@ async function applyIndexOptimization() {
     console.log('  - Faster actress filtering');
     console.log('  - Faster tag-based queries');
     console.log('  - Faster ranking calculations');
-
   } catch (error) {
     console.error('❌ Error applying index optimization:', error);
     throw error;

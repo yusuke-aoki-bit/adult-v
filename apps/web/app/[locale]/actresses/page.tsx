@@ -67,22 +67,22 @@ function buildDebutYearFilter(debutYear: string) {
 function buildInitialFilter(initial: string) {
   // 五十音の行（あかさたなはまやらわ）に対応
   const hiraganaMap: Record<string, string[]> = {
-    'あ': ['あ', 'い', 'う', 'え', 'お'],
-    'か': ['か', 'き', 'く', 'け', 'こ', 'が', 'ぎ', 'ぐ', 'げ', 'ご'],
-    'さ': ['さ', 'し', 'す', 'せ', 'そ', 'ざ', 'じ', 'ず', 'ぜ', 'ぞ'],
-    'た': ['た', 'ち', 'つ', 'て', 'と', 'だ', 'ぢ', 'づ', 'で', 'ど'],
-    'な': ['な', 'に', 'ぬ', 'ね', 'の'],
-    'は': ['は', 'ひ', 'ふ', 'へ', 'ほ', 'ば', 'び', 'ぶ', 'べ', 'ぼ', 'ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'],
-    'ま': ['ま', 'み', 'む', 'め', 'も'],
-    'や': ['や', 'ゆ', 'よ'],
-    'ら': ['ら', 'り', 'る', 'れ', 'ろ'],
-    'わ': ['わ', 'を', 'ん'],
+    あ: ['あ', 'い', 'う', 'え', 'お'],
+    か: ['か', 'き', 'く', 'け', 'こ', 'が', 'ぎ', 'ぐ', 'げ', 'ご'],
+    さ: ['さ', 'し', 'す', 'せ', 'そ', 'ざ', 'じ', 'ず', 'ぜ', 'ぞ'],
+    た: ['た', 'ち', 'つ', 'て', 'と', 'だ', 'ぢ', 'づ', 'で', 'ど'],
+    な: ['な', 'に', 'ぬ', 'ね', 'の'],
+    は: ['は', 'ひ', 'ふ', 'へ', 'ほ', 'ば', 'び', 'ぶ', 'べ', 'ぼ', 'ぱ', 'ぴ', 'ぷ', 'ぺ', 'ぽ'],
+    ま: ['ま', 'み', 'む', 'め', 'も'],
+    や: ['や', 'ゆ', 'よ'],
+    ら: ['ら', 'り', 'る', 'れ', 'ろ'],
+    わ: ['わ', 'を', 'ん'],
   };
 
   const chars = hiraganaMap[initial];
   if (chars) {
     // 複数文字のいずれかで始まるかをOR条件で構築（パラメータバインド）
-    const likeConditions = chars.map(c => sql`pf.name_kana LIKE ${c + '%'}`);
+    const likeConditions = chars.map((c) => sql`pf.name_kana LIKE ${c + '%'}`);
     return sql`AND (${sql.join(likeConditions, sql` OR `)})`;
   }
   // 単一文字
@@ -108,9 +108,7 @@ const getCachedPerformers = unstable_cache(
       conditions.push(sql`pf.name ILIKE ${'%' + filters.query + '%'}`);
     }
 
-    const whereClause = conditions.length > 0
-      ? sql`WHERE ${sql.join(conditions, sql` AND `)}`
-      : sql``;
+    const whereClause = conditions.length > 0 ? sql`WHERE ${sql.join(conditions, sql` AND `)}` : sql``;
 
     // HAVING条件を構築（作品数フィルター）
     const minWorksValue = filters.minWorks ? parseInt(filters.minWorks, 10) : 1;
@@ -161,7 +159,7 @@ const getCachedPerformers = unstable_cache(
     };
   },
   ['actresses-list'],
-  { revalidate: 300, tags: ['actresses'] }
+  { revalidate: 300, tags: ['actresses'] },
 );
 
 const metaTranslations = {
@@ -284,8 +282,8 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
   return (
     <main className="theme-body min-h-screen py-6">
       <div className="container mx-auto px-4">
-        <p className="text-xs text-gray-400 mb-4 text-center">
-          <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+        <p className="mb-4 text-center text-xs text-gray-400">
+          <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
           {t.prNotice}
         </p>
 
@@ -293,24 +291,26 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
         <Breadcrumb items={breadcrumbItems} />
 
         <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Users className="w-8 h-8 text-pink-400" />
-            <h1 className="text-2xl md:text-3xl font-bold theme-text">{t.title}</h1>
+          <div className="mb-2 flex items-center gap-3">
+            <Users className="h-8 w-8 text-pink-400" />
+            <h1 className="theme-text text-2xl font-bold md:text-3xl">{t.title}</h1>
           </div>
-          <p className="theme-text-muted">{t.subtitle} ({total.toLocaleString()})</p>
+          <p className="theme-text-muted">
+            {t.subtitle} ({total.toLocaleString()})
+          </p>
         </div>
 
         {/* Search and Sort */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-4">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row">
           <form className="flex-1" method="get">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 name="q"
                 defaultValue={q}
                 placeholder={t.searchPlaceholder}
-                className="w-full pl-10 pr-4 py-2 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-pink-500"
+                className="w-full rounded-lg border border-gray-700 bg-gray-800 py-2 pr-4 pl-10 text-white placeholder-gray-400 focus:border-pink-500 focus:outline-none"
               />
               {sort !== 'popular' && <input type="hidden" name="sort" value={sort} />}
               {debutYear && <input type="hidden" name="debutYear" value={debutYear} />}
@@ -322,11 +322,13 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
             {(['popular', 'debut', 'name'] as const).map((s) => (
               <Link
                 key={s}
-                href={localizedHref(`/actresses?sort=${s}${q ? `&q=${q}` : ''}${debutYear ? `&debutYear=${debutYear}` : ''}${minWorks ? `&minWorks=${minWorks}` : ''}`, locale)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${sort === s
-                    ? 'bg-pink-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-                  }`}
+                href={localizedHref(
+                  `/actresses?sort=${s}${q ? `&q=${q}` : ''}${debutYear ? `&debutYear=${debutYear}` : ''}${minWorks ? `&minWorks=${minWorks}` : ''}`,
+                  locale,
+                )}
+                className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                  sort === s ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                }`}
               >
                 {t[`sort${s.charAt(0).toUpperCase() + s.slice(1)}` as keyof typeof t]}
               </Link>
@@ -340,39 +342,33 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
         {/* Performers Grid */}
         {performers.length > 0 ? (
           <>
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3 md:gap-4">
+            <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6 md:gap-4 lg:grid-cols-8">
               {performers.map((performer) => (
-                <Link
-                  key={performer.id}
-                  href={localizedHref(`/actress/${performer.id}`, locale)}
-                  className="group"
-                >
-                  <div className="aspect-[3/4] relative rounded-lg overflow-hidden bg-gray-800 mb-2">
+                <Link key={performer.id} href={localizedHref(`/actress/${performer.id}`, locale)} className="group">
+                  <div className="relative mb-2 aspect-[3/4] overflow-hidden rounded-lg bg-gray-800">
                     {performer.imageUrl ? (
                       <Image
                         src={performer.imageUrl}
                         alt={generateActressAltText({ name: performer.name, productCount: performer.productCount })}
                         fill
                         sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 12vw"
-                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                       />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Users className="w-8 h-8 text-gray-600" />
+                      <div className="flex h-full w-full items-center justify-center">
+                        <Users className="h-8 w-8 text-gray-600" />
                       </div>
                     )}
                   </div>
-                  <h2 className="text-sm font-medium theme-text truncate group-hover:text-pink-400 transition-colors">
+                  <h2 className="theme-text truncate text-sm font-medium transition-colors group-hover:text-pink-400">
                     {performer.name}
                   </h2>
-                  <div className="flex items-center gap-2 text-xs theme-text-muted">
+                  <div className="theme-text-muted flex items-center gap-2 text-xs">
                     <span className="flex items-center gap-1">
-                      <Film className="w-3 h-3" />
+                      <Film className="h-3 w-3" />
                       {performer.productCount}
                     </span>
-                    {performer.debutYear && (
-                      <span>{performer.debutYear}</span>
-                    )}
+                    {performer.debutYear && <span>{performer.debutYear}</span>}
                   </div>
                 </Link>
               ))}
@@ -393,8 +389,8 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
             )}
           </>
         ) : (
-          <div className="text-center py-12">
-            <Users className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <div className="py-12 text-center">
+            <Users className="mx-auto mb-4 h-12 w-12 text-gray-600" />
             <p className="theme-text-muted">{t.noResults}</p>
           </div>
         )}

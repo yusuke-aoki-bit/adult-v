@@ -75,18 +75,19 @@ export const SEARCH = {
 
 // Site metadata (requires NEXT_PUBLIC_SITE_MODE and NEXT_PUBLIC_SITE_URL env vars)
 export function getBasicSiteConfig() {
-  const SITE_MODE = typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE'] || 'adult-v';
+  const SITE_MODE = (typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE']) || 'adult-v';
   return {
     NAME: 'Adult-V',
-    DESCRIPTION: 'DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
-    URL: typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com',
+    DESCRIPTION:
+      'DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
+    URL: (typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_URL']) || 'https://adult-v.com',
     MODE: SITE_MODE,
   } as const;
 }
 
 // Cookie settings (requires SITE_MODE)
 export function getCookieConfig() {
-  const SITE_MODE = typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE'] || 'adult-v';
+  const SITE_MODE = (typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE']) || 'adult-v';
   return {
     /** Age verification cookie name */
     AGE_VERIFIED: `age-verified-${SITE_MODE}`,
@@ -98,15 +99,16 @@ export function getCookieConfig() {
 // Static SITE constant for backwards compatibility
 export const SITE = {
   NAME: 'Adult-V',
-  DESCRIPTION: 'DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
+  DESCRIPTION:
+    'DMM / DUGA / SOKMIL / DTI を横断し、ヘビー視聴者向けに女優・ジャンル別のレビュー、ランキング、キャンペーン速報を届けるアフィリエイトサイト。',
   get URL() {
-    return typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_URL'] || 'https://adult-v.com';
+    return (typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_URL']) || 'https://adult-v.com';
   },
 } as const;
 
 // サイト識別子（localhostでの開発時にセッションが共有されないように）
 function getSiteMode() {
-  return typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE'] || 'adult-v';
+  return (typeof process !== 'undefined' && process.env?.['NEXT_PUBLIC_SITE_MODE']) || 'adult-v';
 }
 
 // Static COOKIES constant for backwards compatibility

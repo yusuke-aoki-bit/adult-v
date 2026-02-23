@@ -17,8 +17,9 @@ function getHreflangLinks(path: string): string {
   ];
 
   return languages
-    .map(({ lang, suffix }) =>
-      `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`)
+    .map(
+      ({ lang, suffix }) => `    <xhtml:link rel="alternate" hreflang="${lang}" href="${BASE_URL}${path}${suffix}" />`,
+    )
     .join('\n');
 }
 
@@ -78,21 +79,25 @@ export async function GET() {
 
     // カテゴリ別にURLパスを生成
     const allUrls = [
-      ...allGenreTags.map(tag => ({ path: `/tags/${tag.id}`, priority: '0.6' })),
-      ...makerTags.map(tag => ({ path: `/makers/${tag.id}`, priority: '0.6' })),
-      ...seriesTags.map(tag => ({ path: `/series/${tag.id}`, priority: '0.6' })),
+      ...allGenreTags.map((tag) => ({ path: `/tags/${tag.id}`, priority: '0.6' })),
+      ...makerTags.map((tag) => ({ path: `/makers/${tag.id}`, priority: '0.6' })),
+      ...seriesTags.map((tag) => ({ path: `/series/${tag.id}`, priority: '0.6' })),
     ];
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
-${allUrls.map(({ path, priority }) => `  <url>
+${allUrls
+  .map(
+    ({ path, priority }) => `  <url>
     <loc>${BASE_URL}${path}</loc>
 ${getHreflangLinks(path)}
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
-  </url>`).join('\n')}
+  </url>`,
+  )
+  .join('\n')}
 </urlset>`;
 
     return new NextResponse(xml, {

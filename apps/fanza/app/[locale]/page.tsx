@@ -5,7 +5,15 @@ import PerformerGridWithComparison from '@/components/PerformerGridWithCompariso
 import ActressListFilter from '@/components/ActressListFilter';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import TopPageSectionNav from '@/components/TopPageSectionNav';
-import { getActresses, getActressesCount, getTags, getUncategorizedProductsCount, getAspStats, getSaleProducts, SaleProduct } from '@/lib/db/queries';
+import {
+  getActresses,
+  getActressesCount,
+  getTags,
+  getUncategorizedProductsCount,
+  getAspStats,
+  getSaleProducts,
+  SaleProduct,
+} from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
@@ -73,11 +81,11 @@ export async function generateMetadata({
   const alternates = {
     canonical: `${baseUrl}/`,
     languages: {
-      'ja': `${baseUrl}/`,
-      'en': `${baseUrl}/?hl=en`,
-      'zh': `${baseUrl}/?hl=zh`,
+      ja: `${baseUrl}/`,
+      en: `${baseUrl}/?hl=en`,
+      zh: `${baseUrl}/?hl=zh`,
       'zh-TW': `${baseUrl}/?hl=zh-TW`,
-      'ko': `${baseUrl}/?hl=ko`,
+      ko: `${baseUrl}/?hl=ko`,
       'x-default': `${baseUrl}/`,
     },
   };
@@ -118,41 +126,46 @@ export default async function Home({ params, searchParams }: PageProps) {
   const page = Math.max(1, Math.min(Number(searchParamsData['page']) || 1, 500));
 
   // FANZAサイトかどうかを判定
-  const [serverAspFilter, isFanzaSite] = await Promise.all([
-    getServerAspFilter(),
-    isServerFanzaSite(),
-  ]);
+  const [serverAspFilter, isFanzaSite] = await Promise.all([getServerAspFilter(), isServerFanzaSite()]);
 
-
-  const query = typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
-  const sortBy = (typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'recent') as 'nameAsc' | 'nameDesc' | 'productCountDesc' | 'productCountAsc' | 'recent';
+  const query =
+    typeof searchParamsData['q'] === 'string' ? searchParamsData['q'].trim().slice(0, 500) || undefined : undefined;
+  const sortBy = (typeof searchParamsData['sort'] === 'string' ? searchParamsData['sort'] : 'recent') as
+    | 'nameAsc'
+    | 'nameDesc'
+    | 'productCountDesc'
+    | 'productCountAsc'
+    | 'recent';
   const initialFilter = typeof searchParamsData['initial'] === 'string' ? searchParamsData['initial'] : undefined;
 
   // 対象タグ（include）と除外タグ（exclude）を取得
-  const includeTags = typeof searchParamsData['include'] === 'string'
-    ? searchParamsData['include'].split(',').filter(Boolean)
-    : Array.isArray(searchParamsData['include'])
-    ? searchParamsData['include']
-    : [];
-  const excludeTags = typeof searchParamsData['exclude'] === 'string'
-    ? searchParamsData['exclude'].split(',').filter(Boolean)
-    : Array.isArray(searchParamsData['exclude'])
-    ? searchParamsData['exclude']
-    : [];
+  const includeTags =
+    typeof searchParamsData['include'] === 'string'
+      ? searchParamsData['include'].split(',').filter(Boolean)
+      : Array.isArray(searchParamsData['include'])
+        ? searchParamsData['include']
+        : [];
+  const excludeTags =
+    typeof searchParamsData['exclude'] === 'string'
+      ? searchParamsData['exclude'].split(',').filter(Boolean)
+      : Array.isArray(searchParamsData['exclude'])
+        ? searchParamsData['exclude']
+        : [];
 
   // ASPフィルターを取得（FANZAサイトの場合は自動的にFANZAのみをフィルタ）
   const includeAsps = serverAspFilter
     ? serverAspFilter
-    : (typeof searchParamsData['includeAsp'] === 'string'
-        ? searchParamsData['includeAsp'].split(',').filter(Boolean)
-        : Array.isArray(searchParamsData['includeAsp'])
+    : typeof searchParamsData['includeAsp'] === 'string'
+      ? searchParamsData['includeAsp'].split(',').filter(Boolean)
+      : Array.isArray(searchParamsData['includeAsp'])
         ? searchParamsData['includeAsp']
-        : []);
-  const excludeAsps = typeof searchParamsData['excludeAsp'] === 'string'
-    ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
-    : Array.isArray(searchParamsData['excludeAsp'])
-    ? searchParamsData['excludeAsp']
-    : [];
+        : [];
+  const excludeAsps =
+    typeof searchParamsData['excludeAsp'] === 'string'
+      ? searchParamsData['excludeAsp'].split(',').filter(Boolean)
+      : Array.isArray(searchParamsData['excludeAsp'])
+        ? searchParamsData['excludeAsp']
+        : [];
 
   // hasVideo/hasImage/hasReviewフィルターを取得
   const hasVideo = searchParamsData['hasVideo'] === 'true';
@@ -160,24 +173,21 @@ export default async function Home({ params, searchParams }: PageProps) {
   const hasReview = searchParamsData['hasReview'] === 'true';
 
   // 女優特徴フィルターを取得
-  const cupSizes = typeof searchParamsData['cup'] === 'string'
-    ? searchParamsData['cup'].split(',').filter(Boolean)
-    : [];
-  const heightMin = typeof searchParamsData['heightMin'] === 'string' && searchParamsData['heightMin']
-    ? parseInt(searchParamsData['heightMin'])
-    : undefined;
-  const heightMax = typeof searchParamsData['heightMax'] === 'string' && searchParamsData['heightMax']
-    ? parseInt(searchParamsData['heightMax'])
-    : undefined;
-  const bloodTypes = typeof searchParamsData['bloodType'] === 'string'
-    ? searchParamsData['bloodType'].split(',').filter(Boolean)
-    : [];
-  const debutYear = typeof searchParamsData['debutYear'] === 'string'
-    ? searchParamsData['debutYear']
-    : undefined;
-  const minWorks = typeof searchParamsData['minWorks'] === 'string'
-    ? parseInt(searchParamsData['minWorks'], 10)
-    : undefined;
+  const cupSizes =
+    typeof searchParamsData['cup'] === 'string' ? searchParamsData['cup'].split(',').filter(Boolean) : [];
+  const heightMin =
+    typeof searchParamsData['heightMin'] === 'string' && searchParamsData['heightMin']
+      ? parseInt(searchParamsData['heightMin'])
+      : undefined;
+  const heightMax =
+    typeof searchParamsData['heightMax'] === 'string' && searchParamsData['heightMax']
+      ? parseInt(searchParamsData['heightMax'])
+      : undefined;
+  const bloodTypes =
+    typeof searchParamsData['bloodType'] === 'string' ? searchParamsData['bloodType'].split(',').filter(Boolean) : [];
+  const debutYear = typeof searchParamsData['debutYear'] === 'string' ? searchParamsData['debutYear'] : undefined;
+  const minWorks =
+    typeof searchParamsData['minWorks'] === 'string' ? parseInt(searchParamsData['minWorks'], 10) : undefined;
   const onSale = searchParamsData['onSale'] === 'true';
 
   const offset = (page - 1) * PER_PAGE;
@@ -218,10 +228,12 @@ export default async function Home({ params, searchParams }: PageProps) {
       console.error('Failed to fetch tags:', error);
       return [] as Awaited<ReturnType<typeof getTags>>;
     }),
-    !isFanzaSite ? getAspStats().catch((error: unknown) => {
-      console.error('Failed to fetch ASP stats:', error);
-      return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
-    }) : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+    !isFanzaSite
+      ? getAspStats().catch((error: unknown) => {
+          console.error('Failed to fetch ASP stats:', error);
+          return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
+        })
+      : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
     getActresses({
       ...actressQueryOptions,
       limit: PER_PAGE,
@@ -237,11 +249,11 @@ export default async function Home({ params, searchParams }: PageProps) {
     }),
   ]);
 
-  const genreTags = allTags.filter(tag => tag.category !== 'site');
+  const genreTags = allTags.filter((tag) => tag.category !== 'site');
   const aspStats = aspStatsResult;
 
   // 利用可能なASP一覧（aspStatsから動的に生成、画面上部と一致させる）
-  const availableAsps = aspStats.map(stat => ({
+  const availableAsps = aspStats.map((stat) => ({
     id: stat.aspName,
     name: stat.aspName,
   }));
@@ -254,7 +266,25 @@ export default async function Home({ params, searchParams }: PageProps) {
   // FANZAサイトではincludeAspsが自動的に['FANZA']になるため、ASPフィルターはTOPページ判定に含めない
   const userSetIncludeAsps = isFanzaSite ? [] : includeAsps;
   const userSetExcludeAsps = isFanzaSite ? [] : excludeAsps;
-  const isTopPage = !query && !initialFilter && includeTags.length === 0 && excludeTags.length === 0 && userSetIncludeAsps.length === 0 && userSetExcludeAsps.length === 0 && !hasVideo && !hasImage && !hasReview && !onSale && cupSizes.length === 0 && heightMin === undefined && heightMax === undefined && bloodTypes.length === 0 && !debutYear && !minWorks && sortBy === 'recent' && page === 1;
+  const isTopPage =
+    !query &&
+    !initialFilter &&
+    includeTags.length === 0 &&
+    excludeTags.length === 0 &&
+    userSetIncludeAsps.length === 0 &&
+    userSetExcludeAsps.length === 0 &&
+    !hasVideo &&
+    !hasImage &&
+    !hasReview &&
+    !onSale &&
+    cupSizes.length === 0 &&
+    heightMin === undefined &&
+    heightMax === undefined &&
+    bloodTypes.length === 0 &&
+    !debutYear &&
+    !minWorks &&
+    sortBy === 'recent' &&
+    page === 1;
 
   if (isTopPage) {
     try {
@@ -278,7 +308,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
   // ASP別商品数をマップに変換（フィルター表示用）
   const aspProductCounts: Record<string, number> = {};
-  aspStats.forEach(stat => {
+  aspStats.forEach((stat) => {
     aspProductCounts[stat.aspName] = stat.productCount;
   });
 
@@ -304,24 +334,17 @@ export default async function Home({ params, searchParams }: PageProps) {
       )}
 
       {/* LCP最適化: 最初の画像をpreload */}
-      {firstActressImageUrl && (
-        <link
-          rel="preload"
-          as="image"
-          href={firstActressImageUrl}
-          fetchPriority="high"
-        />
-      )}
+      {firstActressImageUrl && <link rel="preload" as="image" href={firstActressImageUrl} fetchPriority="high" />}
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
 
       {/* 上部セクション（セール中・最近見た作品）- 女優一覧の前 */}
       {isTopPage && (
-        <section id="sale" className="py-3 sm:py-4 scroll-mt-20">
+        <section id="sale" className="scroll-mt-20 py-3 sm:py-4">
           <div className="container mx-auto px-3 sm:px-4">
             <TopPageUpperSections
               locale={locale}
-              saleProducts={saleProducts.map(p => ({
+              saleProducts={saleProducts.map((p) => ({
                 ...p,
                 endAt: p.endAt ? p.endAt.toISOString() : null,
               }))}
@@ -332,15 +355,11 @@ export default async function Home({ params, searchParams }: PageProps) {
       )}
 
       {/* 女優一覧 */}
-      <section id="list" className="py-3 sm:py-4 md:py-6 scroll-mt-4">
+      <section id="list" className="scroll-mt-4 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="mb-2 sm:mb-3">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold theme-text mb-0.5">
-              {tCommon('actresses')}
-            </h1>
-            <p className="text-sm sm:text-base theme-text-secondary">
-              {t('actressCount', { count: totalCount })}
-            </p>
+            <h1 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h1>
+            <p className="theme-text-secondary text-sm sm:text-base">{t('actressCount', { count: totalCount })}</p>
           </div>
 
           {/* フィルター設定（頭文字検索 + タグフィルター） */}
@@ -370,7 +389,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           {/* 並び順 */}
-          <div className="flex justify-end mb-2 sm:mb-4">
+          <div className="mb-2 flex justify-end sm:mb-4">
             <SortDropdown sortBy={sortBy} />
           </div>
 
@@ -402,7 +421,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           <PerformerGridWithComparison
             performers={actresses}
             locale={locale}
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 md:gap-4"
+            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6"
           />
 
           {/* ページネーション（下部） */}
@@ -434,7 +453,7 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* === 以下はメインコンテンツ（女優一覧）の後に表示 === */}
       {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}
-      <section id="recommendations" className="py-3 sm:py-4 scroll-mt-20">
+      <section id="recommendations" className="scroll-mt-20 py-3 sm:py-4">
         <div className="container mx-auto px-3 sm:px-4">
           <TopPageLowerSections
             locale={locale}

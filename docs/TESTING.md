@@ -4,11 +4,11 @@
 
 本プロジェクトでは以下のテストフレームワークを使用しています。
 
-| 種類 | フレームワーク | 用途 |
-|------|--------------|------|
-| ユニットテスト | Vitest | ユーティリティ関数、コンポーネントロジック |
-| E2Eテスト | Playwright | ブラウザベースの統合テスト |
-| アクセシビリティ | axe-core | WCAG準拠チェック |
+| 種類             | フレームワーク | 用途                                       |
+| ---------------- | -------------- | ------------------------------------------ |
+| ユニットテスト   | Vitest         | ユーティリティ関数、コンポーネントロジック |
+| E2Eテスト        | Playwright     | ブラウザベースの統合テスト                 |
+| アクセシビリティ | axe-core       | WCAG準拠チェック                           |
 
 ---
 
@@ -195,39 +195,39 @@ export default defineConfig({
 
 ### 1. ユニットテスト
 
-| テスト対象 | ファイル | 説明 |
-|-----------|---------|------|
-| ASP/プロバイダーマッピング | `provider-utils.test.ts` | ASP名からProviderIDへの変換 |
-| SEOユーティリティ | `seo.test.ts` | メタデータ生成、構造化データ |
-| 演者バリデーション | `performer-validation.test.ts` | 演者名の検証・正規化 |
-| アナリティクスイベント | `analytics-events.test.ts` | GA4イベント送信 |
+| テスト対象                 | ファイル                       | 説明                         |
+| -------------------------- | ------------------------------ | ---------------------------- |
+| ASP/プロバイダーマッピング | `provider-utils.test.ts`       | ASP名からProviderIDへの変換  |
+| SEOユーティリティ          | `seo.test.ts`                  | メタデータ生成、構造化データ |
+| 演者バリデーション         | `performer-validation.test.ts` | 演者名の検証・正規化         |
+| アナリティクスイベント     | `analytics-events.test.ts`     | GA4イベント送信              |
 
 ### 2. E2Eテスト
 
-| テスト対象 | ファイル | 説明 |
-|-----------|---------|------|
-| API動作 | `api-routes.spec.ts` | 全APIエンドポイントの動作確認 |
-| ページナビゲーション | `basic-navigation.spec.ts` | 基本的なページ遷移 |
-| アクセシビリティ | `accessibility.spec.ts` | axe-coreによるWCAG検証 |
-| ビジュアル | `visual-regression.spec.ts` | スクリーンショット比較 |
-| パフォーマンス | `performance.spec.ts` | Core Web Vitals |
-| 要件検証 | `requirements-validation.spec.ts` | REQUIREMENTS.md準拠 |
+| テスト対象           | ファイル                          | 説明                          |
+| -------------------- | --------------------------------- | ----------------------------- |
+| API動作              | `api-routes.spec.ts`              | 全APIエンドポイントの動作確認 |
+| ページナビゲーション | `basic-navigation.spec.ts`        | 基本的なページ遷移            |
+| アクセシビリティ     | `accessibility.spec.ts`           | axe-coreによるWCAG検証        |
+| ビジュアル           | `visual-regression.spec.ts`       | スクリーンショット比較        |
+| パフォーマンス       | `performance.spec.ts`             | Core Web Vitals               |
+| 要件検証             | `requirements-validation.spec.ts` | REQUIREMENTS.md準拠           |
 
 ### 3. 要件検証テスト
 
 `requirements-validation.spec.ts` はREQUIREMENTS.mdに定義された要件の実装を検証します。
 
-| 要件 | テスト内容 |
-|------|-----------|
+| 要件    | テスト内容                      |
+| ------- | ------------------------------- |
 | 要件1-4 | 商品・演者・ASP紐付けの表示確認 |
-| 要件5 | セール情報の表示確認 |
-| 要件7 | 多言語ページの表示確認 |
-| 要件8 | UI/UXの動作確認 |
-| 要件9 | SEOメタタグ・構造化データ |
-| 要件12 | Google Analyticsスクリプト |
-| 要件13 | PWA機能（SW, manifest） |
-| 要件14 | 年齢確認ページ |
-| 要件18 | API動作確認 |
+| 要件5   | セール情報の表示確認            |
+| 要件7   | 多言語ページの表示確認          |
+| 要件8   | UI/UXの動作確認                 |
+| 要件9   | SEOメタタグ・構造化データ       |
+| 要件12  | Google Analyticsスクリプト      |
+| 要件13  | PWA機能（SW, manifest）         |
+| 要件14  | 年齢確認ページ                  |
+| 要件18  | API動作確認                     |
 
 ---
 
@@ -238,11 +238,11 @@ export default defineConfig({
 ```yaml
 # .github/workflows/ci.yml
 jobs:
-  lint:           # ESLint
-  typecheck:      # TypeScript型チェック
-  unit-test:      # Vitestユニットテスト
-  build:          # Next.jsビルド (web/fanza)
-  e2e-test:       # Playwright E2Eテスト
+  lint: # ESLint
+  typecheck: # TypeScript型チェック
+  unit-test: # Vitestユニットテスト
+  build: # Next.jsビルド (web/fanza)
+  e2e-test: # Playwright E2Eテスト
 ```
 
 ### トリガー
@@ -322,9 +322,9 @@ pnpm exec playwright codegen localhost:3000
 
 ## カバレッジ目標
 
-| 対象 | 目標 |
-|------|------|
-| ユーティリティ関数 | 80% |
-| コンポーネントロジック | 70% |
-| APIルート | 60% |
-| E2E（主要フロー） | 100% |
+| 対象                   | 目標 |
+| ---------------------- | ---- |
+| ユーティリティ関数     | 80%  |
+| コンポーネントロジック | 70%  |
+| APIルート              | 60%  |
+| E2E（主要フロー）      | 100% |

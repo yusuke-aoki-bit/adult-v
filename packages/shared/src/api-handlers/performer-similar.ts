@@ -64,7 +64,7 @@ const CACHE_TTL = 60 * 60; // 1時間
 
 export function createPerformerSimilarHandler(
   deps: PerformerSimilarHandlerDeps,
-  options: PerformerSimilarHandlerOptions
+  options: PerformerSimilarHandlerOptions,
 ) {
   const { getDb, performers, getCache, setCache, generateCacheKey } = deps;
   const { siteMode } = options;
@@ -73,7 +73,7 @@ export function createPerformerSimilarHandler(
 
   return async function handlePerformerSimilar(
     performerId: number,
-    limit: number = 20
+    limit: number = 20,
   ): Promise<{ data?: PerformerSimilarityResponse; error?: string; status: number }> {
     try {
       if (isNaN(performerId)) {
@@ -92,7 +92,7 @@ export function createPerformerSimilarHandler(
       const db = getDb();
 
       // 対象の女優情報を取得
-      const performerData = await (db as ReturnType<typeof getDb>)
+      const performerData = (await (db as ReturnType<typeof getDb>)
         .select({
           id: (performers as { id: unknown }).id,
           name: (performers as { name: unknown }).name,
@@ -107,18 +107,18 @@ export function createPerformerSimilarHandler(
         })
         .from(performers)
         .where(eq((performers as { id: unknown }).id as Parameters<typeof eq>[0], performerId))
-        .limit(1) as unknown as Array<{
-          id: number;
-          name: string;
-          nameEn: string | null;
-          profileImageUrl: string | null;
-          height: number | null;
-          bust: number | null;
-          waist: number | null;
-          hip: number | null;
-          cup: string | null;
-          birthday: string | null;
-        }>;
+        .limit(1)) as unknown as Array<{
+        id: number;
+        name: string;
+        nameEn: string | null;
+        profileImageUrl: string | null;
+        height: number | null;
+        bust: number | null;
+        waist: number | null;
+        hip: number | null;
+        cup: string | null;
+        birthday: string | null;
+      }>;
 
       if (performerData.length === 0) {
         return { error: 'Performer not found', status: 404 };
@@ -240,7 +240,7 @@ export function createPerformerSimilarHandler(
       }
 
       // 2ホップ目：タグ類似（同じタグ（ジャンル）に多く出演している女優）
-      const hop1Ids = hop1Results.map(r => r.id);
+      const hop1Ids = hop1Results.map((r) => r.id);
       const hop1IdsArray = hop1Ids.length > 0 ? `{${hop1Ids.join(',')}}` : '{0}';
 
       const hop2Query = await db.execute(sql`
@@ -303,7 +303,13 @@ export function createPerformerSimilarHandler(
       }>;
 
       // プロフィール類似度を計算
-      const calculateProfileSimilarity = (other: { height: number | null; bust: number | null; waist: number | null; hip: number | null; cup: string | null }) => {
+      const calculateProfileSimilarity = (other: {
+        height: number | null;
+        bust: number | null;
+        waist: number | null;
+        hip: number | null;
+        cup: string | null;
+      }) => {
         let heightSim = 0;
         let bustSim = 0;
         let waistSim = 0;
@@ -334,7 +340,7 @@ export function createPerformerSimilarHandler(
 
       // サムネイル取得
       const allResults = [...hop1Results, ...hop2Results];
-      const performerIds = allResults.map(r => r.id);
+      const performerIds = allResults.map((r) => r.id);
       const thumbnailMap = new Map<number, string | null>();
 
       if (performerIds.length > 0) {
@@ -389,10 +395,11 @@ export function createPerformerSimilarHandler(
           // プロフィール類似の場合
           const { heightSim, bustSim, waistSim, hipSim, cupSim } = calculateProfileSimilarity(r);
           const profileComponents = [heightSim, bustSim, waistSim, hipSim, cupSim];
-          const validProfileComponents = profileComponents.filter(c => c > 0);
-          finalScore = validProfileComponents.length > 0
-            ? validProfileComponents.reduce((a, b) => a + b, 0) / validProfileComponents.length
-            : 0;
+          const validProfileComponents = profileComponents.filter((c) => c > 0);
+          finalScore =
+            validProfileComponents.length > 0
+              ? validProfileComponents.reduce((a, b) => a + b, 0) / validProfileComponents.length
+              : 0;
 
           // 類似度0.3以上のみ
           if (finalScore < 0.3) continue;
@@ -423,7 +430,7 @@ export function createPerformerSimilarHandler(
       }
 
       // 2ホップ目：ジャンル類似
-      const maxSharedGenres = hop2Results.length > 0 ? Math.max(...hop2Results.map(r => r.shared_genres)) : 1;
+      const maxSharedGenres = hop2Results.length > 0 ? Math.max(...hop2Results.map((r) => r.shared_genres)) : 1;
       for (let i = 0; i < hop2Results.length; i++) {
         const r = hop2Results[i];
         if (!r) continue;
@@ -454,9 +461,8 @@ export function createPerformerSimilarHandler(
       const finalResults = similarPerformers.slice(0, safeLimit);
 
       const totalSimilarCount = finalResults.length;
-      const avgSimilarityScore = totalSimilarCount > 0
-        ? finalResults.reduce((sum, p) => sum + p.similarityScore, 0) / totalSimilarCount
-        : 0;
+      const avgSimilarityScore =
+        totalSimilarCount > 0 ? finalResults.reduce((sum, p) => sum + p.similarityScore, 0) / totalSimilarCount : 0;
 
       // 中心女優のサムネイル取得
       let centerThumbnail: string | null = null;
@@ -490,7 +496,7 @@ export function createPerformerSimilarHandler(
       centerThumbnail = (centerThumbQuery.rows[0] as { thumbnail_url: string | null })?.thumbnail_url || null;
 
       // エッジを生成（中心から各ノードへ、類似度ベース）
-      const edges: NetworkEdge[] = finalResults.map(p => ({
+      const edges: NetworkEdge[] = finalResults.map((p) => ({
         source: performerId,
         target: p.id,
         weight: Math.round(p.similarityScore * 100),
@@ -516,7 +522,6 @@ export function createPerformerSimilarHandler(
       await setCache(cacheKey, response, CACHE_TTL);
 
       return { data: response, status: 200 };
-
     } catch (error) {
       logDbErrorAndReturn(error, null, 'getPerformerSimilar');
       return { error: 'Internal server error', status: 500 };

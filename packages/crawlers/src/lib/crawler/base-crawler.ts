@@ -452,7 +452,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
             upsertResult.id,
             this.getTableName(),
             upsertResult.gcsUrl || `hash:${upsertResult.id}`,
-            tx
+            tx,
           );
 
           // 6. 関連データ保存
@@ -472,11 +472,10 @@ export abstract class BaseCrawler<TRawItem = unknown> {
           operation: 'processItem.transaction',
           productId: parsed.normalizedProductId,
         });
-        throw new DatabaseError(
-          `トランザクション失敗: ${crawlerError.message}`,
-          CrawlerErrorCode.DB_TRANSACTION,
-          { operation: 'processItem', ...(error instanceof Error && { originalError: error }) }
-        );
+        throw new DatabaseError(`トランザクション失敗: ${crawlerError.message}`, CrawlerErrorCode.DB_TRANSACTION, {
+          operation: 'processItem',
+          ...(error instanceof Error && { originalError: error }),
+        });
       }
 
       // 8. AI処理（トランザクション外 - 長時間処理のため）
@@ -609,7 +608,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         data['title'],
         data.originalId, // 品番（wiki検索用）
         this.options['aspName'], // ASPプレフィックス
-        tx
+        tx,
       );
       console.log(`  ✓ 出演者保存完了 (${result.added}/${result.total}人)`);
     }
@@ -626,7 +625,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
         if (saved) {
           this.stats.salesSaved++;
           console.log(
-            `  💰 セール情報保存: ¥${data.saleInfo.regularPrice.toLocaleString()} → ¥${data.saleInfo.salePrice.toLocaleString()} (${data.saleInfo.discountPercent}% OFF)`
+            `  💰 セール情報保存: ¥${data.saleInfo.regularPrice.toLocaleString()} → ¥${data.saleInfo.salePrice.toLocaleString()} (${data.saleInfo.discountPercent}% OFF)`,
           );
         }
       } catch (error) {
@@ -671,7 +670,9 @@ export abstract class BaseCrawler<TRawItem = unknown> {
       } else if (result.action === 'added') {
         const method = result.matchResult?.matchingMethod || 'unknown';
         const confidence = result.matchResult?.confidenceScore || 0;
-        console.log(`  🔗 既存グループに追加 (group_id: ${result.groupId}, method: ${method}, confidence: ${confidence}%)`);
+        console.log(
+          `  🔗 既存グループに追加 (group_id: ${result.groupId}, method: ${method}, confidence: ${confidence}%)`,
+        );
       }
       // 'skipped' の場合は既にグループに所属しているためログなし
     } catch (error) {
@@ -698,8 +699,8 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
     // 新しい画像をバッチ挿入
     if (imageUrls.length > 0) {
-      const valuesClauses = imageUrls.map((imageUrl, index) =>
-        sql`(${productId}, ${this.options['aspName']}, ${imageUrl}, 'sample', ${index})`
+      const valuesClauses = imageUrls.map(
+        (imageUrl, index) => sql`(${productId}, ${this.options['aspName']}, ${imageUrl}, 'sample', ${index})`,
       );
       await dbCtx.execute(sql`
         INSERT INTO product_images (product_id, asp_name, image_url, image_type, display_order)
@@ -754,8 +755,8 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 
     // 新しい動画をバッチ挿入
     if (videoUrls.length > 0) {
-      const valuesClauses = videoUrls.map((videoUrl, index) =>
-        sql`(${productId}, ${this.options['aspName']}, ${videoUrl}, 'sample', ${index})`
+      const valuesClauses = videoUrls.map(
+        (videoUrl, index) => sql`(${productId}, ${this.options['aspName']}, ${videoUrl}, 'sample', ${index})`,
       );
       await dbCtx.execute(sql`
         INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order)
@@ -779,7 +780,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     }
 
     // 1. categories一括UPSERT
-    const catValuesClauses = categories.map(name => sql`(${name})`);
+    const catValuesClauses = categories.map((name) => sql`(${name})`);
     const catResult = await dbCtx.execute(sql`
       INSERT INTO categories (name)
       VALUES ${sql.join(catValuesClauses, sql`, `)}
@@ -788,7 +789,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     `);
 
     // 2. product_categories一括INSERT
-    const catLinks = catResult.rows.map(row => sql`(${productId}, ${row['id'] as number})`);
+    const catLinks = catResult.rows.map((row) => sql`(${productId}, ${row['id'] as number})`);
     if (catLinks.length > 0) {
       await dbCtx.execute(sql`
         INSERT INTO product_categories (product_id, category_id)
@@ -798,7 +799,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     }
 
     // 3. tags一括UPSERT
-    const tagValuesClauses = categories.map(name => sql`(${name}, 'genre')`);
+    const tagValuesClauses = categories.map((name) => sql`(${name}, 'genre')`);
     const tagResult = await dbCtx.execute(sql`
       INSERT INTO tags (name, category)
       VALUES ${sql.join(tagValuesClauses, sql`, `)}
@@ -807,7 +808,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
     `);
 
     // 4. product_tags一括INSERT
-    const tagLinks = tagResult.rows.map(row => sql`(${productId}, ${row['id'] as number})`);
+    const tagLinks = tagResult.rows.map((row) => sql`(${productId}, ${row['id'] as number})`);
     if (tagLinks.length > 0) {
       await dbCtx.execute(sql`
         INSERT INTO product_tags (product_id, tag_id)
@@ -826,14 +827,15 @@ export abstract class BaseCrawler<TRawItem = unknown> {
   protected async saveReviews(
     productId: number,
     reviews: NonNullable<ParsedProductData['reviews']>,
-    tx?: DbContext
+    tx?: DbContext,
   ): Promise<void> {
     const dbCtx = tx || this.db;
     console.log(`  📝 レビュー保存中 (${reviews.length}件)...`);
 
     if (reviews.length > 0) {
-      const valuesClauses = reviews.map(review =>
-        sql`(${productId}, ${this.options['aspName']}, ${review.reviewerName || null}, ${review['rating']}, 5, ${review['title'] || null}, ${review.content || null}, ${review.date ? new Date(review.date) : null}, ${review.helpfulYes || null}, ${review.reviewId || null}, NOW(), NOW())`
+      const valuesClauses = reviews.map(
+        (review) =>
+          sql`(${productId}, ${this.options['aspName']}, ${review.reviewerName || null}, ${review['rating']}, 5, ${review['title'] || null}, ${review.content || null}, ${review.date ? new Date(review.date) : null}, ${review.helpfulYes || null}, ${review.reviewId || null}, NOW(), NOW())`,
       );
       await dbCtx.execute(sql`
         INSERT INTO product_reviews (
@@ -865,7 +867,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
   protected async saveAggregateRating(
     productId: number,
     rating: NonNullable<ParsedProductData['aggregateRating']>,
-    tx?: DbContext
+    tx?: DbContext,
   ): Promise<void> {
     const dbCtx = tx || this.db;
     await dbCtx.execute(sql`
@@ -918,7 +920,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
           extractTags: true,
           translate: true,
           generateDescription: true,
-        }
+        },
       );
 
       // エラーがあれば警告
@@ -1081,7 +1083,7 @@ export abstract class BaseCrawler<TRawItem = unknown> {
 export function generateDateRanges(
   startYear: number,
   endYear: number,
-  format: 'YYYYMMDD' | 'ISO' = 'YYYYMMDD'
+  format: 'YYYYMMDD' | 'ISO' = 'YYYYMMDD',
 ): Array<{ start: string; end: string }> {
   const ranges: Array<{ start: string; end: string }> = [];
 
@@ -1161,7 +1163,7 @@ export function printCrawlerHeader(
     forceReprocess?: boolean;
     fullScan?: boolean;
     customInfo?: Record<string, string | number | boolean>;
-  }
+  },
 ): void {
   console.log('========================================');
   console.log(`=== ${name} ===`);
@@ -1184,7 +1186,7 @@ export function printCrawlerHeader(
  */
 export async function runCrawler<T extends BaseCrawler>(
   CrawlerClass: new (options: BaseCrawlerOptions) => T,
-  options: BaseCrawlerOptions
+  options: BaseCrawlerOptions,
 ): Promise<void> {
   const crawler = new CrawlerClass(options);
   const result = await crawler.run();

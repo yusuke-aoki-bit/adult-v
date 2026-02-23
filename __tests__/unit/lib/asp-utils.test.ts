@@ -96,11 +96,15 @@ describe('asp-utils', () => {
 
     describe('DTI URL判定', () => {
       it('caribbeancom.comのURLからcaribbeancを判定', () => {
-        expect(normalizeAspName('DTI', 'https://www.caribbeancom.com/moviepages/123456-001/index.html')).toBe('caribbeancom');
+        expect(normalizeAspName('DTI', 'https://www.caribbeancom.com/moviepages/123456-001/index.html')).toBe(
+          'caribbeancom',
+        );
       });
 
       it('caribbeancompr.comのURLからcaribbeancprを判定', () => {
-        expect(normalizeAspName('DTI', 'https://www.caribbeancompr.com/moviepages/123456-001/index.html')).toBe('caribbeancompr');
+        expect(normalizeAspName('DTI', 'https://www.caribbeancompr.com/moviepages/123456-001/index.html')).toBe(
+          'caribbeancompr',
+        );
       });
 
       it('1pondo.tvのURLから1pondoを判定', () => {
@@ -356,7 +360,7 @@ describe('asp-utils', () => {
         const sql = buildAspNormalizationSql('ps.asp_name', 'ps.url');
         expect(sql).toContain('CASE');
         expect(sql).toContain("WHEN ps.asp_name = 'DTI' THEN");
-        expect(sql).toContain("ELSE LOWER(ps.asp_name)");
+        expect(sql).toContain('ELSE LOWER(ps.asp_name)');
       });
     });
 

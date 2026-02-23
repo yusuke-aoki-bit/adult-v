@@ -15,14 +15,7 @@
 
 import { execSync } from 'child_process';
 
-const DTI_CARIBBEAN_SITES = [
-  'caribbeancom',
-  'caribbeancompr',
-  '1pondo',
-  'heyzo',
-  '10musume',
-  'pacopacomama',
-];
+const DTI_CARIBBEAN_SITES = ['caribbeancom', 'caribbeancompr', '1pondo', 'heyzo', '10musume', 'pacopacomama'];
 
 async function main() {
   console.log('=== DTI Caribbean Sites Crawler Starting ===');

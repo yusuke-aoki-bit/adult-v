@@ -26,7 +26,7 @@ export function createAspFilterCondition(
   productsTable: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productSourcesTable: any,
-  siteMode: SiteMode
+  siteMode: SiteMode,
 ): SQL {
   if (siteMode === 'fanza-only') {
     // FANZAサイト: FANZA商品のみを表示
@@ -63,7 +63,7 @@ export function createProviderFilterCondition(
   productsTable: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productSourcesTable: any,
-  provider: string
+  provider: string,
 ): SQL {
   const aspNames = PROVIDER_TO_ASP_MAPPING[provider.toLowerCase()] || [provider];
 
@@ -78,7 +78,10 @@ export function createProviderFilterCondition(
   return sql`EXISTS (
     SELECT 1 FROM ${productSourcesTable} ps
     WHERE ps.product_id = ${productsTable.id}
-    AND ps.asp_name IN (${sql.join(aspNames.map((name) => sql`${name}`), sql`, `)})
+    AND ps.asp_name IN (${sql.join(
+      aspNames.map((name) => sql`${name}`),
+      sql`, `,
+    )})
   )`;
 }
 
@@ -91,14 +94,17 @@ export function createMultiProviderFilterCondition(
   productsTable: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productSourcesTable: any,
-  providers: string[]
+  providers: string[],
 ): SQL {
   // サブクエリ内ではproduct_sourcesのaffiliate_urlを使用（外部テーブル参照を避ける）
   const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'ps.affiliate_url');
   return sql`EXISTS (
     SELECT 1 FROM ${productSourcesTable} ps
     WHERE ps.product_id = ${productsTable.id}
-    AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(providers.map((p) => sql`${p.toLowerCase()}`), sql`, `)})
+    AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(
+      providers.map((p) => sql`${p.toLowerCase()}`),
+      sql`, `,
+    )})
   )`;
 }
 
@@ -111,14 +117,17 @@ export function createExcludeProviderFilterCondition(
   productsTable: any,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   productSourcesTable: any,
-  excludeProviders: string[]
+  excludeProviders: string[],
 ): SQL {
   // サブクエリ内ではproduct_sourcesのaffiliate_urlを使用（外部テーブル参照を避ける）
   const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'ps.affiliate_url');
   return sql`NOT EXISTS (
     SELECT 1 FROM ${productSourcesTable} ps
     WHERE ps.product_id = ${productsTable.id}
-    AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(excludeProviders.map((p) => sql`${p.toLowerCase()}`), sql`, `)})
+    AND (${sql.raw(aspNormalizeSql)}) IN (${sql.join(
+      excludeProviders.map((p) => sql`${p.toLowerCase()}`),
+      sql`, `,
+    )})
   )`;
 }
 
@@ -130,7 +139,7 @@ export function createExcludeProviderFilterCondition(
 export function createActressAspFilterCondition(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   performersTable: any,
-  siteMode: SiteMode
+  siteMode: SiteMode,
 ): SQL {
   if (siteMode === 'fanza-only') {
     // FANZAサイト: FANZA商品に出演している女優のみ

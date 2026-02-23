@@ -14,12 +14,14 @@ test.describe('Event Coverage Tests', () => {
 
   test.beforeEach(async ({ page, context }) => {
     // Age verification cookie設定
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
 
     eventHelper = new EventTestHelper(page);
     await eventHelper.startCapturing();
@@ -96,7 +98,9 @@ test.describe('Event Coverage Tests', () => {
       await page.waitForTimeout(1500);
 
       // お気に入りボタンを探す
-      const favoriteButton = page.locator('button[aria-label*="お気に入り"], button[aria-label*="favorite"], [data-testid="favorite-button"]').first();
+      const favoriteButton = page
+        .locator('button[aria-label*="お気に入り"], button[aria-label*="favorite"], [data-testid="favorite-button"]')
+        .first();
 
       if (await favoriteButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         // お気に入りに追加
@@ -135,7 +139,9 @@ test.describe('Event Coverage Tests', () => {
       await page.waitForTimeout(1500);
 
       // アフィリエイトリンク/購入ボタンを探す
-      const affiliateLink = page.locator('a[rel*="sponsored"], a[href*="dmm.co.jp"], a[href*="mgstage.com"], button:has-text("購入")').first();
+      const affiliateLink = page
+        .locator('a[rel*="sponsored"], a[href*="dmm.co.jp"], a[href*="mgstage.com"], button:has-text("購入")')
+        .first();
 
       if (await affiliateLink.isVisible({ timeout: 3000 }).catch(() => false)) {
         // クリック（新しいタブを開かないようにイベントだけ発火させる）
@@ -161,7 +167,9 @@ test.describe('Event Coverage Tests', () => {
     await page.waitForTimeout(2000);
 
     // フィルター要素を探す
-    const filterSelect = page.locator('select[name*="filter"], select[name*="category"], [data-testid*="filter"]').first();
+    const filterSelect = page
+      .locator('select[name*="filter"], select[name*="category"], [data-testid*="filter"]')
+      .first();
     const filterCheckbox = page.locator('input[type="checkbox"][name*="filter"]').first();
 
     if (await filterSelect.isVisible({ timeout: 5000 }).catch(() => false)) {
@@ -215,7 +223,9 @@ test.describe('Event Coverage Tests', () => {
     await page.waitForTimeout(1000);
 
     // 年齢確認ダイアログを探す
-    const ageVerifyButton = page.locator('button:has-text("18歳以上"), button:has-text("はい"), button:has-text("Enter")').first();
+    const ageVerifyButton = page
+      .locator('button:has-text("18歳以上"), button:has-text("はい"), button:has-text("Enter")')
+      .first();
 
     if (await ageVerifyButton.isVisible({ timeout: 5000 }).catch(() => false)) {
       await ageVerifyButton.click();
@@ -234,10 +244,12 @@ test.describe('Event Coverage Tests', () => {
     await page.waitForTimeout(1500);
 
     // 言語切り替え要素を探す
-    const langSelector = page.locator('select[name*="lang"], a[href="/en"], button:has-text("EN"), [data-testid*="language"]').first();
+    const langSelector = page
+      .locator('select[name*="lang"], a[href="/en"], button:has-text("EN"), [data-testid*="language"]')
+      .first();
 
     if (await langSelector.isVisible({ timeout: 3000 }).catch(() => false)) {
-      const tagName = await langSelector.evaluate(el => el.tagName.toLowerCase());
+      const tagName = await langSelector.evaluate((el) => el.tagName.toLowerCase());
 
       if (tagName === 'select') {
         await langSelector.selectOption({ index: 1 });
@@ -267,7 +279,9 @@ test.describe('Event Coverage Tests', () => {
       await page.waitForTimeout(1500);
 
       // CTAボタンを探す
-      const ctaButton = page.locator('a:has-text("購入"), button:has-text("購入"), a:has-text("今すぐ"), a[rel*="sponsored"]').first();
+      const ctaButton = page
+        .locator('a:has-text("購入"), button:has-text("購入"), a:has-text("今すぐ"), a[rel*="sponsored"]')
+        .first();
 
       if (await ctaButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         await ctaButton.evaluate((el) => {
@@ -325,12 +339,14 @@ test.describe('Event Coverage Tests', () => {
 
 test.describe('Full Event Coverage Report', () => {
   test('Generate comprehensive event coverage report', async ({ page, context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
 
     const eventHelper = new EventTestHelper(page);
     await eventHelper.startCapturing();
@@ -403,7 +419,7 @@ test.describe('Full Event Coverage Report', () => {
 
     if (unfiredEvents.length > 0) {
       console.log('\nEvents not fired during this test:');
-      unfiredEvents.forEach(name => console.log(`  - ${name}`));
+      unfiredEvents.forEach((name) => console.log(`  - ${name}`));
     }
   });
 });

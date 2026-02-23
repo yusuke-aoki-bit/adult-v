@@ -45,6 +45,19 @@ const translations = {
     collapse: '收起',
     recentDiscoveries: '最近发现',
   },
+  'zh-TW': {
+    title: '發掘者徽章',
+    totalDiscoveries: '發現作品',
+    earnedBadges: '獲得徽章',
+    streak: '連續週',
+    platforms: '平台',
+    progress: '進度',
+    earned: '已獲得',
+    locked: '未獲得',
+    viewAll: '查看全部',
+    collapse: '收起',
+    recentDiscoveries: '最近發現',
+  },
   ko: {
     title: '발굴자 배지',
     totalDiscoveries: '발견 작품',
@@ -72,42 +85,30 @@ const BadgeCard = memo(function BadgeCard({ badge, locale }: { badge: Badge; loc
 
   return (
     <div
-      className={`relative p-3 rounded-lg border transition-all ${
+      className={`relative rounded-lg border p-3 transition-all ${
         isEarned
-          ? 'bg-linear-to-br from-yellow-900/30 to-amber-900/20 border-yellow-600/50'
+          ? 'border-yellow-600/50 bg-linear-to-br from-yellow-900/30 to-amber-900/20'
           : 'bg-gray-750 border-gray-700 opacity-60'
       }`}
     >
       <div className="flex items-start gap-3">
-        <div
-          className={`text-2xl shrink-0 ${
-            isEarned ? '' : 'grayscale'
-          }`}
-        >
-          {badge.icon}
-        </div>
-        <div className="flex-1 min-w-0">
-          <h4 className={`font-medium text-sm ${isEarned ? 'text-yellow-400' : 'text-gray-400'}`}>
-            {name}
-          </h4>
-          <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">
-            {description}
-          </p>
+        <div className={`shrink-0 text-2xl ${isEarned ? '' : 'grayscale'}`}>{badge.icon}</div>
+        <div className="min-w-0 flex-1">
+          <h4 className={`text-sm font-medium ${isEarned ? 'text-yellow-400' : 'text-gray-400'}`}>{name}</h4>
+          <p className="mt-0.5 line-clamp-2 text-xs text-gray-500">{description}</p>
           {!isEarned && (
             <div className="mt-2">
-              <div className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
+              <div className="h-1.5 overflow-hidden rounded-full bg-gray-700">
                 <div
-                  className="h-full bg-linear-to-r from-yellow-600 to-amber-500 rounded-full transition-all duration-500"
+                  className="h-full rounded-full bg-linear-to-r from-yellow-600 to-amber-500 transition-all duration-500"
                   style={{ width: `${badge.progress}%` }}
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-1">{badge.progress}%</p>
+              <p className="mt-1 text-xs text-gray-500">{badge.progress}%</p>
             </div>
           )}
         </div>
-        {isEarned && (
-          <Trophy className="w-4 h-4 text-yellow-500 shrink-0" />
-        )}
+        {isEarned && <Trophy className="h-4 w-4 shrink-0 text-yellow-500" />}
       </div>
     </div>
   );
@@ -118,59 +119,53 @@ export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBad
   const { badges, stats, isLoading } = useDiscoveryBadge();
   const [showAll, setShowAll] = useState(false);
 
-  const displayedBadges = useMemo(
-    () => showAll ? badges : badges.slice(0, 4),
-    [showAll, badges]
-  );
-  const earnedBadges = useMemo(
-    () => badges.filter(b => b.progress === 100),
-    [badges]
-  );
+  const displayedBadges = useMemo(() => (showAll ? badges : badges.slice(0, 4)), [showAll, badges]);
+  const earnedBadges = useMemo(() => badges.filter((b) => b.progress === 100), [badges]);
 
   if (isLoading) {
     return (
-      <div className={`bg-gray-800 rounded-lg p-6 ${className}`}>
+      <div className={`rounded-lg bg-gray-800 p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className="h-6 w-40 bg-gray-700 rounded mb-4" />
-          <div className="h-24 bg-gray-700 rounded" />
+          <div className="mb-4 h-6 w-40 rounded bg-gray-700" />
+          <div className="h-24 rounded bg-gray-700" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className={`bg-gray-800 rounded-lg p-6 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
-          <Award className="w-5 h-5 text-yellow-500" />
+    <div className={`rounded-lg bg-gray-800 p-6 ${className}`}>
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+          <Award className="h-5 w-5 text-yellow-500" />
           {t.title}
         </h3>
         <div className="flex items-center gap-1 text-yellow-500">
-          <Trophy className="w-4 h-4" />
+          <Trophy className="h-4 w-4" />
           <span className="font-bold">{earnedBadges.length}</span>
           <span className="text-gray-500">/ {badges.length}</span>
         </div>
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
+      <div className="mb-4 grid grid-cols-4 gap-2">
         <div className="bg-gray-750 rounded-lg p-2 text-center">
-          <Eye className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+          <Eye className="mx-auto mb-1 h-4 w-4 text-blue-400" />
           <p className="text-lg font-bold text-white">{stats.totalDiscoveries}</p>
           <p className="text-xs text-gray-500">{t.totalDiscoveries}</p>
         </div>
         <div className="bg-gray-750 rounded-lg p-2 text-center">
-          <Trophy className="w-4 h-4 text-yellow-400 mx-auto mb-1" />
+          <Trophy className="mx-auto mb-1 h-4 w-4 text-yellow-400" />
           <p className="text-lg font-bold text-white">{stats.earnedBadgesCount}</p>
           <p className="text-xs text-gray-500">{t.earnedBadges}</p>
         </div>
         <div className="bg-gray-750 rounded-lg p-2 text-center">
-          <Flame className="w-4 h-4 text-orange-400 mx-auto mb-1" />
+          <Flame className="mx-auto mb-1 h-4 w-4 text-orange-400" />
           <p className="text-lg font-bold text-white">{stats.weeklyStreak}</p>
           <p className="text-xs text-gray-500">{t.streak}</p>
         </div>
         <div className="bg-gray-750 rounded-lg p-2 text-center">
-          <div className="text-sm mb-1">🌐</div>
+          <div className="mb-1 text-sm">🌐</div>
           <p className="text-lg font-bold text-white">{stats.uniquePlatforms}</p>
           <p className="text-xs text-gray-500">{t.platforms}</p>
         </div>
@@ -178,7 +173,7 @@ export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBad
 
       {/* Badge Grid */}
       <div className="grid grid-cols-2 gap-2">
-        {displayedBadges.map(badge => (
+        {displayedBadges.map((badge) => (
           <BadgeCard key={badge.id} badge={badge} locale={locale} />
         ))}
       </div>
@@ -186,16 +181,16 @@ export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBad
       {badges.length > 4 && (
         <button
           onClick={() => setShowAll(!showAll)}
-          className="w-full mt-3 py-2 text-sm text-gray-400 hover:text-white flex items-center justify-center gap-1 transition-colors"
+          className="mt-3 flex w-full items-center justify-center gap-1 py-2 text-sm text-gray-400 transition-colors hover:text-white"
         >
           {showAll ? (
             <>
-              <ChevronUp className="w-4 h-4" />
+              <ChevronUp className="h-4 w-4" />
               {t.collapse}
             </>
           ) : (
             <>
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="h-4 w-4" />
               {t.viewAll} ({badges.length})
             </>
           )}
@@ -204,16 +199,13 @@ export default function DiscoveryBadges({ locale, className = '' }: DiscoveryBad
 
       {/* Recent Discoveries */}
       {stats.recentDiscoveries.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-700">
-          <h4 className="text-sm font-medium text-gray-400 mb-2">{t.recentDiscoveries}</h4>
+        <div className="mt-4 border-t border-gray-700 pt-4">
+          <h4 className="mb-2 text-sm font-medium text-gray-400">{t.recentDiscoveries}</h4>
           <div className="space-y-1">
-            {stats.recentDiscoveries.slice(0, 3).map(discovery => (
-              <div
-                key={discovery.productId}
-                className="flex items-center justify-between text-sm"
-              >
-                <span className="text-gray-300 truncate flex-1">{discovery.title}</span>
-                <span className="text-gray-500 text-xs ml-2">{discovery.aspName}</span>
+            {stats.recentDiscoveries.slice(0, 3).map((discovery) => (
+              <div key={discovery.productId} className="flex items-center justify-between text-sm">
+                <span className="flex-1 truncate text-gray-300">{discovery.title}</span>
+                <span className="ml-2 text-xs text-gray-500">{discovery.aspName}</span>
               </div>
             ))}
           </div>

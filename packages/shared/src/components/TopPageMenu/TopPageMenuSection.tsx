@@ -60,9 +60,7 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
   const isDark = theme === 'dark';
 
   // アコーディオン状態
-  const [isExpanded, setIsExpanded] = useState(
-    props.type === 'accordion' ? (props.defaultOpen ?? false) : false
-  );
+  const [isExpanded, setIsExpanded] = useState(props.type === 'accordion' ? (props.defaultOpen ?? false) : false);
   const [hasOpened, setHasOpened] = useState(false);
 
   const handleToggle = useCallback(() => {
@@ -78,12 +76,15 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
     }
   }, [isExpanded, hasOpened, props]);
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      handleToggle();
-    }
-  }, [handleToggle]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleToggle();
+      }
+    },
+    [handleToggle],
+  );
 
   // リンク型のスタイル
   const linkStyles = isDark
@@ -91,69 +92,59 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
     : 'bg-white border-gray-200 hover:border-pink-400 hover:bg-pink-50/30';
 
   // アコーディオン型のスタイル（展開可能を示す紫系）
-  const accordionStyles = isDark
-    ? 'bg-gray-800/50 border-gray-700'
-    : 'bg-white border-gray-200';
+  const accordionStyles = isDark ? 'bg-gray-800/50 border-gray-700' : 'bg-white border-gray-200';
 
-  const accordionHeaderHoverStyles = isDark
-    ? 'hover:bg-gray-700/50'
-    : 'hover:bg-purple-50/50';
+  const accordionHeaderHoverStyles = isDark ? 'hover:bg-gray-700/50' : 'hover:bg-purple-50/50';
 
   // アイコン色: リンク=青/ピンク、アコーディオン=紫
-  const iconColor = props.type === 'link'
-    ? (isDark ? 'text-blue-400' : 'text-pink-500')
-    : (isDark ? 'text-purple-400' : 'text-purple-500');
+  const iconColor =
+    props.type === 'link'
+      ? isDark
+        ? 'text-blue-400'
+        : 'text-pink-500'
+      : isDark
+        ? 'text-purple-400'
+        : 'text-purple-500';
 
   // リンク型
   if (props.type === 'link') {
     return (
       <Link
         href={props.href}
-        className={`
-          flex items-center justify-between
-          ${MENU_BASE_STYLES.height} ${MENU_BASE_STYLES.padding}
-          ${MENU_BASE_STYLES.rounded} ${MENU_BASE_STYLES.border}
-          ${linkStyles}
-          transition-all duration-200
-          group
-        `}
+        className={`flex items-center justify-between ${MENU_BASE_STYLES.height} ${MENU_BASE_STYLES.padding} ${MENU_BASE_STYLES.rounded} ${MENU_BASE_STYLES.border} ${linkStyles} group transition-all duration-200`}
       >
         <div className="flex items-center gap-3">
           <span className={iconColor}>{icon}</span>
           <div>
-            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {title}
-            </span>
+            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</span>
             {subtitle && (
-              <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {subtitle}
-              </p>
+              <p className={`mt-0.5 text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{subtitle}</p>
             )}
           </div>
           {props.badge && (
-            <span className={`text-xs px-2 py-0.5 rounded-full ml-2 ${
-              isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
-            }`}>
+            <span
+              className={`ml-2 rounded-full px-2 py-0.5 text-xs ${
+                isDark ? 'bg-gray-700 text-gray-300' : 'bg-gray-100 text-gray-600'
+              }`}
+            >
               {props.badge}
             </span>
           )}
         </div>
-        <ChevronRight className={`w-5 h-5 transition-colors ${
-          isDark
-            ? 'text-gray-500 group-hover:text-blue-400'
-            : 'text-gray-400 group-hover:text-pink-500'
-        }`} />
+        <ChevronRight
+          className={`h-5 w-5 transition-colors ${
+            isDark ? 'text-gray-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-pink-500'
+          }`}
+        />
       </Link>
     );
   }
 
   // アコーディオン型
   return (
-    <div className={`
-      ${MENU_BASE_STYLES.rounded} ${MENU_BASE_STYLES.border}
-      ${accordionStyles}
-      overflow-hidden transition-all duration-200
-    `}>
+    <div
+      className={` ${MENU_BASE_STYLES.rounded} ${MENU_BASE_STYLES.border} ${accordionStyles} overflow-hidden transition-all duration-200`}
+    >
       {/* ヘッダー */}
       <div
         role="button"
@@ -161,39 +152,28 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
         aria-expanded={isExpanded}
-        className={`
-          flex items-center justify-between
-          ${MENU_BASE_STYLES.height} ${MENU_BASE_STYLES.padding}
-          cursor-pointer transition-colors
-          ${accordionHeaderHoverStyles}
-        `}
+        className={`flex items-center justify-between ${MENU_BASE_STYLES.height} ${MENU_BASE_STYLES.padding} cursor-pointer transition-colors ${accordionHeaderHoverStyles} `}
       >
         <div className="flex items-center gap-3">
           <span className={iconColor}>{icon}</span>
           <div>
-            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
-              {title}
-            </span>
+            <span className={`font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>{title}</span>
             {subtitle && (
-              <p className={`text-xs sm:text-sm mt-0.5 ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>
-                {subtitle}
-              </p>
+              <p className={`mt-0.5 text-xs sm:text-sm ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{subtitle}</p>
             )}
           </div>
         </div>
         {isExpanded ? (
-          <ChevronUp className={`w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+          <ChevronUp className={`h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
         ) : (
-          <ChevronDown className={`w-5 h-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
+          <ChevronDown className={`h-5 w-5 ${isDark ? 'text-gray-500' : 'text-gray-400'}`} />
         )}
       </div>
 
       {/* コンテンツ */}
       {isExpanded && (
         <div className={`px-4 pb-4 ${isDark ? 'border-t border-gray-700/50' : 'border-t border-gray-100'}`}>
-          <div className="pt-4">
-            {props.children}
-          </div>
+          <div className="pt-4">{props.children}</div>
         </div>
       )}
     </div>

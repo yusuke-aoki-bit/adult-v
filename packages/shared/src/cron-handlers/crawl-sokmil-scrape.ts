@@ -9,10 +9,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import * as cheerio from 'cheerio';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -93,17 +90,20 @@ async function parseDetailPage(itemId: string): Promise<(SokmilProduct & { rawHt
     const html = await response['text']();
     const $ = cheerio.load(html);
 
-    const title = $('h1').first().text().trim() ||
-                  $('meta[property="og:title"]').attr('content') ||
-                  `Sokmil-${itemId}`;
+    const title = $('h1').first().text().trim() || $('meta[property="og:title"]').attr('content') || `Sokmil-${itemId}`;
 
     const description = $('meta[name="description"]').attr('content');
 
     const performers: string[] = [];
     $('a[href*="/actress/"], a[href*="actress_id="]').each((_, el) => {
       const name = $(el).text().trim();
-      if (name && name.length > 1 && name.length < 30 && !performers.includes(name) &&
-          /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name)) {
+      if (
+        name &&
+        name.length > 1 &&
+        name.length < 30 &&
+        !performers.includes(name) &&
+        /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name)
+      ) {
         performers.push(name);
       }
     });
@@ -140,7 +140,10 @@ async function parseDetailPage(itemId: string): Promise<(SokmilProduct & { rawHt
     if (!releaseDate) {
       $('th:contains("発売"), th:contains("配信")').each((_, el) => {
         if (releaseDate) return;
-        const dateMatch = $(el).next('td').text().match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
+        const dateMatch = $(el)
+          .next('td')
+          .text()
+          .match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
         if (dateMatch?.[1] && dateMatch[2] && dateMatch[3]) {
           releaseDate = `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`;
         }
@@ -151,12 +154,17 @@ async function parseDetailPage(itemId: string): Promise<(SokmilProduct & { rawHt
     let price: number | undefined;
     $('th:contains("価格"), th:contains("定価")').each((_, el) => {
       if (price) return;
-      const priceMatch = $(el).next('td').text().match(/(\d{1,3}(?:,\d{3})*)\s*円/);
+      const priceMatch = $(el)
+        .next('td')
+        .text()
+        .match(/(\d{1,3}(?:,\d{3})*)\s*円/);
       if (priceMatch?.[1]) price = parseInt(priceMatch[1].replace(/,/g, ''));
     });
     // フォールバック: class名による検索
     if (!price) {
-      const priceMatch = $('.price, .product-price, [class*="price"]').text().match(/(\d{1,3}(?:,\d{3})*)\s*円/);
+      const priceMatch = $('.price, .product-price, [class*="price"]')
+        .text()
+        .match(/(\d{1,3}(?:,\d{3})*)\s*円/);
       if (priceMatch?.[1]) price = parseInt(priceMatch[1].replace(/,/g, ''));
     }
 
@@ -199,7 +207,14 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
     const db = deps.getDb();
     const startTime = Date.now();
     const TIME_LIMIT = 150_000; // 150秒（Cloud Scheduler 180秒タイムアウトの83%）
-    const stats: CrawlStats = { totalFetched: 0, newProducts: 0, updatedProducts: 0, errors: 0, rawDataSaved: 0, videosAdded: 0 };
+    const stats: CrawlStats = {
+      totalFetched: 0,
+      newProducts: 0,
+      updatedProducts: 0,
+      errors: 0,
+      rawDataSaved: 0,
+      videosAdded: 0,
+    };
 
     try {
       const url = new URL(request['url']);
@@ -221,7 +236,10 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
           break;
         }
         const product = await parseDetailPage(itemId);
-        if (!product) { stats.errors++; continue; }
+        if (!product) {
+          stats.errors++;
+          continue;
+        }
 
         stats.totalFetched++;
 
@@ -247,7 +265,8 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
 
           const row = productResult.rows[0] as { id: number; is_new: boolean };
           const productId = row.id;
-          if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
+          if (row.is_new) stats.newProducts++;
+          else stats.updatedProducts++;
 
           await db.execute(sql`
             INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated)
@@ -264,11 +283,13 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
           }
 
           if (product['sampleVideoUrl']) {
-            const videoResult = await db.execute(sql`INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order) VALUES (${productId}, 'Sokmil', ${product['sampleVideoUrl']}, 'sample', 0) ON CONFLICT DO NOTHING RETURNING id`);
+            const videoResult = await db.execute(
+              sql`INSERT INTO product_videos (product_id, asp_name, video_url, video_type, display_order) VALUES (${productId}, 'Sokmil', ${product['sampleVideoUrl']}, 'sample', 0) ON CONFLICT DO NOTHING RETURNING id`,
+            );
             if (videoResult.rowCount && videoResult.rowCount > 0) stats.videosAdded++;
           }
 
-          await new Promise(r => setTimeout(r, 1000));
+          await new Promise((r) => setTimeout(r, 1000));
         } catch (error) {
           stats.errors++;
           console.error(`Error processing Sokmil ${product.itemId}:`, error);
@@ -277,9 +298,9 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
@@ -294,9 +315,18 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
         await batchInsertProductPerformers(db, links);
       }
 
-      return NextResponse.json({ success: true, message: 'Sokmil scrape completed', params: { page, limit }, stats, duration: `${Math.round((Date.now() - startTime) / 1000)}s` });
+      return NextResponse.json({
+        success: true,
+        message: 'Sokmil scrape completed',
+        params: { page, limit },
+        stats,
+        duration: `${Math.round((Date.now() - startTime) / 1000)}s`,
+      });
     } catch (error) {
-      return NextResponse.json({ success: false, error: error instanceof Error ? error.message : 'Unknown error', stats }, { status: 500 });
+      return NextResponse.json(
+        { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
+        { status: 500 },
+      );
     }
   };
 }

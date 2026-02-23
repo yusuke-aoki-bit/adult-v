@@ -15,11 +15,5 @@ export default function PerformerRelationMapWrapper({ performerId, locale }: Per
     router.push(`/${locale}/actress/${id}`);
   };
 
-  return (
-    <PerformerRelationMap
-      performerId={performerId}
-      locale={locale}
-      onPerformerClick={handlePerformerClick}
-    />
-  );
+  return <PerformerRelationMap performerId={performerId} locale={locale} onPerformerClick={handlePerformerClick} />;
 }

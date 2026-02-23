@@ -97,7 +97,13 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
           productThumbnail: (products as Record<string, unknown>)['thumbnailUrl'],
         })
           .from(publicFavoriteListItems)
-          .leftJoin(products, eq((publicFavoriteListItems as Record<string, unknown>)['productId'], (products as Record<string, unknown>)['id']))
+          .leftJoin(
+            products,
+            eq(
+              (publicFavoriteListItems as Record<string, unknown>)['productId'],
+              (products as Record<string, unknown>)['id'],
+            ),
+          )
           .where(eq((publicFavoriteListItems as Record<string, unknown>)['listId'], parseInt(listId, 10)))
           .orderBy((publicFavoriteListItems as Record<string, unknown>)['displayOrder']);
 
@@ -106,10 +112,12 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
         if (userId) {
           const likeCheck = await (db['select'] as CallableFunction)()
             .from(publicListLikes)
-            .where(and(
-              eq((publicListLikes as Record<string, unknown>)['listId'], parseInt(listId, 10)),
-              eq((publicListLikes as Record<string, unknown>)['userId'], userId)
-            ))
+            .where(
+              and(
+                eq((publicListLikes as Record<string, unknown>)['listId'], parseInt(listId, 10)),
+                eq((publicListLikes as Record<string, unknown>)['userId'], userId),
+              ),
+            )
             .limit(1);
           userLiked = likeCheck.length > 0;
         }
@@ -117,7 +125,9 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
         // 閲覧数をインクリメント（所有者以外）
         if (listData.userId !== userId) {
           await (db['update'] as CallableFunction)(publicFavoriteLists)
-            .set({ viewCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>)['viewCount']} + 1` })
+            .set({
+              viewCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>)['viewCount']} + 1`,
+            })
             .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], parseInt(listId, 10)));
         }
 
@@ -175,13 +185,16 @@ export function createPublicFavoriteListsGetHandler(deps: PublicFavoriteListsHan
       let containingListIds: number[] = [];
       if (checkProductId && myLists && lists.length > 0) {
         const listIds = lists.map((l: { id: number }) => l.id);
-        const listIdArray = (sql as any)`ARRAY[${(sql as any).join(listIds.map((id: number) => (sql as CallableFunction)`${id}`), (sql as CallableFunction)`, `)}]::int[]`;
-        const containResult = await (db['execute'] as CallableFunction)((sql as CallableFunction)`
+        const listIdArray = (sql as any)`ARRAY[${(sql as any).join(
+          listIds.map((id: number) => (sql as CallableFunction)`${id}`),
+          (sql as CallableFunction)`, `,
+        )}]::int[]`;
+        const containResult = (await (db['execute'] as CallableFunction)((sql as CallableFunction)`
           SELECT DISTINCT list_id FROM ${publicFavoriteListItems}
           WHERE list_id = ANY(${listIdArray})
             AND product_id = ${parseInt(checkProductId, 10)}
-        `) as { rows: Array<{ list_id: number }> };
-        containingListIds = containResult.rows.map(r => r.list_id);
+        `)) as { rows: Array<{ list_id: number }> };
+        containingListIds = containResult.rows.map((r) => r.list_id);
       }
 
       return NextResponse.json({ lists, containingListIds });
@@ -247,10 +260,12 @@ export function createPublicFavoriteListsPutHandler(deps: PublicFavoriteListsHan
       // 所有者確認
       const existing = await (db['select'] as CallableFunction)()
         .from(publicFavoriteLists)
-        .where(and(
-          eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
-          eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId)
-        ))
+        .where(
+          and(
+            eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
+            eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId),
+          ),
+        )
         .limit(1);
 
       if (existing.length === 0) {
@@ -293,10 +308,12 @@ export function createPublicFavoriteListsDeleteHandler(deps: PublicFavoriteLists
 
       // 所有者確認して削除
       const result = await (db['delete'] as CallableFunction)(publicFavoriteLists)
-        .where(and(
-          eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
-          eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId)
-        ))
+        .where(
+          and(
+            eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
+            eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId),
+          ),
+        )
         .returning();
 
       if (result.length === 0) {
@@ -330,10 +347,12 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
       // 所有者確認
       const list = await (db['select'] as CallableFunction)()
         .from(publicFavoriteLists)
-        .where(and(
-          eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
-          eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId)
-        ))
+        .where(
+          and(
+            eq((publicFavoriteLists as Record<string, unknown>)['id'], listId),
+            eq((publicFavoriteLists as Record<string, unknown>)['userId'], userId),
+          ),
+        )
         .limit(1);
 
       if (list.length === 0) {
@@ -353,11 +372,12 @@ export function createPublicFavoriteListItemsHandler(deps: PublicFavoriteListsHa
         return NextResponse.json({ success: true, action: 'added' });
       } else if (action === 'remove') {
         // アイテム削除
-        await (db['delete'] as CallableFunction)(publicFavoriteListItems)
-          .where(and(
+        await (db['delete'] as CallableFunction)(publicFavoriteListItems).where(
+          and(
             eq((publicFavoriteListItems as Record<string, unknown>)['listId'], listId),
-            eq((publicFavoriteListItems as Record<string, unknown>)['productId'], productId)
-          ));
+            eq((publicFavoriteListItems as Record<string, unknown>)['productId'], productId),
+          ),
+        );
 
         return NextResponse.json({ success: true, action: 'removed' });
       }
@@ -408,29 +428,33 @@ export function createPublicFavoriteListLikeHandler(deps: PublicFavoriteListsHan
 
       if (action === 'like') {
         // いいね追加
-        await (db['insert'] as CallableFunction)(publicListLikes)
-          .values({ listId, userId })
-          .onConflictDoNothing();
+        await (db['insert'] as CallableFunction)(publicListLikes).values({ listId, userId }).onConflictDoNothing();
 
         // カウント更新
         await (db['update'] as CallableFunction)(publicFavoriteLists)
-          .set({ likeCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>)['likeCount']} + 1` })
+          .set({
+            likeCount: (sql as CallableFunction)`${(publicFavoriteLists as Record<string, unknown>)['likeCount']} + 1`,
+          })
           .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], listId));
 
         return NextResponse.json({ success: true, action: 'liked' });
       } else if (action === 'unlike') {
         // いいね削除
         const deleted = await (db['delete'] as CallableFunction)(publicListLikes)
-          .where(and(
-            eq((publicListLikes as Record<string, unknown>)['listId'], listId),
-            eq((publicListLikes as Record<string, unknown>)['userId'], userId)
-          ))
+          .where(
+            and(
+              eq((publicListLikes as Record<string, unknown>)['listId'], listId),
+              eq((publicListLikes as Record<string, unknown>)['userId'], userId),
+            ),
+          )
           .returning();
 
         if (deleted.length > 0) {
           // カウント更新
           await (db['update'] as CallableFunction)(publicFavoriteLists)
-            .set({ likeCount: (sql as CallableFunction)`GREATEST(${(publicFavoriteLists as Record<string, unknown>)['likeCount']} - 1, 0)` })
+            .set({
+              likeCount: (sql as CallableFunction)`GREATEST(${(publicFavoriteLists as Record<string, unknown>)['likeCount']} - 1, 0)`,
+            })
             .where(eq((publicFavoriteLists as Record<string, unknown>)['id'], listId));
         }
 

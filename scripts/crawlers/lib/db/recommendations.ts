@@ -12,11 +12,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
   const productIdNum = typeof productId === 'string' ? parseInt(productId) : productId;
 
   // Check if product exists
-  const currentProduct = await db
-    .select()
-    .from(products)
-    .where(eq(products.id, productIdNum))
-    .limit(1);
+  const currentProduct = await db.select().from(products).where(eq(products.id, productIdNum)).limit(1);
 
   if (currentProduct.length === 0) {
     return [];
@@ -52,13 +48,14 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       })
       .from(products)
       .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
-      .where(
-        and(
-          inArray(productPerformers.performerId, performerIds),
-          ne(products.id, productIdNum)
-        )
+      .where(and(inArray(productPerformers.performerId, performerIds), ne(products.id, productIdNum)))
+      .groupBy(
+        products.id,
+        products.title,
+        products.normalizedProductId,
+        products.releaseDate,
+        products.defaultThumbnailUrl,
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
       .orderBy(desc(sql`match_score`), desc(products.releaseDate))
       .limit(limit);
 
@@ -87,10 +84,16 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
         and(
           inArray(productTags.tagId, tagIds),
           ne(products.id, productIdNum),
-          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
-        )
+          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
+        ),
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
+      .groupBy(
+        products.id,
+        products.title,
+        products.normalizedProductId,
+        products.releaseDate,
+        products.defaultThumbnailUrl,
+      )
       .orderBy(desc(sql`match_score`), desc(products.releaseDate))
       .limit(limit - relatedProducts.length);
 
@@ -98,7 +101,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       ...sameTagProducts.map((p: any) => ({
         ...p,
         matchType: 'tag' as const,
-      }))
+      })),
     );
   }
 
@@ -118,8 +121,8 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
       .where(
         and(
           ne(products.id, productIdNum),
-          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`
-        )
+          existingIds.length > 0 ? sql`${products.id} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
+        ),
       )
       .orderBy(desc(products.releaseDate))
       .limit(limit - relatedProducts.length);
@@ -129,7 +132,7 @@ export async function getRelatedProducts(productId: string, limit: number = 6) {
         ...p,
         matchScore: 0,
         matchType: 'recent' as const,
-      }))
+      })),
     );
   }
 
@@ -143,7 +146,11 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
   const db = getDb();
 
   // Convert string ID to number if provided
-  const currentProductIdNum = currentProductId ? (typeof currentProductId === 'string' ? parseInt(currentProductId) : currentProductId) : undefined;
+  const currentProductIdNum = currentProductId
+    ? typeof currentProductId === 'string'
+      ? parseInt(currentProductId)
+      : currentProductId
+    : undefined;
 
   const query = db
     .select({
@@ -157,11 +164,8 @@ export async function getPerformerOtherProducts(performerId: number, currentProd
     .innerJoin(productPerformers, eq(products.id, productPerformers.productId))
     .where(
       currentProductIdNum
-        ? and(
-            eq(productPerformers.performerId, performerId),
-            ne(products.id, currentProductIdNum)
-          )
-        : eq(productPerformers.performerId, performerId)
+        ? and(eq(productPerformers.performerId, performerId), ne(products.id, currentProductIdNum))
+        : eq(productPerformers.performerId, performerId),
     )
     .orderBy(desc(products.releaseDate))
     .limit(limit);
@@ -227,10 +231,7 @@ export async function getTrendingProducts(limit: number = 20, days: number = 7) 
  * Get personalized recommendations based on user's favorite items
  * (localStorage based, so this is a client-side utility function)
  */
-export async function getRecommendationsFromFavorites(
-  favoriteProductIds: number[],
-  limit: number = 12
-) {
+export async function getRecommendationsFromFavorites(favoriteProductIds: number[], limit: number = 12) {
   if (favoriteProductIds.length === 0) {
     return [];
   }
@@ -271,10 +272,16 @@ export async function getRecommendationsFromFavorites(
       .where(
         and(
           inArray(productPerformers.performerId, performerIds),
-          sql`${products.id} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`
-        )
+          sql`${products.id} NOT IN (${sql.join(favoriteProductIds, sql`, `)})`,
+        ),
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
+      .groupBy(
+        products.id,
+        products.title,
+        products.normalizedProductId,
+        products.releaseDate,
+        products.defaultThumbnailUrl,
+      )
       .orderBy(desc(sql`match_score`), desc(products.releaseDate))
       .limit(limit);
 
@@ -300,13 +307,14 @@ export async function getRecommendationsFromFavorites(
       })
       .from(products)
       .innerJoin(productTags, eq(products.id, productTags.productId))
-      .where(
-        and(
-          inArray(productTags.tagId, tagIds),
-          sql`${products.id} NOT IN (${sql.join(allExcludedIds, sql`, `)})`
-        )
+      .where(and(inArray(productTags.tagId, tagIds), sql`${products.id} NOT IN (${sql.join(allExcludedIds, sql`, `)})`))
+      .groupBy(
+        products.id,
+        products.title,
+        products.normalizedProductId,
+        products.releaseDate,
+        products.defaultThumbnailUrl,
       )
-      .groupBy(products.id, products.title, products.normalizedProductId, products.releaseDate, products.defaultThumbnailUrl)
       .orderBy(desc(sql`match_score`), desc(products.releaseDate))
       .limit(limit - recommendations.length);
 
@@ -314,7 +322,7 @@ export async function getRecommendationsFromFavorites(
       ...tagMatches.map((p: any) => ({
         ...p,
         matchType: 'favorite_tag' as const,
-      }))
+      })),
     );
   }
 

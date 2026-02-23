@@ -25,7 +25,9 @@ export const productReviews = pgTable(
   'product_reviews',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     aspName: varchar('asp_name', { length: 50 }).notNull(), // レビュー取得元ASP
     reviewerName: varchar('reviewer_name', { length: 100 }), // レビュワー名（匿名の場合null）
     rating: decimal('rating', { precision: 3, scale: 1 }), // 評価（5段階など、ASPにより異なる）
@@ -65,7 +67,9 @@ export const productRatingSummary = pgTable(
   'product_rating_summary',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     aspName: varchar('asp_name', { length: 50 }).notNull(), // ASP名
     averageRating: decimal('average_rating', { precision: 3, scale: 2 }), // 平均評価
     maxRating: decimal('max_rating', { precision: 3, scale: 1 }).default('5'), // 最大評価値
@@ -74,10 +78,7 @@ export const productRatingSummary = pgTable(
     lastUpdated: timestamp('last_updated').defaultNow().notNull(),
   },
   (table) => ({
-    productAspUnique: uniqueIndex('idx_rating_summary_product_asp').on(
-      table.productId,
-      table.aspName,
-    ),
+    productAspUnique: uniqueIndex('idx_rating_summary_product_asp').on(table.productId, table.aspName),
     productIdx: index('idx_rating_summary_product').on(table.productId),
     avgRatingIdx: index('idx_rating_summary_avg').on(table.averageRating),
   }),

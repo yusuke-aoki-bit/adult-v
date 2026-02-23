@@ -6,6 +6,7 @@ import { Building2, Tag, Star, ChevronRight, ChevronDown } from 'lucide-react';
 import { useRecentlyViewed } from '../hooks/useRecentlyViewed';
 import { localizedHref } from '../i18n';
 import { useSiteTheme, type SiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, makerAnalysisTranslations } from '../lib/translations';
 
 const themeClasses = {
   dark: {
@@ -68,61 +69,6 @@ interface MakerPreference {
   averageRating: number | null;
 }
 
-const translations = {
-  ja: {
-    title: 'メーカー傾向分析',
-    subtitle: 'あなたの視聴履歴から分析',
-    topMakers: 'よく見るメーカー',
-    topLabels: 'よく見るレーベル',
-    viewCount: '視聴数',
-    avgRating: '平均評価',
-    viewMore: 'もっと見る',
-    noData: 'データがありません',
-    noDataDesc: '作品を視聴すると傾向が分析されます',
-    matchRate: '一致率',
-    works: '作品',
-  },
-  en: {
-    title: 'Maker Analysis',
-    subtitle: 'Based on your viewing history',
-    topMakers: 'Top Makers',
-    topLabels: 'Top Labels',
-    viewCount: 'Views',
-    avgRating: 'Avg Rating',
-    viewMore: 'View More',
-    noData: 'No data',
-    noDataDesc: 'Watch more to see analysis',
-    matchRate: 'Match',
-    works: 'works',
-  },
-  zh: {
-    title: '厂商偏好分析',
-    subtitle: '基于您的观看历史',
-    topMakers: '常看厂商',
-    topLabels: '常看品牌',
-    viewCount: '观看数',
-    avgRating: '平均评分',
-    viewMore: '查看更多',
-    noData: '暂无数据',
-    noDataDesc: '观看更多后可查看分析',
-    matchRate: '匹配度',
-    works: '部',
-  },
-  ko: {
-    title: '메이커 분석',
-    subtitle: '시청 기록 기반 분석',
-    topMakers: '자주 보는 메이커',
-    topLabels: '자주 보는 레이블',
-    viewCount: '시청 수',
-    avgRating: '평균 평점',
-    viewMore: '더 보기',
-    noData: '데이터 없음',
-    noDataDesc: '더 많이 시청하면 분석이 표시됩니다',
-    matchRate: '일치율',
-    works: '작품',
-  },
-} as const;
-
 interface MakerAnalysisBaseProps {
   locale: string;
   className?: string;
@@ -131,7 +77,7 @@ interface MakerAnalysisBaseProps {
 export default function MakerAnalysisBase({ locale, className = '' }: MakerAnalysisBaseProps) {
   const { theme } = useSiteTheme();
   const tc = getTheme(theme);
-  const t = translations[locale as keyof typeof translations] || translations['ja'];
+  const t = getTranslation(makerAnalysisTranslations, locale);
   const { items: viewedItems, isLoading: isViewLoading } = useRecentlyViewed();
   const [makers, setMakers] = useState<MakerPreference[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -143,9 +89,7 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
 
       setIsLoading(true);
       try {
-        const productIds = viewedItems
-          .map(item => parseInt(item.id, 10))
-          .filter(id => !isNaN(id));
+        const productIds = viewedItems.map((item) => parseInt(item.id, 10)).filter((id) => !isNaN(id));
 
         if (productIds.length === 0) return;
 
@@ -173,9 +117,9 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
     return (
       <div className={`${tc.container} rounded-lg p-6 ${className}`}>
         <div className="animate-pulse">
-          <div className={`h-6 w-40 ${tc.skeleton} rounded mb-4`} />
+          <div className={`h-6 w-40 ${tc.skeleton} mb-4 rounded`} />
           <div className="space-y-3">
-            {[1, 2, 3].map(i => (
+            {[1, 2, 3].map((i) => (
               <div key={i} className={`h-12 ${tc.skeleton} rounded`} />
             ))}
           </div>
@@ -188,7 +132,7 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
     return (
       <div className={`${tc.container} rounded-lg p-6 ${className}`}>
         <h3 className={`text-lg font-bold ${tc.textPrimary} mb-2 flex items-center gap-2`}>
-          <Building2 className={`w-5 h-5 ${tc.accentBlue}`} />
+          <Building2 className={`h-5 w-5 ${tc.accentBlue}`} />
           {t.title}
         </h3>
         <p className={`text-sm ${tc.textMuted}`}>{t.noDataDesc}</p>
@@ -196,17 +140,17 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
     );
   }
 
-  const topMakers = makers.filter(m => m.category === 'maker');
-  const topLabels = makers.filter(m => m.category === 'label');
+  const topMakers = makers.filter((m) => m.category === 'maker');
+  const topLabels = makers.filter((m) => m.category === 'label');
   const totalViews = makers.reduce((sum, m) => sum + m.count, 0);
   const displayedMakers = isExpanded ? makers : makers.slice(0, 5);
 
   return (
     <div className={`${tc.container} rounded-lg p-6 ${className}`}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div>
           <h3 className={`text-lg font-bold ${tc.textPrimary} flex items-center gap-2`}>
-            <Building2 className={`w-5 h-5 ${tc.accentBlue}`} />
+            <Building2 className={`h-5 w-5 ${tc.accentBlue}`} />
             {t.title}
           </h3>
           <p className={`text-sm ${tc.textMuted}`}>{t.subtitle}</p>
@@ -217,35 +161,34 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
         {displayedMakers.map((maker, index) => {
           const percentage = Math.round((maker.count / totalViews) * 100);
           return (
-            <Link
-              key={maker.makerId}
-              href={localizedHref(`/makers/${maker.makerId}`, locale)}
-              className="block group"
-            >
-              <div className={`flex items-center gap-3 p-3 rounded-lg ${tc.surface} transition-colors`}>
-                <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 ${
-                  index === 0 ? tc.badgeFirst :
-                  index === 1 ? tc.badgeSecond :
-                  index === 2 ? tc.badgeThird :
-                  tc.badgeDefault
-                }`}>
+            <Link key={maker.makerId} href={localizedHref(`/makers/${maker.makerId}`, locale)} className="group block">
+              <div className={`flex items-center gap-3 rounded-lg p-3 ${tc.surface} transition-colors`}>
+                <span
+                  className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                    index === 0
+                      ? tc.badgeFirst
+                      : index === 1
+                        ? tc.badgeSecond
+                        : index === 2
+                          ? tc.badgeThird
+                          : tc.badgeDefault
+                  }`}
+                >
                   {index + 1}
                 </span>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`font-medium truncate ${tc.nameHover} transition-colors`}>
-                      {maker.makerName}
-                    </span>
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
-                      maker.category === 'maker'
-                        ? tc.categoryMaker
-                        : tc.categoryLabel
-                    }`}>
+                <div className="min-w-0 flex-1">
+                  <div className="mb-1 flex items-center gap-2">
+                    <span className={`truncate font-medium ${tc.nameHover} transition-colors`}>{maker.makerName}</span>
+                    <span
+                      className={`rounded px-1.5 py-0.5 text-xs ${
+                        maker.category === 'maker' ? tc.categoryMaker : tc.categoryLabel
+                      }`}
+                    >
                       {maker.category === 'maker' ? (
-                        <Building2 className="w-3 h-3 inline" />
+                        <Building2 className="inline h-3 w-3" />
                       ) : (
-                        <Tag className="w-3 h-3 inline" />
+                        <Tag className="inline h-3 w-3" />
                       )}
                     </span>
                   </div>
@@ -254,19 +197,17 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
                     <span className={tc.textMuted}>
                       {maker.count} {t.works}
                     </span>
-                    <span className={tc.percentage}>
-                      {percentage}%
-                    </span>
+                    <span className={tc.percentage}>{percentage}%</span>
                     {maker.averageRating && (
                       <span className={`${tc.rating} flex items-center gap-1`}>
-                        <Star className="w-3 h-3" />
+                        <Star className="h-3 w-3" />
                         {maker.averageRating.toFixed(1)}
                       </span>
                     )}
                   </div>
                 </div>
 
-                <ChevronRight className={`w-5 h-5 ${tc.chevron} transition-colors shrink-0`} />
+                <ChevronRight className={`h-5 w-5 ${tc.chevron} shrink-0 transition-colors`} />
               </div>
             </Link>
           );
@@ -276,16 +217,16 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
       {makers.length > 5 && (
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className={`w-full mt-4 py-2 text-sm ${tc.expandBtn} flex items-center justify-center gap-1 transition-colors`}
+          className={`mt-4 w-full py-2 text-sm ${tc.expandBtn} flex items-center justify-center gap-1 transition-colors`}
         >
           {isExpanded ? (
             <>
-              <ChevronDown className="w-4 h-4 rotate-180" />
+              <ChevronDown className="h-4 w-4 rotate-180" />
               Show Less
             </>
           ) : (
             <>
-              <ChevronDown className="w-4 h-4" />
+              <ChevronDown className="h-4 w-4" />
               {t.viewMore} ({makers.length - 5})
             </>
           )}
@@ -293,20 +234,20 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
       )}
 
       {(topMakers.length > 0 || topLabels.length > 0) && (
-        <div className={`mt-6 pt-4 border-t ${tc.border}`}>
+        <div className={`mt-6 border-t pt-4 ${tc.border}`}>
           <div className="grid grid-cols-2 gap-4">
             {topMakers.length > 0 && (
               <div>
                 <h4 className={`text-sm ${tc.textMuted} mb-2 flex items-center gap-1`}>
-                  <Building2 className="w-4 h-4" />
+                  <Building2 className="h-4 w-4" />
                   {t.topMakers}
                 </h4>
                 <div className="flex flex-wrap gap-1">
-                  {topMakers.slice(0, 3).map(m => (
+                  {topMakers.slice(0, 3).map((m) => (
                     <Link
                       key={m.makerId}
                       href={localizedHref(`/makers/${m.makerId}`, locale)}
-                      className={`text-xs px-2 py-1 ${tc.tagMaker} rounded transition-colors`}
+                      className={`px-2 py-1 text-xs ${tc.tagMaker} rounded transition-colors`}
                     >
                       {m.makerName}
                     </Link>
@@ -317,15 +258,15 @@ export default function MakerAnalysisBase({ locale, className = '' }: MakerAnaly
             {topLabels.length > 0 && (
               <div>
                 <h4 className={`text-sm ${tc.textMuted} mb-2 flex items-center gap-1`}>
-                  <Tag className="w-4 h-4" />
+                  <Tag className="h-4 w-4" />
                   {t.topLabels}
                 </h4>
                 <div className="flex flex-wrap gap-1">
-                  {topLabels.slice(0, 3).map(m => (
+                  {topLabels.slice(0, 3).map((m) => (
                     <Link
                       key={m.makerId}
                       href={localizedHref(`/makers/${m.makerId}`, locale)}
-                      className={`text-xs px-2 py-1 ${tc.tagLabel} rounded transition-colors`}
+                      className={`px-2 py-1 text-xs ${tc.tagLabel} rounded transition-colors`}
                     >
                       {m.makerName}
                     </Link>

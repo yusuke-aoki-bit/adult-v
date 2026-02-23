@@ -12,14 +12,9 @@ export async function withRetry<T>(
     delayMs?: number;
     backoffMultiplier?: number;
     onRetry?: (error: Error, attempt: number) => void;
-  } = {}
+  } = {},
 ): Promise<T> {
-  const {
-    maxRetries = 3,
-    delayMs = 1000,
-    backoffMultiplier = 2,
-    onRetry,
-  } = options;
+  const { maxRetries = 3, delayMs = 1000, backoffMultiplier = 2, onRetry } = options;
 
   let lastError: Error | undefined;
 
@@ -44,10 +39,7 @@ export async function withRetry<T>(
 /**
  * DB接続のリトライ付きラッパー
  */
-export async function withDbRetry<T>(
-  fn: () => Promise<T>,
-  label: string = 'DB operation'
-): Promise<T> {
+export async function withDbRetry<T>(fn: () => Promise<T>, label: string = 'DB operation'): Promise<T> {
   return withRetry(fn, {
     maxRetries: 3,
     delayMs: 2000,
@@ -62,7 +54,7 @@ export async function withDbRetry<T>(
  * スリープ関数
  */
 export function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 /**
@@ -91,7 +83,9 @@ export function createProgressLogger(total: number, label: string = 'Processing'
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
         const rate = (processed / parseFloat(elapsed)).toFixed(1);
         const errorRate = ((errors / processed) * 100).toFixed(1);
-        console.log(`[${label}] ${processed}/${total} (${rate}/s, errors: ${errors} (${errorRate}%), elapsed: ${elapsed}s)`);
+        console.log(
+          `[${label}] ${processed}/${total} (${rate}/s, errors: ${errors} (${errorRate}%), elapsed: ${elapsed}s)`,
+        );
       }
     },
     summary: () => {

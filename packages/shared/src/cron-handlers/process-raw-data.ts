@@ -106,18 +106,25 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             });
 
             if (performerNames.length === 0) {
-              $('td:contains("出演")').next('td').find('a').each((_, elem) => {
-                const name = $(elem).text().trim();
-                if (name && name.length > 1 && name.length < 30) {
-                  performerNames.push(name);
-                }
-              });
+              $('td:contains("出演")')
+                .next('td')
+                .find('a')
+                .each((_, elem) => {
+                  const name = $(elem).text().trim();
+                  if (name && name.length > 1 && name.length < 30) {
+                    performerNames.push(name);
+                  }
+                });
             }
 
             if (row.product_id.match(/^\d+$/)) {
               sampleVideoUrl = `https://sample.heyzo.com/contents/3000/${row.product_id.padStart(4, '0')}/heyzo_hd_${row.product_id.padStart(4, '0')}_sample.mp4`;
             }
-          } else if (row['source'].includes('1pondo') || row['source'].includes('caribbeancom') || row['source'].includes('カリビアンコム')) {
+          } else if (
+            row['source'].includes('1pondo') ||
+            row['source'].includes('caribbeancom') ||
+            row['source'].includes('カリビアンコム')
+          ) {
             title = $('h1').first().text().trim() || $('title').text().trim();
             description = $('meta[name="description"]').attr('content') || '';
 
@@ -129,12 +136,15 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
             });
 
             if (performerNames.length === 0) {
-              $('td:contains("出演")').next('td').find('a').each((_, elem) => {
-                const name = $(elem).text().trim();
-                if (name && name.length > 1 && name.length < 30) {
-                  performerNames.push(name);
-                }
-              });
+              $('td:contains("出演")')
+                .next('td')
+                .find('a')
+                .each((_, elem) => {
+                  const name = $(elem).text().trim();
+                  if (name && name.length > 1 && name.length < 30) {
+                    performerNames.push(name);
+                  }
+                });
             }
 
             if (row.product_id.match(/^\d{6}_\d{3}$/)) {
@@ -151,10 +161,13 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
               releaseDate = releaseDateText.replace(/\//g, '-');
             }
 
-            $('th:contains("出演")').next('td').find('a').each((_, elem) => {
-              const name = $(elem).text().trim();
-              if (name) performerNames.push(name);
-            });
+            $('th:contains("出演")')
+              .next('td')
+              .find('a')
+              .each((_, elem) => {
+                const name = $(elem).text().trim();
+                if (name) performerNames.push(name);
+              });
 
             const productIdLower = row.product_id.toLowerCase();
             const parts = row.product_id.split('-');
@@ -204,7 +217,8 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
           const productId = (productResult.rows[0] as { id: number }).id;
           const isNew = productResult.rowCount === 1;
 
-          if (isNew) stats.newProducts++; else stats.updatedProducts++;
+          if (isNew) stats.newProducts++;
+          else stats.updatedProducts++;
 
           let aspName = 'DTI';
           if (row['source'].includes('MGS') || row['source'].includes('mgstage')) {
@@ -259,7 +273,6 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
           await db.execute(sql`
             UPDATE raw_html_data SET processed_at = NOW() WHERE id = ${row['id']}
           `);
-
         } catch (error) {
           stats.errors++;
           console.error(`Error processing raw_html_data id=${row['id']}:`, error);
@@ -274,12 +287,11 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('Process raw data error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

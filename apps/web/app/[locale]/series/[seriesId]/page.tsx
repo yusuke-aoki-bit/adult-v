@@ -28,7 +28,7 @@ function toProduct(sp: SeriesProduct): Product {
     affiliateUrl: '',
     provider: 'duga',
     providerLabel: '',
-    performers: sp.performers.map(p => ({ id: String(p.id), name: p.name })),
+    performers: sp.performers.map((p) => ({ id: String(p.id), name: p.name })),
     releaseDate: sp.releaseDate,
     duration: sp.duration,
     rating: sp.rating,
@@ -162,10 +162,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     if (!seriesInfo) return {};
 
     const t = translations[locale as keyof typeof translations] || translations['ja'];
-    const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
-      : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh
-      : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
-      : seriesInfo.name;
+    const name =
+      locale === 'en' && seriesInfo.nameEn
+        ? seriesInfo.nameEn
+        : locale === 'zh' && seriesInfo.nameZh
+          ? seriesInfo.nameZh
+          : locale === 'ko' && seriesInfo.nameKo
+            ? seriesInfo.nameKo
+            : seriesInfo.name;
 
     const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
@@ -176,15 +180,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         undefined,
         localizedHref(`/series/${seriesId}`, locale),
         undefined,
-        locale
+        locale,
       ),
       alternates: {
         canonical: `${baseUrl}/series/${seriesId}`,
         languages: {
-          'ja': `${baseUrl}/series/${seriesId}`,
-          'en': `${baseUrl}/series/${seriesId}?hl=en`,
-          'zh': `${baseUrl}/series/${seriesId}?hl=zh`,
-          'ko': `${baseUrl}/series/${seriesId}?hl=ko`,
+          ja: `${baseUrl}/series/${seriesId}`,
+          en: `${baseUrl}/series/${seriesId}?hl=en`,
+          zh: `${baseUrl}/series/${seriesId}?hl=zh`,
+          ko: `${baseUrl}/series/${seriesId}?hl=ko`,
           'x-default': `${baseUrl}/series/${seriesId}`,
         },
       },
@@ -201,19 +205,14 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
 
   let tNav, seriesInfo;
   try {
-    [tNav, seriesInfo] = await Promise.all([
-      getTranslations('nav'),
-      getSeriesInfo(parseInt(seriesId)),
-    ]);
+    [tNav, seriesInfo] = await Promise.all([getTranslations('nav'), getSeriesInfo(parseInt(seriesId))]);
   } catch (error) {
     console.error(`[series-detail] Error loading series ${seriesId}:`, error);
     notFound();
   }
   if (!seriesInfo) notFound();
 
-  const sortBy = sort === 'rating' ? 'ratingDesc'
-    : sort === 'newest' ? 'releaseDateDesc'
-    : 'releaseDateAsc';
+  const sortBy = sort === 'rating' ? 'ratingDesc' : sort === 'newest' ? 'releaseDateDesc' : 'releaseDateAsc';
 
   let products: SeriesProduct[];
   try {
@@ -223,16 +222,20 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
     notFound();
   }
 
-  const name = locale === 'en' && seriesInfo.nameEn ? seriesInfo.nameEn
-    : locale === 'zh' && seriesInfo.nameZh ? seriesInfo.nameZh
-    : locale === 'ko' && seriesInfo.nameKo ? seriesInfo.nameKo
-    : seriesInfo.name;
+  const name =
+    locale === 'en' && seriesInfo.nameEn
+      ? seriesInfo.nameEn
+      : locale === 'zh' && seriesInfo.nameZh
+        ? seriesInfo.nameZh
+        : locale === 'ko' && seriesInfo.nameKo
+          ? seriesInfo.nameKo
+          : seriesInfo.name;
 
   const totalHours = Math.floor(seriesInfo.totalDuration / 60);
   const totalMinutes = seriesInfo.totalDuration % 60;
 
   // シリーズコストサマリー計算
-  const pricedProducts = products.filter(p => p.price && p.price > 0);
+  const pricedProducts = products.filter((p) => p.price && p.price > 0);
   const totalCost = pricedProducts.reduce((sum, p) => sum + (p.price || 0), 0);
   const avgCost = pricedProducts.length > 0 ? Math.round(totalCost / pricedProducts.length) : 0;
   const costPerMin = seriesInfo.totalDuration > 0 ? Math.round(totalCost / seriesInfo.totalDuration) : 0;
@@ -250,7 +253,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
       name: product.title,
       url: localizedHref(`/products/${product.id}`, locale),
     })),
-    name
+    name,
   );
 
   return (
@@ -262,102 +265,103 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           <Breadcrumb
             items={[
               { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t.backToList.split(' ')[0], href: localizedHref('/series', locale) },
+              { label: t.backToList.split(' ')[0]!, href: localizedHref('/series', locale) },
               { label: name },
             ]}
             className="mb-4"
           />
 
           {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* ヘッダー */}
-          <div className="theme-card rounded-lg p-6 mb-8">
+          <div className="theme-card mb-8 rounded-lg p-6">
             <div className="flex items-start gap-4">
-              <div className="bg-purple-500/20 p-3 rounded-lg">
-                <Library className="w-8 h-8 text-purple-400" />
+              <div className="rounded-lg bg-purple-500/20 p-3">
+                <Library className="h-8 w-8 text-purple-400" />
               </div>
               <div className="flex-1">
-                <h1 className="text-2xl sm:text-3xl font-bold theme-text">{name}</h1>
-                <p className="text-lg theme-text-muted mt-1">
-                  {t.completionGuide}
-                </p>
+                <h1 className="theme-text text-2xl font-bold sm:text-3xl">{name}</h1>
+                <p className="theme-text-muted mt-1 text-lg">{t.completionGuide}</p>
               </div>
             </div>
 
             {/* 統計情報 */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-6">
-              <div className="bg-gray-800/50 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-gray-400 mb-1">
-                  <Film className="w-4 h-4" />
+            <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+              <div className="rounded-lg bg-gray-800/50 p-4">
+                <div className="mb-1 flex items-center gap-2 text-gray-400">
+                  <Film className="h-4 w-4" />
                   <span className="text-sm">{t.totalProducts.split('{count}')[0]}</span>
                 </div>
-                <p className="text-2xl font-bold theme-text">{seriesInfo.totalProducts}</p>
+                <p className="theme-text text-2xl font-bold">{seriesInfo.totalProducts}</p>
               </div>
-              <div className="bg-gray-800/50 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-gray-400 mb-1">
-                  <Clock className="w-4 h-4" />
+              <div className="rounded-lg bg-gray-800/50 p-4">
+                <div className="mb-1 flex items-center gap-2 text-gray-400">
+                  <Clock className="h-4 w-4" />
                   <span className="text-sm">{t.totalDuration}</span>
                 </div>
-                <p className="text-2xl font-bold theme-text">
-                  {totalHours > 0 && <>{totalHours}<span className="text-sm">{t.hours}</span></>}
-                  {totalMinutes}<span className="text-sm">{t.minutes}</span>
+                <p className="theme-text text-2xl font-bold">
+                  {totalHours > 0 && (
+                    <>
+                      {totalHours}
+                      <span className="text-sm">{t.hours}</span>
+                    </>
+                  )}
+                  {totalMinutes}
+                  <span className="text-sm">{t.minutes}</span>
                 </p>
               </div>
               {seriesInfo.averageRating && (
-                <div className="bg-gray-800/50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-gray-400 mb-1">
-                    <Star className="w-4 h-4" />
+                <div className="rounded-lg bg-gray-800/50 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-gray-400">
+                    <Star className="h-4 w-4" />
                     <span className="text-sm">{t.averageRating}</span>
                   </div>
-                  <p className="text-2xl font-bold theme-text flex items-center gap-1">
+                  <p className="theme-text flex items-center gap-1 text-2xl font-bold">
                     {seriesInfo.averageRating.toFixed(1)}
-                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
                   </p>
                 </div>
               )}
               {totalCost > 0 && (
-                <div className="bg-gray-800/50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-gray-400 mb-1">
-                    <Wallet className="w-4 h-4" />
+                <div className="rounded-lg bg-gray-800/50 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-gray-400">
+                    <Wallet className="h-4 w-4" />
                     <span className="text-sm">{t.totalCost}</span>
                   </div>
-                  <p className="text-2xl font-bold theme-text">
-                    ¥{totalCost.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-gray-500 mt-0.5">
+                  <p className="theme-text text-2xl font-bold">¥{totalCost.toLocaleString()}</p>
+                  <p className="mt-0.5 text-xs text-gray-500">
                     {t.itemsWithPrice}: {pricedProducts.length}/{seriesInfo.totalProducts}
                   </p>
                 </div>
               )}
               {avgCost > 0 && (
-                <div className="bg-gray-800/50 rounded-lg p-4">
-                  <div className="flex items-center gap-2 text-gray-400 mb-1">
-                    <ShoppingCart className="w-4 h-4" />
+                <div className="rounded-lg bg-gray-800/50 p-4">
+                  <div className="mb-1 flex items-center gap-2 text-gray-400">
+                    <ShoppingCart className="h-4 w-4" />
                     <span className="text-sm">{t.avgCost}</span>
                   </div>
-                  <p className="text-2xl font-bold theme-text">
-                    ¥{avgCost.toLocaleString()}
-                  </p>
+                  <p className="theme-text text-2xl font-bold">¥{avgCost.toLocaleString()}</p>
                   {costPerMin > 0 && (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      {costPerMin}{t.costPerMin}
+                    <p className="mt-0.5 text-xs text-gray-500">
+                      {costPerMin}
+                      {t.costPerMin}
                     </p>
                   )}
                 </div>
               )}
-              <div className="bg-gray-800/50 rounded-lg p-4">
-                <div className="flex items-center gap-2 text-gray-400 mb-1">
-                  <Trophy className="w-4 h-4" />
+              <div className="rounded-lg bg-gray-800/50 p-4">
+                <div className="mb-1 flex items-center gap-2 text-gray-400">
+                  <Trophy className="h-4 w-4" />
                   <span className="text-sm">{t.progress}</span>
                 </div>
                 <SeriesProgressTracker
                   seriesId={seriesId}
                   totalProducts={seriesInfo.totalProducts}
-                  productIds={products.map(p => p.id)}
+                  productIds={products.map((p) => p.id)}
                   translations={{ watched: t.watched, notWatched: t.notWatched }}
                 />
               </div>
@@ -366,8 +370,8 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             {/* トップ出演者 */}
             {seriesInfo.topPerformers.length > 0 && (
               <div className="mt-6">
-                <h3 className="text-sm text-gray-400 mb-2 flex items-center gap-2">
-                  <User className="w-4 h-4" />
+                <h3 className="mb-2 flex items-center gap-2 text-sm text-gray-400">
+                  <User className="h-4 w-4" />
                   {t.topPerformers}
                 </h3>
                 <div className="flex flex-wrap gap-2">
@@ -375,7 +379,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
                     <Link
                       key={p.id}
                       href={localizedHref(`/actress/${p.id}`, locale)}
-                      className="bg-gray-700/50 hover:bg-gray-600/50 px-3 py-1 rounded-full text-sm theme-text transition-colors"
+                      className="theme-text rounded-full bg-gray-700/50 px-3 py-1 text-sm transition-colors hover:bg-gray-600/50"
                     >
                       {p.name} ({p.count})
                     </Link>
@@ -386,37 +390,31 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           </div>
 
           {/* ソートオプション */}
-          <div className="flex justify-between items-center mb-6">
-            <p className="theme-text-muted">
-              {t.totalProducts.replace('{count}', String(products.length))}
-            </p>
+          <div className="mb-6 flex items-center justify-between">
+            <p className="theme-text-muted">{t.totalProducts.replace('{count}', String(products.length))}</p>
             <div className="flex gap-2">
               <Link
                 href={basePath}
-                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
+                className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                   !sort || sort === 'release'
                     ? 'bg-purple-500 text-white'
-                    : 'bg-gray-700/50 theme-text hover:bg-gray-600/50'
+                    : 'theme-text bg-gray-700/50 hover:bg-gray-600/50'
                 }`}
               >
                 {t.sortByRelease}
               </Link>
               <Link
                 href={`${basePath}${basePath.includes('?') ? '&' : '?'}sort=newest`}
-                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  sort === 'newest'
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-gray-700/50 theme-text hover:bg-gray-600/50'
+                className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  sort === 'newest' ? 'bg-purple-500 text-white' : 'theme-text bg-gray-700/50 hover:bg-gray-600/50'
                 }`}
               >
                 {t.sortByReleaseDesc}
               </Link>
               <Link
                 href={`${basePath}${basePath.includes('?') ? '&' : '?'}sort=rating`}
-                className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  sort === 'rating'
-                    ? 'bg-purple-500 text-white'
-                    : 'bg-gray-700/50 theme-text hover:bg-gray-600/50'
+                className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+                  sort === 'rating' ? 'bg-purple-500 text-white' : 'theme-text bg-gray-700/50 hover:bg-gray-600/50'
                 }`}
               >
                 {t.sortByRating}
@@ -425,17 +423,17 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           </div>
 
           {/* 作品一覧 */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {products.map((product, index) => (
               <div key={product.id} className="relative">
                 {/* 番号バッジ */}
-                <div className="absolute top-2 left-2 z-10 bg-purple-600/90 text-white text-xs font-bold px-2 py-0.5 rounded">
+                <div className="absolute top-2 left-2 z-10 rounded bg-purple-600/90 px-2 py-0.5 text-xs font-bold text-white">
                   #{index + 1}
                 </div>
                 {/* 推奨バッジ（評価トップ3） */}
                 {sort === 'rating' && index < 3 && (
-                  <div className="absolute top-2 right-2 z-10 bg-yellow-500/90 text-black text-xs font-bold px-2 py-0.5 rounded flex items-center gap-1">
-                    <Trophy className="w-3 h-3" />
+                  <div className="absolute top-2 right-2 z-10 flex items-center gap-1 rounded bg-yellow-500/90 px-2 py-0.5 text-xs font-bold text-black">
+                    <Trophy className="h-3 w-3" />
                     {t.recommended}
                   </div>
                 )}
@@ -444,17 +442,13 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
             ))}
           </div>
 
-          {products.length === 0 && (
-            <p className="text-center theme-text-muted py-12">
-              {t.noProducts}
-            </p>
-          )}
+          {products.length === 0 && <p className="theme-text-muted py-12 text-center">{t.noProducts}</p>}
 
           {/* 戻るリンク */}
           <div className="mt-8 text-center">
             <Link
               href={localizedHref('/series', locale)}
-              className="inline-flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors"
+              className="inline-flex items-center gap-2 text-purple-400 transition-colors hover:text-purple-300"
             >
               &larr; {t.backToList}
             </Link>

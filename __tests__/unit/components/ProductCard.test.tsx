@@ -10,7 +10,24 @@ import React from 'react';
 
 // Mock next/image - filter out Next.js specific props
 vi.mock('next/image', () => ({
-  default: ({ src, alt, blurDataURL: _blur, priority: _priority, fill: _fill, placeholder: _placeholder, loader: _loader, quality: _quality, sizes: _sizes, unoptimized: _unoptimized, onLoadingComplete: _onLoadingComplete, ...props }: { src: string; alt: string; [key: string]: unknown }) => (
+  default: ({
+    src,
+    alt,
+    blurDataURL: _blur,
+    priority: _priority,
+    fill: _fill,
+    placeholder: _placeholder,
+    loader: _loader,
+    quality: _quality,
+    sizes: _sizes,
+    unoptimized: _unoptimized,
+    onLoadingComplete: _onLoadingComplete,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    [key: string]: unknown;
+  }) => (
     // eslint-disable-next-line @next/next/no-img-element
     <img src={src} alt={alt} {...props} />
   ),
@@ -18,9 +35,7 @@ vi.mock('next/image', () => ({
 
 // Mock next/link
 vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
-    <a href={href}>{children}</a>
-  ),
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
 // Mock the theme config
@@ -71,7 +86,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByText('テスト商品タイトル')).toBeInTheDocument();
@@ -92,7 +107,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       // Price should be displayed somewhere in the component
@@ -115,7 +130,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       const images = screen.getAllByRole('img');
@@ -137,7 +152,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       expect(screen.getByTestId('favorite-btn')).toBeInTheDocument();
@@ -159,7 +174,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       // Check that component renders with rankPosition prop
@@ -183,13 +198,14 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       // Check that dark theme is applied (look for dark theme specific classes)
-      const hasThemeClass = container.innerHTML.includes('dark') ||
-                           container.innerHTML.includes('bg-gray-') ||
-                           container.innerHTML.includes('text-white');
+      const hasThemeClass =
+        container.innerHTML.includes('dark') ||
+        container.innerHTML.includes('bg-gray-') ||
+        container.innerHTML.includes('text-white');
       expect(hasThemeClass || true).toBeTruthy(); // Flexible check
     });
 
@@ -208,7 +224,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       expect(container).toBeInTheDocument();
@@ -232,7 +248,7 @@ describe('ProductCard Component', () => {
           formatPrice={(price: number) => `¥${price.toLocaleString()}`}
           getVariant={() => 'control'}
           trackCtaClick={vi.fn()}
-        />
+        />,
       );
 
       expect(container).toBeInTheDocument();

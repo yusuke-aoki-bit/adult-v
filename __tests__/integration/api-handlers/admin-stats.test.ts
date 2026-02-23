@@ -16,57 +16,80 @@ function createMockDb() {
   // Promise.allで並列実行されるため、各クエリに対応した結果を返す
   const queryResults = [
     // 1. ASP Summary
-    { rows: [
-      { asp_name: 'FANZA', total_products: '10000', with_image: '9500', image_pct: '95.0', with_video: '8000', video_pct: '80.0', with_performer: '7500', performer_pct: '75.0' },
-    ]},
+    {
+      rows: [
+        {
+          asp_name: 'FANZA',
+          total_products: '10000',
+          with_image: '9500',
+          image_pct: '95.0',
+          with_video: '8000',
+          video_pct: '80.0',
+          with_performer: '7500',
+          performer_pct: '75.0',
+        },
+      ],
+    },
     // 2. Video Stats
-    { rows: [
-      { asp_name: 'FANZA', total_videos: '50000', products_with_video: '8000' },
-    ]},
+    { rows: [{ asp_name: 'FANZA', total_videos: '50000', products_with_video: '8000' }] },
     // 3. Performer Stats
-    { rows: [{
-      total_performers: '5000',
-      with_image: '4000',
-      with_wiki: '0',
-      with_products: '4500',
-      total_links: '50000',
-    }]},
+    {
+      rows: [
+        {
+          total_performers: '5000',
+          with_image: '4000',
+          with_wiki: '0',
+          with_products: '4500',
+          total_links: '50000',
+        },
+      ],
+    },
     // 4. Total Stats
-    { rows: [{
-      total_products: '15000',
-      products_with_image: '13500',
-      products_with_video: '11000',
-      total_videos: '65000',
-      products_with_performer: '12000',
-    }]},
+    {
+      rows: [
+        {
+          total_products: '15000',
+          products_with_image: '13500',
+          products_with_video: '11000',
+          total_videos: '65000',
+          products_with_performer: '12000',
+        },
+      ],
+    },
     // 5. Top Performers
-    { rows: [
-      { id: '1', name: '女優A', has_image: true, has_wiki: false, product_count: '500' },
-    ]},
+    { rows: [{ id: '1', name: '女優A', has_image: true, has_wiki: false, product_count: '500' }] },
     // 6. No Image Performers
-    { rows: [
-      { id: '3', name: '女優C', product_count: '300' },
-    ]},
+    { rows: [{ id: '3', name: '女優C', product_count: '300' }] },
     // 7. Collection Rates
-    { rows: [
-      { asp_name: 'FANZA', count: '10000' },
-    ]},
+    { rows: [{ asp_name: 'FANZA', count: '10000' }] },
     // 8. Latest Releases
-    { rows: [
-      { asp_name: 'FANZA', latest_release: '2024-01-15' },
-    ]},
+    { rows: [{ asp_name: 'FANZA', latest_release: '2024-01-15' }] },
     // 9. Daily Collection
-    { rows: [
-      { date: '2024-01-15', asp_name: 'FANZA', count: '100' },
-    ]},
+    { rows: [{ date: '2024-01-15', asp_name: 'FANZA', count: '100' }] },
     // 10. Raw Data Counts
-    { rows: [
-      { table_name: 'raw_html_data', count: '100000' },
-    ]},
+    { rows: [{ table_name: 'raw_html_data', count: '100000' }] },
     // 11. AI Content Stats (safeQuery)
-    [{ table_name: 'products', total: '15000', with_ai_description: '5000', with_ai_tags: '3000', with_ai_review: '2000', with_ai_catchphrase: '1000' }],
+    [
+      {
+        table_name: 'products',
+        total: '15000',
+        with_ai_description: '5000',
+        with_ai_tags: '3000',
+        with_ai_review: '2000',
+        with_ai_catchphrase: '1000',
+      },
+    ],
     // 12. Performer AI Stats (safeQuery)
-    [{ total_performers: '5000', with_ai_review: '2000', with_height: '3000', with_measurements: '2500', with_birthday: '2000', with_social: '1500' }],
+    [
+      {
+        total_performers: '5000',
+        with_ai_review: '2000',
+        with_height: '3000',
+        with_measurements: '2500',
+        with_birthday: '2000',
+        with_social: '1500',
+      },
+    ],
     // 13. Translation Stats (safeQuery)
     [{ table_name: 'products', total: '15000', en: '10000', zh: '8000', zh_tw: '7000', ko: '6000' }],
     // 14. Table Row Counts (safeQuery)

@@ -26,12 +26,7 @@ interface PageSpeedResult {
   cls: number; // Cumulative Layout Shift
 }
 
-const PAGES_TO_CHECK = [
-  '/',
-  '/products',
-  '/actresses',
-  '/categories',
-];
+const PAGES_TO_CHECK = ['/', '/products', '/actresses', '/categories'];
 
 async function fetchPageSpeedData(url: string): Promise<PageSpeedResult | null> {
   if (!PAGESPEED_API_KEY) {
@@ -102,7 +97,7 @@ async function runFetchTask(db: ReturnType<typeof getDb>, baseUrl: string): Prom
     }
 
     // Rate limiting
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
   return successCount;
@@ -131,7 +126,9 @@ async function runCheckTask(db: ReturnType<typeof getDb>): Promise<void> {
   }>) {
     const isLow = row.performance_score < 50 || row.accessibility_score < 50 || row.seo_score < 50;
     const status = isLow ? '⚠️' : '✅';
-    console.log(`    ${status} ${row.url}: P=${row.performance_score} A=${row.accessibility_score} SEO=${row.seo_score}`);
+    console.log(
+      `    ${status} ${row.url}: P=${row.performance_score} A=${row.accessibility_score} SEO=${row.seo_score}`,
+    );
     if (isLow) lowScoreCount++;
   }
 

@@ -9,12 +9,14 @@ test.setTimeout(120000);
 
 // 全テストで年齢確認クッキーを設定
 test.beforeEach(async ({ context }) => {
-  await context.addCookies([{
-    name: 'age-verified',
-    value: 'true',
-    domain: 'localhost',
-    path: '/',
-  }]);
+  await context.addCookies([
+    {
+      name: 'age-verified',
+      value: 'true',
+      domain: 'localhost',
+      path: '/',
+    },
+  ]);
 });
 
 test.describe('要件1-4: 商品・演者・ASP紐付け', () => {

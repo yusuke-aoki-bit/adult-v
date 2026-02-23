@@ -16,5 +16,5 @@ export {
   weeklyHighlightsTranslations,
   productDetailTranslations,
   getTranslation,
-} from './translations';
-export type { Locale } from './translations';
+} from '../../lib/translations';
+export type { Locale } from '../../lib/translations';

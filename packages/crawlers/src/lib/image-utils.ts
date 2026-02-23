@@ -100,9 +100,9 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
   // e.g., https://pic.duga.jp/unsecure/mbm/1360/noauth/240x180.jpg -> 480x360.jpg (2x) or 640x480.jpg
   if (thumbnailUrl.includes('duga.jp')) {
     return thumbnailUrl
-      .replace(/\/scap\//, '/sample/')  // scap -> sample (高解像度サンプル画像)
-      .replace(/\/240x180\.jpg$/, '/640x480.jpg')  // サムネイル → 大きいサイズ
-      .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg')  // noauthパス含む場合
+      .replace(/\/scap\//, '/sample/') // scap -> sample (高解像度サンプル画像)
+      .replace(/\/240x180\.jpg$/, '/640x480.jpg') // サムネイル → 大きいサイズ
+      .replace(/\/noauth\/240x180\.jpg/, '/noauth/640x480.jpg') // noauthパス含む場合
       .replace(/-t\./, '-l.')
       .replace(/_t\./, '_l.')
       .replace(/\/t\//, '/l/')
@@ -142,7 +142,7 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
       .replace(/\/s\//, '/l/')
       .replace(/\/small\//, '/large/')
       .replace(/\/thumb\//, '/large/')
-      .replace(/_100x142_/, '_250x356_')  // サムネイル→フルサイズ
+      .replace(/_100x142_/, '_250x356_') // サムネイル→フルサイズ
       .replace(/_200x284_/, '_250x356_'); // 中間サイズ→フルサイズ
   }
 
@@ -240,50 +240,32 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // 人妻斬り (hitozuma-giri.com)
   if (thumbnailUrl.includes('hitozuma-giri.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // 女体のしんぴ (nyoshin.com)
   if (thumbnailUrl.includes('nyoshin.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // うんこたれ (unkotare.com)
   if (thumbnailUrl.includes('unkotare.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // AV-4610 (av-4610.com)
   if (thumbnailUrl.includes('av-4610.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // H0230 (av-0230.com)
   if (thumbnailUrl.includes('av-0230.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // E-BODY (av-e-body.com)
   if (thumbnailUrl.includes('av-e-body.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // 金8天国 (kin8tengoku.com)
@@ -297,42 +279,27 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
 
   // NOZOX (nozox.com)
   if (thumbnailUrl.includes('nozox.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // 3D-EROS (3d-eros.net)
   if (thumbnailUrl.includes('3d-eros.net')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // Pikkur (pikkur.com)
   if (thumbnailUrl.includes('pikkur.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // JAV Holic (javholic.com)
   if (thumbnailUrl.includes('javholic.com')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // DTI共通ドメイン (pics.dtiserv, smovie.1pondo.tv等)
   if (thumbnailUrl.includes('dtiserv') || thumbnailUrl.includes('smovie.')) {
-    return thumbnailUrl
-      .replace(/\/s\//, '/l/')
-      .replace(/_s\./, '_l.')
-      .replace(/-s\./, '-l.');
+    return thumbnailUrl.replace(/\/s\//, '/l/').replace(/_s\./, '_l.').replace(/-s\./, '-l.');
   }
 
   // ========== TOKYO-HOT / TVDEAV ==========
@@ -340,9 +307,9 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
   // e.g., https://my.tokyo-hot.com/media/xxxx/jacket.jpg -> https://my.tokyo-hot.com/media/xxxx/jacket_h.jpg
   if (thumbnailUrl.includes('tokyo-hot.com') || thumbnailUrl.includes('tvdeav.com')) {
     return thumbnailUrl
-      .replace(/\/cap\/(\d+)\.jpg$/, '/cap/$1_h.jpg')  // cap/0001.jpg -> cap/0001_h.jpg
-      .replace(/\/jacket\.jpg$/, '/jacket_h.jpg')      // jacket.jpg -> jacket_h.jpg
-      .replace(/\/(\d+)\.jpg$/, '/$1_h.jpg')          // 番号.jpg -> 番号_h.jpg
+      .replace(/\/cap\/(\d+)\.jpg$/, '/cap/$1_h.jpg') // cap/0001.jpg -> cap/0001_h.jpg
+      .replace(/\/jacket\.jpg$/, '/jacket_h.jpg') // jacket.jpg -> jacket_h.jpg
+      .replace(/\/(\d+)\.jpg$/, '/$1_h.jpg') // 番号.jpg -> 番号_h.jpg
       .replace(/\/s\//, '/l/')
       .replace(/_s\./, '_l.')
       .replace(/-s\./, '-l.')
@@ -375,31 +342,31 @@ export function getFullSizeImageUrl(thumbnailUrl: string): string {
  * これらのサイトは無修正コンテンツのためブラーを適用
  */
 const DTI_SUBSCRIPTION_DOMAINS = [
-  'caribbeancom.com',      // カリビアンコム
-  'caribbeancompr.com',    // カリビアンコムプレミアム
-  '1pondo.tv',             // 一本道
-  'heyzo.com',             // HEYZO
-  '10musume.com',          // 天然むすめ
-  'pacopacomama.com',      // パコパコママ
-  'hitozuma-giri.com',     // 人妻斬り
-  'nyoshin.com',           // 女体のしんぴ
-  'unkotare.com',          // うんこたれ
-  'av-4610.com',           // AV-4610
-  'av-0230.com',           // H0230
-  'av-e-body.com',         // E-BODY
-  'kin8tengoku.com',       // 金8天国
-  'nozox.com',             // NOZOX
-  '3d-eros.net',           // 3D-EROS
-  'pikkur.com',            // Pikkur
-  'javholic.com',          // JAV Holic
-  'dtiserv',               // DTI共通ドメイン
-  'smovie.',               // smovie系
-  'japanska',              // Japanska
+  'caribbeancom.com', // カリビアンコム
+  'caribbeancompr.com', // カリビアンコムプレミアム
+  '1pondo.tv', // 一本道
+  'heyzo.com', // HEYZO
+  '10musume.com', // 天然むすめ
+  'pacopacomama.com', // パコパコママ
+  'hitozuma-giri.com', // 人妻斬り
+  'nyoshin.com', // 女体のしんぴ
+  'unkotare.com', // うんこたれ
+  'av-4610.com', // AV-4610
+  'av-0230.com', // H0230
+  'av-e-body.com', // E-BODY
+  'kin8tengoku.com', // 金8天国
+  'nozox.com', // NOZOX
+  '3d-eros.net', // 3D-EROS
+  'pikkur.com', // Pikkur
+  'javholic.com', // JAV Holic
+  'dtiserv', // DTI共通ドメイン
+  'smovie.', // smovie系
+  'japanska', // Japanska
 ];
 
 export function isDtiUncensoredSite(url: string): boolean {
   if (!url) return false;
-  return DTI_SUBSCRIPTION_DOMAINS.some(domain => url.includes(domain));
+  return DTI_SUBSCRIPTION_DOMAINS.some((domain) => url.includes(domain));
 }
 
 /**
@@ -422,9 +389,15 @@ export function isSubscriptionSite(provider: string): boolean {
   if (!provider) return false;
   // 月額制サイト（カリビアンコムプレミアムは単品購入なので除外）
   const subscriptionProviders = [
-    'dti', 'japanska',
-    'caribbeancom', '1pondo', 'heyzo',
-    '10musume', 'pacopacomama', 'muramura', 'tokyohot'
+    'dti',
+    'japanska',
+    'caribbeancom',
+    '1pondo',
+    'heyzo',
+    '10musume',
+    'pacopacomama',
+    'muramura',
+    'tokyohot',
     // 注: caribbeancompr（カリビアンコムプレミアム）は単品購入サイトなので含めない
   ];
   return subscriptionProviders.includes(provider);

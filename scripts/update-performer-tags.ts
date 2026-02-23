@@ -33,14 +33,14 @@ async function fetchPage(url: string, retries = MAX_RETRIES): Promise<string> {
       const response = await fetch(url, {
         headers: {
           'User-Agent': USER_AGENT,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
         },
       });
       if (response.status === 429) {
         const backoffMs = 5000 * Math.pow(2, attempt - 1); // 5s, 10s, 20s
         console.log(`    Rate limited (429), retrying in ${backoffMs / 1000}s...`);
-        await new Promise(r => setTimeout(r, backoffMs));
+        await new Promise((r) => setTimeout(r, backoffMs));
         continue;
       }
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -49,7 +49,7 @@ async function fetchPage(url: string, retries = MAX_RETRIES): Promise<string> {
       if (attempt === retries) throw e;
       const backoffMs = 5000 * Math.pow(2, attempt - 1);
       console.log(`    Retry ${attempt}/${retries} in ${backoffMs / 1000}s: ${e.message}`);
-      await new Promise(r => setTimeout(r, backoffMs));
+      await new Promise((r) => setTimeout(r, backoffMs));
     }
   }
   throw new Error('Unreachable');
@@ -62,8 +62,13 @@ async function extractTags(html: string): Promise<string[]> {
   // tag_a_id形式のリンクからタグを抽出
   $('a[href*="tag_a_id="]').each((_, el) => {
     const tagText = $(el).text().trim();
-    if (tagText && tagText.length >= 2 && tagText.length <= 20 &&
-        !tagText.includes('一覧') && !tagText.includes('評価')) {
+    if (
+      tagText &&
+      tagText.length >= 2 &&
+      tagText.length <= 20 &&
+      !tagText.includes('一覧') &&
+      !tagText.includes('評価')
+    ) {
       tagSet.add(tagText);
     }
   });
@@ -84,11 +89,7 @@ async function savePerformerTags(performerId: number, tagNames: string[]): Promi
   for (const tagName of tagNames) {
     try {
       // タグを取得または作成
-      let tagRecord = await db
-        .select()
-        .from(tags)
-        .where(eq(tags.name, tagName))
-        .limit(1);
+      let tagRecord = await db.select().from(tags).where(eq(tags.name, tagName)).limit(1);
 
       let tagId: number;
       if (tagRecord.length === 0) {
@@ -102,10 +103,7 @@ async function savePerformerTags(performerId: number, tagNames: string[]): Promi
       }
 
       // 演者-タグ関連を保存
-      await db
-        .insert(performerTags)
-        .values({ performerId, tagId, source: 'minnano-av' })
-        .onConflictDoNothing();
+      await db.insert(performerTags).values({ performerId, tagId, source: 'minnano-av' }).onConflictDoNothing();
       saved++;
     } catch (e) {
       // エラーは無視
@@ -164,9 +162,9 @@ function getPerformerQuery(mode: Mode, limit: number, staleDays: number) {
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(a => a.startsWith('--limit='));
-  const modeArg = args.find(a => a.startsWith('--mode='));
-  const staleDaysArg = args.find(a => a.startsWith('--stale-days='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
+  const modeArg = args.find((a) => a.startsWith('--mode='));
+  const staleDaysArg = args.find((a) => a.startsWith('--stale-days='));
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 100;
   const mode = (modeArg ? modeArg.split('=')[1] : 'fill-gaps') as Mode;
@@ -217,7 +215,7 @@ async function main() {
       }
 
       processed++;
-      await new Promise(r => setTimeout(r, DELAY_MS));
+      await new Promise((r) => setTimeout(r, DELAY_MS));
     } catch (e: any) {
       console.log(`  Error: ${e.message}`);
     }

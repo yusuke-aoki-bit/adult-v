@@ -33,7 +33,7 @@ interface TmpSiteConfig {
   productUrlFormat: string;
   aspName: string;
   encoding?: string;
-  usePagination?: boolean;  // ページネーションを使用するか
+  usePagination?: boolean; // ページネーションを使用するか
 }
 
 const TMP_SITES: Record<string, TmpSiteConfig> = {
@@ -45,7 +45,7 @@ const TMP_SITES: Record<string, TmpSiteConfig> = {
     productIdPattern: /\/moviepages\/(\d+)\/(\d+)\/?/,
     productUrlFormat: '/moviepages/{providerId}/{movieId}/index.html',
     aspName: 'HEYDOUGA',
-    usePagination: false,  // ページネーション不使用
+    usePagination: false, // ページネーション不使用
   },
   x1x: {
     name: 'X1X',
@@ -103,7 +103,7 @@ interface TmpProduct {
 async function rateLimit(): Promise<void> {
   const jitter = Math.random() * JITTER_MS;
   const delay = RATE_LIMIT_MS + jitter;
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -113,10 +113,11 @@ async function fetchPage(url: string): Promise<string | null> {
   try {
     const response = await fetch(url, {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-        'Cookie': 'adc=1',  // 年齢認証Cookie
+        Cookie: 'adc=1', // 年齢認証Cookie
       },
     });
 
@@ -135,10 +136,7 @@ async function fetchPage(url: string): Promise<string | null> {
 /**
  * heydouga: リストページから商品IDを抽出
  */
-async function extractHeydougaProductIds(
-  siteConfig: TmpSiteConfig,
-  pageNum: number
-): Promise<string[]> {
+async function extractHeydougaProductIds(siteConfig: TmpSiteConfig, pageNum: number): Promise<string[]> {
   const url = siteConfig.listPageUrl.replace('{page}', pageNum.toString());
   console.log(`📄 Fetching list page: ${url}`);
 
@@ -167,10 +165,7 @@ async function extractHeydougaProductIds(
 /**
  * TMP系（x1x, enkou55等）: リストページから商品IDを抽出
  */
-async function extractTmpProductIds(
-  siteConfig: TmpSiteConfig,
-  pageNum: number
-): Promise<string[]> {
+async function extractTmpProductIds(siteConfig: TmpSiteConfig, pageNum: number): Promise<string[]> {
   const url = siteConfig.listPageUrl.replace('{page}', pageNum.toString());
   console.log(`📄 Fetching list page: ${url}`);
 
@@ -199,10 +194,7 @@ async function extractTmpProductIds(
 /**
  * heydouga: 商品詳細ページから情報を抽出
  */
-async function extractHeydougaProductDetails(
-  siteConfig: TmpSiteConfig,
-  productId: string
-): Promise<TmpProduct | null> {
+async function extractHeydougaProductDetails(siteConfig: TmpSiteConfig, productId: string): Promise<TmpProduct | null> {
   const [providerId, movieId] = productId.split('-');
   const detailPath = siteConfig.productUrlFormat
     .replace('{providerId}', providerId ?? '')
@@ -324,10 +316,7 @@ async function extractHeydougaProductDetails(
 /**
  * TMP系（x1x, enkou55等）: 商品詳細ページから情報を抽出
  */
-async function extractTmpProductDetails(
-  siteConfig: TmpSiteConfig,
-  productId: string
-): Promise<TmpProduct | null> {
+async function extractTmpProductDetails(siteConfig: TmpSiteConfig, productId: string): Promise<TmpProduct | null> {
   const detailPath = siteConfig.productUrlFormat.replace('{id}', productId);
   const url = `${siteConfig.baseUrl}${detailPath}`;
   console.log(`  📦 Fetching detail: ${url}`);
@@ -350,8 +339,7 @@ async function extractTmpProductDetails(
   }
 
   // 説明文
-  const description = $('meta[name="description"]').attr('content') ||
-                      $('.description, .synopsis').text().trim() || '';
+  const description = $('meta[name="description"]').attr('content') || $('.description, .synopsis').text().trim() || '';
 
   // 出演者
   const performers: string[] = [];
@@ -472,10 +460,7 @@ async function extractTmpProductDetails(
 /**
  * 商品をデータベースに保存
  */
-async function saveProduct(
-  siteConfig: TmpSiteConfig,
-  product: TmpProduct
-): Promise<boolean> {
+async function saveProduct(siteConfig: TmpSiteConfig, product: TmpProduct): Promise<boolean> {
   try {
     const normalizedProductId = `${siteConfig.aspName}-${product['productId']}`;
 
@@ -517,7 +502,10 @@ async function saveProduct(
       productId: newProduct.id,
       aspName: siteConfig.aspName,
       originalProductId: product['productId'],
-      affiliateUrl: `${siteConfig.baseUrl}${siteConfig.productUrlFormat.replace('{id}', product['productId']).replace('{providerId}', product['productId'].split('-')[0] ?? '').replace('{movieId}', product['productId'].split('-')[1] ?? '')}`,
+      affiliateUrl: `${siteConfig.baseUrl}${siteConfig.productUrlFormat
+        .replace('{id}', product['productId'])
+        .replace('{providerId}', product['productId'].split('-')[0] ?? '')
+        .replace('{movieId}', product['productId'].split('-')[1] ?? '')}`,
       dataSource: 'SCRAPE',
       isSubscription: true, // TMP系は月額制
     });
@@ -593,9 +581,9 @@ async function main(): Promise<void> {
 
   // コマンドライン引数
   const args = process.argv.slice(2);
-  const siteArg = args.find(a => a.startsWith('--site='))?.split('=')[1] || 'heydouga';
-  const pagesArg = args.find(a => a.startsWith('--pages='))?.split('=')[1];
-  const startPageArg = args.find(a => a.startsWith('--start-page='))?.split('=')[1];
+  const siteArg = args.find((a) => a.startsWith('--site='))?.split('=')[1] || 'heydouga';
+  const pagesArg = args.find((a) => a.startsWith('--pages='))?.split('=')[1];
+  const startPageArg = args.find((a) => a.startsWith('--start-page='))?.split('=')[1];
 
   const pages = pagesArg ? parseInt(pagesArg) : 5;
   const startPage = startPageArg ? parseInt(startPageArg) : 1;

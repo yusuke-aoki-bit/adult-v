@@ -5,7 +5,8 @@ import { setSeoConfig } from '@adult-v/shared/lib/seo';
 setSeoConfig({
   siteName: 'AVVIEWER LAB',
   alternateName: 'AVビューアーラボ',
-  defaultDescription: 'FANZA作品の検索・比較サービス。女優情報、ランキング、セール情報をヘビー視聴者向けに整理しています。',
+  defaultDescription:
+    'FANZA作品の検索・比較サービス。女優情報、ランキング、セール情報をヘビー視聴者向けに整理しています。',
 });
 
 export {

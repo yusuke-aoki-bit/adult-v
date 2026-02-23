@@ -43,10 +43,15 @@
     "filterSettings": "篩選設定",
     "newReleases": "新作發布女優",
     "popularActresses": "人氣女優",
-    "popularTags": "熱門標籤"
+    "popularTags": "熱門標籤",
+    "saleProducts": "特價促銷中",
+    "viewAllSales": "查看所有促銷商品",
+    "saleUntil": "截止至{date}",
+    "viewProductList": "全部作品",
+    "viewProductListDesc": "跨平台搜尋所有配信站點的作品"
   },
   "header": {
-    "title": "ADULT VIEWER LAB",
+    "title": "AVVIEWER LAB",
     "subtitle": "heavy user guide",
     "menu": "選單",
     "close": "關閉"
@@ -64,13 +69,13 @@
     "search": "搜尋"
   },
   "footer": {
-    "description": "跨平台成人串流媒體中心，涵蓋 DUGA / SOKMIL / DTI，為重度用戶提供基於女優的評論、排行榜和活動更新。",
+    "description": "FANZA作品搜尋和比較服務，提供女優評論、排行榜和重度用戶活動更新。",
     "links": "連結",
     "legal": "法律資訊",
     "privacy": "隱私政策",
     "terms": "服務條款",
     "contact": "聯絡我們",
-    "copyright": "© {year} Adult Viewer Lab. 版權所有。",
+    "copyright": "© {year} AVVIEWER LAB. 版權所有。",
     "affiliateNotice": "本站包含成人內容的聯盟連結。"
   },
   "uncategorized": {
@@ -101,6 +106,37 @@
     "viewAll": "查看全部",
     "viewMore": "查看更多"
   },
+  "relatedActresses": {
+    "title": "{name}的合作演員",
+    "description": "與該演員合作過的女優",
+    "costarCount": "次合作",
+    "productCount": "作品",
+    "genreMatch": "匹配"
+  },
+  "similarActresses": {
+    "title": "與{name}相似的女優",
+    "description": "出演相似類型作品的女優（非合作演員）",
+    "genreMatch": "匹配",
+    "productCount": "作品",
+    "matchingGenres": "共同類型"
+  },
+  "performerTopProducts": {
+    "title": "{name}的人氣作品TOP5",
+    "description": "基於評分、評論和瀏覽量的推薦作品",
+    "rating": "評分",
+    "reviews": "則評論",
+    "views": "次瀏覽",
+    "onSale": "促銷"
+  },
+  "performerOnSale": {
+    "title": "{name}的促銷作品",
+    "description": "限時特價！不容錯過",
+    "off": "折",
+    "endsIn": "剩餘{days}天",
+    "endsTomorrow": "明天截止",
+    "endsToday": "今天截止！",
+    "yen": "¥"
+  },
   "filter": {
     "genre": "類型",
     "site": "串流媒體網站",
@@ -118,7 +154,11 @@
     "other": "其他",
     "performerType": "出演形式",
     "solo": "單人出演",
-    "multi": "多人出演"
+    "multi": "多人出演",
+    "saleFilter": "促銷",
+    "onSaleOnly": "僅限促銷商品",
+    "reviewFilter": "評論",
+    "hasReviewOnly": "僅有評論"
   },
   "sort": {
     "nameAsc": "名稱（升序）",
@@ -138,6 +178,8 @@
     "totalProducts": "共 {count} 部作品",
     "metaTitle": "{name} - {count}部作品 | 免費樣片・多平台搜尋",
     "metaDescription": "{name}的{count}部作品跨平台搜尋。支援DUGA・MGS・DTI・加勒比・一本道・HEYZO等多站點作品資訊、價格比較、分類篩選。提供免費預覽影片。",
+    "metaTitleWithGenre": "{name}的{genre}作品列表 | 免費樣片・多平台搜尋",
+    "metaDescriptionWithGenre": "{name}的{genre}類型出演作品跨平台搜尋。支援DUGA・MGS・DTI・加勒比・一本道・HEYZO等多站點作品資訊。",
     "aliases": "別名",
     "height": "身高",
     "measurements": "三圍",
@@ -249,6 +291,86 @@
     "disclosure": "聯盟揭露",
     "disclaimerShort": "本站使用聯盟廣告。",
     "disclaimerFull": "本站是亞馬遜聯盟計劃的參與者，該計劃旨在透過廣告和連結到 Amazon.com 為網站提供賺取廣告費的方式。我們還參與 DUGA、SOKMIL 和 DTI 的聯盟計劃。"
+  },
+  "productCard": {
+    "enlargeImage": "放大圖片",
+    "playSampleVideo": "播放樣片影片",
+    "videoNotSupported": "您的瀏覽器不支援影片播放",
+    "performerInfo": "演員資訊",
+    "releaseDateTbd": "發售日期待定",
+    "productId": "作品ID",
+    "manufacturerId": "廠商編號",
+    "reviews": "則評價",
+    "minutes": "分鐘",
+    "subscriptionOnly": "僅限月費會員",
+    "viewDetails": "查看詳情",
+    "close": "關閉",
+    "clickToCloseEsc": "← 上一張 | 中央關閉 | 下一張 →",
+    "comingSoon": "即將上市",
+    "monthly": "月費",
+    "previousImage": "上一張圖片",
+    "nextImage": "下一張圖片",
+    "thumbnailAlt": "縮圖",
+    "saleTomorrow": "明天截止",
+    "saleEndsIn": "還剩{days}天",
+    "urgentLastHour": "現在！",
+    "urgentEndsIn": "剩餘{hours}小時",
+    "urgentEndsSoon": "還剩{hours}小時"
+  },
+  "imageLightbox": {
+    "close": "關閉",
+    "closeLightbox": "關閉圖片檢視器",
+    "lightboxTitle": "圖片檢視器",
+    "previous": "上一張",
+    "next": "下一張",
+    "clickToCloseEsc": "← 上一張 | 中央關閉 | 下一張 →",
+    "previousImage": "上一張圖片",
+    "nextImage": "下一張圖片",
+    "thumbnailAlt": "縮圖",
+    "viewDetails": "查看詳情"
+  },
+  "categories": {
+    "title": "類型・分類一覽",
+    "metaTitle": "類型・分類一覽 | 按類型搜尋AV作品 - AVVIEWER LAB",
+    "metaDescription": "按類型和分類搜尋FANZA AV作品。可按人氣類型、場景、玩法、體型等分類瀏覽作品。",
+    "description": "按類型和分類瀏覽所有作品。輕鬆找到您喜愛的作品。",
+    "popularGenres": "人氣類型",
+    "situationGenres": "場景類型",
+    "playGenres": "玩法類型",
+    "bodyTypeGenres": "體型類型",
+    "costumeGenres": "服裝類型",
+    "otherGenres": "其他",
+    "allCategories": "全部",
+    "productCount": "{count}件作品",
+    "noCategories": "未找到分類",
+    "viewProducts": "查看全部"
+  },
+  "stickyCta": {
+    "buyAt": "在{provider}觀看",
+    "urgentHours": "僅剩{hours}小時！",
+    "endsToday": "今日結束！",
+    "endsSoon": "還剩{days}天"
+  },
+  "personalized": {
+    "recentlyViewed": "最近瀏覽",
+    "count": "{count}筆紀錄",
+    "basedOnHistory": "根據您的瀏覽歷史推薦",
+    "clearHistory": "清除紀錄"
+  },
+  "viewingDiary": {
+    "markAsViewed": "標記已看",
+    "unmarkAsViewed": "取消標記",
+    "viewed": "已看",
+    "addedToDiary": "已新增至觀看日記",
+    "removedFromDiary": "已從觀看日記移除",
+    "viewCount": "已看{count}次"
+  },
+  "actressCard": {
+    "releaseCount": "出演數",
+    "trend": "趨勢",
+    "fanScore": "支持率",
+    "videos": "部",
+    "viewWorks": "查看作品"
   },
   "productVideoPlayer": {
     "playSampleVideo": "播放樣片影片",

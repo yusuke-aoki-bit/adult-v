@@ -4,7 +4,12 @@ import Link from 'next/link';
 import { useState, useEffect, useRef, memo, useCallback, useMemo, type ReactNode, type ComponentType } from 'react';
 import { useSearchParams, usePathname } from 'next/navigation';
 import { providerMeta } from '../../lib/providers';
-import { headerTranslations, useSaleStats, type SaleStats, type HeaderTranslation } from '../../lib/hooks/useHeaderStats';
+import {
+  headerTranslations,
+  useSaleStats,
+  type SaleStats,
+  type HeaderTranslation,
+} from '../../lib/hooks/useHeaderStats';
 import { localizedHref, locales, defaultLocale, type Locale } from '../../i18n';
 import { ASP_DISPLAY_ORDER, ASP_TO_PROVIDER_ID } from '../../constants/filters';
 
@@ -87,20 +92,32 @@ const DiaryIcon = () => (
 
 const ProfileIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const FavoritesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const WatchlistIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
     <path d="M10 12a2 2 0 100-4 2 2 0 000 4z" />
-    <path fillRule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -118,7 +135,11 @@ const StatisticsIcon = () => (
 
 const CalendarIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -130,13 +151,21 @@ const DiscoverIcon = () => (
 
 const CategoriesIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+    <path
+      fillRule="evenodd"
+      d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM3 15a1 1 0 011-1h6a1 1 0 110 2H4a1 1 0 01-1-1z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
 const ChevronDownIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 ml-0.5" viewBox="0 0 20 20" fill="currentColor">
-    <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+  <svg xmlns="http://www.w3.org/2000/svg" className="ml-0.5 h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+    <path
+      fillRule="evenodd"
+      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+      clipRule="evenodd"
+    />
   </svg>
 );
 
@@ -177,7 +206,7 @@ const DropdownMenu = memo(function DropdownMenu({ label, children, isOpen, onTog
     <div ref={menuRef} className="relative">
       <button
         onClick={onToggle}
-        className="theme-nav-link transition-colors font-medium flex items-center text-sm px-2 py-1 rounded hover:bg-white/10"
+        className="theme-nav-link flex items-center rounded px-2 py-1 text-sm font-medium transition-colors hover:bg-white/10"
         aria-expanded={isOpen}
         aria-haspopup="true"
       >
@@ -185,7 +214,7 @@ const DropdownMenu = memo(function DropdownMenu({ label, children, isOpen, onTog
         <ChevronDownIcon />
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 py-1 min-w-[160px] theme-dropdown rounded-lg shadow-lg border theme-border z-50">
+        <div className="theme-dropdown theme-border absolute top-full left-0 z-50 mt-1 min-w-[160px] rounded-lg border py-1 shadow-lg">
           {children}
         </div>
       )}
@@ -194,7 +223,7 @@ const DropdownMenu = memo(function DropdownMenu({ label, children, isOpen, onTog
 });
 
 const MenuIcon = ({ isOpen }: { isOpen: boolean }) => (
-  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
     {isOpen ? (
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
     ) : (
@@ -241,7 +270,7 @@ export const HeaderBase = memo(function HeaderBase({
 
   // ドロップダウン制御
   const handleDropdownToggle = useCallback((menu: 'browse' | 'tools' | 'my' | 'community') => {
-    setOpenDropdown(prev => prev === menu ? null : menu);
+    setOpenDropdown((prev) => (prev === menu ? null : menu));
   }, []);
 
   const handleDropdownClose = useCallback(() => {
@@ -261,9 +290,8 @@ export const HeaderBase = memo(function HeaderBase({
   // FANZAはヘッダーではなく各ページ（女優、商品）で専用リンクとして表示
   const aspList = useMemo(() => {
     if (isFanzaSite) return [];
-    return ASP_DISPLAY_ORDER
-      .filter(aspName => aspName !== 'fanza') // FANZAはヘッダーから除外
-      .map(aspName => ({
+    return ASP_DISPLAY_ORDER.filter((aspName) => aspName !== 'fanza') // FANZAはヘッダーから除外
+      .map((aspName) => ({
         aspName,
         providerId: ASP_TO_PROVIDER_ID[aspName] ?? 'duga',
       }));
@@ -288,7 +316,7 @@ export const HeaderBase = memo(function HeaderBase({
 
     // フォーカス可能な要素を取得
     const focusableElements = menu.querySelectorAll<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
     );
     const firstElement = focusableElements[0];
     const lastElement = focusableElements[focusableElements.length - 1];
@@ -348,10 +376,7 @@ export const HeaderBase = memo(function HeaderBase({
 
   // デフォルトロゴ
   const defaultLogo = (
-    <Link
-      href={localizedHref('/', locale)}
-      className="header-logo flex items-center space-x-2 shrink-0"
-    >
+    <Link href={localizedHref('/', locale)} className="header-logo flex shrink-0 items-center space-x-2">
       {isFanzaSite ? (
         <div className="text-2xl font-bold tracking-tight">
           <span className="theme-logo-primary">FANZA</span>
@@ -363,9 +388,7 @@ export const HeaderBase = memo(function HeaderBase({
             <span className="theme-logo-primary">ADULT</span>
             <span className="theme-logo-secondary">VIEWER LAB</span>
           </div>
-          <span className="text-xs uppercase tracking-widest theme-logo-subtitle hidden sm:inline">
-            {t.subtitle}
-          </span>
+          <span className="theme-logo-subtitle hidden text-xs tracking-widest uppercase sm:inline">{t.subtitle}</span>
         </>
       )}
     </Link>
@@ -373,33 +396,31 @@ export const HeaderBase = memo(function HeaderBase({
 
   return (
     <header
-      className={`theme-header border-b sticky top-0 z-50 transition-transform duration-300 ${
+      className={`theme-header sticky top-0 z-50 border-b transition-transform duration-300 ${
         isHidden ? '-translate-y-full' : 'translate-y-0'
       }`}
     >
       {/* 広告表記・成人向けコンテンツ注意文（景品表示法・ステマ規制対応） */}
       <div className="theme-header-notice border-b">
-        <div className="container mx-auto px-3 sm:px-4 py-1">
-          <p className="text-[10px] sm:text-xs theme-header-notice-text text-center leading-tight">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1 rounded mr-1">PR</span>
+        <div className="container mx-auto px-3 py-1 sm:px-4">
+          <p className="theme-header-notice-text text-center text-[10px] leading-tight sm:text-xs">
+            <span className="mr-1 rounded bg-yellow-900/30 px-1 font-bold text-yellow-400">PR</span>
             {t.adultNotice.replace(/^【PR】|^\[PR\]|^【广告】/, '')}
           </p>
         </div>
       </div>
       <div className="container mx-auto px-4">
-        <div className="flex items-center h-16 gap-4">
+        <div className="flex h-16 items-center gap-4">
           {/* ロゴ */}
           {renderLogo ? renderLogo(locale, t) : defaultLogo}
 
           {/* 検索バー（デスクトップ） */}
-          <div className="hidden md:block flex-1 max-w-md">
+          <div className="hidden max-w-md flex-1 md:block">
             <SearchBar />
           </div>
 
           {/* デスクトップナビゲーション - ドロップダウンメニュー形式 */}
-          <nav
-            className="hidden md:flex items-center gap-1 shrink-0 theme-nav ml-auto"
-          >
+          <nav className="theme-nav ml-auto hidden shrink-0 items-center gap-1 md:flex">
             {/* コンテンツメニュー */}
             <DropdownMenu
               label={t.menuBrowse}
@@ -409,7 +430,7 @@ export const HeaderBase = memo(function HeaderBase({
             >
               <Link
                 href={localizedHref('/', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <ActressesIcon />
@@ -417,7 +438,7 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/products', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <ProductsIcon />
@@ -425,7 +446,7 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/categories', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <CategoriesIcon />
@@ -433,7 +454,7 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/calendar', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <CalendarIcon />
@@ -441,7 +462,7 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/discover', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <DiscoverIcon />
@@ -449,36 +470,36 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               {!isFanzaSite && (
                 <>
-                  <div className="border-t theme-border my-1" />
+                  <div className="theme-border my-1 border-t" />
                   <Link
                     href={localizedHref('/daily-pick', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.dailyPick}
                   </Link>
                   <Link
                     href={localizedHref('/weekly-report', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.weeklyTrends}
                   </Link>
                   <Link
                     href={localizedHref('/hidden-gems', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.hiddenGems}
                   </Link>
                   <Link
                     href={localizedHref('/rookies', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.rookies}
                   </Link>
-                  <div className="border-t theme-border my-1" />
+                  <div className="theme-border my-1 border-t" />
                   <Link
                     href={localizedHref('/sales', locale)}
                     className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-orange-400 hover:bg-orange-500/20"
@@ -500,7 +521,7 @@ export const HeaderBase = memo(function HeaderBase({
             >
               <Link
                 href={localizedHref('/statistics', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <StatisticsIcon />
@@ -508,7 +529,7 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/compare', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <CompareIcon />
@@ -516,7 +537,7 @@ export const HeaderBase = memo(function HeaderBase({
               </Link>
               <Link
                 href={localizedHref('/profile', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 <ProfileIcon />
@@ -533,7 +554,7 @@ export const HeaderBase = memo(function HeaderBase({
             >
               <Link
                 href={localizedHref('/lists', locale)}
-                className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                 onClick={handleDropdownClose}
               >
                 {t.publicLists}
@@ -542,21 +563,21 @@ export const HeaderBase = memo(function HeaderBase({
                 <>
                   <Link
                     href={localizedHref('/lists/ranking', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.listRanking}
                   </Link>
                   <Link
                     href={localizedHref('/reviewers', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.reviewers}
                   </Link>
                   <Link
                     href={localizedHref('/vote', locale)}
-                    className="flex items-center gap-2 px-3 py-2 text-sm theme-dropdown-item hover:bg-white/10"
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
                     onClick={handleDropdownClose}
                   >
                     {t.voteRanking}
@@ -566,7 +587,7 @@ export const HeaderBase = memo(function HeaderBase({
             </DropdownMenu>
 
             {/* 通知・言語切り替え・ユーザーメニュー */}
-            <div className="flex items-center gap-2 ml-2">
+            <div className="ml-2 flex items-center gap-2">
               <NotificationSubscriber />
               <LanguageSwitcher />
               <UserMenu locale={locale} />
@@ -576,7 +597,7 @@ export const HeaderBase = memo(function HeaderBase({
           {/* モバイルメニューボタン - 48x48pxタッチターゲット確保 */}
           <button
             ref={menuButtonRef}
-            className="md:hidden p-2 min-w-[48px] min-h-[48px] flex items-center justify-center -mr-2"
+            className="-mr-2 flex min-h-[48px] min-w-[48px] items-center justify-center p-2 md:hidden"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             aria-label={isMobileMenuOpen ? t.closeMenu : t.menu}
             aria-expanded={isMobileMenuOpen}
@@ -591,7 +612,7 @@ export const HeaderBase = memo(function HeaderBase({
           <nav
             ref={mobileMenuRef}
             id="mobile-menu"
-            className="md:hidden py-3 space-y-1 border-t theme-border max-h-[calc(100dvh-100px)] overflow-y-auto"
+            className="theme-border max-h-[calc(100dvh-100px)] space-y-1 overflow-y-auto border-t py-3 md:hidden"
             role="navigation"
             aria-label={t.mobileNav}
           >
@@ -602,11 +623,13 @@ export const HeaderBase = memo(function HeaderBase({
 
             {/* コンテンツ */}
             <div className="theme-nav" role="list">
-              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuBrowse}</p>
+              <p className="theme-text-muted px-1 py-1 text-xs font-semibold tracking-wider uppercase">
+                {t.menuBrowse}
+              </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                 <Link
                   href={localizedHref('/', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-actresses transition-colors text-sm"
+                  className="theme-nav-actresses flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -615,7 +638,7 @@ export const HeaderBase = memo(function HeaderBase({
                 </Link>
                 <Link
                   href={localizedHref('/products', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-products transition-colors text-sm"
+                  className="theme-nav-products flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -624,7 +647,7 @@ export const HeaderBase = memo(function HeaderBase({
                 </Link>
                 <Link
                   href={localizedHref('/categories', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -633,7 +656,7 @@ export const HeaderBase = memo(function HeaderBase({
                 </Link>
                 <Link
                   href={localizedHref('/calendar', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-calendar transition-colors text-sm"
+                  className="theme-nav-calendar flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -642,7 +665,7 @@ export const HeaderBase = memo(function HeaderBase({
                 </Link>
                 <Link
                   href={localizedHref('/discover', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-discover transition-colors text-sm"
+                  className="theme-nav-discover flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -653,7 +676,7 @@ export const HeaderBase = memo(function HeaderBase({
                   <>
                     <Link
                       href={localizedHref('/daily-pick', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -661,7 +684,7 @@ export const HeaderBase = memo(function HeaderBase({
                     </Link>
                     <Link
                       href={localizedHref('/weekly-report', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -669,7 +692,7 @@ export const HeaderBase = memo(function HeaderBase({
                     </Link>
                     <Link
                       href={localizedHref('/hidden-gems', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -677,7 +700,7 @@ export const HeaderBase = memo(function HeaderBase({
                     </Link>
                     <Link
                       href={localizedHref('/rookies', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -685,11 +708,11 @@ export const HeaderBase = memo(function HeaderBase({
                     </Link>
                     <Link
                       href={localizedHref('/sales', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center text-orange-400 font-bold transition-colors text-sm col-span-2"
+                      className="col-span-2 flex min-h-[44px] items-center py-2.5 text-sm font-bold text-orange-400 transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
-                      <span className="text-lg mr-2">🔥</span>
+                      <span className="mr-2 text-lg">🔥</span>
                       {t.onSaleProducts}
                     </Link>
                   </>
@@ -698,12 +721,12 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
 
             {/* ツール */}
-            <div className="theme-nav pt-2 border-t theme-border" role="list">
-              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuTools}</p>
+            <div className="theme-nav theme-border border-t pt-2" role="list">
+              <p className="theme-text-muted px-1 py-1 text-xs font-semibold tracking-wider uppercase">{t.menuTools}</p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                 <Link
                   href={localizedHref('/statistics', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-statistics transition-colors text-sm"
+                  className="theme-nav-statistics flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -712,7 +735,7 @@ export const HeaderBase = memo(function HeaderBase({
                 </Link>
                 <Link
                   href={localizedHref('/compare', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-compare transition-colors text-sm"
+                  className="theme-nav-compare flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -721,7 +744,7 @@ export const HeaderBase = memo(function HeaderBase({
                 </Link>
                 <Link
                   href={localizedHref('/profile', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-profile transition-colors text-sm"
+                  className="theme-nav-profile flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -732,12 +755,14 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
 
             {/* コミュニティ */}
-            <div className="theme-nav pt-2 border-t theme-border" role="list">
-              <p className="text-xs font-semibold theme-text-muted uppercase tracking-wider px-1 py-1">{t.menuCommunity}</p>
+            <div className="theme-nav theme-border border-t pt-2" role="list">
+              <p className="theme-text-muted px-1 py-1 text-xs font-semibold tracking-wider uppercase">
+                {t.menuCommunity}
+              </p>
               <div className="grid grid-cols-2 gap-x-4 gap-y-0">
                 <Link
                   href={localizedHref('/lists', locale)}
-                  className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                  className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                   onClick={handleMobileMenuClose}
                   role="listitem"
                 >
@@ -747,7 +772,7 @@ export const HeaderBase = memo(function HeaderBase({
                   <>
                     <Link
                       href={localizedHref('/lists/ranking', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -755,7 +780,7 @@ export const HeaderBase = memo(function HeaderBase({
                     </Link>
                     <Link
                       href={localizedHref('/reviewers', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -763,7 +788,7 @@ export const HeaderBase = memo(function HeaderBase({
                     </Link>
                     <Link
                       href={localizedHref('/vote', locale)}
-                      className="py-2.5 min-h-[44px] flex items-center theme-nav-link transition-colors text-sm"
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
                       onClick={handleMobileMenuClose}
                       role="listitem"
                     >
@@ -782,8 +807,8 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
 
             {/* ASPリンク（モバイル用） */}
-            <div className="pt-2 border-t theme-border">
-              <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="theme-border border-t pt-2">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <AspBadgeList
                   aspList={aspList}
                   saleStats={saleStats}
@@ -799,9 +824,9 @@ export const HeaderBase = memo(function HeaderBase({
       </div>
 
       {/* ASPリンクバー - デスクトップのみ表示 */}
-      <div className="hidden md:block theme-asp-bar border-t">
+      <div className="theme-asp-bar hidden border-t md:block">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-1.5 flex-wrap min-h-[36px]">
+          <div className="flex min-h-[36px] flex-wrap items-center gap-2 py-1.5">
             <AspBadgeList
               aspList={aspList}
               saleStats={saleStats}

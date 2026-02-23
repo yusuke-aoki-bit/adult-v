@@ -22,13 +22,13 @@ export default function ProductSkeleton({ count = 8, size, compact = false }: Pr
     // ミニスケルトン（セクション用: 4-6-8列グリッド）
     // ProductCardのminiサイズに合わせて、タイトル2行分の高さを確保
     return (
-      <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+      <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="theme-skeleton-card rounded-lg overflow-hidden animate-pulse">
+          <div key={i} className="theme-skeleton-card animate-pulse overflow-hidden rounded-lg">
             <div className="theme-skeleton-image" style={{ aspectRatio: '2/3' }} />
-            <div className="p-1.5 space-y-1">
-              <div className="h-2.5 theme-skeleton-image rounded w-full" />
-              <div className="h-2.5 theme-skeleton-image rounded w-2/3" />
+            <div className="space-y-1 p-1.5">
+              <div className="theme-skeleton-image h-2.5 w-full rounded" />
+              <div className="theme-skeleton-image h-2.5 w-2/3 rounded" />
             </div>
           </div>
         ))}
@@ -39,13 +39,13 @@ export default function ProductSkeleton({ count = 8, size, compact = false }: Pr
   if (effectiveSize === 'compact') {
     // コンパクトスケルトン（8列グリッド）
     return (
-      <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8">
         {Array.from({ length: count }).map((_, i) => (
-          <div key={i} className="theme-skeleton-card rounded-lg overflow-hidden animate-pulse">
+          <div key={i} className="theme-skeleton-card animate-pulse overflow-hidden rounded-lg">
             <div className="theme-skeleton-image" style={{ aspectRatio: '2/3' }} />
-            <div className="p-2 space-y-1">
-              <div className="h-3 theme-skeleton-image rounded w-3/4" />
-              <div className="h-2 theme-skeleton-image rounded w-1/2" />
+            <div className="space-y-1 p-2">
+              <div className="theme-skeleton-image h-3 w-3/4 rounded" />
+              <div className="theme-skeleton-image h-2 w-1/2 rounded" />
             </div>
           </div>
         ))}
@@ -55,13 +55,13 @@ export default function ProductSkeleton({ count = 8, size, compact = false }: Pr
 
   // フルスケルトン（4列グリッド）
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="theme-skeleton-card rounded-2xl overflow-hidden animate-pulse">
+        <div key={i} className="theme-skeleton-card animate-pulse overflow-hidden rounded-2xl">
           <div className="theme-skeleton-image" style={{ height: '18rem' }} />
-          <div className="p-4 space-y-2">
-            <div className="h-4 theme-skeleton-image rounded w-3/4" />
-            <div className="h-3 theme-skeleton-image rounded w-1/2" />
+          <div className="space-y-2 p-4">
+            <div className="theme-skeleton-image h-4 w-3/4 rounded" />
+            <div className="theme-skeleton-image h-3 w-1/2 rounded" />
           </div>
         </div>
       ))}

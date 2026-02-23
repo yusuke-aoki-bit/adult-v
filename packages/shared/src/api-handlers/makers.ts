@@ -14,7 +14,7 @@ export function createMakersGetHandler(deps: MakersHandlerDeps) {
   return async function GET(request: NextRequest) {
     try {
       const searchParams = request.nextUrl.searchParams;
-      const category = searchParams.get('category') as 'maker' | 'label' | 'both' || 'both';
+      const category = (searchParams.get('category') as 'maker' | 'label' | 'both') || 'both';
       const limit = parseInt(searchParams.get('limit') || '20', 10);
       const locale = searchParams.get('locale') || 'ja';
 

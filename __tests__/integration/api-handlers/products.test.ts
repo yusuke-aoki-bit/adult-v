@@ -3,7 +3,11 @@
  * 依存関係をモックしてAPIハンドラーの動作を検証
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { createProductsHandler, type ProductsHandlerDeps, type GetProductsParams } from '@adult-v/shared/api-handlers/products';
+import {
+  createProductsHandler,
+  type ProductsHandlerDeps,
+  type GetProductsParams,
+} from '@adult-v/shared/api-handlers/products';
 
 // モックデータ
 const mockProducts = [
@@ -71,7 +75,7 @@ describe('Products API Handler Integration', () => {
         expect.objectContaining({
           limit: 48, // デフォルトは48
           offset: 0,
-        })
+        }),
       );
     });
 
@@ -85,7 +89,7 @@ describe('Products API Handler Integration', () => {
         expect.objectContaining({
           limit: 24,
           offset: 20,
-        })
+        }),
       );
     });
 
@@ -98,7 +102,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           ids: [1, 2, 3],
-        })
+        }),
       );
     });
 
@@ -111,7 +115,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           provider: 'fanza',
-        })
+        }),
       );
     });
 
@@ -124,7 +128,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           providers: ['fanza', 'mgs'],
-        })
+        }),
       );
     });
 
@@ -137,7 +141,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           excludeProviders: ['duga'],
-        })
+        }),
       );
     });
 
@@ -150,7 +154,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           actressId: '123',
-        })
+        }),
       );
     });
 
@@ -165,7 +169,7 @@ describe('Products API Handler Integration', () => {
           isFeatured: true,
           isNew: true,
           hasVideo: true,
-        })
+        }),
       );
     });
 
@@ -178,7 +182,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           sortBy: 'priceAsc',
-        })
+        }),
       );
     });
 
@@ -203,7 +207,7 @@ describe('Products API Handler Integration', () => {
         expect.objectContaining({
           minPrice: 500,
           maxPrice: 2000,
-        })
+        }),
       );
     });
 
@@ -216,7 +220,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           minPrice: 3000,
-        })
+        }),
       );
     });
 
@@ -229,7 +233,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           query: 'テスト',
-        })
+        }),
       );
     });
 
@@ -242,7 +246,7 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           category: 'premium',
-        })
+        }),
       );
     });
   });
@@ -354,9 +358,9 @@ describe('Products API Handler Integration', () => {
       expect(mockGetProducts).toHaveBeenCalledWith(
         expect.objectContaining({
           ids: [1, 2, 3],
-          limit: 3,  // adjusted to ids.length
+          limit: 3, // adjusted to ids.length
           offset: 0, // adjusted to 0
-        })
+        }),
       );
     });
 
@@ -371,7 +375,7 @@ describe('Products API Handler Integration', () => {
           ids: [1, 2, 3],
           limit: 24,
           offset: 24,
-        })
+        }),
       );
     });
   });

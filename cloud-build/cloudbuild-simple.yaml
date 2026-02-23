@@ -1,18 +1,18 @@
 steps:
-  - name: "gcr.io/cloud-builders/docker"
+  - name: 'gcr.io/cloud-builders/docker'
     args:
-      - "build"
-      - "-t"
-      - "asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest"
-      - "-f"
-      - "docker/Dockerfile.crawler"
-      - "."
+      - 'build'
+      - '-t'
+      - 'asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest'
+      - '-f'
+      - 'docker/Dockerfile.crawler'
+      - '.'
 
 images:
-  - "asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest"
+  - 'asia-northeast1-docker.pkg.dev/adult-v/cloud-run-source-deploy/crawlers:latest'
 
 options:
   logging: CLOUD_LOGGING_ONLY
-  machineType: "E2_STANDARD_2"
+  machineType: 'E2_STANDARD_2'
 
-timeout: "1200s"
+timeout: '1200s'

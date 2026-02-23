@@ -58,9 +58,7 @@ async function getStats(): Promise<PipelineStats> {
     const totalProducts = parseInt(totalResult.rows[0].count, 10);
 
     // 演者紐付け済み商品
-    const linkedResult = await client.query(
-      'SELECT COUNT(DISTINCT product_id) FROM product_performers'
-    );
+    const linkedResult = await client.query('SELECT COUNT(DISTINCT product_id) FROM product_performers');
     const productsWithPerformers = parseInt(linkedResult.rows[0].count, 10);
 
     // wiki_crawl_data件数
@@ -94,8 +92,12 @@ async function showStats(): Promise<void> {
 
   console.log(`\n商品統計:`);
   console.log(`  総商品数:           ${stats.totalProducts.toLocaleString()}`);
-  console.log(`  演者紐付け済み:     ${stats.productsWithPerformers.toLocaleString()} (${((stats.productsWithPerformers / stats.totalProducts) * 100).toFixed(1)}%)`);
-  console.log(`  未紐付け:           ${stats.productsWithoutPerformers.toLocaleString()} (${((stats.productsWithoutPerformers / stats.totalProducts) * 100).toFixed(1)}%)`);
+  console.log(
+    `  演者紐付け済み:     ${stats.productsWithPerformers.toLocaleString()} (${((stats.productsWithPerformers / stats.totalProducts) * 100).toFixed(1)}%)`,
+  );
+  console.log(
+    `  未紐付け:           ${stats.productsWithoutPerformers.toLocaleString()} (${((stats.productsWithoutPerformers / stats.totalProducts) * 100).toFixed(1)}%)`,
+  );
 
   console.log(`\nルックアップデータ:`);
   console.log(`  wiki_crawl_data:          ${stats.wikiCrawlDataCount.toLocaleString()} レコード`);
@@ -124,7 +126,7 @@ async function showStats(): Promise<void> {
     for (const row of aspStats.rows) {
       const rate = ((row.linked / row.total) * 100).toFixed(1);
       console.log(
-        `  ${row.asp_name.padEnd(15)} ${row.total.toString().padStart(8)} ${row.linked.toString().padStart(8)} ${(rate + '%').padStart(8)}`
+        `  ${row.asp_name.padEnd(15)} ${row.total.toString().padStart(8)} ${row.linked.toString().padStart(8)} ${(rate + '%').padStart(8)}`,
       );
     }
   } finally {
@@ -193,31 +195,26 @@ async function stepCrawl(options: { sources?: string[]; limit?: number }): Promi
     switch (source) {
       case 'seesaawiki':
         // seesaawiki並列クローラー
-        results.push(
-          await runScript(
-            'packages/crawlers/src/enrichment/wiki/crawl-wiki-parallel.ts',
-            ['1', '100']
-          )
-        );
+        results.push(await runScript('packages/crawlers/src/enrichment/wiki/crawl-wiki-parallel.ts', ['1', '100']));
         break;
 
       case 'av-wiki':
         // av-wiki クローラー
         results.push(
-          await runScript(
-            'packages/crawlers/src/performers/wiki-sources/crawl-wiki-performers.ts',
-            ['av-wiki-all', String(options.limit || 10000)]
-          )
+          await runScript('packages/crawlers/src/performers/wiki-sources/crawl-wiki-performers.ts', [
+            'av-wiki-all',
+            String(options.limit || 10000),
+          ]),
         );
         break;
 
       case 'shiroutoname':
         // 素人名鑑クローラー
         results.push(
-          await runScript(
-            'packages/crawlers/src/performers/wiki-sources/crawl-wiki-performers.ts',
-            ['shiroutoname-all', String(options.limit || 10000)]
-          )
+          await runScript('packages/crawlers/src/performers/wiki-sources/crawl-wiki-performers.ts', [
+            'shiroutoname-all',
+            String(options.limit || 10000),
+          ]),
         );
         break;
 
@@ -240,19 +237,13 @@ async function stepLink(options: { limit?: number; dryRun?: boolean }): Promise<
   if (options.limit) args.push(`--limit=${options.limit}`);
   if (options.dryRun) args.push('--dry-run');
 
-  return runScript(
-    'packages/crawlers/src/enrichment/performer-linking/link-wiki-performers.ts',
-    args
-  );
+  return runScript('packages/crawlers/src/enrichment/performer-linking/link-wiki-performers.ts', args);
 }
 
 /**
  * Step 3: 未紐付け商品のWeb検索
  */
-async function stepSearch(options: {
-  asp?: string;
-  limit?: number;
-}): Promise<StepResult> {
+async function stepSearch(options: { asp?: string; limit?: number }): Promise<StepResult> {
   console.log('\n🔍 Step 3: 未紐付け商品のWeb検索');
   console.log('='.repeat(50));
 

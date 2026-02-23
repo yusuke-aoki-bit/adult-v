@@ -35,17 +35,12 @@ export interface PerformerStructuredData {
 /**
  * Generate JSON-LD for a product/video
  */
-export function generateProductJsonLd(
-  product: ProductStructuredData,
-  locale: string = 'ja'
-): string {
+export function generateProductJsonLd(product: ProductStructuredData, locale: string = 'ja'): string {
   const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
   const productUrl = `${baseUrl}${localizedHref(`/products/${product['id']}`, locale)}`;
 
   // Find the lowest price from all sources
-  const prices = product.productSources
-    .map(s => s.price)
-    .filter((price): price is number => price !== null);
+  const prices = product.productSources.map((s) => s.price).filter((price): price is number => price !== null);
   const minPrice = prices.length > 0 ? Math.min(...prices) : null;
 
   const jsonLd = {
@@ -58,32 +53,34 @@ export function generateProductJsonLd(
     duration: product['duration'] ? `PT${product['duration']}M` : undefined,
     contentUrl: productUrl,
     // Actors
-    actor: product.performers.map(performer => ({
+    actor: product.performers.map((performer) => ({
       '@type': 'Person',
       name: performer['name'],
       url: `${baseUrl}${localizedHref(`/performers/${performer['id']}`, locale)}`,
     })),
     // Tags as keywords
-    keywords: product.tags.map(tag => tag['name']).join(', '),
+    keywords: product.tags.map((tag) => tag['name']).join(', '),
     // Offers - aggregate from all sources
-    offers: minPrice ? {
-      '@type': 'AggregateOffer',
-      priceCurrency: 'JPY',
-      lowPrice: minPrice,
-      offerCount: product.productSources.length,
-      offers: product.productSources
-        .filter(s => s.price !== null)
-        .map(source => ({
-          '@type': 'Offer',
-          price: source.price,
+    offers: minPrice
+      ? {
+          '@type': 'AggregateOffer',
           priceCurrency: 'JPY',
-          seller: {
-            '@type': 'Organization',
-            name: source.aspName,
-          },
-          url: source.affiliateUrl,
-        })),
-    } : undefined,
+          lowPrice: minPrice,
+          offerCount: product.productSources.length,
+          offers: product.productSources
+            .filter((s) => s.price !== null)
+            .map((source) => ({
+              '@type': 'Offer',
+              price: source.price,
+              priceCurrency: 'JPY',
+              seller: {
+                '@type': 'Organization',
+                name: source.aspName,
+              },
+              url: source.affiliateUrl,
+            })),
+        }
+      : undefined,
     // Breadcrumbs
     breadcrumb: {
       '@type': 'BreadcrumbList',
@@ -113,10 +110,7 @@ export function generateProductJsonLd(
 /**
  * Generate JSON-LD for a performer/actress
  */
-export function generatePerformerJsonLd(
-  performer: PerformerStructuredData,
-  locale: string = 'ja'
-): string {
+export function generatePerformerJsonLd(performer: PerformerStructuredData, locale: string = 'ja'): string {
   const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
   const performerUrl = `${baseUrl}${localizedHref(`/performers/${performer['id']}`, locale)}`;
 
@@ -158,11 +152,7 @@ export function generatePerformerJsonLd(
 /**
  * Generate JSON-LD for a list page (e.g., homepage, category page)
  */
-export function generateListPageJsonLd(
-  title: string,
-  description: string,
-  locale: string = 'ja'
-): string {
+export function generateListPageJsonLd(title: string, description: string, locale: string = 'ja'): string {
   const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
 
   const jsonLd = {

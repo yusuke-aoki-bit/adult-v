@@ -22,7 +22,9 @@ export function createFooterActressesHandler(deps: FooterActressesHandlerDeps) {
         select: (cols: Record<string, unknown>) => {
           from: (table: unknown) => {
             orderBy: (col: unknown) => {
-              limit: (n: number) => Promise<Array<{ id: number; name: string; impressions: number | null; position: number | null }>>;
+              limit: (
+                n: number,
+              ) => Promise<Array<{ id: number; name: string; impressions: number | null; position: number | null }>>;
             };
           };
         };

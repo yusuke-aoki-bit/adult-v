@@ -52,7 +52,7 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[], baseUrl?: stri
       '@type': 'ListItem' as const,
       position: index + 1,
       name: item.label,
-      item: baseUrl && item.href ? `${baseUrl}${item.href}` : item.href ?? '',
+      item: baseUrl && item.href ? `${baseUrl}${item.href}` : (item.href ?? ''),
     }));
 
   // 最後のアイテム（現在のページ）も追加（itemは省略可能）
@@ -73,7 +73,13 @@ export function generateBreadcrumbSchema(items: BreadcrumbItem[], baseUrl?: stri
   };
 }
 
-export default function Breadcrumb({ items, className = '', theme: themeProp, baseUrl, includeSchema = false }: BreadcrumbProps) {
+export default function Breadcrumb({
+  items,
+  className = '',
+  theme: themeProp,
+  baseUrl,
+  includeSchema = false,
+}: BreadcrumbProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
   const config = themeConfig[theme];
@@ -83,31 +89,24 @@ export default function Breadcrumb({ items, className = '', theme: themeProp, ba
     <>
       {/* JSON-LD構造化データ（includeSchema=trueの場合のみ） */}
       {schemaData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }} />
       )}
-      <nav aria-label="Breadcrumb" className={`text-sm sm:text-base whitespace-nowrap ${className}`}>
+      <nav aria-label="Breadcrumb" className={`text-sm whitespace-nowrap sm:text-base ${className}`}>
         <ol className="flex items-center gap-1" role="list">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
 
             return (
-              <li
-                key={`${item.href || 'current'}-${item.label}`}
-                className="inline-flex items-center gap-1"
-              >
+              <li key={`${item.href || 'current'}-${item.label}`} className="inline-flex items-center gap-1">
                 {index > 0 && (
-                  <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 shrink-0" aria-hidden="true" />
+                  <ChevronRight className="h-3 w-3 shrink-0 text-gray-500 sm:h-4 sm:w-4" aria-hidden="true" />
                 )}
                 {isLast || !item.href ? (
-                  <span className={config.currentItem} aria-current="page">{item.label}</span>
+                  <span className={config.currentItem} aria-current="page">
+                    {item.label}
+                  </span>
                 ) : (
-                  <Link
-                    href={item.href}
-                    className={`${config.link} transition-colors`}
-                  >
+                  <Link href={item.href} className={`${config.link} transition-colors`}>
                     {item.label}
                   </Link>
                 )}

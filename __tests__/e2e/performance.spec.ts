@@ -19,12 +19,14 @@ const THRESHOLDS = {
 
 test.describe('Performance Tests', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage loads within acceptable time', async ({ page }) => {
@@ -84,12 +86,14 @@ test.describe('Performance Tests', () => {
 
 test.describe('Core Web Vitals', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('measures LCP on homepage', async ({ page }) => {
@@ -168,12 +172,14 @@ test.describe('Core Web Vitals', () => {
 
 test.describe('Resource Loading', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage does not have excessive requests', async ({ page }) => {
@@ -216,9 +222,7 @@ test.describe('Resource Loading', () => {
     // render-blocking リソースをチェック
     const blockingResources = await page.evaluate(() => {
       const resources = performance.getEntriesByType('resource') as PerformanceResourceTiming[];
-      return resources
-        .filter(r => (r as any).renderBlockingStatus === 'blocking')
-        .map(r => r.name);
+      return resources.filter((r) => (r as any).renderBlockingStatus === 'blocking').map((r) => r.name);
     });
 
     console.log(`Blocking resources: ${blockingResources.length}`);
@@ -230,12 +234,14 @@ test.describe('Resource Loading', () => {
 
 test.describe('Caching', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('static assets have cache headers', async ({ page }) => {
@@ -288,12 +294,14 @@ test.describe('Mobile Performance', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('mobile homepage loads within acceptable time', async ({ page }) => {

@@ -13,10 +13,7 @@ export interface KeywordsHandlerDeps {
 }
 
 export function createKeywordsHandler(deps: KeywordsHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
 

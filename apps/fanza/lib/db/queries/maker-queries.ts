@@ -11,8 +11,4 @@
  */
 
 // 現在は queries.ts から re-export
-export {
-  getMakerById,
-  getPopularMakers,
-  analyzeMakerPreference,
-} from '../queries';
+export { getMakerById, getPopularMakers, analyzeMakerPreference } from '../queries';

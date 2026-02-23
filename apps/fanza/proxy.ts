@@ -42,9 +42,12 @@ export default function proxy(request: NextRequest) {
   const contentType = request.headers.get('content-type') || '';
   if (pathname.startsWith('/api') && request.method === 'POST') {
     // For POST requests to API, ensure proper content type
-    if (contentType && !contentType.includes('application/json') &&
-        !contentType.includes('application/x-www-form-urlencoded') &&
-        !contentType.includes('multipart/form-data')) {
+    if (
+      contentType &&
+      !contentType.includes('application/json') &&
+      !contentType.includes('application/x-www-form-urlencoded') &&
+      !contentType.includes('multipart/form-data')
+    ) {
       console.warn('[proxy] Suspicious content-type:', contentType);
       return new NextResponse('Unsupported Media Type', { status: 415 });
     }

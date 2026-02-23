@@ -255,11 +255,7 @@ export class SokmilApiClient {
   private readonly apiKey: string;
   private readonly affiliateId: string;
 
-  constructor(config: {
-    apiKey: string;
-    affiliateId?: string;
-    baseUrl?: string;
-  }) {
+  constructor(config: { apiKey: string; affiliateId?: string; baseUrl?: string }) {
     this.apiKey = config.apiKey;
     this.affiliateId = config.affiliateId || '47418-001';
     // 正しいSOKMIL API エンドポイント (api.サブドメインではなくルート)
@@ -273,20 +269,20 @@ export class SokmilApiClient {
    * @param params パラメータ
    * @returns レスポンス
    */
-  private async request<T>(
-    endpoint: string,
-    params: Record<string, any> = {}
-  ): Promise<SokmilApiResponse<T>> {
+  private async request<T>(endpoint: string, params: Record<string, any> = {}): Promise<SokmilApiResponse<T>> {
     const searchParams = new URLSearchParams({
       affiliate_id: this.affiliateId,
       api_key: this.apiKey,
       output: 'json',
-      ...Object.entries(params).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== null) {
-          acc[key] = String(value);
-        }
-        return acc;
-      }, {} as Record<string, string>),
+      ...Object.entries(params).reduce(
+        (acc, [key, value]) => {
+          if (value !== undefined && value !== null) {
+            acc[key] = String(value);
+          }
+          return acc;
+        },
+        {} as Record<string, string>,
+      ),
     });
 
     const url = `${this.baseUrl}/${endpoint}?${searchParams.toString()}`;
@@ -319,9 +315,7 @@ export class SokmilApiClient {
       crawlerLog.info(`Response: ${JSON.stringify(data).substring(0, 200)}...`);
       return this.normalizeResponse<T>(data);
     } catch (error) {
-      throw new Error(
-        `Failed to fetch from Sokmil API: ${error instanceof Error ? error.message : String(error)}`
-      );
+      throw new Error(`Failed to fetch from Sokmil API: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -350,9 +344,7 @@ export class SokmilApiClient {
    * @param params 検索パラメータ
    * @returns 商品リスト
    */
-  async searchItems(
-    params: Omit<SokmilItemSearchParams, 'api_key'> = {}
-  ): Promise<SokmilApiResponse<SokmilProduct>> {
+  async searchItems(params: Omit<SokmilItemSearchParams, 'api_key'> = {}): Promise<SokmilApiResponse<SokmilProduct>> {
     const response = await this.request<any>('Item', params);
     return {
       ...response,
@@ -469,9 +461,7 @@ export class SokmilApiClient {
    * @param params 検索パラメータ
    * @returns メーカーリスト
    */
-  async searchMakers(
-    params: Omit<SokmilMakerSearchParams, 'api_key'> = {}
-  ): Promise<SokmilApiResponse<SokmilMaker>> {
+  async searchMakers(params: Omit<SokmilMakerSearchParams, 'api_key'> = {}): Promise<SokmilApiResponse<SokmilMaker>> {
     return this.request<SokmilMaker>('api_m_maker', params);
   }
 
@@ -481,9 +471,7 @@ export class SokmilApiClient {
    * @param params 検索パラメータ
    * @returns レーベルリスト
    */
-  async searchLabels(
-    params: Omit<SokmilLabelSearchParams, 'api_key'> = {}
-  ): Promise<SokmilApiResponse<SokmilLabel>> {
+  async searchLabels(params: Omit<SokmilLabelSearchParams, 'api_key'> = {}): Promise<SokmilApiResponse<SokmilLabel>> {
     return this.request<SokmilLabel>('api_m_label', params);
   }
 
@@ -493,9 +481,7 @@ export class SokmilApiClient {
    * @param params 検索パラメータ
    * @returns シリーズリスト
    */
-  async searchSeries(
-    params: Omit<SokmilSeriesSearchParams, 'api_key'> = {}
-  ): Promise<SokmilApiResponse<SokmilSeries>> {
+  async searchSeries(params: Omit<SokmilSeriesSearchParams, 'api_key'> = {}): Promise<SokmilApiResponse<SokmilSeries>> {
     return this.request<SokmilSeries>('api_m_series', params);
   }
 
@@ -505,9 +491,7 @@ export class SokmilApiClient {
    * @param params 検索パラメータ
    * @returns ジャンルリスト
    */
-  async searchGenres(
-    params: Omit<SokmilGenreSearchParams, 'api_key'> = {}
-  ): Promise<SokmilApiResponse<SokmilGenre>> {
+  async searchGenres(params: Omit<SokmilGenreSearchParams, 'api_key'> = {}): Promise<SokmilApiResponse<SokmilGenre>> {
     return this.request<SokmilGenre>('api_m_genre', params);
   }
 
@@ -518,7 +502,7 @@ export class SokmilApiClient {
    * @returns 監督リスト
    */
   async searchDirectors(
-    params: Omit<SokmilDirectorSearchParams, 'api_key'> = {}
+    params: Omit<SokmilDirectorSearchParams, 'api_key'> = {},
   ): Promise<SokmilApiResponse<SokmilDirector>> {
     return this.request<SokmilDirector>('api_m_director', params);
   }
@@ -529,9 +513,7 @@ export class SokmilApiClient {
    * @param params 検索パラメータ
    * @returns 出演者リスト
    */
-  async searchActors(
-    params: Omit<SokmilActorSearchParams, 'api_key'> = {}
-  ): Promise<SokmilApiResponse<SokmilActor>> {
+  async searchActors(params: Omit<SokmilActorSearchParams, 'api_key'> = {}): Promise<SokmilApiResponse<SokmilActor>> {
     return this.request<SokmilActor>('api_m_actor', params);
   }
 
@@ -545,8 +527,8 @@ export class SokmilApiClient {
     // Sokmil Item APIにはitem_id検索がないため、keywordで代用
     const response = await this.searchItems({ keyword: itemId, hits: 10 });
     // 完全一致を探す
-    const match = response.data.find(item => item.itemId === itemId);
-    return match ?? (response.data.length > 0 ? response.data[0] ?? null : null);
+    const match = response.data.find((item) => item.itemId === itemId);
+    return match ?? (response.data.length > 0 ? (response.data[0] ?? null) : null);
   }
 
   /**
@@ -560,7 +542,7 @@ export class SokmilApiClient {
   async searchByKeyword(
     keyword: string,
     hits: number = 20,
-    offset: number = 1
+    offset: number = 1,
   ): Promise<SokmilApiResponse<SokmilProduct>> {
     return this.searchItems({
       keyword,
@@ -580,7 +562,7 @@ export class SokmilApiClient {
   async searchByActor(
     actorId: string,
     hits: number = 20,
-    offset: number = 1
+    offset: number = 1,
   ): Promise<SokmilApiResponse<SokmilProduct>> {
     return this.searchItems({
       article: 'actor',
@@ -597,10 +579,7 @@ export class SokmilApiClient {
    * @param offset 取得開始位置 (1から開始)
    * @returns 商品リスト
    */
-  async getNewReleases(
-    hits: number = 20,
-    offset: number = 1
-  ): Promise<SokmilApiResponse<SokmilProduct>> {
+  async getNewReleases(hits: number = 20, offset: number = 1): Promise<SokmilApiResponse<SokmilProduct>> {
     return this.searchItems({
       sort: 'date',
       hits,
@@ -614,12 +593,14 @@ export class SokmilApiClient {
    * @param options オプション
    * @returns 商品リストのジェネレーター
    */
-  async *fetchAllItems(options: {
-    category?: 'av' | 'idol';
-    gte_date?: string;
-    lte_date?: string;
-    hits?: number;
-  } = {}): AsyncGenerator<SokmilProduct[], void, unknown> {
+  async *fetchAllItems(
+    options: {
+      category?: 'av' | 'idol';
+      gte_date?: string;
+      lte_date?: string;
+      hits?: number;
+    } = {},
+  ): AsyncGenerator<SokmilProduct[], void, unknown> {
     const hits = options.hits || 100; // 最大100件
     let offset = 1;
     let hasMore = true;
@@ -656,7 +637,7 @@ export class SokmilApiClient {
       }
 
       // API負荷軽減のため少し待機
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
     }
   }
 }

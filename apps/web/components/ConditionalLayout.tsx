@@ -10,14 +10,14 @@ import PerPagePersistence from './PerPagePersistence';
 // Header skeleton for Suspense fallback
 function HeaderSkeleton() {
   return (
-    <header className="bg-gray-950 text-white border-b border-white/10 sticky top-0 z-50">
-      <div className="bg-gray-800/80 border-b border-white/5">
-        <div className="container mx-auto px-3 sm:px-4 py-1">
+    <header className="sticky top-0 z-50 border-b border-white/10 bg-gray-950 text-white">
+      <div className="border-b border-white/5 bg-gray-800/80">
+        <div className="container mx-auto px-3 py-1 sm:px-4">
           <div className="h-4" />
         </div>
       </div>
       <div className="container mx-auto px-4">
-        <div className="flex items-center justify-between h-16 gap-4">
+        <div className="flex h-16 items-center justify-between gap-4">
           <div className="text-2xl font-bold tracking-tight">
             <span className="text-rose-400">ADULT</span>
             <span className="text-white">VIEWER LAB</span>
@@ -31,7 +31,7 @@ function HeaderSkeleton() {
 // Footer skeleton for Suspense fallback
 function FooterSkeleton() {
   return (
-    <footer className="bg-gray-950 border-t border-white/10 mt-auto">
+    <footer className="mt-auto border-t border-white/10 bg-gray-950">
       <div className="container mx-auto px-4 py-8">
         <div className="h-32" />
       </div>
@@ -42,8 +42,7 @@ function FooterSkeleton() {
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
-  const isAgeVerificationPage = pathname === '/age-verification' ||
-                                 pathname?.includes('/age-verification');
+  const isAgeVerificationPage = pathname === '/age-verification' || pathname?.includes('/age-verification');
 
   if (isAgeVerificationPage) {
     return <>{children}</>;
@@ -65,6 +64,3 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
     </>
   );
 }
-
-
-

@@ -25,11 +25,7 @@ async function seedSiteTags() {
 
     for (const siteTag of SITE_TAGS) {
       // Check if tag already exists
-      const existing = await db
-        .select()
-        .from(tags)
-        .where(eq(tags.name, siteTag.name))
-        .limit(1);
+      const existing = await db.select().from(tags).where(eq(tags.name, siteTag.name)).limit(1);
 
       if (existing.length > 0) {
         console.log(`  ⚠️  Tag already exists: ${siteTag.name}`);
@@ -52,7 +48,6 @@ async function seedSiteTags() {
     console.log(`  ✓ Created: ${createdCount}`);
     console.log(`  ⚠️  Skipped: ${skippedCount}`);
     console.log('========================================\n');
-
   } catch (error) {
     console.error('Fatal error:', error);
     process.exit(1);

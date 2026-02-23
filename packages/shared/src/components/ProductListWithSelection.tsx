@@ -5,15 +5,7 @@ import { useCompareList } from '../hooks/useCompareList';
 import { SelectableCard } from './SelectableCard';
 import { CompareFloatingBar } from './CompareFloatingBar';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
-
-const productListTexts = {
-  ja: { selectToCompare: '比較選択モード', exitSelection: '選択終了', selected: '選択中', maxReachedPrefix: '最大', maxReachedSuffix: '件まで選択可能' },
-  en: { selectToCompare: 'Select to Compare', exitSelection: 'Exit Selection', selected: 'Selected', maxReachedPrefix: 'Max ', maxReachedSuffix: ' items' },
-  zh: { selectToCompare: '比较选择模式', exitSelection: '结束选择', selected: '已选择', maxReachedPrefix: '最多', maxReachedSuffix: '件可选' },
-  'zh-TW': { selectToCompare: '比較選擇模式', exitSelection: '結束選擇', selected: '已選擇', maxReachedPrefix: '最多', maxReachedSuffix: '件可選' },
-  ko: { selectToCompare: '비교 선택 모드', exitSelection: '선택 종료', selected: '선택 중', maxReachedPrefix: '최대 ', maxReachedSuffix: '건까지 선택 가능' },
-} as const;
-function getProductListText(locale: string) { return productListTexts[locale as keyof typeof productListTexts] || productListTexts.ja; }
+import { getTranslation, productListWithSelectionTranslations } from '../lib/translations';
 
 interface Product {
   id: number | string;
@@ -41,45 +33,43 @@ interface ProductItemProps {
   renderChild: (product: Product, index: number) => ReactNode;
 }
 
-const ProductItem = memo(function ProductItem({
-  product,
-  index,
-  isSelected,
-  isSelectionMode,
-  theme,
-  onToggle,
-  renderChild,
-}: ProductItemProps) {
-  const handleToggle = useCallback(() => {
-    onToggle(product);
-  }, [onToggle, product]);
+const ProductItem = memo(
+  function ProductItem({
+    product,
+    index,
+    isSelected,
+    isSelectionMode,
+    theme,
+    onToggle,
+    renderChild,
+  }: ProductItemProps) {
+    const handleToggle = useCallback(() => {
+      onToggle(product);
+    }, [onToggle, product]);
 
-  // 選択モードでない場合はSelectableCardをスキップ
-  if (!isSelectionMode) {
-    return <>{renderChild(product, index)}</>;
-  }
+    // 選択モードでない場合はSelectableCardをスキップ
+    if (!isSelectionMode) {
+      return <>{renderChild(product, index)}</>;
+    }
 
-  return (
-    <SelectableCard
-      isSelected={isSelected}
-      isSelectionMode={isSelectionMode}
-      onToggle={handleToggle}
-      theme={theme}
-    >
-      {renderChild(product, index)}
-    </SelectableCard>
-  );
-}, (prevProps, nextProps) => {
-  // 選択モードと選択状態が変わらなければ再レンダリング不要
-  return (
-    prevProps.isSelected === nextProps.isSelected &&
-    prevProps.isSelectionMode === nextProps.isSelectionMode &&
-    prevProps.theme === nextProps.theme &&
-    prevProps.product === nextProps.product &&
-    prevProps.index === nextProps.index &&
-    prevProps.renderChild === nextProps.renderChild
-  );
-});
+    return (
+      <SelectableCard isSelected={isSelected} isSelectionMode={isSelectionMode} onToggle={handleToggle} theme={theme}>
+        {renderChild(product, index)}
+      </SelectableCard>
+    );
+  },
+  (prevProps, nextProps) => {
+    // 選択モードと選択状態が変わらなければ再レンダリング不要
+    return (
+      prevProps.isSelected === nextProps.isSelected &&
+      prevProps.isSelectionMode === nextProps.isSelectionMode &&
+      prevProps.theme === nextProps.theme &&
+      prevProps.product === nextProps.product &&
+      prevProps.index === nextProps.index &&
+      prevProps.renderChild === nextProps.renderChild
+    );
+  },
+);
 
 export function ProductListWithSelection({
   products,
@@ -97,7 +87,7 @@ export function ProductListWithSelection({
 
   // 翻訳オブジェクトをメモ化
   const t = useMemo(() => {
-    const texts = getProductListText(locale);
+    const texts = getTranslation(productListWithSelectionTranslations, locale);
     return {
       ...texts,
       maxReached: `${texts.maxReachedPrefix}${maxItems}${texts.maxReachedSuffix}`,
@@ -105,38 +95,46 @@ export function ProductListWithSelection({
   }, [locale, maxItems]);
 
   // コールバックをメモ化
-  const handleToggleProduct = useCallback((product: Product) => {
-    toggleItem({
-      id: product['id'],
-      title: product['title'],
-      imageUrl: product['thumbnailUrl'] || product.imageUrl || null,
-    });
-  }, [toggleItem]);
+  const handleToggleProduct = useCallback(
+    (product: Product) => {
+      toggleItem({
+        id: product['id'],
+        title: product['title'],
+        imageUrl: product['thumbnailUrl'] || product.imageUrl || null,
+      });
+    },
+    [toggleItem],
+  );
 
   const handleToggleSelectionMode = useCallback(() => {
-    setIsSelectionMode(prev => !prev);
+    setIsSelectionMode((prev) => !prev);
   }, []);
 
   return (
     <>
       {/* 比較選択モード切替ボタン */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={handleToggleSelectionMode}
-            className={`flex items-center gap-2 px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               isSelectionMode
                 ? isDark
                   ? 'bg-blue-600 text-white'
                   : 'bg-pink-600 text-white'
                 : isDark
-                  ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
-                  : 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
+                  ? 'border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  : 'border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200'
             }`}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+              />
             </svg>
             {isSelectionMode ? t.exitSelection : t.selectToCompare}
           </button>
@@ -149,9 +147,7 @@ export function ProductListWithSelection({
         </div>
 
         {isSelectionMode && isFull && (
-          <span className={`text-sm ${isDark ? 'text-yellow-500' : 'text-yellow-600'}`}>
-            {t.maxReached}
-          </span>
+          <span className={`text-sm ${isDark ? 'text-yellow-500' : 'text-yellow-600'}`}>{t.maxReached}</span>
         )}
       </div>
 

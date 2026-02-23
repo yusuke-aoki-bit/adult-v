@@ -15,14 +15,14 @@ export function Fc2Credit({ className = '' }: Fc2CreditProps) {
       className={`inline-block ${className}`}
       aria-label="FC2動画"
     >
-      { }
+      {}
       <img
         src="https://cnt.affiliate.fc2.com/cgi-bin/banner.cgi?aff_siteid=347884&bid=20831&uid=355464"
         alt="FC2動画"
         width="320"
         height="50"
         loading="lazy"
-        className="block w-auto h-[50px] max-w-[180px] object-contain"
+        className="block h-[50px] w-auto max-w-[180px] object-contain"
         style={{ aspectRatio: '320/50' }}
       />
     </a>

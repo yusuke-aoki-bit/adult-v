@@ -9,18 +9,12 @@ export interface ProductByIdHandlerDeps {
 }
 
 export function createProductByIdHandler(deps: ProductByIdHandlerDeps) {
-  return async function GET(
-    request: Request,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
 
       if (!id) {
-        return NextResponse.json(
-          { error: 'Product ID is required' },
-          { status: 400 }
-        );
+        return NextResponse.json({ error: 'Product ID is required' }, { status: 400 });
       }
 
       // localeパラメータを取得
@@ -40,10 +34,7 @@ export function createProductByIdHandler(deps: ProductByIdHandlerDeps) {
       }
 
       if (!product) {
-        return NextResponse.json(
-          { error: 'Product not found' },
-          { status: 404 }
-        );
+        return NextResponse.json({ error: 'Product not found' }, { status: 404 });
       }
 
       return NextResponse.json(product);

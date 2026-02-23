@@ -198,7 +198,9 @@ async function getReviewersData(): Promise<ReviewersData> {
 
   return {
     topReviewers: (topReviewersResult.rows as Array<Record<string, unknown>>).map((row, i) => mapReviewer(row, i + 1)),
-    monthlyTopReviewers: (monthlyTopResult.rows as Array<Record<string, unknown>>).map((row, i) => mapReviewer(row, i + 1)),
+    monthlyTopReviewers: (monthlyTopResult.rows as Array<Record<string, unknown>>).map((row, i) =>
+      mapReviewer(row, i + 1),
+    ),
     mostHelpful: (mostHelpfulResult.rows as Array<Record<string, unknown>>).map((row, i) => mapReviewer(row, i + 1)),
     stats: {
       totalReviewers: stats?.total_reviewers || 0,
@@ -247,14 +249,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  return generateBaseMetadata(
-    t.title,
-    t.subtitle,
-    undefined,
-    '/reviewers',
-    undefined,
-    locale,
-  );
+  return generateBaseMetadata(t.title, t.subtitle, undefined, '/reviewers', undefined, locale);
 }
 
 export default async function ReviewersPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -272,10 +267,10 @@ export default async function ReviewersPage({ params }: { params: Promise<{ loca
   };
 
   function getRankIcon(rank: number) {
-    if (rank === 1) return <Crown className="w-6 h-6 text-yellow-400" />;
-    if (rank === 2) return <Medal className="w-6 h-6 text-gray-300" />;
-    if (rank === 3) return <Medal className="w-6 h-6 text-amber-600" />;
-    return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold">#{rank}</span>;
+    if (rank === 1) return <Crown className="h-6 w-6 text-yellow-400" />;
+    if (rank === 2) return <Medal className="h-6 w-6 text-gray-300" />;
+    if (rank === 3) return <Medal className="h-6 w-6 text-amber-600" />;
+    return <span className="flex h-6 w-6 items-center justify-center font-bold text-gray-500">#{rank}</span>;
   }
 
   function getRankBg(rank: number) {
@@ -287,38 +282,36 @@ export default async function ReviewersPage({ params }: { params: Promise<{ loca
 
   function ReviewerCard({ reviewer }: { reviewer: TopReviewer }) {
     return (
-      <div className={`theme-card rounded-lg p-4 border ${getRankBg(reviewer.rank)}`}>
+      <div className={`theme-card rounded-lg border p-4 ${getRankBg(reviewer.rank)}`}>
         <div className="flex items-start gap-4">
-          <div className="flex-shrink-0">
-            {getRankIcon(reviewer.rank)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="font-bold theme-text truncate">{reviewer.displayName}</h3>
+          <div className="flex-shrink-0">{getRankIcon(reviewer.rank)}</div>
+          <div className="min-w-0 flex-1">
+            <div className="mb-2 flex items-center gap-2">
+              <h3 className="theme-text truncate font-bold">{reviewer.displayName}</h3>
               {reviewer.recentActivity > 0 && (
-                <span className="text-xs bg-green-600/30 text-green-400 px-2 py-0.5 rounded">
-                  Active
-                </span>
+                <span className="rounded bg-green-600/30 px-2 py-0.5 text-xs text-green-400">Active</span>
               )}
             </div>
-            <div className="grid grid-cols-3 gap-2 text-sm mb-3">
-              <div className="flex items-center gap-1 theme-text-muted">
-                <MessageCircle className="w-4 h-4" />
-                <span>{reviewer.reviewCount} {t.reviews}</span>
+            <div className="mb-3 grid grid-cols-3 gap-2 text-sm">
+              <div className="theme-text-muted flex items-center gap-1">
+                <MessageCircle className="h-4 w-4" />
+                <span>
+                  {reviewer.reviewCount} {t.reviews}
+                </span>
               </div>
-              <div className="flex items-center gap-1 theme-text-muted">
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              <div className="theme-text-muted flex items-center gap-1">
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 <span>{reviewer.avgRating.toFixed(1)}</span>
               </div>
-              <div className="flex items-center gap-1 theme-text-muted">
-                <ThumbsUp className="w-4 h-4" />
+              <div className="theme-text-muted flex items-center gap-1">
+                <ThumbsUp className="h-4 w-4" />
                 <span>{reviewer.helpfulVotes}</span>
               </div>
             </div>
             {reviewer.favoriteGenres.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {reviewer.favoriteGenres.slice(0, 3).map(genre => (
-                  <span key={genre} className="text-xs bg-gray-700/50 px-2 py-0.5 rounded text-gray-300">
+                {reviewer.favoriteGenres.slice(0, 3).map((genre) => (
+                  <span key={genre} className="rounded bg-gray-700/50 px-2 py-0.5 text-xs text-gray-300">
                     {genre}
                   </span>
                 ))}
@@ -332,18 +325,22 @@ export default async function ReviewersPage({ params }: { params: Promise<{ loca
 
   function CompactReviewerCard({ reviewer }: { reviewer: TopReviewer }) {
     return (
-      <div className="flex items-center gap-3 p-3 bg-gray-800/30 rounded-lg">
-        <div className="flex-shrink-0 w-8 text-center">
-          {reviewer.rank <= 3 ? getRankIcon(reviewer.rank) : (
-            <span className="text-gray-500 font-bold">#{reviewer.rank}</span>
+      <div className="flex items-center gap-3 rounded-lg bg-gray-800/30 p-3">
+        <div className="w-8 flex-shrink-0 text-center">
+          {reviewer.rank <= 3 ? (
+            getRankIcon(reviewer.rank)
+          ) : (
+            <span className="font-bold text-gray-500">#{reviewer.rank}</span>
           )}
         </div>
-        <div className="flex-1 min-w-0">
-          <div className="font-medium theme-text truncate">{reviewer.displayName}</div>
-          <div className="flex items-center gap-3 text-xs theme-text-muted">
-            <span>{reviewer.reviewCount} {t.reviews}</span>
+        <div className="min-w-0 flex-1">
+          <div className="theme-text truncate font-medium">{reviewer.displayName}</div>
+          <div className="theme-text-muted flex items-center gap-3 text-xs">
+            <span>
+              {reviewer.reviewCount} {t.reviews}
+            </span>
             <span className="flex items-center gap-1">
-              <ThumbsUp className="w-3 h-3" />
+              <ThumbsUp className="h-3 w-3" />
               {reviewer.helpfulVotes}
             </span>
           </div>
@@ -358,65 +355,60 @@ export default async function ReviewersPage({ params }: { params: Promise<{ loca
       <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t.title },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t.title }]}
             className="mb-4"
           />
 
           {/* PR表記 */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white px-4 py-2 rounded-full mb-4">
-              <Trophy className="w-5 h-5" />
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-white">
+              <Trophy className="h-5 w-5" />
               <span className="font-bold">REVIEWER RANKINGS</span>
             </div>
-            <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+            <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
             <p className="theme-text-muted">{t.subtitle}</p>
           </div>
 
           {/* 統計カード */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="theme-card rounded-lg p-6 text-center">
-              <MessageCircle className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.totalReviewers}</div>
-              <div className="text-sm theme-text-muted">{t.totalReviewers}</div>
+              <MessageCircle className="mx-auto mb-2 h-8 w-8 text-blue-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.totalReviewers}</div>
+              <div className="theme-text-muted text-sm">{t.totalReviewers}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <Star className="w-8 h-8 mx-auto mb-2 text-yellow-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.totalReviews}</div>
-              <div className="text-sm theme-text-muted">{t.totalReviews}</div>
+              <Star className="mx-auto mb-2 h-8 w-8 text-yellow-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.totalReviews}</div>
+              <div className="theme-text-muted text-sm">{t.totalReviews}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <TrendingUp className="w-8 h-8 mx-auto mb-2 text-green-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.avgReviewsPerUser.toFixed(1)}</div>
-              <div className="text-sm theme-text-muted">{t.avgPerUser}</div>
+              <TrendingUp className="mx-auto mb-2 h-8 w-8 text-green-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.avgReviewsPerUser.toFixed(1)}</div>
+              <div className="theme-text-muted text-sm">{t.avgPerUser}</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* トップレビュアー */}
             <div className="lg:col-span-2">
-              <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
-                <Trophy className="w-5 h-5 text-yellow-400" />
+              <h2 className="theme-text mb-4 flex items-center gap-2 text-xl font-bold">
+                <Trophy className="h-5 w-5 text-yellow-400" />
                 {t.topReviewers}
               </h2>
               {data.topReviewers.length > 0 ? (
                 <div className="space-y-3">
-                  {data.topReviewers.slice(0, 10).map(reviewer => (
+                  {data.topReviewers.slice(0, 10).map((reviewer) => (
                     <ReviewerCard key={reviewer.userId} reviewer={reviewer} />
                   ))}
                 </div>
               ) : (
-                <div className="theme-card rounded-lg p-8 text-center theme-text-muted">
-                  {t.noData}
-                </div>
+                <div className="theme-card theme-text-muted rounded-lg p-8 text-center">{t.noData}</div>
               )}
             </div>
 
@@ -424,39 +416,35 @@ export default async function ReviewersPage({ params }: { params: Promise<{ loca
             <div className="space-y-8">
               {/* 今月のアクティブ */}
               <div>
-                <h2 className="text-lg font-bold theme-text mb-4 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-green-400" />
+                <h2 className="theme-text mb-4 flex items-center gap-2 text-lg font-bold">
+                  <Calendar className="h-5 w-5 text-green-400" />
                   {t.monthlyTop}
                 </h2>
                 {data.monthlyTopReviewers.length > 0 ? (
                   <div className="space-y-2">
-                    {data.monthlyTopReviewers.slice(0, 5).map(reviewer => (
+                    {data.monthlyTopReviewers.slice(0, 5).map((reviewer) => (
                       <CompactReviewerCard key={reviewer.userId} reviewer={reviewer} />
                     ))}
                   </div>
                 ) : (
-                  <div className="theme-card rounded-lg p-4 text-center theme-text-muted text-sm">
-                    {t.noData}
-                  </div>
+                  <div className="theme-card theme-text-muted rounded-lg p-4 text-center text-sm">{t.noData}</div>
                 )}
               </div>
 
               {/* 最も参考になった */}
               <div>
-                <h2 className="text-lg font-bold theme-text mb-4 flex items-center gap-2">
-                  <Award className="w-5 h-5 text-purple-400" />
+                <h2 className="theme-text mb-4 flex items-center gap-2 text-lg font-bold">
+                  <Award className="h-5 w-5 text-purple-400" />
                   {t.mostHelpful}
                 </h2>
                 {data.mostHelpful.length > 0 ? (
                   <div className="space-y-2">
-                    {data.mostHelpful.slice(0, 5).map(reviewer => (
+                    {data.mostHelpful.slice(0, 5).map((reviewer) => (
                       <CompactReviewerCard key={reviewer.userId} reviewer={reviewer} />
                     ))}
                   </div>
                 ) : (
-                  <div className="theme-card rounded-lg p-4 text-center theme-text-muted text-sm">
-                    {t.noData}
-                  </div>
+                  <div className="theme-card theme-text-muted rounded-lg p-4 text-center text-sm">{t.noData}</div>
                 )}
               </div>
             </div>

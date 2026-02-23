@@ -12,16 +12,16 @@ export async function generateStaticParams() {
   return Array.from({ length: 10 }, (_, i) => ({ chunk: String(i) }));
 }
 
-export async function GET(
-  _request: NextRequest,
-  props: { params: Promise<{ chunk: string }> }
-) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ chunk: string }> }) {
   const resolvedParams = await props.params;
   const chunkStr = resolvedParams?.chunk;
   if (!chunkStr) {
-    return new Response('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>', {
-      headers: { 'Content-Type': 'application/xml' },
-    });
+    return new Response(
+      '<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>',
+      {
+        headers: { 'Content-Type': 'application/xml' },
+      },
+    );
   }
   const chunk = parseInt(chunkStr);
 
@@ -47,7 +47,7 @@ export async function GET(
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
           AND ps.asp_name = 'DTI'
-        )`
+        )`,
       )
       .orderBy(desc(products.releaseDate))
       .limit(CHUNK_SIZE)

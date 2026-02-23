@@ -25,7 +25,10 @@ interface ExtractStats {
   errors: number;
 }
 
-const ASP_PROCESSORS: Record<string, (db: ReturnType<typeof getDb>, limit: number, dryRun: boolean) => Promise<ExtractStats>> = {
+const ASP_PROCESSORS: Record<
+  string,
+  (db: ReturnType<typeof getDb>, limit: number, dryRun: boolean) => Promise<ExtractStats>
+> = {
   fanza: extractFanzaCodes,
   mgs: extractMgsCodes,
   duga: extractDugaCodes,
@@ -34,8 +37,8 @@ const ASP_PROCESSORS: Record<string, (db: ReturnType<typeof getDb>, limit: numbe
 
 async function main() {
   const args = process.argv.slice(2);
-  const aspArg = args.find(arg => arg.startsWith('--asp='));
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
+  const aspArg = args.find((arg) => arg.startsWith('--asp='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
   const dryRun = args.includes('--dry-run');
 
   const targetAsp = aspArg ? (aspArg.split('=')[1] ?? 'all').toLowerCase() : 'all';
@@ -99,11 +102,7 @@ async function main() {
  * FANZAの品番抽出
  * cidから品番を変換
  */
-async function extractFanzaCodes(
-  db: ReturnType<typeof getDb>,
-  limit: number,
-  dryRun: boolean
-): Promise<ExtractStats> {
+async function extractFanzaCodes(db: ReturnType<typeof getDb>, limit: number, dryRun: boolean): Promise<ExtractStats> {
   const stats: ExtractStats = { total: 0, extracted: 0, updated: 0, skipped: 0, errors: 0 };
 
   // FANZAのproduct_sourcesからmaker_product_codeがnullの商品を取得
@@ -163,11 +162,7 @@ async function extractFanzaCodes(
  * MGSの品番抽出
  * originalProductIdがそのまま品番
  */
-async function extractMgsCodes(
-  db: ReturnType<typeof getDb>,
-  limit: number,
-  dryRun: boolean
-): Promise<ExtractStats> {
+async function extractMgsCodes(db: ReturnType<typeof getDb>, limit: number, dryRun: boolean): Promise<ExtractStats> {
   const stats: ExtractStats = { total: 0, extracted: 0, updated: 0, skipped: 0, errors: 0 };
 
   const rows = await db.execute<{
@@ -226,11 +221,7 @@ async function extractMgsCodes(
  * DUGAの品番抽出
  * 商品ページからスクレイピング
  */
-async function extractDugaCodes(
-  db: ReturnType<typeof getDb>,
-  limit: number,
-  dryRun: boolean
-): Promise<ExtractStats> {
+async function extractDugaCodes(db: ReturnType<typeof getDb>, limit: number, dryRun: boolean): Promise<ExtractStats> {
   const stats: ExtractStats = { total: 0, extracted: 0, updated: 0, skipped: 0, errors: 0 };
 
   const rows = await db.execute<{
@@ -286,7 +277,7 @@ async function extractDugaCodes(
       }
 
       // レート制限: 1秒待機
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     } catch (error) {
       stats.errors++;
       if (stats.errors <= 5) {
@@ -303,11 +294,7 @@ async function extractDugaCodes(
  * 画像URLから品番パターンを抽出
  * 例: https://img.sokmil.com/image/product/pe_sdd0723_01_T...jpg → SDD-723
  */
-async function extractSokmilCodes(
-  db: ReturnType<typeof getDb>,
-  limit: number,
-  dryRun: boolean
-): Promise<ExtractStats> {
+async function extractSokmilCodes(db: ReturnType<typeof getDb>, limit: number, dryRun: boolean): Promise<ExtractStats> {
   const stats: ExtractStats = { total: 0, extracted: 0, updated: 0, skipped: 0, errors: 0 };
 
   // SOKMILのproduct_sourcesからmaker_product_codeがnullの商品を取得

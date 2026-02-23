@@ -11,7 +11,11 @@
 import { getDb } from '../../lib/db';
 import { products, productSources, performers, productPerformers } from '../../lib/db/schema';
 import { eq, and, sql, isNull, inArray } from 'drizzle-orm';
-import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
+import {
+  isValidPerformerName,
+  normalizePerformerName,
+  isValidPerformerForProduct,
+} from '../../lib/performer-validation';
 import type { SokmilApiClient } from '../../lib/providers/sokmil-client';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
@@ -39,7 +43,7 @@ const JITTER_MS = 500;
 
 async function rateLimit(ms: number = RATE_LIMIT_MS): Promise<void> {
   const jitter = Math.random() * JITTER_MS;
-  await new Promise(resolve => setTimeout(resolve, ms + jitter));
+  await new Promise((resolve) => setTimeout(resolve, ms + jitter));
 }
 
 async function initBrowser(): Promise<Browser> {
@@ -48,12 +52,7 @@ async function initBrowser(): Promise<Browser> {
   console.log('🌐 Puppeteerブラウザを起動中...');
   browser = await puppeteer.launch({
     headless: true,
-    args: [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-    ],
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--disable-gpu'],
   });
   console.log('✅ ブラウザ起動完了');
   return browser;
@@ -77,7 +76,7 @@ async function getPerformersFromFanza(cid: string): Promise<string[]> {
     await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36');
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
-      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' }
+      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
     );
 
     const url = `https://video.dmm.co.jp/av/content/?id=${cid}`;
@@ -211,18 +210,11 @@ async function linkPerformersToProduct(productId: number, performerNames: string
     if (!normalizedName) continue;
 
     // 既存の演者を検索
-    let [performer] = await db
-      .select()
-      .from(performers)
-      .where(eq(performers['name'], normalizedName))
-      .limit(1);
+    let [performer] = await db.select().from(performers).where(eq(performers['name'], normalizedName)).limit(1);
 
     // 存在しなければ作成
     if (!performer) {
-      const [inserted] = await db
-        .insert(performers)
-        .values({ name: normalizedName })
-        .returning();
+      const [inserted] = await db.insert(performers).values({ name: normalizedName }).returning();
       performer = inserted!;
     }
 
@@ -230,12 +222,7 @@ async function linkPerformersToProduct(productId: number, performerNames: string
     const existingLink = await db
       .select()
       .from(productPerformers)
-      .where(
-        and(
-          eq(productPerformers.productId, productId),
-          eq(productPerformers.performerId, performer.id)
-        )
-      )
+      .where(and(eq(productPerformers.productId, productId), eq(productPerformers.performerId, performer.id)))
       .limit(1);
 
     if (existingLink.length === 0) {
@@ -283,10 +270,8 @@ async function main() {
   console.log('🔍 演者未紐付け商品を取得中...');
 
   // まず紐付け済み商品IDを取得
-  const linkedIds = await db
-    .selectDistinct({ productId: productPerformers.productId })
-    .from(productPerformers);
-  const linkedIdSet = new Set(linkedIds.map(r => r.productId));
+  const linkedIds = await db.selectDistinct({ productId: productPerformers.productId }).from(productPerformers);
+  const linkedIdSet = new Set(linkedIds.map((r) => r.productId));
   console.log(`  紐付け済み商品: ${linkedIdSet.size}件`);
 
   // 商品を取得（対象ASPでフィルタ）
@@ -304,7 +289,7 @@ async function main() {
     .limit(limit * 5);
 
   // 未紐付け商品をフィルタ
-  let filteredProducts = allProducts.filter(p => !linkedIdSet.has(p.productId));
+  let filteredProducts = allProducts.filter((p) => !linkedIdSet.has(p.productId));
 
   // limitを適用
   filteredProducts = filteredProducts.slice(0, limit);

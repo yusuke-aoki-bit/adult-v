@@ -56,7 +56,7 @@ export interface PopularContent {
 export async function getPopularPages(
   startDate: string = '7daysAgo',
   endDate: string = 'today',
-  limit: number = 100
+  limit: number = 100,
 ): Promise<PageViewData[]> {
   if (!PROPERTY_ID) {
     throw new Error('GOOGLE_ANALYTICS_PROPERTY_ID が設定されていません');
@@ -67,17 +67,9 @@ export async function getPopularPages(
   const [response] = await client.runReport({
     property: `properties/${PROPERTY_ID}`,
     dateRanges: [{ startDate, endDate }],
-    dimensions: [
-      { name: 'pagePath' },
-      { name: 'pageTitle' },
-    ],
-    metrics: [
-      { name: 'screenPageViews' },
-      { name: 'activeUsers' },
-    ],
-    orderBys: [
-      { metric: { metricName: 'screenPageViews' }, desc: true },
-    ],
+    dimensions: [{ name: 'pagePath' }, { name: 'pageTitle' }],
+    metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }],
+    orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
     limit,
   });
 
@@ -98,7 +90,7 @@ export async function getPopularPages(
  */
 export async function getPopularContent(
   startDate: string = '7daysAgo',
-  endDate: string = 'today'
+  endDate: string = 'today',
 ): Promise<PopularContent> {
   const allPages = await getPopularPages(startDate, endDate, 500);
 
@@ -129,7 +121,7 @@ export async function getPopularContent(
 export async function getSearchTerms(
   startDate: string = '7daysAgo',
   endDate: string = 'today',
-  limit: number = 100
+  limit: number = 100,
 ): Promise<{ term: string; count: number }[]> {
   if (!PROPERTY_ID) {
     throw new Error('GOOGLE_ANALYTICS_PROPERTY_ID が設定されていません');
@@ -142,9 +134,7 @@ export async function getSearchTerms(
     dateRanges: [{ startDate, endDate }],
     dimensions: [{ name: 'searchTerm' }],
     metrics: [{ name: 'eventCount' }],
-    orderBys: [
-      { metric: { metricName: 'eventCount' }, desc: true },
-    ],
+    orderBys: [{ metric: { metricName: 'eventCount' }, desc: true }],
     limit,
   });
 
@@ -165,7 +155,7 @@ export async function getSearchTerms(
  */
 export async function getTrafficSources(
   startDate: string = '7daysAgo',
-  endDate: string = 'today'
+  endDate: string = 'today',
 ): Promise<{ source: string; medium: string; users: number }[]> {
   if (!PROPERTY_ID) {
     throw new Error('GOOGLE_ANALYTICS_PROPERTY_ID が設定されていません');
@@ -176,14 +166,9 @@ export async function getTrafficSources(
   const [response] = await client.runReport({
     property: `properties/${PROPERTY_ID}`,
     dateRanges: [{ startDate, endDate }],
-    dimensions: [
-      { name: 'sessionSource' },
-      { name: 'sessionMedium' },
-    ],
+    dimensions: [{ name: 'sessionSource' }, { name: 'sessionMedium' }],
     metrics: [{ name: 'activeUsers' }],
-    orderBys: [
-      { metric: { metricName: 'activeUsers' }, desc: true },
-    ],
+    orderBys: [{ metric: { metricName: 'activeUsers' }, desc: true }],
     limit: 50,
   });
 

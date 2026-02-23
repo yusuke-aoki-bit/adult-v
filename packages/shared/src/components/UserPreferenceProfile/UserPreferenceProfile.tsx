@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRecentlyViewed } from '../../hooks/useRecentlyViewed';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, userPreferenceProfileTranslations, profileTypeLabels, preferenceLabels } from '../../lib/translations';
 
 interface UserProfile {
   profileType: 'casual' | 'explorer' | 'collector' | 'specialist';
@@ -37,66 +38,9 @@ interface UserPreferenceProfileProps {
   className?: string;
 }
 
-const profileTypeLabels = {
-  casual: { ja: '気軽派', en: 'Casual', icon: '🎯' },
-  explorer: { ja: '探求者', en: 'Explorer', icon: '🔍' },
-  collector: { ja: '収集家', en: 'Collector', icon: '📚' },
-  specialist: { ja: '専門家', en: 'Specialist', icon: '🎓' },
-};
-
-const preferenceLabels = {
-  actressPreference: {
-    specific: { ja: '推し女優派', en: 'Specific' },
-    variety: { ja: '多様派', en: 'Variety' },
-    mixed: { ja: 'バランス派', en: 'Mixed' },
-  },
-  genreDepth: {
-    shallow: { ja: '浅く広く', en: 'Shallow' },
-    medium: { ja: 'バランス', en: 'Medium' },
-    deep: { ja: '深く狭く', en: 'Deep' },
-  },
-  newVsClassic: {
-    new: { ja: '新作重視', en: 'New' },
-    classic: { ja: '旧作好き', en: 'Classic' },
-    balanced: { ja: 'バランス', en: 'Balanced' },
-  },
-};
-
-const profileTexts = {
-  ja: {
-    fetchError: 'プロファイルの取得に失敗しました',
-    title: 'あなたの好みプロファイル',
-    viewMore: (remaining: number) => `あと${remaining}件閲覧するとプロファイルが生成されます`,
-    analyzing: 'プロファイルを分析中...',
-    secondaryPreferences: '副次的な好み',
-    actressTrend: '女優傾向',
-    genre: 'ジャンル',
-    era: '作品年代',
-    confidence: '信頼度',
-    suggestedActions: 'おすすめアクション',
-    statsViewed: (count: number) => `${count}件閲覧`,
-    statsPerformers: (count: number) => `${count}名の女優`,
-    statsGenres: (count: number) => `${count}ジャンル`,
-  },
-  en: {
-    fetchError: 'Failed to load profile',
-    title: 'Your Preference Profile',
-    viewMore: (remaining: number) => `View ${remaining} more to generate your profile`,
-    analyzing: 'Analyzing your profile...',
-    secondaryPreferences: 'Secondary Preferences',
-    actressTrend: 'Actress',
-    genre: 'Genre',
-    era: 'Era',
-    confidence: 'Confidence',
-    suggestedActions: 'Suggested Actions',
-    statsViewed: (count: number) => `${count} viewed`,
-    statsPerformers: (count: number) => `${count} performers`,
-    statsGenres: (count: number) => `${count} genres`,
-  },
-} as const;
 
 function getProfileText(locale: string) {
-  return profileTexts[locale as keyof typeof profileTexts] || profileTexts.ja;
+  return getTranslation(userPreferenceProfileTranslations, locale);
 }
 
 function getLocaleKey(locale: string): 'ja' | 'en' {
@@ -134,7 +78,7 @@ export function UserPreferenceProfile({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          history: recentlyViewed.map(item => ({
+          history: recentlyViewed.map((item) => ({
             id: item['id'],
             title: item['title'],
           })),
@@ -177,11 +121,9 @@ export function UserPreferenceProfile({
   if (!historyLoading && recentlyViewed.length < 5) {
     return (
       <div className={`rounded-xl p-4 sm:p-6 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'} ${className}`}>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="mb-3 flex items-center gap-2">
           <span className="text-xl">📊</span>
-          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {pt.title}
-          </h3>
+          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{pt.title}</h3>
         </div>
         <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
           {pt.viewMore(5 - recentlyViewed.length)}
@@ -192,8 +134,12 @@ export function UserPreferenceProfile({
               key={i}
               className={`h-1.5 flex-1 rounded-full ${
                 i < recentlyViewed.length
-                  ? isDark ? 'bg-pink-500' : 'bg-pink-400'
-                  : isDark ? 'bg-gray-700' : 'bg-gray-300'
+                  ? isDark
+                    ? 'bg-pink-500'
+                    : 'bg-pink-400'
+                  : isDark
+                    ? 'bg-gray-700'
+                    : 'bg-gray-300'
               }`}
             />
           ))}
@@ -206,15 +152,19 @@ export function UserPreferenceProfile({
   if (isLoading || historyLoading) {
     return (
       <div className={`rounded-xl p-4 sm:p-6 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'} ${className}`}>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-xl animate-pulse">📊</span>
-          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {pt.analyzing}
-          </h3>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="animate-pulse text-xl">📊</span>
+          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{pt.analyzing}</h3>
         </div>
         <div className="space-y-2">
-          <div className={`h-4 rounded animate-pulse ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} style={{ width: '60%' }} />
-          <div className={`h-3 rounded animate-pulse ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} style={{ width: '80%' }} />
+          <div
+            className={`h-4 animate-pulse rounded ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`}
+            style={{ width: '60%' }}
+          />
+          <div
+            className={`h-3 animate-pulse rounded ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`}
+            style={{ width: '80%' }}
+          />
         </div>
       </div>
     );
@@ -228,10 +178,10 @@ export function UserPreferenceProfile({
   const typeInfo = profileTypeLabels[profile.profileType];
 
   return (
-    <div className={`rounded-xl overflow-hidden ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'} ${className}`}>
+    <div className={`overflow-hidden rounded-xl ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'} ${className}`}>
       {/* ヘッダー */}
       <div
-        className={`p-4 sm:p-6 cursor-pointer transition-colors ${
+        className={`cursor-pointer p-4 transition-colors sm:p-6 ${
           isDark ? 'hover:bg-gray-800/70' : 'hover:bg-gray-200/70'
         }`}
         onClick={() => setIsExpanded(!isExpanded)}
@@ -244,22 +194,24 @@ export function UserPreferenceProfile({
                 <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
                   {profile.profileTitle}
                 </h3>
-                <span className={`text-xs px-2 py-0.5 rounded-full ${
-                  isDark ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-700'
-                }`}>
+                <span
+                  className={`rounded-full px-2 py-0.5 text-xs ${
+                    isDark ? 'bg-purple-900/50 text-purple-300' : 'bg-purple-100 text-purple-700'
+                  }`}
+                >
                   {typeInfo[localeKey]}
                 </span>
               </div>
-              <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+              <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                 {profile.profileDescription}
               </p>
             </div>
           </div>
 
           {/* 展開ボタン */}
-          <button className={`p-1 rounded-full ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-300'}`}>
+          <button className={`rounded-full p-1 ${isDark ? 'hover:bg-gray-700' : 'hover:bg-gray-300'}`}>
             <svg
-              className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''} ${
+              className={`h-5 w-5 transition-transform ${isExpanded ? 'rotate-180' : ''} ${
                 isDark ? 'text-gray-400' : 'text-gray-600'
               }`}
               fill="none"
@@ -280,7 +232,7 @@ export function UserPreferenceProfile({
                 e.stopPropagation();
                 handleTagClick(tag);
               }}
-              className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
+              className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
                 isDark
                   ? 'bg-pink-900/50 text-pink-300 hover:bg-pink-800/50'
                   : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
@@ -294,11 +246,11 @@ export function UserPreferenceProfile({
 
       {/* 展開コンテンツ */}
       {isExpanded && (
-        <div className={`px-4 sm:px-6 pb-4 sm:pb-6 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+        <div className={`border-t px-4 pb-4 sm:px-6 sm:pb-6 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
           {/* 副次タグ */}
           {profile.secondaryTags.length > 0 && (
             <div className="mt-4">
-              <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              <p className={`mb-2 text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                 {pt.secondaryPreferences}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -306,7 +258,7 @@ export function UserPreferenceProfile({
                   <button
                     key={i}
                     onClick={() => handleTagClick(tag)}
-                    className={`px-2 py-0.5 rounded text-xs transition-colors ${
+                    className={`rounded px-2 py-0.5 text-xs transition-colors ${
                       isDark
                         ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                         : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
@@ -320,35 +272,27 @@ export function UserPreferenceProfile({
           )}
 
           {/* 傾向分析 */}
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
-            <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
-              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {pt.actressTrend}
-              </p>
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className={`rounded-lg p-2 ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
+              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{pt.actressTrend}</p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {preferenceLabels.actressPreference[profile.preferences.actressPreference][localeKey]}
               </p>
             </div>
-            <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
-              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {pt.genre}
-              </p>
+            <div className={`rounded-lg p-2 ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
+              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{pt.genre}</p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {preferenceLabels.genreDepth[profile.preferences.genreDepth][localeKey]}
               </p>
             </div>
-            <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
-              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {pt.era}
-              </p>
+            <div className={`rounded-lg p-2 ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
+              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{pt.era}</p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {preferenceLabels.newVsClassic[profile.preferences.newVsClassic][localeKey]}
               </p>
             </div>
-            <div className={`p-2 rounded-lg ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
-              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
-                {pt.confidence}
-              </p>
+            <div className={`rounded-lg p-2 ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
+              <p className={`text-[10px] ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{pt.confidence}</p>
               <p className={`text-xs font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
                 {profile.confidenceScore}%
               </p>
@@ -358,15 +302,12 @@ export function UserPreferenceProfile({
           {/* おすすめアクション */}
           {profile.suggestedActions.length > 0 && (
             <div className="mt-4">
-              <p className={`text-xs font-medium mb-2 ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
+              <p className={`mb-2 text-xs font-medium ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>
                 💡 {pt.suggestedActions}
               </p>
               <ul className="space-y-1">
                 {profile.suggestedActions.map((action, i) => (
-                  <li
-                    key={i}
-                    className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}
-                  >
+                  <li key={i} className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
                     • {action}
                   </li>
                 ))}
@@ -376,7 +317,7 @@ export function UserPreferenceProfile({
 
           {/* 統計情報 */}
           {stats && (
-            <div className={`mt-4 pt-3 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`mt-4 border-t pt-3 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex items-center gap-4 text-xs">
                 <span className={isDark ? 'text-gray-500' : 'text-gray-500'}>
                   📊 {pt.statsViewed(stats.totalViewed)}

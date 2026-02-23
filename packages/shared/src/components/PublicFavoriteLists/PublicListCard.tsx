@@ -75,19 +75,13 @@ export function PublicListCard({
   return (
     <div
       onClick={() => onView(list['id'])}
-      className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow cursor-pointer relative group"
+      className="group relative cursor-pointer rounded-xl border border-gray-200 bg-white p-4 transition-shadow hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
     >
       {/* Header */}
-      <div className="flex items-start justify-between mb-2">
+      <div className="mb-2 flex items-start justify-between">
         <div className="flex items-center gap-2">
-          {list['isPublic'] ? (
-            <Globe className="w-4 h-4 text-green-500" />
-          ) : (
-            <Lock className="w-4 h-4 text-gray-400" />
-          )}
-          <h3 className="font-semibold text-gray-900 dark:text-white line-clamp-1">
-            {list['title']}
-          </h3>
+          {list['isPublic'] ? <Globe className="h-4 w-4 text-green-500" /> : <Lock className="h-4 w-4 text-gray-400" />}
+          <h3 className="line-clamp-1 font-semibold text-gray-900 dark:text-white">{list['title']}</h3>
         </div>
 
         {isOwner && (
@@ -97,25 +91,25 @@ export function PublicListCard({
                 e.stopPropagation();
                 setShowMenu(!showMenu);
               }}
-              className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+              className="rounded-lg p-1 opacity-0 transition-opacity group-hover:opacity-100 hover:bg-gray-100 dark:hover:bg-gray-700"
             >
-              <MoreVertical className="w-4 h-4 text-gray-500" />
+              <MoreVertical className="h-4 w-4 text-gray-500" />
             </button>
 
             {showMenu && (
-              <div className="absolute right-0 top-8 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-10 min-w-[120px]">
+              <div className="absolute top-8 right-0 z-10 min-w-[120px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
                 <button
                   onClick={handleEdit}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700"
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="h-4 w-4" />
                   {t.edit}
                 </button>
                 <button
                   onClick={handleDelete}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-700"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Trash2 className="h-4 w-4" />
                   {t.delete}
                 </button>
               </div>
@@ -126,28 +120,24 @@ export function PublicListCard({
 
       {/* Description */}
       {list['description'] && (
-        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-          {list['description']}
-        </p>
+        <p className="mb-3 line-clamp-2 text-sm text-gray-600 dark:text-gray-400">{list['description']}</p>
       )}
 
       {/* Stats */}
       <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
         <span>{t.items.replace('{count}', String(list.itemCount || 0))}</span>
         <span className="flex items-center gap-1">
-          <Eye className="w-4 h-4" />
+          <Eye className="h-4 w-4" />
           {list['viewCount']}
         </span>
         <button
           onClick={handleLike}
           disabled={!currentUserId || isOwner || isLiking}
           className={`flex items-center gap-1 transition-colors ${
-            list.userLiked
-              ? 'text-rose-500'
-              : 'hover:text-rose-500 disabled:cursor-default'
+            list.userLiked ? 'text-rose-500' : 'hover:text-rose-500 disabled:cursor-default'
           }`}
         >
-          <Heart className={`w-4 h-4 ${list.userLiked ? 'fill-rose-500' : ''}`} />
+          <Heart className={`h-4 w-4 ${list.userLiked ? 'fill-rose-500' : ''}`} />
           {list['likeCount']}
         </button>
       </div>

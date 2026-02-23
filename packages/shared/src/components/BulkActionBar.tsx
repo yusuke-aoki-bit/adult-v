@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, bulkActionBarTranslations } from '../lib/translations';
 
 export interface BulkAction {
   id: string;
@@ -38,11 +39,7 @@ export function BulkActionBar({
 
   const isDark = theme === 'dark';
 
-  const texts = {
-    ja: { selected: '件選択中', selectAll: 'すべて選択', clearSelection: '選択解除', processing: '処理中...' },
-    en: { selected: ' selected', selectAll: 'Select all', clearSelection: 'Clear selection', processing: 'Processing...' },
-  } as const;
-  const t = texts[locale as keyof typeof texts] || texts.ja;
+  const t = getTranslation(bulkActionBarTranslations, locale);
 
   const handleAction = async (action: BulkAction) => {
     if (loadingAction) return;
@@ -59,29 +56,28 @@ export function BulkActionBar({
 
   return (
     <div
-      className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-50 rounded-xl shadow-2xl px-4 py-3 flex items-center gap-4 ${
-        isDark
-          ? 'bg-gray-800 border border-gray-700'
-          : 'bg-white border border-gray-200'
+      className={`fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 items-center gap-4 rounded-xl px-4 py-3 shadow-2xl ${
+        isDark ? 'border border-gray-700 bg-gray-800' : 'border border-gray-200 bg-white'
       }`}
       style={{ maxWidth: 'calc(100vw - 2rem)' }}
     >
       {/* 選択件数 */}
       <div className="flex items-center gap-2">
         <span
-          className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
             isDark ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'
           }`}
         >
           {selectedCount}
         </span>
         <span className={`text-sm ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-          {selectedCount}{t.selected}
+          {selectedCount}
+          {t.selected}
         </span>
       </div>
 
       {/* 区切り線 */}
-      <div className={`w-px h-8 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`} />
+      <div className={`h-8 w-px ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`} />
 
       {/* すべて選択 / 選択解除 */}
       <div className="flex items-center gap-2">
@@ -89,10 +85,8 @@ export function BulkActionBar({
           <button
             type="button"
             onClick={onSelectAll}
-            className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-              isDark
-                ? 'text-blue-400 hover:bg-gray-700'
-                : 'text-pink-600 hover:bg-gray-100'
+            className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+              isDark ? 'text-blue-400 hover:bg-gray-700' : 'text-pink-600 hover:bg-gray-100'
             }`}
           >
             {t.selectAll}
@@ -101,10 +95,8 @@ export function BulkActionBar({
         <button
           type="button"
           onClick={onClearSelection}
-          className={`text-sm px-3 py-1.5 rounded-lg transition-colors ${
-            isDark
-              ? 'text-gray-400 hover:bg-gray-700'
-              : 'text-gray-600 hover:bg-gray-100'
+          className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
+            isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-600 hover:bg-gray-100'
           }`}
         >
           {t.clearSelection}
@@ -112,7 +104,7 @@ export function BulkActionBar({
       </div>
 
       {/* 区切り線 */}
-      <div className={`w-px h-8 ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`} />
+      <div className={`h-8 w-px ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`} />
 
       {/* アクションボタン */}
       <div className="flex items-center gap-2">
@@ -126,27 +118,20 @@ export function BulkActionBar({
               type="button"
               onClick={() => handleAction(action)}
               disabled={!!loadingAction}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                 isDanger
                   ? isDark
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-red-500 hover:bg-red-600 text-white'
+                    ? 'bg-red-600 text-white hover:bg-red-700'
+                    : 'bg-red-500 text-white hover:bg-red-600'
                   : isDark
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-pink-600 hover:bg-pink-700 text-white'
+                    ? 'bg-blue-600 text-white hover:bg-blue-700'
+                    : 'bg-pink-600 text-white hover:bg-pink-700'
               }`}
             >
               {isLoading ? (
                 <>
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
+                  <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path
                       className="opacity-75"
                       fill="currentColor"
@@ -170,14 +155,14 @@ export function BulkActionBar({
       <button
         type="button"
         onClick={onClearSelection}
-        className={`ml-2 p-1.5 rounded-full transition-colors ${
+        className={`ml-2 rounded-full p-1.5 transition-colors ${
           isDark
             ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-200'
             : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
         }`}
         aria-label="Close"
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>

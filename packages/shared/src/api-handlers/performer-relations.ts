@@ -14,14 +14,14 @@ export interface PerformerRelationsHandlerOptions {
   cachePrefix?: string;
 }
 
-export function createPerformerRelationsHandler(deps: PerformerRelationsHandlerDeps, options: PerformerRelationsHandlerOptions = {}) {
+export function createPerformerRelationsHandler(
+  deps: PerformerRelationsHandlerDeps,
+  options: PerformerRelationsHandlerOptions = {},
+) {
   const cachePrefix = options.cachePrefix || 'relations:web:v5';
   const CACHE_TTL = 60 * 30;
 
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
       const performerId = parseInt(id, 10);
@@ -37,8 +37,16 @@ export function createPerformerRelationsHandler(deps: PerformerRelationsHandlerD
 
       const db = deps.getDb();
 
-      const performerData = await db.select({ id: deps.performers.id, name: deps.performers.name, nameEn: deps.performers.nameEn, profileImageUrl: deps.performers.profileImageUrl })
-        .from(deps.performers).where(deps.eq(deps.performers.id, performerId)).limit(1);
+      const performerData = await db
+        .select({
+          id: deps.performers.id,
+          name: deps.performers.name,
+          nameEn: deps.performers.nameEn,
+          profileImageUrl: deps.performers.profileImageUrl,
+        })
+        .from(deps.performers)
+        .where(deps.eq(deps.performers.id, performerId))
+        .limit(1);
       if (performerData.length === 0) return NextResponse.json({ error: 'Performer not found' }, { status: 404 });
       const performer = performerData[0];
 
@@ -85,7 +93,10 @@ export function createPerformerRelationsHandler(deps: PerformerRelationsHandlerD
       const thumbnailMap = new Map<number, string | null>();
 
       if (performerIds.length > 0) {
-        const idsArraySql = deps.sql`ARRAY[${deps.sql.join(performerIds.map((id: number) => deps.sql`${id}`), deps.sql`, `)}]::int[]`;
+        const idsArraySql = deps.sql`ARRAY[${deps.sql.join(
+          performerIds.map((id: number) => deps.sql`${id}`),
+          deps.sql`, `,
+        )}]::int[]`;
         const thumbQuery = await db.execute(deps.sql`
           SELECT DISTINCT ON (pp.performer_id) pp.performer_id,
             COALESCE((SELECT pi.image_url FROM product_images pi WHERE pi.product_id = p.id AND pi.image_type = 'thumbnail' AND pi.asp_name IS NOT NULL AND pi.asp_name != 'FANZA' ORDER BY pi.display_order NULLS LAST LIMIT 1), p.default_thumbnail_url) as thumbnail_url
@@ -97,7 +108,10 @@ export function createPerformerRelationsHandler(deps: PerformerRelationsHandlerD
       }
 
       const allNodeIds = [performerId, ...performerIds];
-      const edgeIdsSql = deps.sql`ARRAY[${deps.sql.join(allNodeIds.map((id: number) => deps.sql`${id}`), deps.sql`, `)}]::int[]`;
+      const edgeIdsSql = deps.sql`ARRAY[${deps.sql.join(
+        allNodeIds.map((id: number) => deps.sql`${id}`),
+        deps.sql`, `,
+      )}]::int[]`;
       const edgesQuery = await db.execute(deps.sql`
         WITH node_pairs AS (
           SELECT DISTINCT LEAST(pp1.performer_id, pp2.performer_id) as source, GREATEST(pp1.performer_id, pp2.performer_id) as target, COUNT(DISTINCT pp1.product_id) as weight
@@ -107,16 +121,35 @@ export function createPerformerRelationsHandler(deps: PerformerRelationsHandlerD
         ) SELECT source, target, weight FROM node_pairs ORDER BY weight DESC
       `);
 
-      const edges = (edgesQuery.rows as any[]).map((row: any) => ({ source: Number(row.source), target: Number(row.target), weight: Number(row.weight) }));
-      const relationsWithThumbnails = relations.map((rel: any) => ({ id: rel.id, name: rel.name, nameEn: rel.nameEn, profileImageUrl: rel.profileImageUrl, thumbnailUrl: thumbnailMap.get(rel.id) || null, costarCount: Number(rel.costarCount), hop: rel.hop }));
+      const edges = (edgesQuery.rows as any[]).map((row: any) => ({
+        source: Number(row.source),
+        target: Number(row.target),
+        weight: Number(row.weight),
+      }));
+      const relationsWithThumbnails = relations.map((rel: any) => ({
+        id: rel.id,
+        name: rel.name,
+        nameEn: rel.nameEn,
+        profileImageUrl: rel.profileImageUrl,
+        thumbnailUrl: thumbnailMap.get(rel.id) || null,
+        costarCount: Number(rel.costarCount),
+        hop: rel.hop,
+      }));
 
       const hop1Count = relations.filter((r: any) => r.hop === 1).length;
       const mostFrequentCostar = relations.find((r: any) => r.hop === 1)?.name || null;
 
       const response = {
         success: true,
-        performer: { id: performer.id, name: performer.name, nameEn: performer.nameEn, profileImageUrl: performer.profileImageUrl, thumbnailUrl: centerThumbnail },
-        relations: relationsWithThumbnails, edges,
+        performer: {
+          id: performer.id,
+          name: performer.name,
+          nameEn: performer.nameEn,
+          profileImageUrl: performer.profileImageUrl,
+          thumbnailUrl: centerThumbnail,
+        },
+        relations: relationsWithThumbnails,
+        edges,
         stats: { totalCostarCount: hop1Count, mostFrequentCostar },
       };
 
@@ -124,7 +157,14 @@ export function createPerformerRelationsHandler(deps: PerformerRelationsHandlerD
       return NextResponse.json(response);
     } catch (error) {
       console.error('[Performer Relations API] Error:', error);
-      return NextResponse.json({ success: false, fallback: true, performer: null, relations: [], edges: [], stats: { totalCostarCount: 0, mostFrequentCostar: null } });
+      return NextResponse.json({
+        success: false,
+        fallback: true,
+        performer: null,
+        relations: [],
+        edges: [],
+        stats: { totalCostarCount: 0, mostFrequentCostar: null },
+      });
     }
   };
 }

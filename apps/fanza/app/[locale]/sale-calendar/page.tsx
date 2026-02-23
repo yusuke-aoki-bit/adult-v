@@ -8,7 +8,8 @@ interface PageProps {
 const translations = {
   ja: {
     title: 'セールカレンダー',
-    description: '年間セールスケジュールと過去のセール傾向を確認できます。お得な購入タイミングを見逃さないようにしましょう。',
+    description:
+      '年間セールスケジュールと過去のセール傾向を確認できます。お得な購入タイミングを見逃さないようにしましょう。',
   },
   en: {
     title: 'Sale Calendar',

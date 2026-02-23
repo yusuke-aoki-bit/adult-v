@@ -18,7 +18,7 @@ const BASE_URL = 'https://av-wiki.tokyo';
 interface ActressData {
   name: string;
   aliases: string[];
-  productIds: string[];  // 品番のみ
+  productIds: string[]; // 品番のみ
 }
 
 // グローバルクローラーインスタンス
@@ -68,8 +68,16 @@ async function fetchActressPage(actressName: string): Promise<ActressData | null
       if (!header || !value) return;
 
       // 別名
-      if (header.includes('別名') || header.includes('旧芸名') || header.includes('他名義') || header.includes('別名義')) {
-        const aliases = value.split(/[,、/／\n]/).map(a => a.trim()).filter(a => a.length > 0 && a !== actressName);
+      if (
+        header.includes('別名') ||
+        header.includes('旧芸名') ||
+        header.includes('他名義') ||
+        header.includes('別名義')
+      ) {
+        const aliases = value
+          .split(/[,、/／\n]/)
+          .map((a) => a.trim())
+          .filter((a) => a.length > 0 && a !== actressName);
         data.aliases.push(...aliases);
       }
     });
@@ -83,7 +91,7 @@ async function fetchActressPage(actressName: string): Promise<ActressData | null
       const text = $(link).text().trim();
       const matches = text.match(productPattern);
       if (matches) {
-        matches.forEach(m => foundProducts.add(m.toUpperCase()));
+        matches.forEach((m) => foundProducts.add(m.toUpperCase()));
       }
     });
 
@@ -92,7 +100,7 @@ async function fetchActressPage(actressName: string): Promise<ActressData | null
       const text = $(cell).text().trim();
       const matches = text.match(productPattern);
       if (matches) {
-        matches.forEach(m => foundProducts.add(m.toUpperCase()));
+        matches.forEach((m) => foundProducts.add(m.toUpperCase()));
       }
     });
 
@@ -110,19 +118,25 @@ async function fetchActressPage(actressName: string): Promise<ActressData | null
 /**
  * データベースに保存
  */
-async function saveActressData(db: any, performerId: number, data: ActressData): Promise<{ aliases: number; products: number }> {
+async function saveActressData(
+  db: any,
+  performerId: number,
+  data: ActressData,
+): Promise<{ aliases: number; products: number }> {
   const result = { aliases: 0, products: 0 };
 
   // 別名を保存
   for (const alias of data.aliases) {
     if (!alias || alias === data['name']) continue;
     try {
-      await db['insert'](performerAliases).values({
-        performerId,
-        aliasName: alias,
-        source: 'av-wiki.tokyo',
-        isPrimary: false,
-      }).onConflictDoNothing();
+      await db['insert'](performerAliases)
+        .values({
+          performerId,
+          aliasName: alias,
+          source: 'av-wiki.tokyo',
+          isPrimary: false,
+        })
+        .onConflictDoNothing();
       result.aliases++;
     } catch {
       // 重複は無視
@@ -141,10 +155,12 @@ async function saveActressData(db: any, performerId: number, data: ActressData):
         .limit(1);
 
       if (existingProduct.length > 0) {
-        await db['insert'](productPerformers).values({
-          productId: existingProduct[0]['id'],
-          performerId,
-        }).onConflictDoNothing();
+        await db['insert'](productPerformers)
+          .values({
+            productId: existingProduct[0]['id'],
+            performerId,
+          })
+          .onConflictDoNothing();
         result.products++;
       }
     } catch {
@@ -211,7 +227,7 @@ async function main() {
     }
 
     // Rate limiting: 2秒待機
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
   }
 
   // クローラーをクリーンアップ

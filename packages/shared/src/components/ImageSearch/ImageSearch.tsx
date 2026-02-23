@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, imageSearchTranslations } from '../../lib/translations';
 
 interface SearchResult {
   id: number;
@@ -32,34 +33,11 @@ interface ImageSearchProps {
   onProductClick?: (productId: string) => void;
 }
 
-const searchTexts = {
-  ja: {
-    title: '画像で検索', subtitle: '画像を貼り付け（Ctrl+V）またはドラッグ＆ドロップして類似作品を検索',
-    paste: 'Ctrl+V で貼り付け', uploadHint: 'またはクリック・ドラッグ＆ドロップでアップロード',
-    formats: 'JPEG, PNG, WebP, GIF (最大5MB)', analyzing: '分析中...',
-    searchSimilar: '類似作品を検索', analysisResult: '画像分析結果',
-    keywords: '検出キーワード:', genres: '推奨ジャンル:',
-    results: (n: number) => `類似作品 (${n}件)`, noResults: '類似作品が見つかりませんでした',
-    invalidFile: '画像ファイルを選択してください', fileTooLarge: 'ファイルサイズは5MB以下にしてください',
-    searchFailed: '検索に失敗しました', searchError: '検索中にエラーが発生しました',
-  },
-  en: {
-    title: 'Search by Image', subtitle: 'Paste (Ctrl+V) or drag & drop an image to find similar products',
-    paste: 'Paste with Ctrl+V', uploadHint: 'Or click / drag & drop to upload',
-    formats: 'JPEG, PNG, WebP, GIF (max 5MB)', analyzing: 'Analyzing...',
-    searchSimilar: 'Search Similar', analysisResult: 'Image Analysis',
-    keywords: 'Keywords:', genres: 'Suggested Genres:',
-    results: (n: number) => `Similar Products (${n})`, noResults: 'No similar products found',
-    invalidFile: 'Please select an image file', fileTooLarge: 'File size must be 5MB or less',
-    searchFailed: 'Search failed', searchError: 'An error occurred during search',
-  },
-} as const;
-function getSearchText(locale: string) { return searchTexts[locale as keyof typeof searchTexts] || searchTexts.ja; }
 
 export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }: ImageSearchProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const st = getSearchText(locale);
+  const st = getTranslation(imageSearchTranslations, locale);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isSearching, setIsSearching] = useState(false);
@@ -72,7 +50,9 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
 
   // Cleanup abort controller on unmount
   useEffect(() => {
-    return () => { abortControllerRef.current?.abort(); };
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, []);
 
   // Cleanup blob URL when previewUrl changes or on unmount
@@ -88,9 +68,10 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
     container: theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200',
     text: theme === 'dark' ? 'text-white' : 'text-gray-900',
     textMuted: theme === 'dark' ? 'text-gray-400' : 'text-gray-500',
-    dropzone: theme === 'dark'
-      ? 'border-gray-600 hover:border-blue-500 bg-gray-700/50'
-      : 'border-gray-300 hover:border-blue-400 bg-gray-50',
+    dropzone:
+      theme === 'dark'
+        ? 'border-gray-600 hover:border-blue-500 bg-gray-700/50'
+        : 'border-gray-300 hover:border-blue-400 bg-gray-50',
     dropzoneActive: theme === 'dark' ? 'border-blue-500 bg-blue-900/20' : 'border-blue-400 bg-blue-50',
     card: theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100',
     tag: theme === 'dark' ? 'bg-gray-600 text-gray-200' : 'bg-gray-200 text-gray-700',
@@ -108,7 +89,7 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
     }
 
     setSelectedImage(file);
-    setPreviewUrl(prev => {
+    setPreviewUrl((prev) => {
       if (prev) URL.revokeObjectURL(prev);
       return URL.createObjectURL(file);
     });
@@ -117,15 +98,18 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
     setAnalysis(null);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
 
-    const file = e.dataTransfer.files[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  }, [handleFileSelect]);
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        handleFileSelect(file);
+      }
+    },
+    [handleFileSelect],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -137,29 +121,35 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
     setIsDragging(false);
   }, []);
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      handleFileSelect(file);
-    }
-  }, [handleFileSelect]);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) {
+        handleFileSelect(file);
+      }
+    },
+    [handleFileSelect],
+  );
 
   // クリップボードからの貼り付け処理
-  const handlePaste = useCallback((e: ClipboardEvent) => {
-    const items = e.clipboardData?.items;
-    if (!items) return;
+  const handlePaste = useCallback(
+    (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
 
-    for (const item of items) {
-      if (item.type.startsWith('image/')) {
-        const file = item.getAsFile();
-        if (file) {
-          e.preventDefault();
-          handleFileSelect(file);
-          return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          const file = item.getAsFile();
+          if (file) {
+            e.preventDefault();
+            handleFileSelect(file);
+            return;
+          }
         }
       }
-    }
-  }, [handleFileSelect]);
+    },
+    [handleFileSelect],
+  );
 
   // グローバルなペーストイベントを監視
   useEffect(() => {
@@ -216,31 +206,37 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
     }
   }, [previewUrl]);
 
-  const handleProductClick = useCallback((result: SearchResult) => {
-    if (onProductClick && result.normalizedProductId) {
-      onProductClick(result.normalizedProductId);
-    }
-  }, [onProductClick]);
+  const handleProductClick = useCallback(
+    (result: SearchResult) => {
+      if (onProductClick && result.normalizedProductId) {
+        onProductClick(result.normalizedProductId);
+      }
+    },
+    [onProductClick],
+  );
 
   return (
     <div className={`rounded-lg border p-4 sm:p-6 ${themeClasses.container}`}>
       {/* ヘッダー */}
       <div className="mb-4">
-        <h2 className={`text-lg sm:text-xl font-bold ${themeClasses.text} flex items-center gap-2`}>
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        <h2 className={`text-lg font-bold sm:text-xl ${themeClasses.text} flex items-center gap-2`}>
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
           </svg>
           {st.title}
         </h2>
-        <p className={`text-sm ${themeClasses.textMuted} mt-1`}>
-          {st.subtitle}
-        </p>
+        <p className={`text-sm ${themeClasses.textMuted} mt-1`}>{st.subtitle}</p>
       </div>
 
       {/* ドロップゾーン */}
       {!previewUrl ? (
         <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+          className={`cursor-pointer rounded-lg border-2 border-dashed p-8 text-center transition-colors ${
             isDragging ? themeClasses.dropzoneActive : themeClasses.dropzone
           }`}
           onDrop={handleDrop}
@@ -248,15 +244,9 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
           onDragLeave={handleDragLeave}
           onClick={() => fileInputRef.current?.click()}
         >
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={handleInputChange}
-          />
+          <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleInputChange} />
           <svg
-            className={`w-12 h-12 mx-auto mb-3 ${themeClasses.textMuted}`}
+            className={`mx-auto mb-3 h-12 w-12 ${themeClasses.textMuted}`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -268,30 +258,20 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
               d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
             />
           </svg>
-          <p className={themeClasses.text}>
-            {st.paste}
-          </p>
-          <p className={`text-sm ${themeClasses.textMuted} mt-1`}>
-            {st.uploadHint}
-          </p>
-          <p className={`text-xs ${themeClasses.textMuted} mt-2`}>
-            {st.formats}
-          </p>
+          <p className={themeClasses.text}>{st.paste}</p>
+          <p className={`text-sm ${themeClasses.textMuted} mt-1`}>{st.uploadHint}</p>
+          <p className={`text-xs ${themeClasses.textMuted} mt-2`}>{st.formats}</p>
         </div>
       ) : (
         /* プレビュー */
         <div className="space-y-4">
           <div className="relative">
-            <img
-              src={previewUrl}
-              alt="Preview"
-              className="w-full max-h-64 object-contain rounded-lg"
-            />
+            <img src={previewUrl} alt="Preview" className="max-h-64 w-full rounded-lg object-contain" />
             <button
               onClick={handleClear}
-              className="absolute top-2 right-2 p-1 bg-black/50 rounded-full text-white hover:bg-black/70 transition-colors"
+              className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -301,17 +281,19 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
           <button
             onClick={handleSearch}
             disabled={isSearching}
-            className={`w-full py-3 rounded-lg font-medium transition-colors ${
-              isSearching
-                ? 'bg-gray-500 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700 text-white'
+            className={`w-full rounded-lg py-3 font-medium transition-colors ${
+              isSearching ? 'cursor-not-allowed bg-gray-500' : 'bg-blue-600 text-white hover:bg-blue-700'
             }`}
           >
             {isSearching ? (
               <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+                <svg className="h-5 w-5 animate-spin" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
                 </svg>
                 {st.analyzing}
               </span>
@@ -324,27 +306,21 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
 
       {/* エラー表示 */}
       {error && (
-        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/50 rounded-lg text-red-400 text-sm">
-          {error}
-        </div>
+        <div className="mt-4 rounded-lg border border-red-500/50 bg-red-500/20 p-3 text-sm text-red-400">{error}</div>
       )}
 
       {/* 分析結果 */}
       {analysis && (
-        <div className={`mt-6 p-4 rounded-lg ${themeClasses.card}`}>
-          <h3 className={`font-semibold mb-2 ${themeClasses.text}`}>
-            {st.analysisResult}
-          </h3>
+        <div className={`mt-6 rounded-lg p-4 ${themeClasses.card}`}>
+          <h3 className={`mb-2 font-semibold ${themeClasses.text}`}>{st.analysisResult}</h3>
           <p className={`text-sm ${themeClasses.textMuted} mb-3`}>{analysis.description}</p>
 
           {analysis.keywords.length > 0 && (
             <div className="mb-3">
-              <p className={`text-xs ${themeClasses.textMuted} mb-1`}>
-                {st.keywords}
-              </p>
+              <p className={`text-xs ${themeClasses.textMuted} mb-1`}>{st.keywords}</p>
               <div className="flex flex-wrap gap-1">
                 {analysis.keywords.map((keyword, i) => (
-                  <span key={i} className={`px-2 py-0.5 text-xs rounded ${themeClasses.tag}`}>
+                  <span key={i} className={`rounded px-2 py-0.5 text-xs ${themeClasses.tag}`}>
                     {keyword}
                   </span>
                 ))}
@@ -354,12 +330,10 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
 
           {analysis.genres.length > 0 && (
             <div>
-              <p className={`text-xs ${themeClasses.textMuted} mb-1`}>
-                {st.genres}
-              </p>
+              <p className={`text-xs ${themeClasses.textMuted} mb-1`}>{st.genres}</p>
               <div className="flex flex-wrap gap-1">
                 {analysis.genres.map((genre, i) => (
-                  <span key={i} className="px-2 py-0.5 text-xs rounded bg-blue-600/30 text-blue-300">
+                  <span key={i} className="rounded bg-blue-600/30 px-2 py-0.5 text-xs text-blue-300">
                     {genre}
                   </span>
                 ))}
@@ -372,38 +346,37 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
       {/* 検索結果 */}
       {results.length > 0 && (
         <div className="mt-6">
-          <h3 className={`font-semibold mb-3 ${themeClasses.text}`}>
-            {st.results(results.length)}
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+          <h3 className={`mb-3 font-semibold ${themeClasses.text}`}>{st.results(results.length)}</h3>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
             {results.map((result) => (
               <div
                 key={result['id']}
-                className={`rounded-lg overflow-hidden cursor-pointer transition-transform hover:scale-105 ${themeClasses.card}`}
+                className={`cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-105 ${themeClasses.card}`}
                 onClick={() => handleProductClick(result)}
               >
                 <div className="relative aspect-3/4">
                   {result.imageUrl ? (
-                    <img
-                      src={result.imageUrl}
-                      alt={result['title']}
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={result.imageUrl} alt={result['title']} className="h-full w-full object-cover" />
                   ) : (
-                    <div className={`w-full h-full flex items-center justify-center ${themeClasses.textMuted}`}>
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    <div className={`flex h-full w-full items-center justify-center ${themeClasses.textMuted}`}>
+                      <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                        />
                       </svg>
                     </div>
                   )}
                   {/* スコアバッジ */}
-                  <div className="absolute top-1 right-1 px-1.5 py-0.5 bg-blue-600 text-white text-xs font-bold rounded">
+                  <div className="absolute top-1 right-1 rounded bg-blue-600 px-1.5 py-0.5 text-xs font-bold text-white">
                     {result.score}%
                   </div>
                 </div>
                 <div className="p-2">
-                  <p className={`text-xs line-clamp-2 ${themeClasses.text}`}>{result['title']}</p>
-                  <p className={`text-xs mt-1 ${themeClasses.textMuted}`}>{result.matchReason}</p>
+                  <p className={`line-clamp-2 text-xs ${themeClasses.text}`}>{result['title']}</p>
+                  <p className={`mt-1 text-xs ${themeClasses.textMuted}`}>{result.matchReason}</p>
                 </div>
               </div>
             ))}
@@ -413,9 +386,14 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
 
       {/* 結果なし */}
       {analysis && results.length === 0 && !isSearching && (
-        <div className={`mt-6 text-center py-8 ${themeClasses.textMuted}`}>
-          <svg className="w-12 h-12 mx-auto mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        <div className={`mt-6 py-8 text-center ${themeClasses.textMuted}`}>
+          <svg className="mx-auto mb-3 h-12 w-12 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1.5}
+              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
           </svg>
           <p>{st.noResults}</p>
         </div>

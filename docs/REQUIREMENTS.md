@@ -2,16 +2,16 @@
 
 ## 要件一覧
 
-| # | 要件 | 対応状況 | 備考 |
-|---|------|---------|------|
-| 1 | 各ASPの全商品を順次収集 | ✅ 対応済み | 全ASPで--full-scan対応 |
-| 2 | 品番IDやタイトルと演者の紐づけ情報を収集 | ⚠️ 部分対応 | Wiki優先、ASP直接情報の活用余地あり |
-| 3 | ASPの商品と演者の紐づけ | ✅ 対応済み | product_performersテーブル |
-| 4 | ASP間での同一商品の紐づけ | ✅ 対応済み | normalized_product_id |
-| 5 | セール情報を収集 | ✅ 対応済み | product_salesテーブル |
-| 6 | 付加情報を収集（価格・時間・説明） | ✅ 対応済み | 各フィールド実装済み |
-| 7 | 上記すべてを各言語に翻訳 | ✅ 対応済み | 5言語対応（ja/en/zh/zh-TW/ko） |
-| 8 | UI/UXに展開 | ✅ 対応済み | 商品詳細・演者・検索対応 |
+| #   | 要件                                     | 対応状況    | 備考                                |
+| --- | ---------------------------------------- | ----------- | ----------------------------------- |
+| 1   | 各ASPの全商品を順次収集                  | ✅ 対応済み | 全ASPで--full-scan対応              |
+| 2   | 品番IDやタイトルと演者の紐づけ情報を収集 | ⚠️ 部分対応 | Wiki優先、ASP直接情報の活用余地あり |
+| 3   | ASPの商品と演者の紐づけ                  | ✅ 対応済み | product_performersテーブル          |
+| 4   | ASP間での同一商品の紐づけ                | ✅ 対応済み | normalized_product_id               |
+| 5   | セール情報を収集                         | ✅ 対応済み | product_salesテーブル               |
+| 6   | 付加情報を収集（価格・時間・説明）       | ✅ 対応済み | 各フィールド実装済み                |
+| 7   | 上記すべてを各言語に翻訳                 | ✅ 対応済み | 5言語対応（ja/en/zh/zh-TW/ko）      |
+| 8   | UI/UXに展開                              | ✅ 対応済み | 商品詳細・演者・検索対応            |
 
 ---
 
@@ -19,18 +19,18 @@
 
 ### 対応ASP一覧
 
-| ASP | クローラー | 全商品収集オプション | Cloud Run Job |
-|-----|-----------|-------------------|---------------|
-| DUGA | `crawl-duga-api-v2.ts` | `--full-scan --year=YYYY` | crawl-duga |
-| FANZA | `crawl-fanza.ts` | `--full-scan --max-pages=N` | fanza-daily |
-| MGS | `crawl-mgs-list.ts` | `--category-crawl` / `--full-scan` | mgs-full-crawl, mgs-series-scan |
-| SOKMIL | `crawl-sokmil-api-v2.ts` | `--page=N --max-pages=N` | crawl-sokmil |
-| FC2 | `crawl-fc2-video.ts` | `--page=N` | crawl-fc2 |
-| Japanska | `crawl-japanska.ts` | `--page=N --limit=N` | crawl-japanska |
-| b10f | `crawl-b10f-csv.ts` | CSV全件処理 | crawl-b10f |
-| Tokyo-Hot | `crawl-tokyohot.ts` | `--start-page=N --end-page=N` | crawl-tokyohot |
-| Caribbean | `crawl-caribbean.ts` | `--start-date --end-date` | - |
-| 1pondo | `crawl-1pondo.ts` | `--start-date --end-date` | - |
+| ASP       | クローラー               | 全商品収集オプション               | Cloud Run Job                   |
+| --------- | ------------------------ | ---------------------------------- | ------------------------------- |
+| DUGA      | `crawl-duga-api-v2.ts`   | `--full-scan --year=YYYY`          | crawl-duga                      |
+| FANZA     | `crawl-fanza.ts`         | `--full-scan --max-pages=N`        | fanza-daily                     |
+| MGS       | `crawl-mgs-list.ts`      | `--category-crawl` / `--full-scan` | mgs-full-crawl, mgs-series-scan |
+| SOKMIL    | `crawl-sokmil-api-v2.ts` | `--page=N --max-pages=N`           | crawl-sokmil                    |
+| FC2       | `crawl-fc2-video.ts`     | `--page=N`                         | crawl-fc2                       |
+| Japanska  | `crawl-japanska.ts`      | `--page=N --limit=N`               | crawl-japanska                  |
+| b10f      | `crawl-b10f-csv.ts`      | CSV全件処理                        | crawl-b10f                      |
+| Tokyo-Hot | `crawl-tokyohot.ts`      | `--start-page=N --end-page=N`      | crawl-tokyohot                  |
+| Caribbean | `crawl-caribbean.ts`     | `--start-date --end-date`          | -                               |
+| 1pondo    | `crawl-1pondo.ts`        | `--start-date --end-date`          | -                               |
 
 ### 実装詳細
 
@@ -200,13 +200,13 @@ product_videos (
 
 ### 対応言語
 
-| コード | 言語 |
-|-------|------|
-| ja | 日本語（元言語） |
-| en | 英語 |
-| zh | 中国語簡体字 |
-| zh-TW | 中国語繁体字 |
-| ko | 韓国語 |
+| コード | 言語             |
+| ------ | ---------------- |
+| ja     | 日本語（元言語） |
+| en     | 英語             |
+| zh     | 中国語簡体字     |
+| zh-TW  | 中国語繁体字     |
+| ko     | 韓国語           |
 
 ### 翻訳対象
 
@@ -236,12 +236,12 @@ packages/crawlers/src/enrichment/translation-backfill.ts  # バックフィル
 
 ### ページ構成
 
-| ページ | パス | 機能 |
-|-------|------|------|
-| 商品詳細 | `/[locale]/products/[id]` | 多言語タイトル、複数ASP価格比較、セール表示 |
-| 演者詳細 | `/[locale]/actress/[performerId]` | 多言語プロフィール、出演作品リスト |
-| 商品一覧 | `/[locale]/products` | フィルタ、ソート、検索 |
-| 検索 | `/[locale]/search` | Meilisearch統合、多言語検索 |
+| ページ   | パス                              | 機能                                        |
+| -------- | --------------------------------- | ------------------------------------------- |
+| 商品詳細 | `/[locale]/products/[id]`         | 多言語タイトル、複数ASP価格比較、セール表示 |
+| 演者詳細 | `/[locale]/actress/[performerId]` | 多言語プロフィール、出演作品リスト          |
+| 商品一覧 | `/[locale]/products`              | フィルタ、ソート、検索                      |
+| 検索     | `/[locale]/search`                | Meilisearch統合、多言語検索                 |
 
 ### コンポーネント
 
@@ -258,9 +258,9 @@ packages/shared/src/components/
 
 ```typescript
 // packages/shared/src/lib/localization.ts
-getLocalizedTitle(product, locale)
-getLocalizedDescription(product, locale)
-getLocalizedPerformerName(performer, locale)
+getLocalizedTitle(product, locale);
+getLocalizedDescription(product, locale);
+getLocalizedPerformerName(performer, locale);
 ```
 
 ---
@@ -296,15 +296,15 @@ npx tsx packages/crawlers/src/enrichment/performer-linking/link-performers.ts
 
 ## Cloud Run Jobs
 
-| ジョブ名 | 用途 | スケジュール |
-|---------|------|-------------|
-| fanza-daily | FANZA日次更新 | 毎日 |
-| mgs-daily | MGS日次更新 | 毎日 |
-| mgs-full-crawl | MGS全商品収集 | 手動 |
-| crawl-duga | DUGA日次更新 | 毎日 |
-| crawl-sokmil | SOKMIL更新 | 毎日 |
-| enrich-performers | 演者情報充実化 | 手動 |
-| link-wiki-performers | Wiki演者紐づけ | 手動 |
+| ジョブ名             | 用途           | スケジュール |
+| -------------------- | -------------- | ------------ |
+| fanza-daily          | FANZA日次更新  | 毎日         |
+| mgs-daily            | MGS日次更新    | 毎日         |
+| mgs-full-crawl       | MGS全商品収集  | 手動         |
+| crawl-duga           | DUGA日次更新   | 毎日         |
+| crawl-sokmil         | SOKMIL更新     | 毎日         |
+| enrich-performers    | 演者情報充実化 | 手動         |
+| link-wiki-performers | Wiki演者紐づけ | 手動         |
 
 ---
 
@@ -312,31 +312,31 @@ npx tsx packages/crawlers/src/enrichment/performer-linking/link-performers.ts
 
 ### 対応状況: ✅ 対応済み
 
-| 項目 | 状況 | 実装ファイル |
-|------|------|-------------|
-| メタデータ最適化 | ✅ | `packages/shared/src/lib/seo.ts` |
-| 構造化データ（JSON-LD） | ✅ | Product, Person, FAQ, BreadcrumbList, VideoObject, Review |
-| サイトマップ | ✅ | `apps/web/app/sitemap*.ts` |
-| OGP/Twitter Cards | ✅ | `generateBaseMetadata()` |
-| hreflang多言語対応 | ✅ | 5言語（ja/en/zh/zh-TW/ko） |
-| robots.txt | ✅ | `apps/web/app/robots.ts` |
+| 項目                    | 状況 | 実装ファイル                                              |
+| ----------------------- | ---- | --------------------------------------------------------- |
+| メタデータ最適化        | ✅   | `packages/shared/src/lib/seo.ts`                          |
+| 構造化データ（JSON-LD） | ✅   | Product, Person, FAQ, BreadcrumbList, VideoObject, Review |
+| サイトマップ            | ✅   | `apps/web/app/sitemap*.ts`                                |
+| OGP/Twitter Cards       | ✅   | `generateBaseMetadata()`                                  |
+| hreflang多言語対応      | ✅   | 5言語（ja/en/zh/zh-TW/ko）                                |
+| robots.txt              | ✅   | `apps/web/app/robots.ts`                                  |
 
 ### 構造化データ（JSON-LD）対応一覧
 
-| スキーマタイプ | 用途 | ページ |
-|--------------|------|-------|
-| Product | 商品情報、価格、評価 | 商品詳細 |
-| Person | 演者情報 | 演者詳細 |
-| VideoObject | サンプル動画 | 商品詳細 |
-| FAQPage | よくある質問 | 商品・演者・ホーム |
-| BreadcrumbList | パンくずリスト | 全ページ |
-| WebSite | サイト情報 | レイアウト |
-| Organization | 運営者情報 | レイアウト |
-| Review/CriticReview | AIレビュー | 商品詳細 |
-| ItemList | 作品一覧 | 演者詳細 |
-| AggregateOffer | 複数ASP価格比較 | 商品詳細 |
-| HowTo | 視聴方法 | 商品詳細 |
-| CollectionPage | コレクション | 一覧ページ |
+| スキーマタイプ      | 用途                 | ページ             |
+| ------------------- | -------------------- | ------------------ |
+| Product             | 商品情報、価格、評価 | 商品詳細           |
+| Person              | 演者情報             | 演者詳細           |
+| VideoObject         | サンプル動画         | 商品詳細           |
+| FAQPage             | よくある質問         | 商品・演者・ホーム |
+| BreadcrumbList      | パンくずリスト       | 全ページ           |
+| WebSite             | サイト情報           | レイアウト         |
+| Organization        | 運営者情報           | レイアウト         |
+| Review/CriticReview | AIレビュー           | 商品詳細           |
+| ItemList            | 作品一覧             | 演者詳細           |
+| AggregateOffer      | 複数ASP価格比較      | 商品詳細           |
+| HowTo               | 視聴方法             | 商品詳細           |
+| CollectionPage      | コレクション         | 一覧ページ         |
 
 ### サイトマップ構成
 
@@ -352,24 +352,24 @@ apps/web/app/
 
 ### robots.txt ボット別設定
 
-| ボット | 設定 |
-|-------|------|
-| Googlebot | 許可（CSS/JS/画像含む） |
-| Bingbot | 許可（crawlDelay: 1秒） |
-| Baiduspider | 許可（中国語対応） |
-| Naverbot | 許可（韓国語対応） |
-| AhrefsBot等 | ブロック（SEOボット） |
-| GPTBot等 | 許可（AI学習用、2秒間隔）|
+| ボット      | 設定                      |
+| ----------- | ------------------------- |
+| Googlebot   | 許可（CSS/JS/画像含む）   |
+| Bingbot     | 許可（crawlDelay: 1秒）   |
+| Baiduspider | 許可（中国語対応）        |
+| Naverbot    | 許可（韓国語対応）        |
+| AhrefsBot等 | ブロック（SEOボット）     |
+| GPTBot等    | 許可（AI学習用、2秒間隔） |
 
 ### SEOメタデータ生成
 
 ```typescript
 // packages/shared/src/lib/seo.ts
-generateBaseMetadata(title, description, image, path, keywords, locale)
-generateOptimizedDescription(title, actressName, tags, releaseDate, productId, options)
-generateProductSchema(name, description, image, url, price, brand, rating, salePrice, currency, sku)
-generatePersonSchema(name, description, image, url, options)
-generateFAQSchema(faqs)
+generateBaseMetadata(title, description, image, path, keywords, locale);
+generateOptimizedDescription(title, actressName, tags, releaseDate, productId, options);
+generateProductSchema(name, description, image, url, price, brand, rating, salePrice, currency, sku);
+generatePersonSchema(name, description, image, url, options);
+generateFAQSchema(faqs);
 ```
 
 ### 多言語SEO
@@ -385,122 +385,122 @@ generateFAQSchema(faqs)
 
 ### ページ構成
 
-| ページ | パス | 主要機能 |
-|-------|------|---------|
-| ホーム | `/` | 女優一覧、フィルター、最近見た作品、おすすめ |
-| 商品一覧 | `/products` | 高度なフィルター、ソート、ページネーション |
-| 商品詳細 | `/products/[id]` | 画像ギャラリー、動画、価格比較、AIレビュー |
-| 女優詳細 | `/actress/[id]` | キャリア分析、出演作品、関連女優 |
-| 発見モード | `/discover` | Tinder風スワイプUI |
-| お気に入り | `/favorites` | 作品/女優のお気に入り管理 |
-| 統計 | `/statistics` | ランキング、トレンドチャート |
-| カレンダー | `/calendar` | リリースカレンダー |
-| 予算管理 | `/budget` | 月間予算、ウォッチリスト |
-| プロフィール | `/profile` | 嗜好分析、視聴履歴 |
-| メーカー | `/makers` | メーカー/レーベル一覧 |
-| シリーズ | `/series` | シリーズ一覧 |
-| カテゴリ | `/categories` | ジャンル/タグ一覧 |
+| ページ       | パス             | 主要機能                                     |
+| ------------ | ---------------- | -------------------------------------------- |
+| ホーム       | `/`              | 女優一覧、フィルター、最近見た作品、おすすめ |
+| 商品一覧     | `/products`      | 高度なフィルター、ソート、ページネーション   |
+| 商品詳細     | `/products/[id]` | 画像ギャラリー、動画、価格比較、AIレビュー   |
+| 女優詳細     | `/actress/[id]`  | キャリア分析、出演作品、関連女優             |
+| 発見モード   | `/discover`      | Tinder風スワイプUI                           |
+| お気に入り   | `/favorites`     | 作品/女優のお気に入り管理                    |
+| 統計         | `/statistics`    | ランキング、トレンドチャート                 |
+| カレンダー   | `/calendar`      | リリースカレンダー                           |
+| 予算管理     | `/budget`        | 月間予算、ウォッチリスト                     |
+| プロフィール | `/profile`       | 嗜好分析、視聴履歴                           |
+| メーカー     | `/makers`        | メーカー/レーベル一覧                        |
+| シリーズ     | `/series`        | シリーズ一覧                                 |
+| カテゴリ     | `/categories`    | ジャンル/タグ一覧                            |
 
 ### フィルター・検索機能
 
-| 機能 | 説明 |
-|------|------|
-| ASPフィルター | 複数選択・除外対応（FANZA, MGS, DUGA等） |
-| ジャンルフィルター | 対象/除外の組み合わせ |
-| 女優属性フィルター | 血液型、カップサイズ、身長範囲 |
-| サンプルフィルター | 動画有無、画像有無 |
-| 出演タイプ | 単体/複数出演 |
-| セールフィルター | セール中のみ表示 |
-| リリース日範囲 | 開始日〜終了日 |
-| ソート | リリース日、価格、評価、タイトル、出演数 |
-| プリセット保存 | フィルター設定の保存/読み込み |
-| 品番検索 | SSIS-865等の品番で直接検索 |
-| 自然言語検索 | キーワード検索 |
+| 機能               | 説明                                     |
+| ------------------ | ---------------------------------------- |
+| ASPフィルター      | 複数選択・除外対応（FANZA, MGS, DUGA等） |
+| ジャンルフィルター | 対象/除外の組み合わせ                    |
+| 女優属性フィルター | 血液型、カップサイズ、身長範囲           |
+| サンプルフィルター | 動画有無、画像有無                       |
+| 出演タイプ         | 単体/複数出演                            |
+| セールフィルター   | セール中のみ表示                         |
+| リリース日範囲     | 開始日〜終了日                           |
+| ソート             | リリース日、価格、評価、タイトル、出演数 |
+| プリセット保存     | フィルター設定の保存/読み込み            |
+| 品番検索           | SSIS-865等の品番で直接検索               |
+| 自然言語検索       | キーワード検索                           |
 
 ### ユーザー機能
 
-| 機能 | ストレージ | 説明 |
-|------|-----------|------|
-| お気に入り | LocalStorage + Firebase | 作品/女優のお気に入り登録 |
-| 視聴履歴 | LocalStorage + Firebase | 最大20件、日記形式 |
-| 後で見る | LocalStorage | ウォッチリスト管理 |
-| 視聴済みマーク | Firebase | 視聴完了記録 |
-| 予算管理 | LocalStorage | 月間予算設定、コスト計算 |
-| 嗜好分析 | Firebase | 10カテゴリのレーダーチャート |
-| クラウド同期 | Firebase | 複数デバイス間同期 |
+| 機能           | ストレージ              | 説明                         |
+| -------------- | ----------------------- | ---------------------------- |
+| お気に入り     | LocalStorage + Firebase | 作品/女優のお気に入り登録    |
+| 視聴履歴       | LocalStorage + Firebase | 最大20件、日記形式           |
+| 後で見る       | LocalStorage            | ウォッチリスト管理           |
+| 視聴済みマーク | Firebase                | 視聴完了記録                 |
+| 予算管理       | LocalStorage            | 月間予算設定、コスト計算     |
+| 嗜好分析       | Firebase                | 10カテゴリのレーダーチャート |
+| クラウド同期   | Firebase                | 複数デバイス間同期           |
 
 ### 商品詳細ページ機能
 
-| 機能 | 説明 |
-|------|------|
-| 画像ギャラリー | スワイプ対応、ライトボックス |
-| サンプル動画 | 動的読み込みプレイヤー |
-| 価格比較 | 複数ASP間の価格表示 |
-| セール表示 | 残り時間、割引率 |
-| AIレビュー | AI生成の作品分析（システム事前生成） |
-| シーンタイムライン | シーン情報表示 |
-| コスパ分析 | 分あたり価格計算 |
-| 関連商品 | 同演者・同メーカー・同シリーズ |
-| 固定CTA | モバイル下部/デスクトップ右 |
-| SNSシェア | Twitter, LINE等 |
+| 機能               | 説明                                 |
+| ------------------ | ------------------------------------ |
+| 画像ギャラリー     | スワイプ対応、ライトボックス         |
+| サンプル動画       | 動的読み込みプレイヤー               |
+| 価格比較           | 複数ASP間の価格表示                  |
+| セール表示         | 残り時間、割引率                     |
+| AIレビュー         | AI生成の作品分析（システム事前生成） |
+| シーンタイムライン | シーン情報表示                       |
+| コスパ分析         | 分あたり価格計算                     |
+| 関連商品           | 同演者・同メーカー・同シリーズ       |
+| 固定CTA            | モバイル下部/デスクトップ右          |
+| SNSシェア          | Twitter, LINE等                      |
 
 ### 女優詳細ページ機能
 
-| 機能 | 説明 |
-|------|------|
-| ヒーロー画像 | 高解像度プロフィール画像 |
-| キャリアタイムライン | デビュー〜現在/引退 |
-| AI分析レビュー | AI生成の女優分析（システム事前生成） |
-| クロスASP情報 | 複数ASPでの出演状況 |
-| 人気作品TOP5 | 評価・レビュー数順 |
-| セール中作品 | 現在セール中の作品 |
-| 関連女優 | 共演者一覧 |
-| 類似女優 | ジャンルベースの推奨 |
-| 引退警告 | 活動停止の場合に表示 |
+| 機能                 | 説明                                 |
+| -------------------- | ------------------------------------ |
+| ヒーロー画像         | 高解像度プロフィール画像             |
+| キャリアタイムライン | デビュー〜現在/引退                  |
+| AI分析レビュー       | AI生成の女優分析（システム事前生成） |
+| クロスASP情報        | 複数ASPでの出演状況                  |
+| 人気作品TOP5         | 評価・レビュー数順                   |
+| セール中作品         | 現在セール中の作品                   |
+| 関連女優             | 共演者一覧                           |
+| 類似女優             | ジャンルベースの推奨                 |
+| 引退警告             | 活動停止の場合に表示                 |
 
 ### 統計・分析機能
 
-| 機能 | 説明 |
-|------|------|
-| 月別リリース推移 | 折れ線グラフ |
-| ジャンル分布 | 円グラフ |
-| 女優ランキング | 出演数TOP20 |
-| メーカーシェア | メーカー別占有率 |
-| デビュートレンド | 年別デビュー数 |
-| 年別統計 | 年ごとの作品数推移 |
+| 機能               | 説明                       |
+| ------------------ | -------------------------- |
+| 月別リリース推移   | 折れ線グラフ               |
+| ジャンル分布       | 円グラフ                   |
+| 女優ランキング     | 出演数TOP20                |
+| メーカーシェア     | メーカー別占有率           |
+| デビュートレンド   | 年別デビュー数             |
+| 年別統計           | 年ごとの作品数推移         |
 | プリファレンス分析 | 10カテゴリレーダーチャート |
-| ウォッチリスト分析 | 購入計画のコスト分析 |
+| ウォッチリスト分析 | 購入計画のコスト分析       |
 
 ### パフォーマンス最適化
 
-| 技術 | 適用箇所 |
-|------|---------|
-| ISR | ホーム(60秒)、商品詳細(600秒)、カテゴリ(3600秒) |
-| 動的読み込み | 動画プレイヤー、関連商品、AIレビュー、価格セクション |
-| 仮想スクロール | 商品グリッド（react-window） |
-| 画像最適化 | Next.js Image、WebP、Blur placeholder |
-| コード分割 | ページ・コンポーネント単位 |
+| 技術           | 適用箇所                                             |
+| -------------- | ---------------------------------------------------- |
+| ISR            | ホーム(60秒)、商品詳細(600秒)、カテゴリ(3600秒)      |
+| 動的読み込み   | 動画プレイヤー、関連商品、AIレビュー、価格セクション |
+| 仮想スクロール | 商品グリッド（react-window）                         |
+| 画像最適化     | Next.js Image、WebP、Blur placeholder                |
+| コード分割     | ページ・コンポーネント単位                           |
 
 ### レスポンシブデザイン
 
-| 画面サイズ | グリッド列数 | 特徴 |
-|-----------|-------------|------|
-| モバイル (sm) | 2列 | ハンバーガーメニュー、下部固定CTA |
-| タブレット (md) | 3列 | - |
-| ノートPC (lg) | 4列 | - |
-| デスクトップ (xl) | 5列 | サイドフィルター |
-| ワイド (2xl) | 6列 | ホバーエフェクト |
+| 画面サイズ        | グリッド列数 | 特徴                              |
+| ----------------- | ------------ | --------------------------------- |
+| モバイル (sm)     | 2列          | ハンバーガーメニュー、下部固定CTA |
+| タブレット (md)   | 3列          | -                                 |
+| ノートPC (lg)     | 4列          | -                                 |
+| デスクトップ (xl) | 5列          | サイドフィルター                  |
+| ワイド (2xl)      | 6列          | ホバーエフェクト                  |
 
 ### インタラクション
 
-| 機能 | 説明 |
-|------|------|
-| スワイプ | 画像ギャラリー、発見モード |
-| アコーディオン | フィルター、詳細情報セクション |
-| モーダル | ライトボックス、検索オートコンプリート |
+| 機能           | 説明                                              |
+| -------------- | ------------------------------------------------- |
+| スワイプ       | 画像ギャラリー、発見モード                        |
+| アコーディオン | フィルター、詳細情報セクション                    |
+| モーダル       | ライトボックス、検索オートコンプリート            |
 | アニメーション | スケルトン、セール緊急バッジ、ヘッダー表示/非表示 |
-| 無限スクロール | 商品一覧（オプション） |
-| プログレスバー | ページ遷移時 |
+| 無限スクロール | 商品一覧（オプション）                            |
+| プログレスバー | ページ遷移時                                      |
 
 ### コンポーネント構成
 
@@ -541,18 +541,18 @@ apps/web/components/              # アプリ固有コンポーネント（81個
 
 ### 技術スタック
 
-| カテゴリ | 技術 |
-|---------|------|
-| フレームワーク | Next.js 14+, React 18 |
-| 言語 | TypeScript |
-| スタイリング | Tailwind CSS |
-| 状態管理 | React Context, LocalStorage |
-| データベース | PostgreSQL (Drizzle ORM) |
-| 認証・同期 | Firebase (Firestore, Auth) |
-| チャート | Recharts |
-| 仮想スクロール | react-window |
-| 国際化 | next-intl |
-| 検索 | Meilisearch |
+| カテゴリ       | 技術                        |
+| -------------- | --------------------------- |
+| フレームワーク | Next.js 14+, React 18       |
+| 言語           | TypeScript                  |
+| スタイリング   | Tailwind CSS                |
+| 状態管理       | React Context, LocalStorage |
+| データベース   | PostgreSQL (Drizzle ORM)    |
+| 認証・同期     | Firebase (Firestore, Auth)  |
+| チャート       | Recharts                    |
+| 仮想スクロール | react-window                |
+| 国際化         | next-intl                   |
+| 検索           | Meilisearch                 |
 
 ---
 
@@ -562,14 +562,14 @@ apps/web/components/              # アプリ固有コンポーネント（81個
 
 同一コードベースで2つのサイトを運用するマルチサイト構成。
 
-| 項目 | apps/web (メインサイト) | apps/fanza (FANZAサブドメイン) |
-|------|------------------------|------------------------------|
-| URL | adult-v.com | f.adult-v.com |
-| ポート | 3000 | 3001 |
-| 対象ASP | 全ASP（FANZA, MGS, DUGA, SOKMIL等） | FANZAのみ |
-| テーマカラー | Indigo (#6366f1) | Pink (#ec4899) |
-| ブランド名 | Adult-V | FANZA Reviews |
-| 相互リンク | FANZAサイトへリンク可 | 他ASPへのリンク不可 |
+| 項目         | apps/web (メインサイト)             | apps/fanza (FANZAサブドメイン) |
+| ------------ | ----------------------------------- | ------------------------------ |
+| URL          | adult-v.com                         | f.adult-v.com                  |
+| ポート       | 3000                                | 3001                           |
+| 対象ASP      | 全ASP（FANZA, MGS, DUGA, SOKMIL等） | FANZAのみ                      |
+| テーマカラー | Indigo (#6366f1)                    | Pink (#ec4899)                 |
+| ブランド名   | Adult-V                             | FANZA Reviews                  |
+| 相互リンク   | FANZAサイトへリンク可               | 他ASPへのリンク不可            |
 
 ### サイトモード判定
 
@@ -585,12 +585,12 @@ export function getSiteMode(hostname?: string): SiteMode {
 
 ### 設定の違い
 
-| 設定項目 | adult-v | fanza |
-|---------|---------|-------|
-| `aspFilter` | `null`（全ASP） | `['FANZA']` |
-| `crossLinkEnabled` | `true` | `false` |
-| `primaryColor` | Indigo | Pink |
-| SEOタイトル | 厳選アダルト動画レビュー | FANZA作品専門レビュー |
+| 設定項目           | adult-v                  | fanza                 |
+| ------------------ | ------------------------ | --------------------- |
+| `aspFilter`        | `null`（全ASP）          | `['FANZA']`           |
+| `crossLinkEnabled` | `true`                   | `false`               |
+| `primaryColor`     | Indigo                   | Pink                  |
+| SEOタイトル        | 厳選アダルト動画レビュー | FANZA作品専門レビュー |
 
 ### 実装の共有
 
@@ -661,21 +661,21 @@ const config = getSiteConfig();
 
 ### Sentry エラー監視
 
-| 項目 | 説明 |
-|------|------|
-| 統合 | `@sentry/nextjs` |
-| 設定ファイル | `sentry.*.config.ts`, `instrumentation*.ts` |
-| カバレッジ | Server, Client, Edge |
-| エラートラッキング | 自動キャプチャ、カスタムエラー送信 |
+| 項目               | 説明                                        |
+| ------------------ | ------------------------------------------- |
+| 統合               | `@sentry/nextjs`                            |
+| 設定ファイル       | `sentry.*.config.ts`, `instrumentation*.ts` |
+| カバレッジ         | Server, Client, Edge                        |
+| エラートラッキング | 自動キャプチャ、カスタムエラー送信          |
 
 ### Google Analytics 4
 
-| 項目 | 説明 |
-|------|------|
-| 統合 | `gtag.js` |
-| 設定 | `packages/shared/src/lib/google-analytics.ts` |
-| カスタムイベント | 購入クリック、お気に入り追加、視聴完了 |
-| コンバージョン | CTAクリック、ASP遷移 |
+| 項目             | 説明                                          |
+| ---------------- | --------------------------------------------- |
+| 統合             | `gtag.js`                                     |
+| 設定             | `packages/shared/src/lib/google-analytics.ts` |
+| カスタムイベント | 購入クリック、お気に入り追加、視聴完了        |
+| コンバージョン   | CTAクリック、ASP遷移                          |
 
 ### A/Bテストフレームワーク
 
@@ -701,19 +701,19 @@ experiments: {
 
 ### PWAサポート
 
-| 項目 | 説明 |
-|------|------|
-| Service Worker | `public/sw.js` |
-| インストーラー | `PWAInstaller.tsx` |
-| マニフェスト | `manifest.json` |
-| オフライン | 基本ページキャッシュ |
-| 多言語対応 | ja/en/zh/ko |
+| 項目           | 説明                 |
+| -------------- | -------------------- |
+| Service Worker | `public/sw.js`       |
+| インストーラー | `PWAInstaller.tsx`   |
+| マニフェスト   | `manifest.json`      |
+| オフライン     | 基本ページキャッシュ |
+| 多言語対応     | ja/en/zh/ko          |
 
 ### プッシュ通知
 
-| API | 説明 |
-|-----|------|
-| `/api/notifications/subscribe` | 購読登録 |
+| API                              | 説明     |
+| -------------------------------- | -------- |
+| `/api/notifications/subscribe`   | 購読登録 |
 | `/api/notifications/unsubscribe` | 購読解除 |
 
 ---
@@ -722,18 +722,18 @@ experiments: {
 
 ### Cookie同意
 
-| 項目 | 説明 |
-|------|------|
-| コンポーネント | `CookieConsent.tsx` |
-| GDPR対応 | 同意前のトラッキング制限 |
-| 設定保存 | LocalStorage |
+| 項目           | 説明                     |
+| -------------- | ------------------------ |
+| コンポーネント | `CookieConsent.tsx`      |
+| GDPR対応       | 同意前のトラッキング制限 |
+| 設定保存       | LocalStorage             |
 
 ### 年齢確認
 
-| 項目 | 説明 |
-|------|------|
-| ページ | `/age-verification` |
-| API | `/api/age-verify` |
+| 項目   | 説明                   |
+| ------ | ---------------------- |
+| ページ | `/age-verification`    |
+| API    | `/api/age-verify`      |
 | Cookie | 18歳以上確認済みフラグ |
 
 ---
@@ -742,12 +742,12 @@ experiments: {
 
 ### Meilisearch全文検索
 
-| 項目 | 説明 |
-|------|------|
-| 設定 | `packages/shared/src/lib/meilisearch.ts` |
-| インデックス | `products` |
-| 特徴 | 50ms以下レスポンス、タイポ許容、日本語対応 |
-| ファセット | 女優、タグ、プロバイダー |
+| 項目         | 説明                                       |
+| ------------ | ------------------------------------------ |
+| 設定         | `packages/shared/src/lib/meilisearch.ts`   |
+| インデックス | `products`                                 |
+| 特徴         | 50ms以下レスポンス、タイポ許容、日本語対応 |
+| ファセット   | 女優、タグ、プロバイダー                   |
 | インデクサー | `scripts/index-products-to-meilisearch.ts` |
 
 ### 検索対象フィールド
@@ -769,30 +769,30 @@ interface MeilisearchProduct {
 
 ### Google Cloud Storage
 
-| 用途 | 説明 |
-|------|------|
-| Raw HTML保存 | クロール元HTMLの保存（再解析用） |
-| ヘルパー | `packages/crawlers/src/lib/gcs-crawler-helper.ts` |
+| 用途         | 説明                                              |
+| ------------ | ------------------------------------------------- |
+| Raw HTML保存 | クロール元HTMLの保存（再解析用）                  |
+| ヘルパー     | `packages/crawlers/src/lib/gcs-crawler-helper.ts` |
 
 ### データベーステーブル（主要）
 
-| テーブル | 説明 |
-|---------|------|
-| `products` | 商品マスタ（名寄せ後） |
-| `product_sources` | ASP別商品情報 |
-| `product_prices` | 価格タイプ別価格 |
-| `product_sales` | セール情報 |
-| `performers` | 出演者マスタ |
-| `performer_aliases` | 別名（芸名変更等） |
-| `performer_external_ids` | 外部サイトID |
-| `product_performers` | 商品-出演者紐付け |
-| `tags` | タグ/ジャンル |
-| `product_tags` | 商品-タグ紐付け |
-| `product_images` | サンプル画像 |
-| `product_videos` | サンプル動画 |
-| `product_reviews` | ユーザーレビュー |
-| `product_rating_summary` | 評価サマリ |
-| `raw_html_data` | 生HTML保存 |
+| テーブル                 | 説明                   |
+| ------------------------ | ---------------------- |
+| `products`               | 商品マスタ（名寄せ後） |
+| `product_sources`        | ASP別商品情報          |
+| `product_prices`         | 価格タイプ別価格       |
+| `product_sales`          | セール情報             |
+| `performers`             | 出演者マスタ           |
+| `performer_aliases`      | 別名（芸名変更等）     |
+| `performer_external_ids` | 外部サイトID           |
+| `product_performers`     | 商品-出演者紐付け      |
+| `tags`                   | タグ/ジャンル          |
+| `product_tags`           | 商品-タグ紐付け        |
+| `product_images`         | サンプル画像           |
+| `product_videos`         | サンプル動画           |
+| `product_reviews`        | ユーザーレビュー       |
+| `product_rating_summary` | 評価サマリ             |
+| `raw_html_data`          | 生HTML保存             |
 
 ---
 
@@ -800,28 +800,28 @@ interface MeilisearchProduct {
 
 ### Wikiソース
 
-| ソース | ファイル |
-|--------|---------|
-| AV-Wiki.net | `crawl-avwiki-net.ts` |
-| AV-Wiki.tokyo | `crawl-avwiki-tokyo.ts` |
-| Seesaa Wiki | `crawl-seesaawiki-performers.ts` |
-| Wikipedia日本語 | `crawl-wikipedia-ja.ts` |
-| エロ動画ZO | `crawl-erodougazo-performers.ts` |
+| ソース          | ファイル                         |
+| --------------- | -------------------------------- |
+| AV-Wiki.net     | `crawl-avwiki-net.ts`            |
+| AV-Wiki.tokyo   | `crawl-avwiki-tokyo.ts`          |
+| Seesaa Wiki     | `crawl-seesaawiki-performers.ts` |
+| Wikipedia日本語 | `crawl-wikipedia-ja.ts`          |
+| エロ動画ZO      | `crawl-erodougazo-performers.ts` |
 
 ### プロファイルソース
 
-| ソース | ファイル |
-|--------|---------|
-| SOKMIL | `crawl-sokmil-actors.ts` |
+| ソース     | ファイル                         |
+| ---------- | -------------------------------- |
+| SOKMIL     | `crawl-sokmil-actors.ts`         |
 | Gravurefit | `crawl-gravurefit-performers.ts` |
 | みんなのAV | `crawl-minnano-av-performers.ts` |
 
 ### 演者紐付けジョブ
 
-| ジョブ | 説明 |
-|-------|------|
+| ジョブ                 | 説明                 |
+| ---------------------- | -------------------- |
 | `link-wiki-performers` | Wiki情報と演者紐付け |
-| `enrich-performers` | 演者情報充実化 |
+| `enrich-performers`    | 演者情報充実化       |
 
 ---
 
@@ -829,74 +829,74 @@ interface MeilisearchProduct {
 
 ### 商品API
 
-| エンドポイント | 説明 |
-|---------------|------|
-| `GET /api/products` | 商品一覧 |
-| `GET /api/products/[id]` | 商品詳細 |
-| `GET /api/products/[id]/prices` | 価格情報 |
-| `GET /api/products/[id]/price-history` | 価格履歴 |
-| `GET /api/products/[id]/sale-prediction` | セール予測 |
+| エンドポイント                            | 説明         |
+| ----------------------------------------- | ------------ |
+| `GET /api/products`                       | 商品一覧     |
+| `GET /api/products/[id]`                  | 商品詳細     |
+| `GET /api/products/[id]/prices`           | 価格情報     |
+| `GET /api/products/[id]/price-history`    | 価格履歴     |
+| `GET /api/products/[id]/sale-prediction`  | セール予測   |
 | `GET /api/products/[id]/viewing-patterns` | 視聴パターン |
-| `GET /api/products/search` | 検索 |
-| `GET /api/products/search-by-id` | 品番検索 |
-| `GET /api/products/related` | 関連商品 |
+| `GET /api/products/search`                | 検索         |
+| `GET /api/products/search-by-id`          | 品番検索     |
+| `GET /api/products/related`               | 関連商品     |
 
 ### 女優API
 
-| エンドポイント | 説明 |
-|---------------|------|
-| `GET /api/actresses` | 女優一覧 |
-| `GET /api/actresses/[id]` | 女優詳細 |
+| エンドポイント                    | 説明             |
+| --------------------------------- | ---------------- |
+| `GET /api/actresses`              | 女優一覧         |
+| `GET /api/actresses/[id]`         | 女優詳細         |
 | `GET /api/performers/[id]/bundle` | 女優バンドル情報 |
 
 ### ランキング・統計API
 
-| エンドポイント | 説明 |
-|---------------|------|
-| `GET /api/ranking/products` | 商品ランキング |
-| `GET /api/ranking/actresses` | 女優ランキング |
-| `GET /api/stats/sales` | セール統計 |
-| `GET /api/stats/asp` | ASP統計 |
-| `GET /api/stats/daily-releases` | 日別リリース |
+| エンドポイント                   | 説明           |
+| -------------------------------- | -------------- |
+| `GET /api/ranking/products`      | 商品ランキング |
+| `GET /api/ranking/actresses`     | 女優ランキング |
+| `GET /api/stats/sales`           | セール統計     |
+| `GET /api/stats/asp`             | ASP統計        |
+| `GET /api/stats/daily-releases`  | 日別リリース   |
 | `GET /api/stats/calendar-detail` | カレンダー詳細 |
 
 ### その他API
 
-| エンドポイント | 説明 |
-|---------------|------|
-| `GET /api/recommendations` | おすすめ |
-| `GET /api/recommendations/actresses` | 女優おすすめ |
-| `GET /api/weekly-highlights` | 週間ハイライト |
-| `GET /api/discover` | 発見モード |
-| `GET /api/sale-calendar` | セールカレンダー |
-| `GET /api/sales/for-you` | パーソナライズセール |
-| `GET /api/makers` | メーカー一覧 |
-| `GET /api/makers/[makerId]` | メーカー詳細 |
-| `GET /api/series/[seriesId]` | シリーズ詳細 |
-| `GET /api/search/autocomplete` | オートコンプリート |
-| `GET /api/footer-actresses` | フッター女優 |
-| `GET /api/footer-links` | フッターリンク |
+| エンドポイント                       | 説明                 |
+| ------------------------------------ | -------------------- |
+| `GET /api/recommendations`           | おすすめ             |
+| `GET /api/recommendations/actresses` | 女優おすすめ         |
+| `GET /api/weekly-highlights`         | 週間ハイライト       |
+| `GET /api/discover`                  | 発見モード           |
+| `GET /api/sale-calendar`             | セールカレンダー     |
+| `GET /api/sales/for-you`             | パーソナライズセール |
+| `GET /api/makers`                    | メーカー一覧         |
+| `GET /api/makers/[makerId]`          | メーカー詳細         |
+| `GET /api/series/[seriesId]`         | シリーズ詳細         |
+| `GET /api/search/autocomplete`       | オートコンプリート   |
+| `GET /api/footer-actresses`          | フッター女優         |
+| `GET /api/footer-links`              | フッターリンク       |
 
 ### 管理API
 
-| エンドポイント | 説明 |
-|---------------|------|
-| `GET /api/admin/stats` | 管理統計 |
-| `GET /api/admin/jobs` | ジョブ管理 |
-| `GET /api/embed/stats` | 埋め込み統計 |
-| `GET /api/analytics` | アナリティクス |
+| エンドポイント         | 説明           |
+| ---------------------- | -------------- |
+| `GET /api/admin/stats` | 管理統計       |
+| `GET /api/admin/jobs`  | ジョブ管理     |
+| `GET /api/embed/stats` | 埋め込み統計   |
+| `GET /api/analytics`   | アナリティクス |
 
 ### Cron API（定期実行）
 
-| エンドポイント | 説明 |
-|---------------|------|
-| `/api/cron/crawl-*` | 各ASPクロール |
-| `/api/cron/enhance-content` | コンテンツ強化 |
-| `/api/cron/seo-enhance` | SEO強化 |
-| `/api/cron/normalize-performers` | 演者正規化 |
-| `/api/cron/performer-pipeline` | 演者パイプライン |
+| エンドポイント                          | 説明                       |
+| --------------------------------------- | -------------------------- |
+| `/api/cron/crawl-*`                     | 各ASPクロール              |
+| `/api/cron/enhance-content`             | コンテンツ強化             |
+| `/api/cron/seo-enhance`                 | SEO強化                    |
+| `/api/cron/normalize-performers`        | 演者正規化                 |
+| `/api/cron/performer-pipeline`          | 演者パイプライン           |
 | `/api/cron/content-enrichment-pipeline` | コンテンツ充実パイプライン |
-| `/api/cron/cleanup` | クリーンアップ |
+| `/api/cron/cleanup`                     | クリーンアップ             |
 
 ---
 
@@ -912,20 +912,22 @@ interface MeilisearchProduct {
 
 **移行先**: `packages/shared`
 
-| 移行コンテンツ | 移行先 |
-|--------------|--------|
-| 5 hooks (useDebounce等) | `packages/shared/src/hooks/` |
-| 7 components | `packages/shared/src/components/` |
+| 移行コンテンツ          | 移行先                            |
+| ----------------------- | --------------------------------- |
+| 5 hooks (useDebounce等) | `packages/shared/src/hooks/`      |
+| 7 components            | `packages/shared/src/components/` |
 
 ### Phase 2: lib共通化
 
 **対象**: 30ファイルの重複lib
 
 **作業内容**:
+
 - `apps/web/lib/*.ts` と `apps/fanza/lib/*.ts` の共通ファイルを `packages/shared/src/lib/` に統合
 - 各アプリからは re-export 形式で参照
 
 **統合ファイル例**:
+
 - `affiliate.ts`, `api-utils.ts`, `asp-totals.ts`
 - `bot-detection.ts`, `cache.ts`, `firebase.ts`
 - `google-analytics.ts`, `meilisearch.ts`, `sale-helper.ts`
@@ -937,13 +939,14 @@ interface MeilisearchProduct {
 **対象API**: `/api/performers/[id]/relations`
 
 **修正内容**:
+
 ```typescript
 // Before: N+1 (costars.map内で個別クエリ)
 const relationsWithProducts = await Promise.all(
   costars.map(async (costar) => {
     const products = await db.execute(sql`...`);
     return { ...costar, products };
-  })
+  }),
 );
 
 // After: 1クエリでバッチ取得（CTE + ROW_NUMBER）
@@ -965,13 +968,14 @@ const allProducts = await db.execute(sql`
 
 ### Phase 4: APIキャッシュ追加
 
-| API | TTL | キャッシュキー形式 |
-|-----|-----|-------------------|
-| `/api/trends` | 5分 | `trends:{site}:{period}:{locale}` |
-| `/api/products/compare` | 10分 | `compare:{site}:{ids}` |
+| API                              | TTL  | キャッシュキー形式                       |
+| -------------------------------- | ---- | ---------------------------------------- |
+| `/api/trends`                    | 5分  | `trends:{site}:{period}:{locale}`        |
+| `/api/products/compare`          | 10分 | `compare:{site}:{ids}`                   |
 | `/api/performers/[id]/relations` | 30分 | `relations:{site}:{performerId}:{limit}` |
 
 **実装**:
+
 ```typescript
 import { getCache, setCache, generateCacheKey } from '@adult-v/shared/lib/cache';
 
@@ -990,6 +994,7 @@ await setCache(cacheKey, response, CACHE_TTL);
 **パッケージ**: `packages/shared/src/api-handlers/`
 
 **パターン**:
+
 ```typescript
 // packages/shared/src/api-handlers/createTrendsHandler.ts
 export function createTrendsHandler(deps: { getDb: () => DbClient }) {
@@ -1005,6 +1010,7 @@ export const GET = createTrendsHandler({ getDb });
 ```
 
 **共通化済みハンドラー一覧**:
+
 - `createActressDetailHandler` - 女優詳細
 - `createActressesHandler` - 女優一覧
 - `createProductsHandler` - 商品一覧
@@ -1017,35 +1023,35 @@ export const GET = createTrendsHandler({ getDb });
 
 **修正箇所**:
 
-| ファイル | 修正内容 |
-|---------|---------|
-| `packages/shared/src/lib/cache.ts` | `any` → `RedisClientType \| null` |
+| ファイル                                         | 修正内容                                                                     |
+| ------------------------------------------------ | ---------------------------------------------------------------------------- |
+| `packages/shared/src/lib/cache.ts`               | `any` → `RedisClientType \| null`                                            |
 | `packages/shared/src/db-queries/core-queries.ts` | `sourcesMap: Map<number, any>` → `Map<number, BatchSourceData \| undefined>` |
 
 ### 削減効果
 
-| 項目 | 削減量 |
-|------|--------|
-| lib重複コード | ~3,000行 |
-| APIルート重複 | ~5,000行 |
-| コンポーネント重複 | ~2,000行 |
-| db/queries重複 | ~1,500行 |
-| **合計** | **~11,500行** |
+| 項目               | 削減量        |
+| ------------------ | ------------- |
+| lib重複コード      | ~3,000行      |
+| APIルート重複      | ~5,000行      |
+| コンポーネント重複 | ~2,000行      |
+| db/queries重複     | ~1,500行      |
+| **合計**           | **~11,500行** |
 
 ### パフォーマンス改善
 
-| 改善項目 | 効果 |
-|---------|------|
-| N+1クエリ解消 | relations API: 20+クエリ → 2クエリ |
+| 改善項目        | 効果                                           |
+| --------------- | ---------------------------------------------- |
+| N+1クエリ解消   | relations API: 20+クエリ → 2クエリ             |
 | Redisキャッシュ | trends/compare/relations APIのレスポンス高速化 |
-| バッチ取得 | 関連データの一括取得でDB負荷軽減 |
+| バッチ取得      | 関連データの一括取得でDB負荷軽減               |
 
 ### Tailwind CSS標準化
 
-| 変更前 | 変更後 |
-|--------|--------|
-| `flex-shrink-0` | `shrink-0` |
-| `aspect-[3/4]` | `aspect-3/4` |
+| 変更前             | 変更後                        |
+| ------------------ | ----------------------------- |
+| `flex-shrink-0`    | `shrink-0`                    |
+| `aspect-[3/4]`     | `aspect-3/4`                  |
 | `bg-gradient-to-*` | `bg-linear-to-*` (Tailwind 4) |
 
 ---
@@ -1059,6 +1065,7 @@ export const GET = createTrendsHandler({ getDb });
 ### 20.1 商品比較機能
 
 **ファイル**:
+
 - `packages/shared/src/components/ProductCompare.tsx`
 - `packages/shared/src/components/CompareButton.tsx`
 - `packages/shared/src/components/CompareFloatingBar.tsx`
@@ -1078,6 +1085,7 @@ export const GET = createTrendsHandler({ getDb });
 ### 20.2 一括選択機能
 
 **ファイル**:
+
 - `packages/shared/src/hooks/useBulkSelection.ts`
 - `packages/shared/src/components/BulkActionBar.tsx`
 - `packages/shared/src/components/SelectableCard.tsx`
@@ -1094,6 +1102,7 @@ export const GET = createTrendsHandler({ getDb });
 ### 20.3 ホームセクションカスタマイズ
 
 **ファイル**:
+
 - `packages/shared/src/hooks/useHomeSections.ts`
 - `packages/shared/src/components/HomeSectionManager.tsx`
 
@@ -1110,6 +1119,7 @@ export const GET = createTrendsHandler({ getDb });
 | `new-releases` | 新作 | ✓ |
 
 **機能**:
+
 - 各セクションの表示/非表示切り替え
 - ドラッグ&ドロップで順序変更
 - デフォルトにリセット
@@ -1118,6 +1128,7 @@ export const GET = createTrendsHandler({ getDb });
 ### 20.4 スワイプジェスチャー
 
 **ファイル**:
+
 - `packages/shared/src/hooks/useSwipeGesture.ts`
 - `packages/shared/src/components/SwipeableCarousel.tsx`
 
@@ -1130,6 +1141,7 @@ export const GET = createTrendsHandler({ getDb });
 | 優先度 | 水平 > 垂直 |
 
 **用途**:
+
 - 画像ギャラリー
 - 発見モード（Tinder風）
 - カルーセルナビゲーション
@@ -1137,10 +1149,12 @@ export const GET = createTrendsHandler({ getDb });
 ### 20.5 視聴習慣ダッシュボード
 
 **ファイル**:
+
 - `packages/shared/src/hooks/useViewingDiary.ts`
 - `packages/shared/src/components/ViewingHabitsDashboard.tsx`
 
 **記録データ**:
+
 ```typescript
 interface DiaryEntry {
   productId: string;
@@ -1150,10 +1164,10 @@ interface DiaryEntry {
   performerName?: string;
   performerId?: number | string;
   tags?: string[];
-  duration?: number;      // 分
-  rating?: number;        // 1-5
+  duration?: number; // 分
+  rating?: number; // 1-5
   note?: string;
-  viewedAt: number;       // timestamp
+  viewedAt: number; // timestamp
 }
 ```
 
@@ -1172,6 +1186,7 @@ interface DiaryEntry {
 ### 20.6 お気に入り/ウォッチリスト
 
 **ファイル**:
+
 - `packages/shared/src/hooks/useFavorites.ts`
 - `packages/shared/src/hooks/useWatchLater.ts`
 - `packages/shared/src/components/FavoriteButton.tsx`
@@ -1196,11 +1211,13 @@ interface DiaryEntry {
 ### 20.7 価格アラート
 
 **ファイル**:
+
 - `packages/shared/src/hooks/usePriceAlerts.ts`
 - `packages/shared/src/components/PriceAlertButton.tsx`
 - `packages/shared/src/components/SaleAlertButton.tsx`
 
 **アラート設定**:
+
 ```typescript
 interface PriceAlert {
   productId: string;
@@ -1215,6 +1232,7 @@ interface PriceAlert {
 ```
 
 **通知設定（useNotificationPreferences）**:
+
 - セールアラート（有効/無効）
 - 価格低下通知
 - 新作通知
@@ -1226,12 +1244,13 @@ interface PriceAlert {
 
 **マイグレーション実施済み**:
 
-| ファイル | 内容 |
-|---------|------|
-| `0032_add_price_history.sql` | 価格履歴テーブル |
+| ファイル                     | 内容                   |
+| ---------------------------- | ---------------------- |
+| `0032_add_price_history.sql` | 価格履歴テーブル       |
 | `0033_add_sale_patterns.sql` | セールパターンテーブル |
 
 **price_history テーブル**:
+
 ```sql
 CREATE TABLE price_history (
     id SERIAL PRIMARY KEY,
@@ -1244,6 +1263,7 @@ CREATE TABLE price_history (
 ```
 
 **sale_patterns テーブル**:
+
 ```sql
 CREATE TABLE sale_patterns (
     id SERIAL PRIMARY KEY,
@@ -1260,6 +1280,7 @@ CREATE TABLE sale_patterns (
 ```
 
 **product_views 追加カラム**:
+
 ```sql
 ALTER TABLE product_views ADD COLUMN session_id VARCHAR(255);
 CREATE INDEX idx_product_views_session_id ON product_views(session_id);
@@ -1269,17 +1290,17 @@ CREATE INDEX idx_product_views_session_id ON product_views(session_id);
 
 **新規テストファイル**:
 
-| ファイル | テスト数 | 内容 |
-|---------|---------|------|
-| `useCompareList.test.ts` | 16 | 比較リストフック |
-| `useBulkSelection.test.ts` | 19 | 一括選択フック |
-| `useHomeSections.test.ts` | 15 | ホームセクションフック |
-| `useSwipeGesture.test.ts` | 13 | スワイプジェスチャー |
-| `BulkActionBar.test.tsx` | 17 | アクションバー |
-| `ViewingHabitsDashboard.test.tsx` | 18 | ダッシュボード |
-| `CompareButton.test.tsx` | 16 | 比較ボタン |
-| `price-history.test.ts` | 15 | 価格履歴クエリ |
-| `schema-consistency.test.ts` | 9 | DBスキーマ整合性 |
+| ファイル                          | テスト数 | 内容                   |
+| --------------------------------- | -------- | ---------------------- |
+| `useCompareList.test.ts`          | 16       | 比較リストフック       |
+| `useBulkSelection.test.ts`        | 19       | 一括選択フック         |
+| `useHomeSections.test.ts`         | 15       | ホームセクションフック |
+| `useSwipeGesture.test.ts`         | 13       | スワイプジェスチャー   |
+| `BulkActionBar.test.tsx`          | 17       | アクションバー         |
+| `ViewingHabitsDashboard.test.tsx` | 18       | ダッシュボード         |
+| `CompareButton.test.tsx`          | 16       | 比較ボタン             |
+| `price-history.test.ts`           | 15       | 価格履歴クエリ         |
+| `schema-consistency.test.ts`      | 9        | DBスキーマ整合性       |
 
 **総テスト数**: 680テスト（32ファイル）
 
@@ -1293,13 +1314,14 @@ Core Web Vitalsの改善とSEO強化のための包括的な最適化を実施�
 
 ### 21.1 バンドルサイズ最適化
 
-| 施策 | ファイル | 効果 |
-|------|---------|------|
-| 統計チャートDynamic Import | `packages/shared/src/components/stats/DynamicCharts.tsx` | ~50KB削減 |
-| recharts最適化 | `next.config.mjs` optimizePackageImports | ~20KB削減 |
-| HeaderBase memo化 | `packages/shared/src/components/Header/HeaderBase.tsx` | 再レンダー削減 |
+| 施策                       | ファイル                                                 | 効果           |
+| -------------------------- | -------------------------------------------------------- | -------------- |
+| 統計チャートDynamic Import | `packages/shared/src/components/stats/DynamicCharts.tsx` | ~50KB削減      |
+| recharts最適化             | `next.config.mjs` optimizePackageImports                 | ~20KB削減      |
+| HeaderBase memo化          | `packages/shared/src/components/Header/HeaderBase.tsx`   | 再レンダー削減 |
 
 **Dynamic Charts実装**:
+
 ```typescript
 // DynamicCharts.tsx
 export const DynamicReleasesTrendChart = dynamic(
@@ -1310,13 +1332,14 @@ export const DynamicReleasesTrendChart = dynamic(
 
 ### 21.2 LCP/FCP最適化
 
-| 施策 | ファイル | 効果 |
-|------|---------|------|
-| Firebase Remote Config遅延 | `FirebaseAuthContext.tsx` | FCP ~300ms改善 |
-| LCP画像priority設定 | `FanzaNewReleasesSection.tsx` | LCP ~500ms改善 |
-| requestIdleCallback活用 | Remote Config初期化 | メインスレッド解放 |
+| 施策                       | ファイル                      | 効果               |
+| -------------------------- | ----------------------------- | ------------------ |
+| Firebase Remote Config遅延 | `FirebaseAuthContext.tsx`     | FCP ~300ms改善     |
+| LCP画像priority設定        | `FanzaNewReleasesSection.tsx` | LCP ~500ms改善     |
+| requestIdleCallback活用    | Remote Config初期化           | メインスレッド解放 |
 
 **Firebase遅延初期化**:
+
 ```typescript
 if ('requestIdleCallback' in window) {
   window.requestIdleCallback(() => loadRemoteConfig(), { timeout: 5000 });
@@ -1327,31 +1350,36 @@ if ('requestIdleCallback' in window) {
 
 ### 21.3 構造化データ拡張
 
-| スキーマ | ファイル | 用途 |
-|---------|---------|------|
-| HowTo | `seo.ts` generateHowToSchema | 視聴方法リッチスニペット |
-| AggregateOffer | `seo.ts` generateAggregateOfferSchema | 複数ASP価格比較 |
-| ItemList (Products) | `seo.ts` generateProductItemListSchema | 関連商品リスト |
-| ItemList (Performers) | `seo.ts` generatePerformerItemListSchema | 関連女優リスト |
+| スキーマ              | ファイル                                 | 用途                     |
+| --------------------- | ---------------------------------------- | ------------------------ |
+| HowTo                 | `seo.ts` generateHowToSchema             | 視聴方法リッチスニペット |
+| AggregateOffer        | `seo.ts` generateAggregateOfferSchema    | 複数ASP価格比較          |
+| ItemList (Products)   | `seo.ts` generateProductItemListSchema   | 関連商品リスト           |
+| ItemList (Performers) | `seo.ts` generatePerformerItemListSchema | 関連女優リスト           |
 
 **AggregateOfferスキーマ**:
+
 ```typescript
-generateAggregateOfferSchema([
-  { providerName: 'FANZA', price: 1980 },
-  { providerName: 'MGS', price: 1780 },
-], 'JPY')
+generateAggregateOfferSchema(
+  [
+    { providerName: 'FANZA', price: 1980 },
+    { providerName: 'MGS', price: 1780 },
+  ],
+  'JPY',
+);
 ```
 
 ### 21.4 多言語SEO最適化
 
-| 言語 | 関数 | 特徴 |
-|------|------|------|
-| 日本語 | generateJapaneseProductDescription | セール優先、品番、CTA |
-| 英語 | generateEnglishProductDescription | Sale badge, feat. actress |
-| 中国語 | generateChineseProductDescription | 簡体/繁体対応 |
-| 韓国語 | generateKoreanProductDescription | 할인表示、출연 |
+| 言語   | 関数                               | 特徴                      |
+| ------ | ---------------------------------- | ------------------------- |
+| 日本語 | generateJapaneseProductDescription | セール優先、品番、CTA     |
+| 英語   | generateEnglishProductDescription  | Sale badge, feat. actress |
+| 中国語 | generateChineseProductDescription  | 簡体/繁体対応             |
+| 韓国語 | generateKoreanProductDescription   | 할인表示、출연            |
 
 **各言語CTR最適化テンプレート**:
+
 ```typescript
 // 日本語: 【30%OFF】SSIS-865 タイトル - 女優名出演 - 120分 - FANZAで今すぐ視聴
 // 英語: [30% OFF] SSIS-865 Title - feat. ActressName - 120min - Watch now on FANZA
@@ -1361,12 +1389,13 @@ generateAggregateOfferSchema([
 
 ### 21.5 SEO関連ユーティリティ追加
 
-| 関数 | ファイル | 用途 |
-|------|---------|------|
-| generateActressAltText | `seo-utils.ts` | 女優画像Alt最適化 |
+| 関数                       | ファイル       | 用途                  |
+| -------------------------- | -------------- | --------------------- |
+| generateActressAltText     | `seo-utils.ts` | 女優画像Alt最適化     |
 | generateSampleImageAltText | `seo-utils.ts` | サンプル画像Alt最適化 |
 
 **Alt属性フォーマット**:
+
 ```typescript
 // 女優: "女優名 | (別名) | 出演50作品 | FANZA・MGS"
 // 商品: "タイトル - 女優名 - サンプル画像1"
@@ -1387,13 +1416,13 @@ npm run dev:fanza  # FANZA版 (localhost:3001)
 
 GETパラメータ `hl` で指定：
 
-| 言語 | URL |
-|------|-----|
-| 日本語 | http://localhost:3000?hl=ja |
-| 英語 | http://localhost:3000?hl=en |
-| 中国語(簡) | http://localhost:3000?hl=zh |
+| 言語       | URL                            |
+| ---------- | ------------------------------ |
+| 日本語     | http://localhost:3000?hl=ja    |
+| 英語       | http://localhost:3000?hl=en    |
+| 中国語(簡) | http://localhost:3000?hl=zh    |
 | 中国語(繁) | http://localhost:3000?hl=zh-TW |
-| 韓国語 | http://localhost:3000?hl=ko |
+| 韓国語     | http://localhost:3000?hl=ko    |
 
 ### テスト実行
 
@@ -1420,11 +1449,13 @@ npm run build:fanza  # FANZA版
 ### 22.1 ユーザーレビュー機能
 
 **ファイル**:
+
 - `packages/shared/src/api-handlers/user-reviews.ts`
 - `packages/shared/src/components/UserContributions/UserReviewForm.tsx`
 - `packages/shared/src/components/UserContributions/UserReviewList.tsx`
 
 **DBスキーマ**:
+
 ```sql
 CREATE TABLE user_reviews (
     id SERIAL PRIMARY KEY,
@@ -1469,11 +1500,13 @@ CREATE TABLE user_review_votes (
 ### 22.2 タグ提案機能
 
 **ファイル**:
+
 - `packages/shared/src/api-handlers/tag-suggestions.ts`
 - `packages/shared/src/components/UserContributions/TagSuggestionForm.tsx`
 - `packages/shared/src/components/UserContributions/TagSuggestionList.tsx`
 
 **DBスキーマ**:
+
 ```sql
 CREATE TABLE user_tag_suggestions (
     id SERIAL PRIMARY KEY,
@@ -1515,11 +1548,13 @@ CREATE TABLE user_tag_suggestion_votes (
 ### 22.3 出演者提案機能
 
 **ファイル**:
+
 - `packages/shared/src/api-handlers/performer-suggestions.ts`
 - `packages/shared/src/components/UserContributions/PerformerSuggestionForm.tsx`
 - `packages/shared/src/components/UserContributions/PerformerSuggestionList.tsx`
 
 **DBスキーマ**:
+
 ```sql
 CREATE TABLE user_performer_suggestions (
     id SERIAL PRIMARY KEY,
@@ -1561,10 +1596,12 @@ CREATE TABLE user_performer_suggestion_votes (
 ### 22.4 統合UIコンポーネント
 
 **ファイル**:
+
 - `packages/shared/src/components/UserContributions/UserContributionsSection.tsx`
 - `packages/shared/src/components/UserContributions/index.ts`
 
 **機能**:
+
 - アコーディオン形式で3つの貢献機能を統合
 - ログイン必須コールバック対応
 - 多言語対応（日本語・英語）
@@ -1613,9 +1650,11 @@ CREATE TABLE public_favorite_list_likes (
 ### ファイル
 
 **API ハンドラー**:
+
 - `packages/shared/src/api-handlers/public-favorite-lists.ts`
 
 **UIコンポーネント**:
+
 - `packages/shared/src/components/PublicFavoriteLists/PublicListCard.tsx`
 - `packages/shared/src/components/PublicFavoriteLists/CreateListModal.tsx`
 - `packages/shared/src/components/PublicFavoriteLists/PublicListDetail.tsx`
@@ -1623,39 +1662,39 @@ CREATE TABLE public_favorite_list_likes (
 
 ### 機能一覧
 
-| 機能 | 説明 |
-|------|------|
-| リスト作成 | タイトル・説明・公開/非公開設定 |
-| リスト編集 | タイトル・説明・公開設定の変更 |
-| リスト削除 | 所有者のみ削除可（アイテムもカスケード削除） |
-| アイテム追加 | 商品をリストに追加 |
-| アイテム削除 | リストから商品を削除 |
-| いいね | 他ユーザーの公開リストにいいね |
-| いいね解除 | いいねを取り消し |
-| 閲覧数カウント | リスト詳細閲覧時にカウント |
-| ソート | いいね数順、閲覧数順、作成日順 |
+| 機能           | 説明                                         |
+| -------------- | -------------------------------------------- |
+| リスト作成     | タイトル・説明・公開/非公開設定              |
+| リスト編集     | タイトル・説明・公開設定の変更               |
+| リスト削除     | 所有者のみ削除可（アイテムもカスケード削除） |
+| アイテム追加   | 商品をリストに追加                           |
+| アイテム削除   | リストから商品を削除                         |
+| いいね         | 他ユーザーの公開リストにいいね               |
+| いいね解除     | いいねを取り消し                             |
+| 閲覧数カウント | リスト詳細閲覧時にカウント                   |
+| ソート         | いいね数順、閲覧数順、作成日順               |
 
 ### アクセス制御
 
-| 操作 | 条件 |
-|------|------|
-| 公開リスト閲覧 | 誰でも可能 |
-| 非公開リスト閲覧 | 所有者のみ |
-| リスト編集・削除 | 所有者のみ |
-| アイテム追加・削除 | 所有者のみ |
-| いいね | ログインユーザー（所有者以外） |
+| 操作               | 条件                           |
+| ------------------ | ------------------------------ |
+| 公開リスト閲覧     | 誰でも可能                     |
+| 非公開リスト閲覧   | 所有者のみ                     |
+| リスト編集・削除   | 所有者のみ                     |
+| アイテム追加・削除 | 所有者のみ                     |
+| いいね             | ログインユーザー（所有者以外） |
 
 ### API
 
-| エンドポイント | メソッド | 説明 |
-|---------------|---------|------|
-| `/api/favorite-lists` | GET | リスト一覧取得 |
-| `/api/favorite-lists` | POST | リスト作成 |
-| `/api/favorite-lists/[id]` | GET | リスト詳細取得 |
-| `/api/favorite-lists/[id]` | PUT | リスト更新 |
-| `/api/favorite-lists/[id]` | DELETE | リスト削除 |
-| `/api/favorite-lists/[id]/items` | POST | アイテム追加/削除 |
-| `/api/favorite-lists/[id]/like` | POST | いいね/いいね解除 |
+| エンドポイント                   | メソッド | 説明              |
+| -------------------------------- | -------- | ----------------- |
+| `/api/favorite-lists`            | GET      | リスト一覧取得    |
+| `/api/favorite-lists`            | POST     | リスト作成        |
+| `/api/favorite-lists/[id]`       | GET      | リスト詳細取得    |
+| `/api/favorite-lists/[id]`       | PUT      | リスト更新        |
+| `/api/favorite-lists/[id]`       | DELETE   | リスト削除        |
+| `/api/favorite-lists/[id]/items` | POST     | アイテム追加/削除 |
+| `/api/favorite-lists/[id]/like`  | POST     | いいね/いいね解除 |
 
 ### ページ
 

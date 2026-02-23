@@ -16,7 +16,7 @@ interface DbClient {
     from: (table: unknown) => {
       leftJoin: (
         table: unknown,
-        condition: unknown
+        condition: unknown,
       ) => {
         where: (condition: unknown) => {
           groupBy: (...fields: unknown[]) => {
@@ -106,23 +106,22 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
             thumbnail: deps.products['defaultThumbnailUrl'],
           })
           .from(deps.products)
-          .leftJoin(
-            deps.productSources,
-            sql`${deps.products['id']} = ${deps.productSources.productId}`
-          )
+          .leftJoin(deps.productSources, sql`${deps.products['id']} = ${deps.productSources.productId}`)
           .where(
             or(
               sql`${deps.products.normalizedProductId} ILIKE ${`%${query}%`}`,
-              sql`${deps.productSources.originalProductId} ILIKE ${`%${query}%`}`
-            )
+              sql`${deps.productSources.originalProductId} ILIKE ${`%${query}%`}`,
+            ),
           )
-          .limit(limit) as Promise<{
+          .limit(limit) as Promise<
+          {
             id: number;
             title: string | null;
             normalizedProductId: string | null;
             originalProductId: string | null;
             thumbnail: string | null;
-          }[]>,
+          }[]
+        >,
 
         // 2. 女優名検索（release_countカラムを使用してJOINを回避）
         db
@@ -130,19 +129,19 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
             id: deps.performers['id'],
             name: deps.performers['name'],
             image: deps.performers['profileImageUrl'],
-            productCount: sql<number>`COALESCE(${deps.performers}.release_count, 0)`.as(
-              'product_count'
-            ),
+            productCount: sql<number>`COALESCE(${deps.performers}.release_count, 0)`.as('product_count'),
           })
           .from(deps.performers)
           .where(ilike(deps.performers['name'] as never, `%${query}%`))
           .orderBy(desc(sql`COALESCE(${deps.performers}.release_count, 0)`))
-          .limit(limit) as Promise<{
+          .limit(limit) as Promise<
+          {
             id: number;
             name: string;
             image: string | null;
             productCount: number;
-          }[]>,
+          }[]
+        >,
 
         // 3. タグ検索（JOINなしでシンプルに - カウントは省略）
         db
@@ -153,11 +152,13 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
           })
           .from(deps.tags)
           .where(ilike(deps.tags.name as never, `%${query}%`))
-          .limit(limit) as Promise<{
+          .limit(limit) as Promise<
+          {
             id: number;
             name: string;
             category: string | null;
-          }[]>,
+          }[]
+        >,
 
         // 4. 商品タイトル検索（FTS使用）
         db
@@ -167,14 +168,14 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
             thumbnail: deps.products['defaultThumbnailUrl'],
           })
           .from(deps.products)
-          .where(
-            sql`${deps.products}.search_vector @@ plainto_tsquery('simple', ${query})`
-          )
-          .limit(5) as Promise<{
+          .where(sql`${deps.products}.search_vector @@ plainto_tsquery('simple', ${query})`)
+          .limit(5) as Promise<
+          {
             id: number;
             title: string | null;
             thumbnail: string | null;
-          }[]>,
+          }[]
+        >,
       ]);
 
       // Combine results with type priority
@@ -185,10 +186,7 @@ export function createSearchAutocompleteHandler(deps: SearchAutocompleteHandlerD
         results.push({
           type: 'product_id',
           id: match.id,
-          name:
-            match.originalProductId ||
-            match.normalizedProductId ||
-            String(match.id),
+          name: match.originalProductId || match.normalizedProductId || String(match.id),
           ...(match.thumbnail && { image: match.thumbnail }),
           category: '品番',
         });

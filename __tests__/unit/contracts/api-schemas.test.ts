@@ -28,10 +28,14 @@ const ProductSchema = z.object({
   providerLabel: z.string(),
   actressId: z.string().optional(),
   actressName: z.string().optional(),
-  performers: z.array(z.object({
-    id: z.string(),
-    name: z.string(),
-  })).optional(),
+  performers: z
+    .array(
+      z.object({
+        id: z.string(),
+        name: z.string(),
+      }),
+    )
+    .optional(),
   releaseDate: z.string().optional(),
   duration: z.number().optional(),
   tags: z.array(z.string()),
@@ -44,21 +48,29 @@ const ProductSchema = z.object({
   regularPrice: z.number().optional(),
   saleEndAt: z.string().optional(),
   sampleImages: z.array(z.string()).optional(),
-  sampleVideos: z.array(z.object({
-    url: z.string(),
-    type: z.string(),
-    quality: z.string().optional(),
-    duration: z.number().optional(),
-  })).optional(),
+  sampleVideos: z
+    .array(
+      z.object({
+        url: z.string(),
+        type: z.string(),
+        quality: z.string().optional(),
+        duration: z.number().optional(),
+      }),
+    )
+    .optional(),
   aiReview: z.string().optional(),
   aiReviewUpdatedAt: z.string().optional(),
-  alternativeSources: z.array(z.object({
-    aspName: z.string(),
-    price: z.number(),
-    salePrice: z.number().optional(),
-    affiliateUrl: z.string(),
-    productId: z.number(),
-  })).optional(),
+  alternativeSources: z
+    .array(
+      z.object({
+        aspName: z.string(),
+        price: z.number(),
+        salePrice: z.number().optional(),
+        affiliateUrl: z.string(),
+        productId: z.number(),
+      }),
+    )
+    .optional(),
 });
 
 const ProductListResponseSchema = z.object({
@@ -89,12 +101,14 @@ const ActressSchema = z.object({
   highlightWorks: z.array(z.any()),
   tags: z.array(z.string()),
   aliases: z.array(z.string()).optional(),
-  aiReview: z.object({
-    summary: z.string().optional(),
-    bodyType: z.string().optional(),
-    personality: z.string().optional(),
-    performance: z.string().optional(),
-  }).optional(),
+  aiReview: z
+    .object({
+      summary: z.string().optional(),
+      bodyType: z.string().optional(),
+      personality: z.string().optional(),
+      performance: z.string().optional(),
+    })
+    .optional(),
   aiReviewUpdatedAt: z.string().optional(),
 });
 
@@ -183,9 +197,7 @@ describe('API Contract Tests', () => {
         sampleImages: ['https://example.com/sample1.jpg'],
         sampleVideos: [{ url: 'https://example.com/video.mp4', type: 'sample' }],
         aiReview: 'AIレビュー',
-        alternativeSources: [
-          { aspName: 'MGS', price: 2000, affiliateUrl: 'https://mgs.com', productId: 12345 },
-        ],
+        alternativeSources: [{ aspName: 'MGS', price: 2000, affiliateUrl: 'https://mgs.com', productId: 12345 }],
       };
 
       const result = ProductSchema.safeParse(fullProduct);

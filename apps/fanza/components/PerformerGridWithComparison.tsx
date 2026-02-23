@@ -30,12 +30,7 @@ export function PerformerGridWithComparison({
   const theme = useSiteTheme();
 
   return (
-    <PerformerListWithSelection
-      performers={performers}
-      locale={locale}
-      theme={theme}
-      className={className}
-    >
+    <PerformerListWithSelection performers={performers} locale={locale} theme={theme} className={className}>
       {(performer, index) => (
         <ActressCard
           key={performer.id}

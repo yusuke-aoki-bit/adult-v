@@ -14,10 +14,7 @@ export async function POST(request: NextRequest) {
     const { productId, category, userId } = body;
 
     if (!productId || !category || !userId) {
-      return NextResponse.json(
-        { error: 'Missing required fields' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // 既に投票済みかチェック
@@ -29,10 +26,7 @@ export async function POST(request: NextRequest) {
     `);
 
     if (existingVote.rows.length > 0) {
-      return NextResponse.json(
-        { error: 'Already voted' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Already voted' }, { status: 400 });
     }
 
     // 投票を記録
@@ -44,9 +38,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Vote error:', error);
-    return NextResponse.json(
-      { error: 'Failed to vote' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to vote' }, { status: 500 });
   }
 }

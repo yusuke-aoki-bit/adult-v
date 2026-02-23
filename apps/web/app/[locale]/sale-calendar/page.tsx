@@ -8,7 +8,8 @@ interface PageProps {
 const translations = {
   ja: {
     title: 'セールカレンダー',
-    description: '年間セールスケジュールと過去のセール傾向を確認できます。お得な購入タイミングを見逃さないようにしましょう。',
+    description:
+      '年間セールスケジュールと過去のセール傾向を確認できます。お得な購入タイミングを見逃さないようにしましょう。',
   },
   en: {
     title: 'Sale Calendar',
@@ -17,6 +18,10 @@ const translations = {
   zh: {
     title: '促销日历',
     description: '查看年度促销时间表和过去的促销趋势。不要错过好的购买时机。',
+  },
+  'zh-TW': {
+    title: '促銷日曆',
+    description: '查看年度促銷時間表和過去的促銷趨勢。不要錯過好的購買時機。',
   },
   ko: {
     title: '세일 캘린더',

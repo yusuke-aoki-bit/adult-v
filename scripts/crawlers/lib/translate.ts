@@ -9,11 +9,7 @@
  */
 
 // Lingvaインスタンス（フォールバック用に複数用意）
-const LINGVA_INSTANCES = [
-  'https://lingva.ml',
-  'https://lingva.lunar.icu',
-  'https://translate.plausibility.cloud',
-];
+const LINGVA_INSTANCES = ['https://lingva.ml', 'https://lingva.lunar.icu', 'https://translate.plausibility.cloud'];
 
 // 言語コードマッピング（Lingvaは小文字を使用）
 const LINGVA_LANG_MAP: Record<string, string> = {
@@ -30,7 +26,7 @@ async function tryTranslateWithInstance(
   instance: string,
   text: string,
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
 ): Promise<string | null> {
   const source = LINGVA_LANG_MAP[sourceLang] || sourceLang;
   const target = LINGVA_LANG_MAP[targetLang] || targetLang;
@@ -40,7 +36,7 @@ async function tryTranslateWithInstance(
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -65,7 +61,7 @@ async function tryTranslateWithInstance(
 export async function translateText(
   text: string,
   targetLang: 'en' | 'zh' | 'ko',
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string> {
   if (!text || text.trim() === '') {
     return '';
@@ -94,7 +90,7 @@ export async function translateText(
 export async function translateBatch(
   texts: string[],
   targetLang: 'en' | 'zh' | 'ko',
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string[]> {
   if (texts.length === 0) {
     return [];
@@ -126,7 +122,7 @@ export async function translateBatch(
  */
 export async function translateToAll(
   text: string,
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<{
   en: string;
   zh: string;
@@ -172,4 +168,3 @@ export function chunk<T>(array: T[], size: number): T[][] {
   }
   return chunks;
 }
-

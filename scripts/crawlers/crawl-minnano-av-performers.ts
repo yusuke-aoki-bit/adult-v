@@ -10,7 +10,8 @@ import { performers, performerAliases, performerExternalIds } from './lib/db/sch
 import { eq, sql } from 'drizzle-orm';
 
 const BASE_URL = 'https://www.minnano-av.com';
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const DELAY_MS = 2000;
 
 interface MinnanoPerformer {
@@ -41,7 +42,7 @@ async function fetchPage(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: {
       'User-Agent': USER_AGENT,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
       'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
     },
   });
@@ -90,16 +91,17 @@ async function fetchActressList(page: number): Promise<MinnanoPerformer[]> {
       }
 
       // 名前のバリデーション
-      if (name &&
-          name.length >= 2 &&
-          name.length <= 30 &&
-          /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z・ー]+$/.test(name) &&
-          !name.includes('評価') &&
-          !name.includes('女優') &&
-          !name.includes('一覧')) {
-
+      if (
+        name &&
+        name.length >= 2 &&
+        name.length <= 30 &&
+        /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z・ー]+$/.test(name) &&
+        !name.includes('評価') &&
+        !name.includes('女優') &&
+        !name.includes('一覧')
+      ) {
         // 重複チェック
-        if (!performers.find(p => p.actressId === actressId)) {
+        if (!performers.find((p) => p.actressId === actressId)) {
           performers.push({
             name,
             nameKana: null,
@@ -141,7 +143,10 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
 
     // 名前を取得
     const nameEl = $('h1').first();
-    detail.name = nameEl.text().trim().replace(/\s*のAV作品.*/, '');
+    detail.name = nameEl
+      .text()
+      .trim()
+      .replace(/\s*のAV作品.*/, '');
 
     // プロフィールテーブルから情報を抽出
     $('table tr, .profile-table tr').each((_, row) => {
@@ -152,7 +157,10 @@ async function fetchActressDetail(url: string): Promise<PerformerDetail | null> 
         detail.nameKana = td || null;
       } else if (th.includes('別名') || th.includes('旧名義')) {
         if (td) {
-          detail.aliases = td.split(/[、,・]/).map(s => s.trim()).filter(s => s.length >= 2);
+          detail.aliases = td
+            .split(/[、,・]/)
+            .map((s) => s.trim())
+            .filter((s) => s.length >= 2);
         }
       } else if (th.includes('生年月日') || th.includes('誕生日')) {
         // 1990年1月1日 形式をパース
@@ -202,11 +210,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
   const name = detail?.name || performer.name;
 
   // 既存のperformerを検索（名前で）
-  const existing = await db
-    .select()
-    .from(performers)
-    .where(eq(performers.name, name))
-    .limit(1);
+  const existing = await db.select().from(performers).where(eq(performers.name, name)).limit(1);
 
   if (existing.length > 0) {
     // 既存のperformerを更新（既存のデータがnullの場合のみ更新）
@@ -226,10 +230,7 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
     }
 
     if (Object.keys(updates).length > 0) {
-      await db
-        .update(performers)
-        .set(updates)
-        .where(eq(performers.id, existingPerformer.id));
+      await db.update(performers).set(updates).where(eq(performers.id, existingPerformer.id));
       console.log(`  Updated: ${name} (${Object.keys(updates).join(', ')})`);
     } else {
       console.log(`  Skipped (no new data): ${name}`);
@@ -309,9 +310,9 @@ async function savePerformerToDb(performer: MinnanoPerformer, detail: PerformerD
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 50;
-  const startPageArg = args.find(a => a.startsWith('--start-page='));
+  const startPageArg = args.find((a) => a.startsWith('--start-page='));
   const startPage = startPageArg ? parseInt(startPageArg.split('=')[1], 10) : 1;
   const fetchDetail = args.includes('--detail');
 
@@ -327,7 +328,7 @@ async function main() {
     .from(performerExternalIds)
     .where(eq(performerExternalIds.provider, 'minnano-av'));
 
-  const crawledSet = new Set(crawledIds.map(r => r.externalId));
+  const crawledSet = new Set(crawledIds.map((r) => r.externalId));
   console.log(`Already crawled: ${crawledSet.size}`);
 
   const allPerformers: MinnanoPerformer[] = [];
@@ -345,13 +346,13 @@ async function main() {
       } else {
         emptyPages = 0;
         // 未クロールのperformerのみ追加
-        const newPerformers = performers.filter(p => !crawledSet.has(p.actressId));
+        const newPerformers = performers.filter((p) => !crawledSet.has(p.actressId));
         console.log(`  Page ${page}: Found ${performers.length} performers (${newPerformers.length} new)`);
         allPerformers.push(...newPerformers);
       }
 
       page++;
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise((r) => setTimeout(r, 1000));
     } catch (error) {
       console.error(`  Error on page ${page}: ${error}`);
       emptyPages++;
@@ -387,7 +388,7 @@ async function main() {
 
       if (fetchDetail) {
         detail = await fetchActressDetail(performer.profileUrl);
-        await new Promise(r => setTimeout(r, DELAY_MS));
+        await new Promise((r) => setTimeout(r, DELAY_MS));
       }
 
       await savePerformerToDb(performer, detail);

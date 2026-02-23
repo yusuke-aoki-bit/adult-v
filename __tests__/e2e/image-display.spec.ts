@@ -17,12 +17,14 @@ test.setTimeout(120000);
 test.describe('Image Display Tests', () => {
   test.beforeEach(async ({ context }) => {
     // 年齢確認クッキーを設定
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test.describe('ProductCard Images', () => {
@@ -48,7 +50,7 @@ test.describe('Image Display Tests', () => {
         const card = productCards.nth(i);
         const img = card.locator('img').first();
 
-        if (await img.count() > 0) {
+        if ((await img.count()) > 0) {
           const box = await img.boundingBox();
 
           // 画像が表示されていることを確認（高さが0でない）
@@ -99,7 +101,7 @@ test.describe('Image Display Tests', () => {
       const imageErrors: string[] = [];
 
       // 画像読み込みエラーを監視
-      page.on('response', response => {
+      page.on('response', (response) => {
         if (response.url().includes('/_next/image') && !response.ok()) {
           imageErrors.push(`${response.status()}: ${response.url()}`);
         }
@@ -141,9 +143,11 @@ test.describe('Image Display Tests', () => {
             // アスペクト比が約3:4または4:5であることを確認
             const ratio = box.height / box.width;
             expect(ratio).toBeGreaterThan(1.0); // 縦長であること
-            expect(ratio).toBeLessThan(1.5);    // 極端に縦長でないこと
+            expect(ratio).toBeLessThan(1.5); // 極端に縦長でないこと
 
-            console.log(`Actress image ${i}: ${Math.round(box.width)}x${Math.round(box.height)}, ratio=${ratio.toFixed(2)}`);
+            console.log(
+              `Actress image ${i}: ${Math.round(box.width)}x${Math.round(box.height)}, ratio=${ratio.toFixed(2)}`,
+            );
           }
         }
       }
@@ -153,8 +157,8 @@ test.describe('Image Display Tests', () => {
   test.describe('Skeleton Loading', () => {
     test('should show skeleton with correct dimensions while loading', async ({ page }) => {
       // ネットワークを遅延させてスケルトンを表示
-      await page.route('**/api/**', async route => {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+      await page.route('**/api/**', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
         await route.continue();
       });
 
@@ -198,7 +202,7 @@ test.describe('Image Display Tests', () => {
             console.log(`Main image: ${Math.round(box.width)}x${Math.round(box.height)}, ratio=${ratio.toFixed(2)}`);
 
             expect(ratio).toBeGreaterThan(1.0); // 縦長であること
-            expect(ratio).toBeLessThan(2.0);    // 極端に縦長でないこと
+            expect(ratio).toBeLessThan(2.0); // 極端に縦長でないこと
           }
 
           // 画像のsrc属性を確認
@@ -225,8 +229,12 @@ test.describe('Image Display Tests', () => {
         }
 
         // ナビゲーションボタンを確認（複数画像がある場合）
-        const prevButton = page.locator('button[aria-label*="previous"], button:has(svg[data-lucide="chevron-left"])').first();
-        const nextButton = page.locator('button[aria-label*="next"], button:has(svg[data-lucide="chevron-right"])').first();
+        const prevButton = page
+          .locator('button[aria-label*="previous"], button:has(svg[data-lucide="chevron-left"])')
+          .first();
+        const nextButton = page
+          .locator('button[aria-label*="next"], button:has(svg[data-lucide="chevron-right"])')
+          .first();
 
         const hasPrev = await prevButton.isVisible({ timeout: 1000 }).catch(() => false);
         const hasNext = await nextButton.isVisible({ timeout: 1000 }).catch(() => false);
@@ -252,7 +260,7 @@ test.describe('Image Display Tests', () => {
       const imageErrors: { url: string; status: number }[] = [];
 
       // 画像読み込みエラーを監視
-      page.on('response', response => {
+      page.on('response', (response) => {
         const url = response.url();
         if ((url.includes('/_next/image') || url.includes('.jpg') || url.includes('.png')) && !response.ok()) {
           imageErrors.push({ url, status: response.status() });

@@ -48,7 +48,7 @@ export async function GET() {
     // JSONフォーマットではcompletionTimestamp, creationTimestampが使われる
     const { stdout } = await execAsync(
       `gcloud run jobs list --project=${PROJECT_ID} --region=${REGION} --format="json(metadata.name,status.latestCreatedExecution)" 2>/dev/null || echo "[]"`,
-      { timeout: 30000 }
+      { timeout: 30000 },
     );
 
     let allJobs: Array<{

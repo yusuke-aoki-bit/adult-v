@@ -14,7 +14,7 @@ export function createRecommendationsActressesHandler(deps: RecommendationsActre
       }
 
       const numericIds = performerIds
-        .map((id: string | number) => typeof id === 'string' ? parseInt(id) : id)
+        .map((id: string | number) => (typeof id === 'string' ? parseInt(id) : id))
         .filter((id: number) => !isNaN(id));
 
       if (numericIds.length === 0) {

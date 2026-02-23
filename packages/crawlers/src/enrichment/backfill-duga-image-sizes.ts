@@ -22,20 +22,22 @@ interface ImageRow {
  * 小さいサイズのURLを大きいサイズに変換
  */
 function convertToLargeSize(url: string): string {
-  return url
-    // サイズ指定パターン
-    .replace(/\/240x180\.jpg/g, '/640x480.jpg')
-    .replace(/\/noauth\/240x180\.jpg/g, '/noauth/640x480.jpg')
-    .replace(/\/480x360\.jpg/g, '/640x480.jpg')
-    // scap → sample (小サイズキャプチャ → フルサイズサンプル)
-    .replace(/\/scap\//g, '/sample/')
-    // -t, _t, /t/ パターン
-    .replace(/-t\.jpg/g, '-l.jpg')
-    .replace(/_t\.jpg/g, '_l.jpg')
-    .replace(/\/t\//g, '/l/')
-    // -s, _s パターン
-    .replace(/-s\.jpg/g, '-l.jpg')
-    .replace(/_s\.jpg/g, '_l.jpg');
+  return (
+    url
+      // サイズ指定パターン
+      .replace(/\/240x180\.jpg/g, '/640x480.jpg')
+      .replace(/\/noauth\/240x180\.jpg/g, '/noauth/640x480.jpg')
+      .replace(/\/480x360\.jpg/g, '/640x480.jpg')
+      // scap → sample (小サイズキャプチャ → フルサイズサンプル)
+      .replace(/\/scap\//g, '/sample/')
+      // -t, _t, /t/ パターン
+      .replace(/-t\.jpg/g, '-l.jpg')
+      .replace(/_t\.jpg/g, '_l.jpg')
+      .replace(/\/t\//g, '/l/')
+      // -s, _s パターン
+      .replace(/-s\.jpg/g, '-l.jpg')
+      .replace(/_s\.jpg/g, '_l.jpg')
+  );
 }
 
 /**

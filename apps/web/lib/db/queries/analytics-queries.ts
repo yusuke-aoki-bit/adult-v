@@ -12,9 +12,4 @@
  */
 
 // 現在は queries.ts から re-export
-export {
-  getProviderProductCounts,
-  getAspStats,
-  getAspStatsByCategory,
-  getSaleStats,
-} from '../queries';
+export { getProviderProductCounts, getAspStats, getAspStatsByCategory, getSaleStats } from '../queries';

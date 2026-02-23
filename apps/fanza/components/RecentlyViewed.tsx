@@ -31,11 +31,11 @@ function toActressType(performer: { id: string | number; name: string }): Actres
 async function fetchActresses(ids: (string | number)[]): Promise<Actress[]> {
   try {
     const response = await fetch(`/api/actresses?ids=${ids.join(',')}`);
-    if (!response.ok) return ids.map(id => toActressType({ id, name: '' }));
+    if (!response.ok) return ids.map((id) => toActressType({ id, name: '' }));
     const data = await response.json();
     return data.actresses || [];
   } catch {
-    return ids.map(id => toActressType({ id, name: '' }));
+    return ids.map((id) => toActressType({ id, name: '' }));
   }
 }
 

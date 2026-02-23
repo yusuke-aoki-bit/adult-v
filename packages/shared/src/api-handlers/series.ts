@@ -12,10 +12,7 @@ export interface SeriesHandlerDeps {
 }
 
 export function createSeriesHandler(deps: SeriesHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ seriesId: string }> }
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ seriesId: string }> }) {
     try {
       const { seriesId } = await params;
       const { searchParams } = new URL(request['url']);

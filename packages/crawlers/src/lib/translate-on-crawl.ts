@@ -45,7 +45,7 @@ export async function translateProduct(
   productId: number,
   title: string,
   description?: string | null,
-  aiReview?: string | null
+  aiReview?: string | null,
 ): Promise<boolean> {
   if (!TRANSLATION_ENABLED) {
     return false;
@@ -135,7 +135,7 @@ export async function translateProduct(
  */
 export async function translateProductBatch(
   db: DbInstance,
-  products: Array<{ id: number; title: string; description?: string | null; aiReview?: string | null }>
+  products: Array<{ id: number; title: string; description?: string | null; aiReview?: string | null }>,
 ): Promise<TranslationStats> {
   const stats: TranslationStats = {
     translated: 0,
@@ -158,9 +158,9 @@ export async function translateProductBatch(
   // バッチに分割して処理
   for (let i = 0; i < products.length; i += BATCH_SIZE) {
     const batch = products.slice(i, i + BATCH_SIZE);
-    const titles = batch.map(p => p.title);
-    const descriptions = batch.map(p => p.description || '');
-    const aiReviews = batch.map(p => p.aiReview || '');
+    const titles = batch.map((p) => p.title);
+    const descriptions = batch.map((p) => p.description || '');
+    const aiReviews = batch.map((p) => p.aiReview || '');
 
     try {
       // タイトルをバッチ翻訳
@@ -171,7 +171,7 @@ export async function translateProductBatch(
       ]);
 
       // 説明文があるものだけ翻訳
-      const nonEmptyDescs = descriptions.filter(d => d.length > 0);
+      const nonEmptyDescs = descriptions.filter((d) => d.length > 0);
       let descsEn: string[] = [];
       let descsZh: string[] = [];
       let descsKo: string[] = [];
@@ -187,7 +187,7 @@ export async function translateProductBatch(
       }
 
       // AIレビューがあるものだけ翻訳
-      const nonEmptyReviews = aiReviews.filter(r => r.length > 0);
+      const nonEmptyReviews = aiReviews.filter((r) => r.length > 0);
       let reviewsEn: string[] = [];
       let reviewsZh: string[] = [];
       let reviewsKo: string[] = [];
@@ -252,10 +252,7 @@ export async function translateProductBatch(
 /**
  * クロール後フック - 新規保存された商品を翻訳
  */
-export async function translateNewProducts(
-  db: DbInstance,
-  limit: number = 50
-): Promise<TranslationStats> {
+export async function translateNewProducts(db: DbInstance, limit: number = 50): Promise<TranslationStats> {
   if (!TRANSLATION_ENABLED) {
     return { translated: 0, failed: 0, skipped: 0 };
   }
@@ -281,7 +278,7 @@ export async function translateNewProducts(
   }
 
   // ai_review -> aiReview にマッピング
-  const mappedProducts = products.map(p => ({
+  const mappedProducts = products.map((p) => ({
     id: p.id,
     title: p.title,
     description: p.description,
@@ -294,10 +291,7 @@ export async function translateNewProducts(
 /**
  * AIレビューのみを翻訳（既存商品のAIレビュー翻訳用）
  */
-export async function translateAiReviews(
-  db: DbInstance,
-  limit: number = 50
-): Promise<TranslationStats> {
+export async function translateAiReviews(db: DbInstance, limit: number = 50): Promise<TranslationStats> {
   if (!TRANSLATION_ENABLED) {
     return { translated: 0, failed: 0, skipped: 0 };
   }
@@ -333,7 +327,7 @@ export async function translateAiReviews(
   // バッチに分割して処理
   for (let i = 0; i < products.length; i += BATCH_SIZE) {
     const batch = products.slice(i, i + BATCH_SIZE);
-    const reviews = batch.map(p => p.ai_review);
+    const reviews = batch.map((p) => p.ai_review);
 
     try {
       // AIレビューをバッチ翻訳
@@ -379,10 +373,7 @@ export async function translateAiReviews(
 /**
  * 演者のAIレビュー翻訳
  */
-export async function translatePerformerAiReviews(
-  db: DbInstance,
-  limit: number = 50
-): Promise<TranslationStats> {
+export async function translatePerformerAiReviews(db: DbInstance, limit: number = 50): Promise<TranslationStats> {
   if (!TRANSLATION_ENABLED) {
     return { translated: 0, failed: 0, skipped: 0 };
   }
@@ -418,7 +409,7 @@ export async function translatePerformerAiReviews(
   // バッチに分割して処理
   for (let i = 0; i < performers.length; i += BATCH_SIZE) {
     const batch = performers.slice(i, i + BATCH_SIZE);
-    const reviews = batch.map(p => p.ai_review);
+    const reviews = batch.map((p) => p.ai_review);
 
     try {
       // AIレビューをバッチ翻訳

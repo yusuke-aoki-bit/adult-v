@@ -29,14 +29,7 @@ import { execSync } from 'child_process';
 import { parseArgs } from 'util';
 
 const DTI_GROUPS = {
-  caribbean: [
-    'caribbeancom',
-    'caribbeancompr',
-    '1pondo',
-    'heyzo',
-    '10musume',
-    'pacopacomama',
-  ],
+  caribbean: ['caribbeancom', 'caribbeancompr', '1pondo', 'heyzo', '10musume', 'pacopacomama'],
   hitozuma: ['h4610', 'h0930', 'c0930'],
   new: ['kin8tengoku', 'nyoshin', 'h0230'],
 };
@@ -69,9 +62,10 @@ async function main() {
   const startTime = Date.now();
 
   // 対象グループを決定
-  const targetGroups = groupFilter === 'all'
-    ? Object.keys(DTI_GROUPS) as (keyof typeof DTI_GROUPS)[]
-    : [groupFilter as keyof typeof DTI_GROUPS];
+  const targetGroups =
+    groupFilter === 'all'
+      ? (Object.keys(DTI_GROUPS) as (keyof typeof DTI_GROUPS)[])
+      : [groupFilter as keyof typeof DTI_GROUPS];
 
   for (const group of targetGroups) {
     const sites = DTI_GROUPS[group];
@@ -120,8 +114,8 @@ async function main() {
 
   // グループ別に結果を表示
   for (const group of targetGroups) {
-    const groupResults = results.filter(r => r.group === group);
-    const successCount = groupResults.filter(r => r.success).length;
+    const groupResults = results.filter((r) => r.group === group);
+    const successCount = groupResults.filter((r) => r.success).length;
     console.log(`\n${group.toUpperCase()} (${successCount}/${groupResults.length}):`);
 
     for (const r of groupResults) {
@@ -135,8 +129,8 @@ async function main() {
   }
 
   // 全体統計
-  const successTotal = results.filter(r => r.success).length;
-  const failureTotal = results.filter(r => !r.success).length;
+  const successTotal = results.filter((r) => r.success).length;
+  const failureTotal = results.filter((r) => !r.success).length;
 
   console.log('\n----------------------------------------');
   console.log(`Total: ${successTotal} succeeded, ${failureTotal} failed`);

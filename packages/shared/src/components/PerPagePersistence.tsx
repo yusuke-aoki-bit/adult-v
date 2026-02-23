@@ -20,7 +20,7 @@ export default function PerPagePersistence() {
     // 一覧ページかどうかを判定（女優一覧、商品一覧、検索結果など）
     const isListPage =
       pathname === '/' ||
-      pathname?.match(/^\/[a-z]{2}$/) ||  // /ja, /en など
+      pathname?.match(/^\/[a-z]{2}$/) || // /ja, /en など
       pathname?.match(/^\/[a-z]{2}\/products/) ||
       pathname?.match(/^\/[a-z]{2}\/actress\//) ||
       pathname?.match(/^\/[a-z]{2}\/search/);

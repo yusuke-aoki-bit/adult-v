@@ -87,25 +87,11 @@ export default function FavoriteButton({
   return (
     <button
       onClick={handleClick}
-      className={`
-        ${sizeClasses[size]}
-        rounded-full
-        transition-all
-        duration-200
-        active:scale-110
-        ${getButtonStyles()}
-        backdrop-blur-sm
-        flex
-        items-center
-        justify-center
-        ${className}
-      `}
+      className={` ${sizeClasses[size]} rounded-full transition-all duration-200 active:scale-110 ${getButtonStyles()} flex items-center justify-center backdrop-blur-sm ${className} `}
       title={isFavorite ? labels.removeFromFavorites : labels.addToFavorites}
       aria-label={isFavorite ? labels.removeFromFavorites : labels.addToFavorites}
     >
-      <Heart
-        className={`${iconSizes[size]} ${isFavorite ? 'fill-current' : ''}`}
-      />
+      <Heart className={`${iconSizes[size]} ${isFavorite ? 'fill-current' : ''}`} />
     </button>
   );
 }

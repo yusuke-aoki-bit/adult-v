@@ -11,12 +11,14 @@ test.setTimeout(120000);
 
 test.describe('Accessibility Tests', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('Homepage has no critical accessibility violations', async ({ page }) => {
@@ -30,12 +32,12 @@ test.describe('Accessibility Tests', () => {
       .analyze();
 
     const criticalViolations = accessibilityScanResults.violations.filter(
-      v => v.impact === 'critical' || v.impact === 'serious'
+      (v) => v.impact === 'critical' || v.impact === 'serious',
     );
 
     if (criticalViolations.length > 0) {
       console.log('Critical/Serious Accessibility Violations:');
-      criticalViolations.forEach(v => {
+      criticalViolations.forEach((v) => {
         console.log(`- ${v.id}: ${v.description}`);
         console.log(`  Impact: ${v.impact}`);
         console.log(`  Elements: ${v.nodes.length}`);
@@ -58,12 +60,10 @@ test.describe('Accessibility Tests', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(2000);
 
-      const accessibilityScanResults = await new AxeBuilder({ page })
-        .withTags(['wcag2a', 'wcag2aa'])
-        .analyze();
+      const accessibilityScanResults = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 
       const criticalViolations = accessibilityScanResults.violations.filter(
-        v => v.impact === 'critical' || v.impact === 'serious'
+        (v) => v.impact === 'critical' || v.impact === 'serious',
       );
 
       expect(criticalViolations).toHaveLength(0);
@@ -111,8 +111,7 @@ test.describe('Accessibility Tests', () => {
 
         // Check if there's a visible focus indicator
         return (
-          (outline !== 'none' && outline !== '0px none rgb(0, 0, 0)') ||
-          (boxShadow !== 'none' && boxShadow !== '')
+          (outline !== 'none' && outline !== '0px none rgb(0, 0, 0)') || (boxShadow !== 'none' && boxShadow !== '')
         );
       });
 
@@ -193,19 +192,15 @@ test.describe('Accessibility Tests', () => {
     await page.waitForLoadState('domcontentloaded');
     await page.waitForTimeout(2000);
 
-    const accessibilityScanResults = await new AxeBuilder({ page })
-      .withTags(['cat.color'])
-      .analyze();
+    const accessibilityScanResults = await new AxeBuilder({ page }).withTags(['cat.color']).analyze();
 
-    const contrastViolations = accessibilityScanResults.violations.filter(
-      v => v.id === 'color-contrast'
-    );
+    const contrastViolations = accessibilityScanResults.violations.filter((v) => v.id === 'color-contrast');
 
     if (contrastViolations.length > 0) {
       console.log('Color contrast issues found:');
-      contrastViolations.forEach(v => {
+      contrastViolations.forEach((v) => {
         console.log(`Elements affected: ${v.nodes.length}`);
-        v.nodes.slice(0, 3).forEach(n => {
+        v.nodes.slice(0, 3).forEach((n) => {
           console.log(`  - ${n.html.slice(0, 100)}`);
         });
       });
@@ -225,7 +220,7 @@ test.describe('Accessibility Tests', () => {
         h1Count: h1s.length,
         h2Count: h2s.length,
         h3Count: h3s.length,
-        h1Texts: Array.from(h1s).map(h => h.textContent?.trim().slice(0, 50)),
+        h1Texts: Array.from(h1s).map((h) => h.textContent?.trim().slice(0, 50)),
       };
     });
 
@@ -252,7 +247,7 @@ test.describe('Accessibility Tests', () => {
 
     // Check for skip link
     const skipLink = page.locator('a[href="#main"], a[href="#content"], .skip-link, [data-skip-link]');
-    const hasSkipLink = await skipLink.count() > 0;
+    const hasSkipLink = (await skipLink.count()) > 0;
 
     console.log(`Skip link present: ${hasSkipLink}`);
   });
@@ -260,12 +255,14 @@ test.describe('Accessibility Tests', () => {
 
 test.describe('FANZA Links Accessibility', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('FANZA banner links have accessible text', async ({ page }) => {
@@ -287,10 +284,7 @@ test.describe('FANZA Links Accessibility', () => {
       const ariaLabel = await link.getAttribute('aria-label');
       const title = await link.getAttribute('title');
 
-      const hasAccessibleText =
-        (text && text.trim().length > 0) ||
-        ariaLabel ||
-        title;
+      const hasAccessibleText = (text && text.trim().length > 0) || ariaLabel || title;
 
       expect(hasAccessibleText).toBeTruthy();
     }
@@ -395,12 +389,14 @@ test.describe('Mobile Accessibility', () => {
   test.use({ viewport: { width: 375, height: 667 } });
 
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('Touch targets are large enough', async ({ page }) => {

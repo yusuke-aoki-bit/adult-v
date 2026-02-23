@@ -7,13 +7,7 @@
 
 import { createHash } from 'crypto';
 import { db } from '../db';
-import {
-  dugaRawResponses,
-  sokmilRawResponses,
-  mgsRawPages,
-  productRawDataLinks,
-  rawHtmlData,
-} from '../db/schema';
+import { dugaRawResponses, sokmilRawResponses, mgsRawPages, productRawDataLinks, rawHtmlData } from '../db/schema';
 import { eq, and, count, isNull } from 'drizzle-orm';
 import { saveRawHtml, saveRawJson, isGcsEnabled } from '../gcs-crawler-helper';
 
@@ -21,7 +15,18 @@ import { saveRawHtml, saveRawJson, isGcsEnabled } from '../gcs-crawler-helper';
 // Types
 // ============================================================
 
-export type SourceType = 'duga' | 'sokmil' | 'mgs' | 'fc2' | 'dti' | 'b10f' | 'japanska' | 'wiki-av-wiki' | 'wiki-seesaawiki' | 'wiki-shiroutoname' | 'wiki-fc2-blog';
+export type SourceType =
+  | 'duga'
+  | 'sokmil'
+  | 'mgs'
+  | 'fc2'
+  | 'dti'
+  | 'b10f'
+  | 'japanska'
+  | 'wiki-av-wiki'
+  | 'wiki-seesaawiki'
+  | 'wiki-shiroutoname'
+  | 'wiki-fc2-blog';
 
 export type RawDataTable =
   | 'duga_raw_responses'
@@ -100,15 +105,11 @@ export function calculateJsonHash(data: Record<string, unknown>): string {
  */
 export async function checkDugaRawData(
   productId: string,
-  newData: Record<string, unknown>
+  newData: Record<string, unknown>,
 ): Promise<RawDataCheckResult> {
   const newHash = calculateJsonHash(newData);
 
-  const [existing] = await db
-    .select()
-    .from(dugaRawResponses)
-    .where(eq(dugaRawResponses.productId, productId))
-    .limit(1);
+  const [existing] = await db.select().from(dugaRawResponses).where(eq(dugaRawResponses.productId, productId)).limit(1);
 
   if (!existing) {
     return {
@@ -135,19 +136,14 @@ export async function checkDugaRawData(
 export async function checkSokmilRawData(
   itemId: string,
   apiType: string,
-  newData: Record<string, unknown>
+  newData: Record<string, unknown>,
 ): Promise<RawDataCheckResult> {
   const newHash = calculateJsonHash(newData);
 
   const [existing] = await db
     .select()
     .from(sokmilRawResponses)
-    .where(
-      and(
-        eq(sokmilRawResponses.itemId, itemId),
-        eq(sokmilRawResponses.apiType, apiType)
-      )
-    )
+    .where(and(eq(sokmilRawResponses.itemId, itemId), eq(sokmilRawResponses.apiType, apiType)))
     .limit(1);
 
   if (!existing) {
@@ -172,17 +168,10 @@ export async function checkSokmilRawData(
 /**
  * MGS生データの重複チェック
  */
-export async function checkMgsRawData(
-  productUrl: string,
-  newHtml: string
-): Promise<RawDataCheckResult> {
+export async function checkMgsRawData(productUrl: string, newHtml: string): Promise<RawDataCheckResult> {
   const newHash = calculateHash(newHtml);
 
-  const [existing] = await db
-    .select()
-    .from(mgsRawPages)
-    .where(eq(mgsRawPages.productUrl, productUrl))
-    .limit(1);
+  const [existing] = await db.select().from(mgsRawPages).where(eq(mgsRawPages.productUrl, productUrl)).limit(1);
 
   if (!existing) {
     return {
@@ -206,17 +195,10 @@ export async function checkMgsRawData(
 /**
  * 汎用HTML生データの重複チェック
  */
-export async function checkRawHtmlData(
-  url: string,
-  newHtml: string
-): Promise<RawDataCheckResult> {
+export async function checkRawHtmlData(url: string, newHtml: string): Promise<RawDataCheckResult> {
   const newHash = calculateHash(newHtml);
 
-  const [existing] = await db
-    .select()
-    .from(rawHtmlData)
-    .where(eq(rawHtmlData.url, url))
-    .limit(1);
+  const [existing] = await db.select().from(rawHtmlData).where(eq(rawHtmlData.url, url)).limit(1);
 
   if (!existing) {
     return {
@@ -248,7 +230,7 @@ export async function checkRawHtmlData(
 export async function upsertDugaRawData(
   productId: string,
   rawJson: Record<string, unknown>,
-  hash: string
+  hash: string,
 ): Promise<{ id: number; isNew: boolean }> {
   const [existing] = await db
     .select({ id: dugaRawResponses.id })
@@ -289,17 +271,12 @@ export async function upsertSokmilRawData(
   itemId: string,
   apiType: string,
   rawJson: Record<string, unknown>,
-  hash: string
+  hash: string,
 ): Promise<{ id: number; isNew: boolean }> {
   const [existing] = await db
     .select({ id: sokmilRawResponses.id })
     .from(sokmilRawResponses)
-    .where(
-      and(
-        eq(sokmilRawResponses.itemId, itemId),
-        eq(sokmilRawResponses.apiType, apiType)
-      )
-    )
+    .where(and(eq(sokmilRawResponses.itemId, itemId), eq(sokmilRawResponses.apiType, apiType)))
     .limit(1);
 
   if (existing) {
@@ -338,7 +315,7 @@ export async function upsertMgsRawData(
   rawHtmlContent: string,
   rawJson: Record<string, unknown> | null,
   hash: string,
-  statusCode = 200
+  statusCode = 200,
 ): Promise<{ id: number; isNew: boolean }> {
   const [existing] = await db
     .select({ id: mgsRawPages.id })
@@ -391,16 +368,12 @@ export async function upsertMgsRawData(
  */
 export async function upsertDugaRawDataWithGcs(
   productId: string,
-  rawJson: Record<string, unknown>
+  rawJson: Record<string, unknown>,
 ): Promise<UpsertRawDataResult> {
   const hash = calculateJsonHash(rawJson);
 
   // 既存データをチェック
-  const [existing] = await db
-    .select()
-    .from(dugaRawResponses)
-    .where(eq(dugaRawResponses.productId, productId))
-    .limit(1);
+  const [existing] = await db.select().from(dugaRawResponses).where(eq(dugaRawResponses.productId, productId)).limit(1);
 
   // 重複チェック: hashが同じで処理済みならスキップ
   if (existing && existing.hash === hash && existing.processedAt !== null) {
@@ -449,7 +422,7 @@ export async function upsertDugaRawDataWithGcs(
 export async function upsertSokmilRawDataWithGcs(
   itemId: string,
   apiType: string,
-  rawJson: Record<string, unknown>
+  rawJson: Record<string, unknown>,
 ): Promise<UpsertRawDataResult> {
   const hash = calculateJsonHash(rawJson);
 
@@ -457,12 +430,7 @@ export async function upsertSokmilRawDataWithGcs(
   const [existing] = await db
     .select()
     .from(sokmilRawResponses)
-    .where(
-      and(
-        eq(sokmilRawResponses.itemId, itemId),
-        eq(sokmilRawResponses.apiType, apiType)
-      )
-    )
+    .where(and(eq(sokmilRawResponses.itemId, itemId), eq(sokmilRawResponses.apiType, apiType)))
     .limit(1);
 
   // 重複チェック: hashが同じで処理済みならスキップ
@@ -515,16 +483,12 @@ export async function upsertMgsRawDataWithGcs(
   productId: string | null,
   rawHtmlContent: string,
   rawJson: Record<string, unknown> | null,
-  statusCode = 200
+  statusCode = 200,
 ): Promise<UpsertRawDataResult> {
   const hash = calculateHash(rawHtmlContent);
 
   // 既存データをチェック
-  const [existing] = await db
-    .select()
-    .from(mgsRawPages)
-    .where(eq(mgsRawPages.productUrl, productUrl))
-    .limit(1);
+  const [existing] = await db.select().from(mgsRawPages).where(eq(mgsRawPages.productUrl, productUrl)).limit(1);
 
   // 重複チェック: hashが同じで処理済みならスキップ
   if (existing && existing.hash === hash && existing.processedAt !== null) {
@@ -581,16 +545,12 @@ export async function upsertRawHtmlDataWithGcs(
   source: string,
   productId: string,
   url: string,
-  htmlContent: string
+  htmlContent: string,
 ): Promise<UpsertRawDataResult> {
   const hash = calculateHash(htmlContent);
 
   // 既存データをチェック
-  const [existing] = await db
-    .select()
-    .from(rawHtmlData)
-    .where(eq(rawHtmlData.url, url))
-    .limit(1);
+  const [existing] = await db.select().from(rawHtmlData).where(eq(rawHtmlData.url, url)).limit(1);
 
   // 重複チェック: hashが同じで処理済みならスキップ
   if (existing && existing.hash === hash && existing.processedAt !== null) {
@@ -648,7 +608,7 @@ export async function linkProductToRawData(
   sourceType: SourceType,
   rawDataId: number,
   rawDataTable: RawDataTable,
-  contentHash: string
+  contentHash: string,
 ): Promise<LinkProductResult> {
   const [existing] = await db
     .select()
@@ -657,8 +617,8 @@ export async function linkProductToRawData(
       and(
         eq(productRawDataLinks.productId, productId),
         eq(productRawDataLinks.sourceType, sourceType),
-        eq(productRawDataLinks.rawDataId, rawDataId)
-      )
+        eq(productRawDataLinks.rawDataId, rawDataId),
+      ),
     )
     .limit(1);
 
@@ -667,10 +627,7 @@ export async function linkProductToRawData(
 
     if (needsReprocessing) {
       // ハッシュが変わった場合は更新
-      await db
-        .update(productRawDataLinks)
-        .set({ contentHash })
-        .where(eq(productRawDataLinks.id, existing.id));
+      await db.update(productRawDataLinks).set({ contentHash }).where(eq(productRawDataLinks.id, existing.id));
     }
 
     return {
@@ -701,37 +658,22 @@ export async function linkProductToRawData(
 /**
  * 生データを処理済みとしてマーク
  */
-export async function markRawDataAsProcessed(
-  sourceType: SourceType,
-  rawDataId: number
-): Promise<void> {
+export async function markRawDataAsProcessed(sourceType: SourceType, rawDataId: number): Promise<void> {
   const now = new Date();
 
   switch (sourceType) {
     case 'duga':
-      await db
-        .update(dugaRawResponses)
-        .set({ processedAt: now })
-        .where(eq(dugaRawResponses.id, rawDataId));
+      await db.update(dugaRawResponses).set({ processedAt: now }).where(eq(dugaRawResponses.id, rawDataId));
       break;
     case 'sokmil':
-      await db
-        .update(sokmilRawResponses)
-        .set({ processedAt: now })
-        .where(eq(sokmilRawResponses.id, rawDataId));
+      await db.update(sokmilRawResponses).set({ processedAt: now }).where(eq(sokmilRawResponses.id, rawDataId));
       break;
     case 'mgs':
-      await db
-        .update(mgsRawPages)
-        .set({ processedAt: now })
-        .where(eq(mgsRawPages.id, rawDataId));
+      await db.update(mgsRawPages).set({ processedAt: now }).where(eq(mgsRawPages.id, rawDataId));
       break;
     default:
       // raw_html_data, raw_csv_data用
-      await db
-        .update(rawHtmlData)
-        .set({ processedAt: now })
-        .where(eq(rawHtmlData.id, rawDataId));
+      await db.update(rawHtmlData).set({ processedAt: now }).where(eq(rawHtmlData.id, rawDataId));
   }
 }
 
@@ -785,10 +727,7 @@ export async function getUnprocessedCount(sourceType: SourceType): Promise<numbe
       return result?.count ?? 0;
     }
     case 'mgs': {
-      const [result] = await db
-        .select({ count: count() })
-        .from(mgsRawPages)
-        .where(isNull(mgsRawPages.processedAt));
+      const [result] = await db.select({ count: count() }).from(mgsRawPages).where(isNull(mgsRawPages.processedAt));
       return result?.count ?? 0;
     }
     default:

@@ -28,10 +28,7 @@ export interface StatsAspHandlerOptions {
 // ASP名のマッピング（レジストリから導出）
 const ASP_NAME_MAP: Record<string, string> = ASP_STATS_NAME_MAP;
 
-export function createStatsAspHandler(
-  deps: StatsAspHandlerDeps,
-  options: StatsAspHandlerOptions = {}
-) {
+export function createStatsAspHandler(deps: StatsAspHandlerDeps, options: StatsAspHandlerOptions = {}) {
   return async function GET() {
     try {
       // 並列で取得
@@ -49,12 +46,10 @@ export function createStatsAspHandler(
       }
 
       // FANZAフィルタ適用
-      const filteredStats = options.excludeFanza
-        ? aspStats.filter(stat => stat.aspName !== 'FANZA')
-        : aspStats;
+      const filteredStats = options.excludeFanza ? aspStats.filter((stat) => stat.aspName !== 'FANZA') : aspStats;
 
       // 収集数に推定総数を追加
-      const enrichedStats = filteredStats.map(stat => {
+      const enrichedStats = filteredStats.map((stat) => {
         const mappedName = ASP_NAME_MAP[stat.aspName] || stat.aspName;
         const estimatedTotal = totalsMap.get(mappedName) || null;
         return {

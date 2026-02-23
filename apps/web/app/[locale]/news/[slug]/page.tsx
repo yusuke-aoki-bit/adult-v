@@ -36,11 +36,11 @@ export async function generateMetadata({
       alternates: {
         canonical: `${baseUrl}/news/${slug}`,
         languages: {
-          'ja': `${baseUrl}/news/${slug}`,
-          'en': `${baseUrl}/news/${slug}?hl=en`,
-          'zh': `${baseUrl}/news/${slug}?hl=zh`,
+          ja: `${baseUrl}/news/${slug}`,
+          en: `${baseUrl}/news/${slug}?hl=en`,
+          zh: `${baseUrl}/news/${slug}?hl=zh`,
           'zh-TW': `${baseUrl}/news/${slug}?hl=zh-TW`,
-          'ko': `${baseUrl}/news/${slug}?hl=ko`,
+          ko: `${baseUrl}/news/${slug}?hl=ko`,
           'x-default': `${baseUrl}/news/${slug}`,
         },
       },
@@ -68,19 +68,20 @@ function renderMarkdownContent(content: string): string {
 
 function getDateLocale(locale: string): string {
   switch (locale) {
-    case 'ko': return 'ko-KR';
-    case 'zh-TW': return 'zh-TW';
-    case 'zh': return 'zh-CN';
-    case 'en': return 'en-US';
-    default: return 'ja-JP';
+    case 'ko':
+      return 'ko-KR';
+    case 'zh-TW':
+      return 'zh-TW';
+    case 'zh':
+      return 'zh-CN';
+    case 'en':
+      return 'en-US';
+    default:
+      return 'ja-JP';
   }
 }
 
-export default async function NewsDetailPage({
-  params,
-}: {
-  params: Promise<{ locale: string; slug: string }>;
-}) {
+export default async function NewsDetailPage({ params }: { params: Promise<{ locale: string; slug: string }> }) {
   const { locale, slug } = await params;
 
   let article, t, tNav;
@@ -107,17 +108,20 @@ export default async function NewsDetailPage({
     site_update: { bg: 'bg-gray-600', text: 'text-gray-100', label: t('siteUpdate') },
   };
 
-  const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES['site_update'];
-  const publishedDate = new Date(article.published_at).toLocaleDateString(
-    getDateLocale(locale),
-    { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' },
-  );
+  const style = CATEGORY_STYLES[article.category] ?? CATEGORY_STYLES['site_update']!;
+  const publishedDate = new Date(article.published_at).toLocaleDateString(getDateLocale(locale), {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
 
   const htmlContent = renderMarkdownContent(article.content);
 
   return (
-    <div className="min-h-screen theme-body">
-      <div className="max-w-3xl mx-auto px-4 py-8">
+    <div className="theme-body min-h-screen">
+      <div className="mx-auto max-w-3xl px-4 py-8">
         <Breadcrumb
           items={[
             { label: tNav('home'), href: localizedHref('/', locale) },
@@ -130,50 +134,44 @@ export default async function NewsDetailPage({
         {/* 戻るリンク */}
         <a
           href={localizedHref('/news', locale)}
-          className="inline-flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors mb-6"
+          className="mb-6 inline-flex items-center gap-1 text-sm text-gray-400 transition-colors hover:text-white"
         >
-          <ArrowLeft className="w-4 h-4" />
+          <ArrowLeft className="h-4 w-4" />
           {t('backToList')}
         </a>
 
         {/* 記事 */}
         <article>
-          <div className="flex items-center gap-3 mb-4">
-            <span className={`text-xs font-bold px-2 py-1 rounded ${style.bg} ${style.text}`}>
-              {style.label}
-            </span>
+          <div className="mb-4 flex items-center gap-3">
+            <span className={`rounded px-2 py-1 text-xs font-bold ${style.bg} ${style.text}`}>{style.label}</span>
             <div className="flex items-center gap-1 text-xs text-gray-400">
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="h-3.5 w-3.5" />
               {publishedDate}
             </div>
             {article.view_count > 0 && (
               <div className="flex items-center gap-1 text-xs text-gray-400">
-                <Eye className="w-3.5 h-3.5" />
+                <Eye className="h-3.5 w-3.5" />
                 {article.view_count}
               </div>
             )}
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">
-            {article.title}
-          </h1>
+          <h1 className="mb-4 text-2xl font-bold text-white md:text-3xl">{article.title}</h1>
 
           {article.excerpt && (
-            <p className="text-gray-400 text-lg mb-6 border-l-4 border-blue-500 pl-4">
-              {article.excerpt}
-            </p>
+            <p className="mb-6 border-l-4 border-blue-500 pl-4 text-lg text-gray-400">{article.excerpt}</p>
           )}
 
           {/* AI生成バッジ */}
           {article.source === 'gemini' && (
-            <div className="inline-flex items-center gap-1 text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded mb-6">
+            <div className="mb-6 inline-flex items-center gap-1 rounded bg-purple-900/30 px-2 py-1 text-xs text-purple-400">
               AI Generated (Gemini)
             </div>
           )}
 
           {/* 本文 */}
           <div
-            className="prose prose-invert max-w-none text-gray-300 leading-relaxed"
+            className="prose prose-invert max-w-none leading-relaxed text-gray-300"
             dangerouslySetInnerHTML={{
               __html: `<p class="text-gray-300 leading-relaxed mb-4">${htmlContent}</p>`,
             }}
@@ -181,12 +179,12 @@ export default async function NewsDetailPage({
 
           {/* ソース */}
           {article.source_url && (
-            <div className="mt-8 pt-4 border-t border-gray-700">
+            <div className="mt-8 border-t border-gray-700 pt-4">
               <a
                 href={article.source_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                className="text-sm text-blue-400 transition-colors hover:text-blue-300"
               >
                 Source →
               </a>
@@ -195,12 +193,12 @@ export default async function NewsDetailPage({
         </article>
 
         {/* フッターナビ */}
-        <div className="mt-12 pt-6 border-t border-gray-700">
+        <div className="mt-12 border-t border-gray-700 pt-6">
           <a
             href={localizedHref('/news', locale)}
-            className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800 text-gray-300 rounded-lg hover:bg-gray-700 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 text-gray-300 transition-colors hover:bg-gray-700"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             {t('backToList')}
           </a>
         </div>

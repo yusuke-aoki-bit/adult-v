@@ -27,9 +27,7 @@ describe('Favorites Storage', () => {
 
   describe('localStorage operations', () => {
     test('saves favorite to localStorage', () => {
-      const favorites = [
-        { type: 'product', id: '123', title: 'Test Product', addedAt: Date.now() },
-      ];
+      const favorites = [{ type: 'product', id: '123', title: 'Test Product', addedAt: Date.now() }];
 
       window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 
@@ -47,7 +45,7 @@ describe('Favorites Storage', () => {
       window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 
       // Remove one item
-      const filtered = favorites.filter(f => f.id !== '123');
+      const filtered = favorites.filter((f) => f.id !== '123');
       window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(filtered));
 
       const stored = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
@@ -112,29 +110,21 @@ describe('Favorites Storage', () => {
 
   describe('isFavorite check', () => {
     test('returns true for existing favorite', () => {
-      const favorites = [
-        { type: 'product', id: '123', addedAt: Date.now() },
-      ];
+      const favorites = [{ type: 'product', id: '123', addedAt: Date.now() }];
       window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 
       const stored = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
-      const isFavorite = stored.some((f: { type: string; id: string }) =>
-        f.type === 'product' && f.id === '123'
-      );
+      const isFavorite = stored.some((f: { type: string; id: string }) => f.type === 'product' && f.id === '123');
 
       expect(isFavorite).toBe(true);
     });
 
     test('returns false for non-existing favorite', () => {
-      const favorites = [
-        { type: 'product', id: '123', addedAt: Date.now() },
-      ];
+      const favorites = [{ type: 'product', id: '123', addedAt: Date.now() }];
       window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
 
       const stored = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
-      const isFavorite = stored.some((f: { type: string; id: string }) =>
-        f.type === 'product' && f.id === '999'
-      );
+      const isFavorite = stored.some((f: { type: string; id: string }) => f.type === 'product' && f.id === '999');
 
       expect(isFavorite).toBe(false);
     });
@@ -148,11 +138,11 @@ describe('Favorites Storage', () => {
 
       const stored = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) || '[]');
 
-      const isProductFavorite = stored.some((f: { type: string; id: string }) =>
-        f.type === 'product' && f.id === '123'
+      const isProductFavorite = stored.some(
+        (f: { type: string; id: string }) => f.type === 'product' && f.id === '123',
       );
-      const isActressFavorite = stored.some((f: { type: string; id: string }) =>
-        f.type === 'actress' && f.id === '123'
+      const isActressFavorite = stored.some(
+        (f: { type: string; id: string }) => f.type === 'actress' && f.id === '123',
       );
 
       expect(isProductFavorite).toBe(true);

@@ -214,13 +214,13 @@ async function getRookiesData(): Promise<RookiesData> {
     LIMIT 10
   `);
 
-  const thisYearRookies = (thisYearResult.rows as unknown as Array<RookiePerformer>).map(row => ({
+  const thisYearRookies = (thisYearResult.rows as unknown as Array<RookiePerformer>).map((row) => ({
     ...row,
     avgRating: row.avgRating ? Number(row.avgRating) : null,
     tags: row.tags || [],
   }));
 
-  const lastYearRookies = (lastYearResult.rows as unknown as Array<RookiePerformer>).map(row => ({
+  const lastYearRookies = (lastYearResult.rows as unknown as Array<RookiePerformer>).map((row) => ({
     ...row,
     avgRating: row.avgRating ? Number(row.avgRating) : null,
     tags: row.tags || [],
@@ -240,9 +240,9 @@ async function getRookiesData(): Promise<RookiesData> {
   const monthlyDebuts: MonthlyDebut[] = Array.from(monthlyMap.entries())
     .sort((a, b) => b[0].localeCompare(a[0]))
     .map(([key, performers]) => {
-      const [year, month] = key.split('-').map(Number);
+      const [year, month] = key.split('-').map(Number) as [number, number];
       return {
-        month: monthNames[month],
+        month: monthNames[month]!,
         year,
         monthNum: month,
         performers,
@@ -308,14 +308,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  return generateBaseMetadata(
-    t.title,
-    t.subtitle,
-    undefined,
-    '/rookies',
-    undefined,
-    locale,
-  );
+  return generateBaseMetadata(t.title, t.subtitle, undefined, '/rookies', undefined, locale);
 }
 
 export default async function RookiesPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -338,59 +331,57 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
     return (
       <Link
         href={localizedHref(`/actress/${performer.id}`, locale)}
-        className="group theme-card rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all"
+        className="group theme-card overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-rose-500/50"
       >
         <div className="relative">
-          <div className="aspect-[3/4] bg-gray-700 overflow-hidden">
+          <div className="aspect-[3/4] overflow-hidden bg-gray-700">
             {performer.imageUrl ? (
               <img
                 src={performer.imageUrl}
                 alt={performer.name}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 loading="lazy"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500 text-4xl">
-                👤
-              </div>
+              <div className="flex h-full w-full items-center justify-center text-4xl text-gray-500">👤</div>
             )}
           </div>
           {rank && (
-            <div className="absolute top-2 left-2 bg-gradient-to-r from-rose-600 to-purple-600 text-white text-sm font-bold px-2 py-1 rounded">
+            <div className="absolute top-2 left-2 rounded bg-gradient-to-r from-rose-600 to-purple-600 px-2 py-1 text-sm font-bold text-white">
               #{rank}
             </div>
           )}
-          <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
+          <div className="absolute top-2 right-2 rounded bg-black/70 px-2 py-1 text-xs text-white">
             {performer.debutYear}年{t.debut}
           </div>
         </div>
         <div className="p-4">
-          <h3 className="font-bold theme-text group-hover:text-rose-400 transition-colors mb-2">
-            {performer.name}
-          </h3>
-          <div className="flex items-center gap-2 text-sm theme-text-muted mb-2">
-            <Film className="w-4 h-4" />
-            <span>{performer.productCount} {t.works}</span>
+          <h3 className="theme-text mb-2 font-bold transition-colors group-hover:text-rose-400">{performer.name}</h3>
+          <div className="theme-text-muted mb-2 flex items-center gap-2 text-sm">
+            <Film className="h-4 w-4" />
+            <span>
+              {performer.productCount} {t.works}
+            </span>
             {performer.avgRating && (
               <>
-                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                 <span>{performer.avgRating.toFixed(1)}</span>
               </>
             )}
           </div>
           {performer.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
-              {performer.tags.slice(0, 3).map(tag => (
-                <span key={tag} className="text-xs bg-gray-700/50 px-2 py-0.5 rounded text-gray-300">
+              {performer.tags.slice(0, 3).map((tag) => (
+                <span key={tag} className="rounded bg-gray-700/50 px-2 py-0.5 text-xs text-gray-300">
                   {tag}
                 </span>
               ))}
             </div>
           )}
           {performer.latestProductTitle && (
-            <div className="mt-3 pt-3 border-t border-gray-700">
-              <div className="text-xs theme-text-muted mb-1">{t.latest}:</div>
-              <div className="text-sm theme-text line-clamp-2">{performer.latestProductTitle}</div>
+            <div className="mt-3 border-t border-gray-700 pt-3">
+              <div className="theme-text-muted mb-1 text-xs">{t.latest}:</div>
+              <div className="theme-text line-clamp-2 text-sm">{performer.latestProductTitle}</div>
             </div>
           )}
         </div>
@@ -404,49 +395,46 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
       <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           <Breadcrumb
-            items={[
-              { label: tNav('home'), href: localizedHref('/', locale) },
-              { label: t.title },
-            ]}
+            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t.title }]}
             className="mb-4"
           />
 
           {/* PR表記 */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-600 to-purple-600 text-white px-4 py-2 rounded-full mb-4">
-              <Sparkles className="w-5 h-5" />
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-purple-600 px-4 py-2 text-white">
+              <Sparkles className="h-5 w-5" />
               <span className="font-bold">NEW FACES</span>
             </div>
-            <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+            <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
             <p className="theme-text-muted">{t.subtitle}</p>
           </div>
 
           {/* 統計カード */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="theme-card rounded-lg p-6 text-center">
-              <Users className="w-8 h-8 mx-auto mb-2 text-rose-400" />
-              <div className="text-3xl font-bold theme-text">{data.totalRookies}</div>
-              <div className="text-sm theme-text-muted">{t.totalRookies}</div>
+              <Users className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+              <div className="theme-text text-3xl font-bold">{data.totalRookies}</div>
+              <div className="theme-text-muted text-sm">{t.totalRookies}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <Film className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-              <div className="text-3xl font-bold theme-text">{data.avgProductsPerRookie.toFixed(1)}</div>
-              <div className="text-sm theme-text-muted">{t.avgProducts}</div>
+              <Film className="mx-auto mb-2 h-8 w-8 text-purple-400" />
+              <div className="theme-text text-3xl font-bold">{data.avgProductsPerRookie.toFixed(1)}</div>
+              <div className="theme-text-muted text-sm">{t.avgProducts}</div>
             </div>
             <div className="theme-card rounded-lg p-6">
-              <div className="flex items-center gap-2 mb-3">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-                <span className="text-sm font-bold theme-text">{t.topGenres}</span>
+              <div className="mb-3 flex items-center gap-2">
+                <TrendingUp className="h-5 w-5 text-green-400" />
+                <span className="theme-text text-sm font-bold">{t.topGenres}</span>
               </div>
               <div className="flex flex-wrap gap-2">
-                {data.topGenres.slice(0, 5).map(genre => (
-                  <span key={genre.name} className="text-xs bg-gray-700/50 px-2 py-1 rounded text-gray-300">
+                {data.topGenres.slice(0, 5).map((genre) => (
+                  <span key={genre.name} className="rounded bg-gray-700/50 px-2 py-1 text-xs text-gray-300">
                     {genre.name}
                   </span>
                 ))}
@@ -456,79 +444,89 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
 
           {/* 今年デビュー */}
           <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold theme-text flex items-center gap-2">
-                <Award className="w-6 h-6 text-yellow-400" />
-                {currentYear}{t.thisYear}
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="theme-text flex items-center gap-2 text-2xl font-bold">
+                <Award className="h-6 w-6 text-yellow-400" />
+                {currentYear}
+                {t.thisYear}
               </h2>
-              <span className="text-sm theme-text-muted">{data.thisYearRookies.length}{t.people}</span>
+              <span className="theme-text-muted text-sm">
+                {data.thisYearRookies.length}
+                {t.people}
+              </span>
             </div>
             {data.thisYearRookies.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {data.thisYearRookies.slice(0, 12).map((performer, i) => (
                   <RookieCard key={performer.id} performer={performer} rank={i + 1} />
                 ))}
               </div>
             ) : (
-              <div className="theme-card rounded-lg p-8 text-center theme-text-muted">
-                {t.noRookies}
-              </div>
+              <div className="theme-card theme-text-muted rounded-lg p-8 text-center">{t.noRookies}</div>
             )}
           </section>
 
           {/* 昨年デビュー */}
           <section className="mb-12">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold theme-text flex items-center gap-2">
-                <Star className="w-6 h-6 text-purple-400" />
-                {lastYear}{t.lastYear}
+            <div className="mb-6 flex items-center justify-between">
+              <h2 className="theme-text flex items-center gap-2 text-2xl font-bold">
+                <Star className="h-6 w-6 text-purple-400" />
+                {lastYear}
+                {t.lastYear}
               </h2>
-              <span className="text-sm theme-text-muted">{data.lastYearRookies.length}{t.people}</span>
+              <span className="theme-text-muted text-sm">
+                {data.lastYearRookies.length}
+                {t.people}
+              </span>
             </div>
             {data.lastYearRookies.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {data.lastYearRookies.slice(0, 12).map((performer, i) => (
                   <RookieCard key={performer.id} performer={performer} rank={i + 1} />
                 ))}
               </div>
             ) : (
-              <div className="theme-card rounded-lg p-8 text-center theme-text-muted">
-                {t.noRookies}
-              </div>
+              <div className="theme-card theme-text-muted rounded-lg p-8 text-center">{t.noRookies}</div>
             )}
           </section>
 
           {/* 月別デビュー */}
           {data.monthlyDebuts.length > 0 && (
             <section>
-              <h2 className="text-2xl font-bold theme-text mb-6 flex items-center gap-2">
-                <Calendar className="w-6 h-6 text-blue-400" />
+              <h2 className="theme-text mb-6 flex items-center gap-2 text-2xl font-bold">
+                <Calendar className="h-6 w-6 text-blue-400" />
                 {t.monthlyDebut}
               </h2>
               <div className="space-y-6">
-                {data.monthlyDebuts.map(monthly => (
+                {data.monthlyDebuts.map((monthly) => (
                   <div key={`${monthly.year}-${monthly.monthNum}`} className="theme-card rounded-lg p-6">
-                    <h3 className="text-lg font-bold theme-text mb-4">
-                      {monthly.year}年{monthly.month} ({monthly.performers.length}{t.people})
+                    <h3 className="theme-text mb-4 text-lg font-bold">
+                      {monthly.year}年{monthly.month} ({monthly.performers.length}
+                      {t.people})
                     </h3>
                     <div className="flex flex-wrap gap-3">
-                      {monthly.performers.map(performer => (
+                      {monthly.performers.map((performer) => (
                         <Link
                           key={performer.id}
                           href={localizedHref(`/actress/${performer.id}`, locale)}
-                          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-800/50 rounded-lg hover:bg-gray-700/50 transition-colors"
+                          className="inline-flex items-center gap-2 rounded-lg bg-gray-800/50 px-4 py-2 transition-colors hover:bg-gray-700/50"
                         >
                           {performer.imageUrl ? (
                             <img
                               src={performer.imageUrl}
                               alt={performer.name}
-                              className="w-8 h-8 rounded-full object-cover"
+                              className="h-8 w-8 rounded-full object-cover"
                             />
                           ) : (
-                            <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center text-xs">👤</div>
+                            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-600 text-xs">
+                              👤
+                            </div>
                           )}
                           <span className="theme-text">{performer.name}</span>
-                          <span className="text-xs theme-text-muted">({performer.productCount}{t.works})</span>
+                          <span className="theme-text-muted text-xs">
+                            ({performer.productCount}
+                            {t.works})
+                          </span>
                         </Link>
                       ))}
                     </div>

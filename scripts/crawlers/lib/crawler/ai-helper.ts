@@ -101,10 +101,7 @@ export class CrawlerAIHelper {
   /**
    * タイトル・説明からタグを抽出
    */
-  async extractTags(
-    title: string,
-    description?: string
-  ): Promise<ExtractedTags | null> {
+  async extractTags(title: string, description?: string): Promise<ExtractedTags | null> {
     if (!this.enabled) {
       return null;
     }
@@ -120,10 +117,7 @@ export class CrawlerAIHelper {
   /**
    * 商品情報を多言語翻訳
    */
-  async translate(
-    title: string,
-    description?: string
-  ): Promise<ProductTranslation | null> {
+  async translate(title: string, description?: string): Promise<ProductTranslation | null> {
     if (!this.enabled) {
       return null;
     }
@@ -139,9 +133,7 @@ export class CrawlerAIHelper {
   /**
    * AI説明文を生成
    */
-  async generateDescription(
-    input: ProductAIInput
-  ): Promise<GeneratedDescription | null> {
+  async generateDescription(input: ProductAIInput): Promise<GeneratedDescription | null> {
     if (!this.enabled) {
       return null;
     }
@@ -166,16 +158,8 @@ export class CrawlerAIHelper {
    *
    * 複数のAI機能を一度に実行し、結果をまとめて返す
    */
-  async processProduct(
-    input: ProductAIInput,
-    options: CrawlerAIOptions = {}
-  ): Promise<AIProcessingResult> {
-    const {
-      extractTags = true,
-      translate = true,
-      generateDescription = false,
-      throwOnError = false,
-    } = options;
+  async processProduct(input: ProductAIInput, options: CrawlerAIOptions = {}): Promise<AIProcessingResult> {
+    const { extractTags = true, translate = true, generateDescription = false, throwOnError = false } = options;
 
     const result: AIProcessingResult = {
       errors: [],
@@ -198,7 +182,7 @@ export class CrawlerAIHelper {
           .catch((error) => {
             result.errors.push(`Tag extraction: ${error.message}`);
             if (throwOnError) throw error;
-          })
+          }),
       );
     }
 
@@ -212,7 +196,7 @@ export class CrawlerAIHelper {
           .catch((error) => {
             result.errors.push(`Translation: ${error.message}`);
             if (throwOnError) throw error;
-          })
+          }),
       );
     }
 
@@ -226,7 +210,7 @@ export class CrawlerAIHelper {
           .catch((error) => {
             result.errors.push(`Description generation: ${error.message}`);
             if (throwOnError) throw error;
-          })
+          }),
       );
     }
 
@@ -243,7 +227,7 @@ export class CrawlerAIHelper {
   async processProducts(
     inputs: ProductAIInput[],
     options: CrawlerAIOptions = {},
-    delayMs = 500
+    delayMs = 500,
   ): Promise<AIProcessingResult[]> {
     const results: AIProcessingResult[] = [];
 
@@ -282,7 +266,7 @@ export function getAIHelper(): CrawlerAIHelper {
  */
 export async function processProductWithAI(
   input: ProductAIInput,
-  options?: CrawlerAIOptions
+  options?: CrawlerAIOptions,
 ): Promise<AIProcessingResult> {
   return getAIHelper().processProduct(input, options);
 }

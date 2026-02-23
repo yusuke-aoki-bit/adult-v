@@ -13,10 +13,7 @@ export interface AutoTagsHandlerDeps {
 }
 
 export function createAutoTagsHandler(deps: AutoTagsHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
 

@@ -7,6 +7,7 @@
 接続前に以下の情報を確認してください：
 
 1. **Cloud SQLインスタンス名**
+
    ```bash
    gcloud sql instances list --project=adult-v
    ```
@@ -20,12 +21,14 @@
 ### ステップ1: Cloud SQL Proxyのインストール
 
 **Windows:**
+
 ```powershell
 # PowerShellで実行
 (New-Object Net.WebClient).DownloadFile("https://dl.google.com/cloudsql/cloud_sql_proxy_x64.exe", "$env:USERPROFILE\cloud_sql_proxy.exe")
 ```
 
 **WSL/Linux/Mac:**
+
 ```bash
 curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64
 chmod +x cloud_sql_proxy
@@ -36,11 +39,13 @@ chmod +x cloud_sql_proxy
 プロジェクトルートにある `adult-v-d8a2b1c2c90f.json` を使用します。
 
 **Windows (PowerShell):**
+
 ```powershell
 $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\yuuku\cursor\adult-v\adult-v-d8a2b1c2c90f.json"
 ```
 
 **WSL/Linux/Mac:**
+
 ```bash
 export GOOGLE_APPLICATION_CREDENTIALS="./adult-v-d8a2b1c2c90f.json"
 ```
@@ -48,12 +53,14 @@ export GOOGLE_APPLICATION_CREDENTIALS="./adult-v-d8a2b1c2c90f.json"
 ### ステップ3: Cloud SQL Proxyの起動
 
 **Windows:**
+
 ```powershell
 # インスタンス名を実際の名前に置き換えてください
 $env:USERPROFILE\cloud_sql_proxy.exe -instances=adult-v:asia-east1:INSTANCE_NAME=tcp:5432
 ```
 
 **WSL/Linux/Mac:**
+
 ```bash
 ./cloud_sql_proxy -instances=adult-v:asia-east1:INSTANCE_NAME=tcp:5432
 ```
@@ -112,6 +119,7 @@ echo $env:DATABASE_URL  # Windows PowerShell
 ```
 
 URLをパースして、以下の情報を取得：
+
 - `username`: URLの `://` と `:` の間
 - `password`: 最初の `:` と `@` の間
 - `host`: `@` と `:` の間（または `/` の前）
@@ -131,6 +139,7 @@ URLをパースして、以下の情報を取得：
    - サービスアカウントにCloud SQL Client権限があるか
 
 3. **インスタンス名が正しいか確認**
+
    ```bash
    gcloud sql instances list --project=adult-v
    ```

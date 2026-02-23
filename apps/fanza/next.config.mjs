@@ -1,7 +1,12 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
+import bundleAnalyzer from '@next/bundle-analyzer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,10 +15,27 @@ const monorepoRoot = path.resolve(__dirname, '../..');
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 const optimizePackageImports = [
-  'drizzle-orm', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu',
-  '@radix-ui/react-popover', '@radix-ui/react-select', '@radix-ui/react-slot', '@radix-ui/react-tooltip',
-  'firebase', 'firebase/app', 'firebase/auth', 'firebase/firestore', '@google-cloud/storage',
-  '@google/generative-ai', 'next-intl', 'cheerio', 'date-fns', 'clsx', 'lodash', 'zod', 'recharts',
+  'drizzle-orm',
+  'lucide-react',
+  '@radix-ui/react-dialog',
+  '@radix-ui/react-dropdown-menu',
+  '@radix-ui/react-popover',
+  '@radix-ui/react-select',
+  '@radix-ui/react-slot',
+  '@radix-ui/react-tooltip',
+  'firebase',
+  'firebase/app',
+  'firebase/auth',
+  'firebase/firestore',
+  '@google-cloud/storage',
+  '@google/generative-ai',
+  'next-intl',
+  'cheerio',
+  'date-fns',
+  'clsx',
+  'lodash',
+  'zod',
+  'recharts',
 ];
 
 const remotePatterns = [
@@ -41,7 +63,7 @@ const fanzaCspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://*.dmm.co.jp https://*.dmm.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com https://*.mgstage.com https://image.mgstage.com https://*.duga.jp https://pic.duga.jp https://img.duga.jp https://*.sokmil.com https://img.sokmil.com https://*.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.1pondo.tv https://*.b10f.jp https://b10f.jp https://*.fc2.com https://*.japanska-xxx.com https://www.minnano-av.com https://*.minnano-av.com",
+  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://awsimgsrc.dmm.co.jp https://placehold.co https://www.googletagmanager.com https://www.google-analytics.com https://*.mgstage.com https://image.mgstage.com https://*.duga.jp https://pic.duga.jp https://img.duga.jp https://*.sokmil.com https://img.sokmil.com https://*.heyzo.com https://*.caribbeancom.com https://*.caribbeancompr.com https://*.1pondo.tv https://*.b10f.jp https://b10f.jp https://*.fc2.com https://*.japanska-xxx.com https://www.minnano-av.com https://*.minnano-av.com https://wsrv.nl",
   "font-src 'self' data:",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://*.sentry.io https://*.ingest.sentry.io",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com",
@@ -51,7 +73,7 @@ const fanzaCspDirectives = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'self'",
-  "upgrade-insecure-requests",
+  'upgrade-insecure-requests',
 ].join('; ');
 
 const fanzaSecurityHeaders = [
@@ -67,9 +89,10 @@ const fanzaSecurityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
-    // 外部CDN画像を直接配信（/_next/image プロキシをバイパス）
-    // Firebase Cloud Run上での画像最適化はレイテンシが大きいため無効化
-    unoptimized: true,
+    // 外部CDN画像は wsrv.nl プロキシ経由で WebP 変換 + リサイズ
+    // Firebase Cloud Run の画像最適化レイテンシを回避しつつ最適化を実現
+    loader: 'custom',
+    loaderFile: '../../packages/shared/src/lib/image-loader.ts',
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -87,9 +110,21 @@ const nextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: fanzaSecurityHeaders },
-      { source: '/api/:path*', headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
-      { source: '/_next/static/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      { source: '/_next/image/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }] },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/_next/image/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
     ];
   },
@@ -110,16 +145,32 @@ const nextConfig = {
       { source: '/uncategorized', destination: '/products?uncategorized=true', permanent: true },
       { source: '/reviews', destination: '/?hasReview=true', permanent: true },
       { source: '/actress', destination: '/', permanent: true },
-      { source: '/actress/:performerId/genre/:tagId', destination: '/actress/:performerId?include=:tagId', permanent: true },
+      {
+        source: '/actress/:performerId/genre/:tagId',
+        destination: '/actress/:performerId?include=:tagId',
+        permanent: true,
+      },
       { source: '/search', destination: '/products', permanent: true },
       { source: '/products/search', destination: '/products', permanent: true },
       // FANZA locale redirects
-      { source: '/:locale(en|zh|zh-TW|ko)/categories/:tagId', destination: '/:locale/products?include=:tagId', permanent: true },
+      {
+        source: '/:locale(en|zh|zh-TW|ko)/categories/:tagId',
+        destination: '/:locale/products?include=:tagId',
+        permanent: true,
+      },
       { source: '/:locale(en|zh|zh-TW|ko)/categories', destination: '/:locale/products', permanent: true },
-      { source: '/:locale(en|zh|zh-TW|ko)/uncategorized', destination: '/:locale/products?uncategorized=true', permanent: true },
+      {
+        source: '/:locale(en|zh|zh-TW|ko)/uncategorized',
+        destination: '/:locale/products?uncategorized=true',
+        permanent: true,
+      },
       { source: '/:locale(en|zh|zh-TW|ko)/reviews', destination: '/:locale?hasReview=true', permanent: true },
       { source: '/:locale(en|zh|zh-TW|ko)/actress', destination: '/:locale', permanent: true },
-      { source: '/:locale(en|zh|zh-TW|ko)/actress/:performerId/genre/:tagId', destination: '/:locale/actress/:performerId?include=:tagId', permanent: true },
+      {
+        source: '/:locale(en|zh|zh-TW|ko)/actress/:performerId/genre/:tagId',
+        destination: '/:locale/actress/:performerId?include=:tagId',
+        permanent: true,
+      },
       { source: '/:locale(en|zh|zh-TW|ko)/search', destination: '/:locale/products', permanent: true },
       { source: '/:locale(en|zh|zh-TW|ko)/products/search', destination: '/:locale/products', permanent: true },
     ];
@@ -128,6 +179,9 @@ const nextConfig = {
 
 // Wrap with next-intl
 const configWithIntl = withNextIntl(nextConfig);
+
+// Wrap with bundle analyzer
+const configWithAnalyzer = withBundleAnalyzer(configWithIntl);
 
 // Sentry configuration
 const sentryBuildOptions = {
@@ -145,5 +199,5 @@ const sentryBuildOptions = {
 };
 
 export default process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(configWithIntl, sentryBuildOptions)
-  : configWithIntl;
+  ? withSentryConfig(configWithAnalyzer, sentryBuildOptions)
+  : configWithAnalyzer;

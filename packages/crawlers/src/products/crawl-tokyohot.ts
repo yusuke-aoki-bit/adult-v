@@ -39,7 +39,7 @@ interface JskySiteConfig {
   listPageUrl: string;
   productIdPattern: RegExp;
   aspName: string;
-  enterUrl?: string;  // 年齢認証後のエントリーURL
+  enterUrl?: string; // 年齢認証後のエントリーURL
 }
 
 const JSKY_SITES: Record<string, JskySiteConfig> = {
@@ -77,8 +77,8 @@ interface TokyoHotProduct {
   thumbnailUrl: string;
   sampleImages: string[];
   genres: string[];
-  price: number | null;  // 月額料金
-  rawHtml: string;  // ハッシュ計算用
+  price: number | null; // 月額料金
+  rawHtml: string; // ハッシュ計算用
 }
 
 /**
@@ -87,7 +87,7 @@ interface TokyoHotProduct {
 async function rateLimit(): Promise<void> {
   const jitter = Math.random() * JITTER_MS;
   const delay = RATE_LIMIT_MS + jitter;
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -184,18 +184,14 @@ async function passAgeVerification(page: Page, siteConfig: JskySiteConfig): Prom
 /**
  * リストページから商品IDを抽出
  */
-async function extractProductIdsFromList(
-  page: Page,
-  siteConfig: JskySiteConfig,
-  pageNum: number
-): Promise<string[]> {
+async function extractProductIdsFromList(page: Page, siteConfig: JskySiteConfig, pageNum: number): Promise<string[]> {
   const url = siteConfig.listPageUrl.replace('{page}', pageNum.toString());
   console.log(`📄 Fetching list page: ${url}`);
 
   await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
 
   // ページがロードされるまで待機
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise((r) => setTimeout(r, 3000));
 
   // スクロールして動的コンテンツをロード（より多くスクロール）
   await page.evaluate(async () => {
@@ -206,16 +202,16 @@ async function extractProductIdsFromList(
     while (currentPosition < scrollHeight) {
       currentPosition += viewportHeight;
       window.scrollTo(0, currentPosition);
-      await new Promise(r => setTimeout(r, 800));
+      await new Promise((r) => setTimeout(r, 800));
     }
 
     // 最後までスクロールした後、少し上に戻って再度下にスクロール
     window.scrollTo(0, scrollHeight / 2);
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
     window.scrollTo(0, scrollHeight);
   });
 
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise((r) => setTimeout(r, 3000));
 
   // HTMLを取得
   const html = await page.content();
@@ -245,14 +241,14 @@ async function extractProductIdsFromList(
 async function extractProductDetails(
   page: Page,
   siteConfig: JskySiteConfig,
-  productId: string
+  productId: string,
 ): Promise<TokyoHotProduct | null> {
   const url = `${siteConfig.baseUrl}/product/${productId}/?lang=ja`;
   console.log(`  📦 Fetching detail: ${url}`);
 
   try {
     await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 2000));
 
     const html = await page.content();
     const $ = cheerio.load(html);
@@ -273,7 +269,7 @@ async function extractProductDetails(
     // 出演者（キーワードから抽出）
     const performers: string[] = [];
     const keywords = $('meta[name="keywords"]').attr('content') || '';
-    const keywordList = keywords.split(',').map(k => k.trim());
+    const keywordList = keywords.split(',').map((k) => k.trim());
 
     for (const keyword of keywordList) {
       // 商品IDは除外
@@ -312,12 +308,15 @@ async function extractProductDetails(
       }
 
       if (label.includes('カテゴリ') || label.includes('タグ') || label.includes('ジャンル')) {
-        $(el).next('dd, td').find('a').each((_, a) => {
-          const genre = $(a).text().trim();
-          if (genre && !genres.includes(genre)) {
-            genres.push(genre);
-          }
-        });
+        $(el)
+          .next('dd, td')
+          .find('a')
+          .each((_, a) => {
+            const genre = $(a).text().trim();
+            if (genre && !genres.includes(genre)) {
+              genres.push(genre);
+            }
+          });
       }
     });
 
@@ -380,7 +379,7 @@ async function extractProductDetails(
       sampleImages,
       genres,
       price,
-      rawHtml: html,  // ハッシュ計算用
+      rawHtml: html, // ハッシュ計算用
     };
   } catch (error) {
     console.error(`  ❌ Error fetching ${productId}:`, error);
@@ -394,7 +393,7 @@ async function extractProductDetails(
 async function saveProduct(
   siteConfig: JskySiteConfig,
   product: TokyoHotProduct,
-  forceReprocess: boolean = false
+  forceReprocess: boolean = false,
 ): Promise<{ saved: boolean; isNew: boolean; skippedUnchanged: boolean }> {
   try {
     const normalizedProductId = `${siteConfig.aspName}-${product['productId']}`;
@@ -404,7 +403,7 @@ async function saveProduct(
       siteConfig.aspName,
       product['productId'],
       `${siteConfig.baseUrl}/product/${product['productId']}/`,
-      product.rawHtml
+      product.rawHtml,
     );
 
     // ハッシュ変更なし、かつ処理済みならスキップ
@@ -457,22 +456,24 @@ async function saveProduct(
     }
 
     // ProductSource（価格情報含む）
-    await db['insert'](productSources).values({
-      productId: productId,
-      aspName: siteConfig.aspName,
-      originalProductId: product['productId'],
-      affiliateUrl: `${siteConfig.baseUrl}/product/${product['productId']}/`,
-      price: product['price'],  // 月額料金
-      dataSource: 'SCRAPE',
-      isSubscription: true, // JSKY系は月額制
-    }).onConflictDoUpdate({
-      target: [productSources.productId, productSources.aspName],
-      set: {
+    await db['insert'](productSources)
+      .values({
+        productId: productId,
+        aspName: siteConfig.aspName,
+        originalProductId: product['productId'],
         affiliateUrl: `${siteConfig.baseUrl}/product/${product['productId']}/`,
-        price: product['price'],
-        lastUpdated: new Date(),
-      },
-    });
+        price: product['price'], // 月額料金
+        dataSource: 'SCRAPE',
+        isSubscription: true, // JSKY系は月額制
+      })
+      .onConflictDoUpdate({
+        target: [productSources.productId, productSources.aspName],
+        set: {
+          affiliateUrl: `${siteConfig.baseUrl}/product/${product['productId']}/`,
+          price: product['price'],
+          lastUpdated: new Date(),
+        },
+      });
 
     // 出演者
     for (const performerName of product.performers) {
@@ -543,9 +544,9 @@ async function main(): Promise<void> {
 
   // コマンドライン引数
   const args = process.argv.slice(2);
-  const siteArg = args.find(a => a.startsWith('--site='))?.split('=')[1] || 'tokyo-hot';
-  const pagesArg = args.find(a => a.startsWith('--pages='))?.split('=')[1];
-  const startPageArg = args.find(a => a.startsWith('--start-page='))?.split('=')[1];
+  const siteArg = args.find((a) => a.startsWith('--site='))?.split('=')[1] || 'tokyo-hot';
+  const pagesArg = args.find((a) => a.startsWith('--pages='))?.split('=')[1];
+  const startPageArg = args.find((a) => a.startsWith('--start-page='))?.split('=')[1];
   const forceReprocess = args.includes('--force');
 
   const pages = pagesArg ? parseInt(pagesArg) : 5;
@@ -573,7 +574,9 @@ async function main(): Promise<void> {
     const browserInstance = await initBrowser();
     const page = await browserInstance.newPage();
 
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢認証を通過

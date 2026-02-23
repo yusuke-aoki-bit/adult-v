@@ -21,12 +21,14 @@ const results: PerformanceResult[] = [];
 test.describe('Performance Tests - After Migration 0026', () => {
   test.beforeEach(async ({ context }) => {
     // 年齢確認クッキーを設定
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test.afterAll(async () => {
@@ -34,7 +36,7 @@ test.describe('Performance Tests - After Migration 0026', () => {
     console.log('\n=== Performance Test Results ===\n');
     console.log('| Page | Load Time | DOMContentLoaded | FCP | LCP |');
     console.log('|------|-----------|------------------|-----|-----|');
-    results.forEach(r => {
+    results.forEach((r) => {
       const fcp = r.firstContentfulPaint ? `${r.firstContentfulPaint.toFixed(0)}ms` : 'N/A';
       const lcp = r.largestContentfulPaint ? `${r.largestContentfulPaint.toFixed(0)}ms` : 'N/A';
       console.log(`| ${r.page} | ${r.loadTime.toFixed(0)}ms | ${r.domContentLoaded.toFixed(0)}ms | ${fcp} | ${lcp} |`);
@@ -54,7 +56,7 @@ test.describe('Performance Tests - After Migration 0026', () => {
       const navigation = performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming;
       const paint = performance.getEntriesByType('paint');
 
-      const fcp = paint.find(p => p.name === 'first-contentful-paint');
+      const fcp = paint.find((p) => p.name === 'first-contentful-paint');
 
       return {
         domContentLoaded: navigation.domContentLoadedEventEnd - navigation.startTime,
@@ -107,16 +109,15 @@ test.describe('Performance Tests - After Migration 0026', () => {
   });
 
   test('Actresses list - Name sort (default)', async ({ page }) => {
-    const result = await measurePagePerformance(
-      page,
-      '/ja/actresses?sort=nameAsc',
-      'Actresses (nameAsc)'
-    );
+    const result = await measurePagePerformance(page, '/ja/actresses?sort=nameAsc', 'Actresses (nameAsc)');
     console.log(`Actresses (nameAsc): ${result.loadTime}ms`);
 
     // 確認: ページにコンテンツが表示されている
     const cards = page.locator('[class*="card"], [class*="Card"]');
-    const hasCards = await cards.first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasCards = await cards
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // CI環境ではDBデータが空でカードが表示されない場合がある
     if (!hasCards) {
@@ -129,15 +130,14 @@ test.describe('Performance Tests - After Migration 0026', () => {
   });
 
   test('Actresses list - Recent sort (uses precomputed latest_release_date)', async ({ page }) => {
-    const result = await measurePagePerformance(
-      page,
-      '/ja/actresses?sort=recent',
-      'Actresses (recent)'
-    );
+    const result = await measurePagePerformance(page, '/ja/actresses?sort=recent', 'Actresses (recent)');
     console.log(`Actresses (recent): ${result.loadTime}ms`);
 
     const cards = page.locator('[class*="card"], [class*="Card"]');
-    const hasCards = await cards.first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasCards = await cards
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // CI環境ではDBデータが空でカードが表示されない場合がある
     if (!hasCards) {
@@ -151,15 +151,14 @@ test.describe('Performance Tests - After Migration 0026', () => {
   });
 
   test('Actresses list - Product count sort (uses precomputed release_count)', async ({ page }) => {
-    const result = await measurePagePerformance(
-      page,
-      '/ja/actresses?sort=productCount',
-      'Actresses (productCount)'
-    );
+    const result = await measurePagePerformance(page, '/ja/actresses?sort=productCount', 'Actresses (productCount)');
     console.log(`Actresses (productCount): ${result.loadTime}ms`);
 
     const cards = page.locator('[class*="card"], [class*="Card"]');
-    const hasCards = await cards.first().isVisible({ timeout: 5000 }).catch(() => false);
+    const hasCards = await cards
+      .first()
+      .isVisible({ timeout: 5000 })
+      .catch(() => false);
 
     // CI環境ではDBデータが空でカードが表示されない場合がある
     if (!hasCards) {
@@ -175,7 +174,7 @@ test.describe('Performance Tests - After Migration 0026', () => {
     const result = await measurePagePerformance(
       page,
       '/ja/actresses?excludeFanzaOnly=true',
-      'Actresses (excludeFanzaOnly)'
+      'Actresses (excludeFanzaOnly)',
     );
     console.log(`Actresses (excludeFanzaOnly): ${result.loadTime}ms`);
 
@@ -183,22 +182,14 @@ test.describe('Performance Tests - After Migration 0026', () => {
   });
 
   test('Products list - Default sort', async ({ page }) => {
-    const result = await measurePagePerformance(
-      page,
-      '/ja/products',
-      'Products (default)'
-    );
+    const result = await measurePagePerformance(page, '/ja/products', 'Products (default)');
     console.log(`Products (default): ${result.loadTime}ms`);
 
     expect(result.loadTime).toBeLessThan(10000);
   });
 
   test('Products list - Release date sort', async ({ page }) => {
-    const result = await measurePagePerformance(
-      page,
-      '/ja/products?sort=releaseDate',
-      'Products (releaseDate)'
-    );
+    const result = await measurePagePerformance(page, '/ja/products?sort=releaseDate', 'Products (releaseDate)');
     console.log(`Products (releaseDate): ${result.loadTime}ms`);
 
     expect(result.loadTime).toBeLessThan(10000);
@@ -213,11 +204,7 @@ test.describe('Performance Tests - After Migration 0026', () => {
     if (await actressLink.isVisible({ timeout: 5000 }).catch(() => false)) {
       const href = await actressLink.getAttribute('href');
 
-      const result = await measurePagePerformance(
-        page,
-        href || '/ja/actresses',
-        'Actress Detail'
-      );
+      const result = await measurePagePerformance(page, href || '/ja/actresses', 'Actress Detail');
       console.log(`Actress Detail: ${result.loadTime}ms`);
 
       expect(result.loadTime).toBeLessThan(10000);
@@ -234,11 +221,7 @@ test.describe('Performance Tests - After Migration 0026', () => {
     if (await productLink.isVisible({ timeout: 5000 }).catch(() => false)) {
       const href = await productLink.getAttribute('href');
 
-      const result = await measurePagePerformance(
-        page,
-        href || '/ja',
-        'Product Detail'
-      );
+      const result = await measurePagePerformance(page, href || '/ja', 'Product Detail');
       console.log(`Product Detail: ${result.loadTime}ms`);
 
       expect(result.loadTime).toBeLessThan(10000);
@@ -250,12 +233,14 @@ test.describe('Performance Tests - After Migration 0026', () => {
 
 test.describe('AB Test Performance Comparison', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('Compare sort methods - A/B performance test', async ({ page }) => {

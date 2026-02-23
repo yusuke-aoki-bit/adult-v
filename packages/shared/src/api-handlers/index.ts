@@ -99,15 +99,35 @@ export type { UserReviewsHandlerDeps, UserReview, UserReviewWithVote } from './u
 export { createUserReviewsGetHandler, createUserReviewsPostHandler, createUserReviewVoteHandler } from './user-reviews';
 
 // User Tag Suggestions handlers
-export type { UserTagSuggestionsHandlerDeps, UserTagSuggestion, UserTagSuggestionWithVote } from './user-tag-suggestions';
-export { createUserTagSuggestionsGetHandler, createUserTagSuggestionsPostHandler, createUserTagVoteHandler } from './user-tag-suggestions';
+export type {
+  UserTagSuggestionsHandlerDeps,
+  UserTagSuggestion,
+  UserTagSuggestionWithVote,
+} from './user-tag-suggestions';
+export {
+  createUserTagSuggestionsGetHandler,
+  createUserTagSuggestionsPostHandler,
+  createUserTagVoteHandler,
+} from './user-tag-suggestions';
 
 // User Performer Suggestions handlers
-export type { UserPerformerSuggestionsHandlerDeps, UserPerformerSuggestion, UserPerformerSuggestionWithVote } from './user-performer-suggestions';
-export { createUserPerformerSuggestionsGetHandler, createUserPerformerSuggestionsPostHandler, createUserPerformerVoteHandler } from './user-performer-suggestions';
+export type {
+  UserPerformerSuggestionsHandlerDeps,
+  UserPerformerSuggestion,
+  UserPerformerSuggestionWithVote,
+} from './user-performer-suggestions';
+export {
+  createUserPerformerSuggestionsGetHandler,
+  createUserPerformerSuggestionsPostHandler,
+  createUserPerformerVoteHandler,
+} from './user-performer-suggestions';
 
 // Public Favorite Lists handlers
-export type { PublicFavoriteListsHandlerDeps, PublicFavoriteList, PublicFavoriteListItem } from './public-favorite-lists';
+export type {
+  PublicFavoriteListsHandlerDeps,
+  PublicFavoriteList,
+  PublicFavoriteListItem,
+} from './public-favorite-lists';
 export {
   createPublicFavoriteListsGetHandler,
   createPublicFavoriteListsPostHandler,

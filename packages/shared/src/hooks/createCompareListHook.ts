@@ -16,19 +16,13 @@ type AddItemInput<T> = Omit<T, 'addedAt'> & { id: string | number };
  * useCompareList / usePerformerCompareList の重複を排除し、
  * useLocalStorage ベースのクロスタブ同期を提供する。
  */
-export function createCompareListHook<T extends CompareItemBase>(
-  storageKey: string,
-  maxItems: number = 4,
-) {
+export function createCompareListHook<T extends CompareItemBase>(storageKey: string, maxItems: number = 4) {
   const defaultValue: T[] = [];
 
   return function useCompareListInstance() {
     const [items, setItems] = useLocalStorage<T[]>(storageKey, defaultValue);
 
-    const compareSet = useMemo(
-      () => new Set(items.map((i) => String(i.id))),
-      [items],
-    );
+    const compareSet = useMemo(() => new Set(items.map((i) => String(i.id))), [items]);
 
     const addItem = useCallback(
       (item: AddItemInput<T>) => {
@@ -51,10 +45,7 @@ export function createCompareListHook<T extends CompareItemBase>(
       setItems(defaultValue);
     }, [setItems]);
 
-    const isInCompareList = useCallback(
-      (id: string | number) => compareSet.has(String(id)),
-      [compareSet],
-    );
+    const isInCompareList = useCallback((id: string | number) => compareSet.has(String(id)), [compareSet]);
 
     const toggleItem = useCallback(
       (item: AddItemInput<T>) => {

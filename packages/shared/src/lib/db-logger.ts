@@ -22,12 +22,7 @@ const dbLogger = logger.child({ layer: 'db-queries' });
  * }
  * ```
  */
-export function logDbErrorAndReturn<T>(
-  error: unknown,
-  defaultValue: T,
-  operation: string,
-  context?: LogContext
-): T {
+export function logDbErrorAndReturn<T>(error: unknown, defaultValue: T, operation: string, context?: LogContext): T {
   dbLogger.error(`${operation} failed`, error, {
     ...context,
     operation,
@@ -55,11 +50,7 @@ export function logDbErrorAndReturn<T>(
  * }
  * ```
  */
-export function logDbErrorAndThrow(
-  error: unknown,
-  operation: string,
-  context?: LogContext
-): never {
+export function logDbErrorAndThrow(error: unknown, operation: string, context?: LogContext): never {
   dbLogger.error(`${operation} failed`, error, {
     ...context,
     operation,
@@ -84,11 +75,7 @@ export function logDbErrorAndThrow(
  * }
  * ```
  */
-export function logDbWarning(
-  message: string,
-  operation: string,
-  context?: LogContext
-): void {
+export function logDbWarning(message: string, operation: string, context?: LogContext): void {
   dbLogger.warn(message, {
     ...context,
     operation,
@@ -105,11 +92,7 @@ export function logDbWarning(
  * });
  * ```
  */
-export async function withDbLogging<T>(
-  operation: string,
-  fn: () => Promise<T>,
-  context?: LogContext
-): Promise<T> {
+export async function withDbLogging<T>(operation: string, fn: () => Promise<T>, context?: LogContext): Promise<T> {
   return dbLogger.time(operation, fn, context);
 }
 

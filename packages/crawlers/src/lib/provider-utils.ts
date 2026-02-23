@@ -3,7 +3,16 @@ import type { ProviderId } from './providers';
 /**
  * Valid provider IDs
  */
-export const VALID_PROVIDER_IDS: readonly ProviderId[] = ['duga', 'sokmil', 'dti', 'mgs', 'b10f', 'japanska', 'fc2', 'fanza'] as const;
+export const VALID_PROVIDER_IDS: readonly ProviderId[] = [
+  'duga',
+  'sokmil',
+  'dti',
+  'mgs',
+  'b10f',
+  'japanska',
+  'fc2',
+  'fanza',
+] as const;
 
 /**
  * Check if a string is a valid ProviderId
@@ -27,28 +36,28 @@ export function mapLegacyProvider(provider: string): ProviderId {
 
   // Map specific ASP names to provider IDs
   const aspMapping: Record<string, ProviderId> = {
-    'duga': 'duga',
-    'apex': 'duga',
-    'dti': 'dti',
-    'mgs': 'mgs',
-    'b10f': 'b10f',
-    'sokmil': 'sokmil',
-    'ソクミル': 'sokmil',
-    'japanska': 'japanska',
-    'fc2': 'fc2',
-    'fanza': 'fanza',
-    'dmm': 'fanza',
+    duga: 'duga',
+    apex: 'duga',
+    dti: 'dti',
+    mgs: 'mgs',
+    b10f: 'b10f',
+    sokmil: 'sokmil',
+    ソクミル: 'sokmil',
+    japanska: 'japanska',
+    fc2: 'fc2',
+    fanza: 'fanza',
+    dmm: 'fanza',
     // DTI系サイト（月額制）
-    'heyzo': 'dti',
-    'caribbeancom': 'dti',  // カリビアンコム（月額制）
+    heyzo: 'dti',
+    caribbeancom: 'dti', // カリビアンコム（月額制）
     '1pondo': 'dti',
     '10musume': 'dti',
-    'pacopacomama': 'dti',
-    'muramura': 'dti',
-    'tokyohot': 'dti',
+    pacopacomama: 'dti',
+    muramura: 'dti',
+    tokyohot: 'dti',
     // カリビアンコムプレミアムは単品購入サイト（月額制ではない）
-    'カリビアンコムプレミアム': 'dti',
-    'caribbeancompr': 'dti',
+    カリビアンコムプレミアム: 'dti',
+    caribbeancompr: 'dti',
   };
 
   const mapped = aspMapping[normalizedProvider];
@@ -70,7 +79,5 @@ export function mapLegacyProvider(provider: string): ProviderId {
  * Map an array of legacy service names to current provider IDs
  */
 export function mapLegacyServices(services: string[]): ProviderId[] {
-  return services
-    .map(mapLegacyProvider)
-    .filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
+  return services.map(mapLegacyProvider).filter((value, index, self) => self.indexOf(value) === index); // Remove duplicates
 }

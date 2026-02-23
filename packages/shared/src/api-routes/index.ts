@@ -183,9 +183,17 @@ const noopCache = (fn: (...args: any[]) => Promise<any>) => fn;
 
 const appQueries = createAppQueries({
   getDb: getDb as never,
-  products, performers, productPerformers, performerAliases,
-  tags, productTags, productSources,
-  productImages, productVideos, productSales, productRatingSummary,
+  products,
+  performers,
+  productPerformers,
+  performerAliases,
+  tags,
+  productTags,
+  productSources,
+  productImages,
+  productVideos,
+  productSales,
+  productRatingSummary,
   siteMode: 'all',
   enableActressFeatureFilter: true,
   isValidPerformerName,
@@ -215,29 +223,71 @@ const recQueries = createRecommendationsQueries({
 // ====== Common dependency groups ======
 
 const correctionsDeps = {
-  getDb, userCorrections, userContributionStats, eq, and, desc, sql,
+  getDb,
+  userCorrections,
+  userContributionStats,
+  eq,
+  and,
+  desc,
+  sql,
 };
 
 const reviewsDeps = {
-  getDb, userReviews, userReviewVotes, products, eq, and, desc, sql,
+  getDb,
+  userReviews,
+  userReviewVotes,
+  products,
+  eq,
+  and,
+  desc,
+  sql,
 };
 
 const tagSuggestionsDeps = {
-  getDb, userTagSuggestions, userTagVotes, products, tags, eq, and, desc, sql,
+  getDb,
+  userTagSuggestions,
+  userTagVotes,
+  products,
+  tags,
+  eq,
+  and,
+  desc,
+  sql,
 };
 
 const performerSuggestionsDeps = {
-  getDb, userPerformerSuggestions, userPerformerVotes, products, performers,
-  eq, and, or, desc, ilike, sql,
+  getDb,
+  userPerformerSuggestions,
+  userPerformerVotes,
+  products,
+  performers,
+  eq,
+  and,
+  or,
+  desc,
+  ilike,
+  sql,
 };
 
 const favoriteListsDeps = {
-  getDb, publicFavoriteLists, publicFavoriteListItems, publicListLikes, products,
-  eq, and, desc, asc, sql,
+  getDb,
+  publicFavoriteLists,
+  publicFavoriteListItems,
+  publicListLikes,
+  products,
+  eq,
+  and,
+  desc,
+  asc,
+  sql,
 };
 
 const securityDeps = {
-  checkRateLimit, getClientIP, RATE_LIMITS, detectBot, validateSecurityHeaders,
+  checkRateLimit,
+  getClientIP,
+  RATE_LIMITS,
+  detectBot,
+  validateSecurityHeaders,
 };
 
 // ====== Inline helper functions ======
@@ -261,27 +311,37 @@ async function trackPerformerView(performerId: number) {
 // ====================================================================
 
 export const apiSearchAutocompleteGET = createSearchAutocompleteHandler({
-  getDb: getDb as never, products, performers, tags, productSources,
+  getDb: getDb as never,
+  products,
+  performers,
+  tags,
+  productSources,
 });
 
 export const apiRankingProductsGET = createRankingProductsHandler({
-  getDb, productSources,
+  getDb,
+  productSources,
 });
 
 export const apiRankingActressesGET = createRankingActressesHandler({
-  getDb, performers,
+  getDb,
+  performers,
 });
 
 export const apiFooterActressesGET = createFooterActressesHandler({
-  getDb, footerFeaturedActresses: footerFeaturedActresses as any,
+  getDb,
+  footerFeaturedActresses: footerFeaturedActresses as any,
 });
 
 export const apiFooterLinksGET = createFooterLinksHandler({
-  getDb, tags, productTags,
+  getDb,
+  tags,
+  productTags,
 });
 
 export const apiSalePredictionGET = createSalePredictionHandler({
-  getDb, sql,
+  getDb,
+  sql,
 });
 
 // ====================================================================
@@ -295,18 +355,12 @@ export const apiCorrectionsPOST = createUserCorrectionsPostHandler(correctionsDe
 const _correctionsReviewHandler = createUserCorrectionsReviewHandler(correctionsDeps);
 const _correctionsDeleteHandler = createUserCorrectionsDeleteHandler(correctionsDeps);
 
-export async function apiCorrectionByIdPUT(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function apiCorrectionByIdPUT(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
   return _correctionsReviewHandler(request, { params });
 }
 
-export async function apiCorrectionByIdDELETE(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function apiCorrectionByIdDELETE(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const params = await context.params;
   return _correctionsDeleteHandler(request, { params });
 }
@@ -328,7 +382,15 @@ export const apiFavoriteListItemsPOST = createPublicFavoriteListItemsHandler(fav
 export const apiFavoriteListLikePOST = createPublicFavoriteListLikeHandler(favoriteListsDeps);
 
 export const apiRookiesGET = createRookiePerformersHandler({
-  getDb, performers, productPerformers, products, eq, desc, gte, and, sql,
+  getDb,
+  performers,
+  productPerformers,
+  products,
+  eq,
+  desc,
+  gte,
+  and,
+  sql,
 });
 
 // ====================================================================
@@ -339,7 +401,8 @@ export const apiAgeVerifyPOST = createAgeVerifyPostHandler(securityDeps);
 export const apiAgeVerifyDELETE = createAgeVerifyDeleteHandler(securityDeps);
 
 export const apiTrackViewPOST = createTrackViewHandler({
-  trackProductView, trackPerformerView,
+  trackProductView,
+  trackPerformerView,
 });
 
 // ====================================================================
@@ -449,16 +512,15 @@ const _performerSimilarHandler = createPerformerSimilarHandler(
   {
     getDb: getDb as Parameters<typeof createPerformerSimilarHandler>[0]['getDb'],
     performers,
-    getCache, setCache, generateCacheKey,
+    getCache,
+    setCache,
+    generateCacheKey,
     aspName: 'mgs',
   },
   { siteMode: 'mgs' },
 );
 
-export async function apiPerformerSimilarGET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function apiPerformerSimilarGET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const performerId = parseInt(id, 10);
   const { searchParams } = new URL(request.url);
@@ -475,16 +537,15 @@ const _productSimilarHandler = createProductSimilarHandler(
   {
     getDb: getDb as Parameters<typeof createProductSimilarHandler>[0]['getDb'],
     products,
-    getCache, setCache, generateCacheKey,
+    getCache,
+    setCache,
+    generateCacheKey,
     aspName: 'mgs',
   },
   { siteMode: 'mgs' },
 );
 
-export async function apiProductSimilarGET(
-  request: NextRequest,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function apiProductSimilarGET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id } = await context.params;
   const productId = parseInt(id, 10);
   const { searchParams } = new URL(request.url);
@@ -503,7 +564,7 @@ const _adminStatsHandler = createAdminStatsHandler(
 );
 
 export async function apiAdminStatsGET(request: NextRequest) {
-  if (!await verifyCronRequest(request)) {
+  if (!(await verifyCronRequest(request))) {
     return unauthorizedResponse();
   }
   return _adminStatsHandler();
@@ -549,7 +610,9 @@ export const apiProductRelatedGET = createProductRelatedHandler({
 
 // --- Product AI Description ---
 export const apiProductAiDescriptionGET = createProductAiDescriptionHandler({
-  getDb, products, eq,
+  getDb,
+  products,
+  eq,
 });
 
 // --- Product Generate Description ---
@@ -580,7 +643,10 @@ export const apiEmbedStatsFanzaOPTIONS = _embedStatsFanza.OPTIONS;
 
 // --- Also Viewed ---
 export const apiAlsoViewedGET = createAlsoViewedHandler({
-  getDb, products, productSources, sql,
+  getDb,
+  products,
+  productSources,
+  sql,
 });
 
 // --- Product Search ---
@@ -590,23 +656,47 @@ export const apiProductSearchGET = createProductSearchHandler({
 
 // --- Product Batch Prices ---
 export const apiProductBatchPricesPOST = createProductBatchPricesHandler({
-  getDb, products, productSources, productSales, inArray, eq, and,
+  getDb,
+  products,
+  productSources,
+  productSales,
+  inArray,
+  eq,
+  and,
 });
 
 // --- Sale Calendar ---
 export const apiSaleCalendarGET = createSaleCalendarHandler({
-  getDb, sql,
+  getDb,
+  sql,
 });
 
 // --- Generate Profile ---
 export const apiGenerateProfileGET = createGenerateProfileHandler({
-  getDb, getActressById: appQueries.getActressById as any,
-  generateActressProfile, products, productPerformers, productTags, productSources, tags, sql, desc, inArray,
+  getDb,
+  getActressById: appQueries.getActressById as any,
+  generateActressProfile,
+  products,
+  productPerformers,
+  productTags,
+  productSources,
+  tags,
+  sql,
+  desc,
+  inArray,
 });
 
 // --- User Profile ---
 export const apiUserProfilePOST = createUserProfileHandler({
-  getDb, products, productPerformers, productTags, performers, tags, inArray, eq, generateUserPreferenceProfile,
+  getDb,
+  products,
+  productPerformers,
+  productTags,
+  performers,
+  tags,
+  inArray,
+  eq,
+  generateUserPreferenceProfile,
 });
 
 // --- Price Alerts Route ---
@@ -617,12 +707,22 @@ export const apiPriceAlertsRouteDELETE = _priceAlerts.DELETE;
 
 // --- Search AI ---
 export const apiSearchAiPOST = createSearchAiHandler({
-  getDb, tags, performers, eq, desc, sql, ilike, or, analyzeSearchQuery,
+  getDb,
+  tags,
+  performers,
+  eq,
+  desc,
+  sql,
+  ilike,
+  or,
+  analyzeSearchQuery,
 });
 
 // --- Semantic Search ---
 export const apiSemanticSearchGET = createSemanticSearchHandler({
-  getDb, sql, generateQueryEmbedding,
+  getDb,
+  sql,
+  generateQueryEmbedding,
 });
 
 // --- Trends (web) ---
@@ -639,13 +739,30 @@ export const apiTrendsFanzaGET = createTrendsHandler(
 
 // --- Search Image ---
 export const apiSearchImagePOST = createSearchImageHandler({
-  getDb, products, productTags, productSources, tags, sql, inArray,
-  analyzeImageForSearch, calculateImageTextSimilarity,
+  getDb,
+  products,
+  productTags,
+  productSources,
+  tags,
+  sql,
+  inArray,
+  analyzeImageForSearch,
+  calculateImageTextSimilarity,
 });
 
 // --- Recommendations From History ---
 export const apiRecommendationsFromHistoryPOST = createRecommendationsFromHistoryHandler({
-  getDb, products, productPerformers, productTags, performers, tags, eq, inArray, sql, desc, and,
+  getDb,
+  products,
+  productPerformers,
+  productTags,
+  performers,
+  tags,
+  eq,
+  inArray,
+  sql,
+  desc,
+  and,
   analyzeViewingHistory,
 });
 

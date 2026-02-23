@@ -38,7 +38,8 @@ const themeStyles = {
 // 事前計算したblurDataURL（モジュールレベルで1回だけ生成）
 const PRECOMPUTED_BLUR_DATA_URLS = {
   dark: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciPjxzdG9wIHN0b3AtY29sb3I9IiMxZjI5MzciIG9mZnNldD0iMCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iIzM3NDE1MSIgb2Zmc2V0PSI1MCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iIzFmMjkzNyIgb2Zmc2V0PSIxMDAlIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI3MDAiIGhlaWdodD0iNDc1IiBmaWxsPSIjMWYyOTM3IiAvPjxyZWN0IGlkPSJyIiB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgZmlsbD0idXJsKCNnKSIgLz48YW5pbWF0ZSB4bGluazpocmVmPSIjciIgYXR0cmlidXRlTmFtZT0ieCIgZnJvbT0iLTcwMCIgdG89IjcwMCIgZHVyPSIxcyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiICAvPjwvc3ZnPg==',
-  light: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciPjxzdG9wIHN0b3AtY29sb3I9IiNlNWU3ZWIiIG9mZnNldD0iMCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iI2QxZDVkYiIgb2Zmc2V0PSI1MCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iI2U1ZTdlYiIgb2Zmc2V0PSIxMDAlIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI3MDAiIGhlaWdodD0iNDc1IiBmaWxsPSIjZTVlN2ViIiAvPjxyZWN0IGlkPSJyIiB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgZmlsbD0idXJsKCNnKSIgLz48YW5pbWF0ZSB4bGluazpocmVmPSIjciIgYXR0cmlidXRlTmFtZT0ieCIgZnJvbT0iLTcwMCIgdG89IjcwMCIgZHVyPSIxcyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiICAvPjwvc3ZnPg==',
+  light:
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgdmVyc2lvbj0iMS4xIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIj48ZGVmcz48bGluZWFyR3JhZGllbnQgaWQ9ImciPjxzdG9wIHN0b3AtY29sb3I9IiNlNWU3ZWIiIG9mZnNldD0iMCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iI2QxZDVkYiIgb2Zmc2V0PSI1MCUiIC8+PHN0b3Agc3RvcC1jb2xvcj0iI2U1ZTdlYiIgb2Zmc2V0PSIxMDAlIiAvPjwvbGluZWFyR3JhZGllbnQ+PC9kZWZzPjxyZWN0IHdpZHRoPSI3MDAiIGhlaWdodD0iNDc1IiBmaWxsPSIjZTVlN2ViIiAvPjxyZWN0IGlkPSJyIiB3aWR0aD0iNzAwIiBoZWlnaHQ9IjQ3NSIgZmlsbD0idXJsKCNnKSIgLz48YW5pbWF0ZSB4bGluazpocmVmPSIjciIgYXR0cmlidXRlTmFtZT0ieCIgZnJvbT0iLTcwMCIgdG89IjcwMCIgZHVyPSIxcyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiICAvPjwvc3ZnPg==',
 };
 
 /**
@@ -79,12 +80,7 @@ export function OptimizedImageBase({
               }
         }
       >
-        <svg
-          className={`w-12 h-12 ${styles.errorIcon}`}
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className={`h-12 w-12 ${styles.errorIcon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -122,10 +118,6 @@ export function OptimizedImageBase({
 
   return (
     // eslint-disable-next-line jsx-a11y/alt-text
-    <Image
-      {...imageProps}
-      width={width || 500}
-      height={height || 300}
-    />
+    <Image {...imageProps} width={width || 500} height={height || 300} />
   );
 }

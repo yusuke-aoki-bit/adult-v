@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, alsoViewedTranslations } from '../../lib/translations';
 
 interface AlsoViewedProduct {
   id: number;
@@ -22,25 +23,6 @@ interface AlsoViewedProps {
   className?: string;
 }
 
-const translations = {
-  ja: {
-    title: 'この作品を見た人は',
-    alsoViewed: 'こちらも見ています',
-    viewedBy: 'の人が閲覧',
-    loading: '読み込み中...',
-    error: '取得に失敗しました',
-    noData: 'データがありません',
-  },
-  en: {
-    title: 'People who viewed this',
-    alsoViewed: 'also viewed',
-    viewedBy: 'of viewers',
-    loading: 'Loading...',
-    error: 'Failed to load',
-    noData: 'No data available',
-  },
-};
-
 export function AlsoViewed({
   productId,
   locale = 'ja',
@@ -56,7 +38,7 @@ export function AlsoViewed({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(alsoViewedTranslations, locale);
   const isDark = theme === 'dark';
 
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -70,10 +52,9 @@ export function AlsoViewed({
       setError(null);
 
       try {
-        const response = await fetch(
-          `${apiEndpoint}/${productId}/also-viewed?limit=${limit}`,
-          { signal: abortControllerRef.current.signal }
-        );
+        const response = await fetch(`${apiEndpoint}/${productId}/also-viewed?limit=${limit}`, {
+          signal: abortControllerRef.current.signal,
+        });
 
         if (!response.ok) {
           throw new Error('Failed to fetch');
@@ -99,7 +80,9 @@ export function AlsoViewed({
       fetchAlsoViewed();
     }
 
-    return () => { abortControllerRef.current?.abort(); };
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, [productId, apiEndpoint, limit, t.error]);
 
   const handleProductClick = (product: AlsoViewedProduct) => {
@@ -112,15 +95,13 @@ export function AlsoViewed({
   if (isLoading) {
     return (
       <div className={`rounded-xl p-4 sm:p-6 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'} ${className}`}>
-        <div className="flex items-center gap-2 mb-4">
-          <span className="text-xl animate-pulse">👥</span>
-          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {t.loading}
-          </h3>
+        <div className="mb-4 flex items-center gap-2">
+          <span className="animate-pulse text-xl">👥</span>
+          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.loading}</h3>
         </div>
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className={`aspect-3/4 rounded-lg animate-pulse ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
+            <div key={i} className={`aspect-3/4 animate-pulse rounded-lg ${isDark ? 'bg-gray-700' : 'bg-gray-300'}`} />
           ))}
         </div>
       </div>
@@ -135,25 +116,21 @@ export function AlsoViewed({
   return (
     <div className={`rounded-xl p-4 sm:p-6 ${isDark ? 'bg-gray-800/50' : 'bg-gray-100'} ${className}`}>
       {/* ヘッダー */}
-      <div className="flex items-center gap-2 mb-4">
+      <div className="mb-4 flex items-center gap-2">
         <span className="text-xl">👥</span>
         <div>
-          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-            {t.title}
-          </h3>
-          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-            {t.alsoViewed}
-          </p>
+          <h3 className={`text-base font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.title}</h3>
+          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.alsoViewed}</p>
         </div>
       </div>
 
       {/* 作品グリッド */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
         {products.map((product) => (
           <div
             key={product['id']}
             onClick={() => handleProductClick(product)}
-            className={`group cursor-pointer rounded-lg overflow-hidden transition-transform hover:scale-[1.02] ${
+            className={`group cursor-pointer overflow-hidden rounded-lg transition-transform hover:scale-[1.02] ${
               isDark ? 'bg-gray-900' : 'bg-white'
             }`}
           >
@@ -163,13 +140,13 @@ export function AlsoViewed({
                 <img
                   src={product.imageUrl}
                   alt={product['title']}
-                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
+                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
                   loading="lazy"
                 />
               ) : (
-                <div className={`w-full h-full flex items-center justify-center ${
-                  isDark ? 'bg-gray-800' : 'bg-gray-200'
-                }`}>
+                <div
+                  className={`flex h-full w-full items-center justify-center ${isDark ? 'bg-gray-800' : 'bg-gray-200'}`}
+                >
                   <span className="text-2xl opacity-30">🎬</span>
                 </div>
               )}
@@ -177,9 +154,11 @@ export function AlsoViewed({
               {/* 閲覧率バッジ */}
               {product.coViewRate > 0 && (
                 <div className="absolute top-1 right-1">
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                    isDark ? 'bg-blue-900/80 text-blue-200' : 'bg-blue-100 text-blue-700'
-                  }`}>
+                  <span
+                    className={`rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      isDark ? 'bg-blue-900/80 text-blue-200' : 'bg-blue-100 text-blue-700'
+                    }`}
+                  >
                     {product.coViewRate}%
                   </span>
                 </div>
@@ -188,9 +167,11 @@ export function AlsoViewed({
 
             {/* タイトル */}
             <div className="p-1.5">
-              <h4 className={`text-[10px] sm:text-xs font-medium line-clamp-2 ${
-                isDark ? 'text-gray-300' : 'text-gray-700'
-              }`}>
+              <h4
+                className={`line-clamp-2 text-[10px] font-medium sm:text-xs ${
+                  isDark ? 'text-gray-300' : 'text-gray-700'
+                }`}
+              >
                 {product['title']}
               </h4>
             </div>

@@ -12,16 +12,12 @@ interface AlsoViewedWrapperProps {
 export default function AlsoViewedWrapper({ productId, locale }: AlsoViewedWrapperProps) {
   const router = useRouter();
 
-  const handleProductClick = useCallback((id: string) => {
-    router.push(`/${locale}/products/${id}`);
-  }, [router, locale]);
-
-  return (
-    <AlsoViewed
-      productId={productId}
-      locale={locale}
-      onProductClick={handleProductClick}
-      limit={6}
-    />
+  const handleProductClick = useCallback(
+    (id: string) => {
+      router.push(`/${locale}/products/${id}`);
+    },
+    [router, locale],
   );
+
+  return <AlsoViewed productId={productId} locale={locale} onProductClick={handleProductClick} limit={6} />;
 }

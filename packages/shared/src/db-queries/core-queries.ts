@@ -20,9 +20,9 @@ type AnyTable = PgTableWithColumns<any>;
  */
 function escapeLikePattern(input: string): string {
   return input
-    .replace(/\\/g, '\\\\')  // バックスラッシュをエスケープ
-    .replace(/%/g, '\\%')    // %をエスケープ
-    .replace(/_/g, '\\_');   // _をエスケープ
+    .replace(/\\/g, '\\\\') // バックスラッシュをエスケープ
+    .replace(/%/g, '\\%') // %をエスケープ
+    .replace(/_/g, '\\_'); // _をエスケープ
 }
 import type { SourceData as MapperSourceData } from './mappers';
 import { selectProductSources, groupSourcesByProduct } from '../lib/source-selection';
@@ -462,9 +462,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   async function getSaleStats(aspName?: string): Promise<SaleStatsResult> {
     const db = getDb();
 
-    const aspCondition = aspName
-      ? sql`AND ps.asp_name = ${aspName}`
-      : sql``;
+    const aspCondition = aspName ? sql`AND ps.asp_name = ${aspName}` : sql``;
 
     const result = await db.execute(sql`
       SELECT
@@ -499,37 +497,28 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
     return {
       totalSaleProducts:
-        typeof row.totalSaleProducts === 'string'
-          ? parseInt(row.totalSaleProducts)
-          : row.totalSaleProducts || 0,
+        typeof row.totalSaleProducts === 'string' ? parseInt(row.totalSaleProducts) : row.totalSaleProducts || 0,
       avgDiscountPercent:
-        typeof row.avgDiscountPercent === 'string'
-          ? parseFloat(row.avgDiscountPercent)
-          : row.avgDiscountPercent || 0,
+        typeof row.avgDiscountPercent === 'string' ? parseFloat(row.avgDiscountPercent) : row.avgDiscountPercent || 0,
       maxDiscountPercent:
-        typeof row.maxDiscountPercent === 'string'
-          ? parseInt(row.maxDiscountPercent)
-          : row.maxDiscountPercent || 0,
-      saleEndingSoon:
-        typeof row.saleEndingSoon === 'string'
-          ? parseInt(row.saleEndingSoon)
-          : row.saleEndingSoon || 0,
+        typeof row.maxDiscountPercent === 'string' ? parseInt(row.maxDiscountPercent) : row.maxDiscountPercent || 0,
+      saleEndingSoon: typeof row.saleEndingSoon === 'string' ? parseInt(row.saleEndingSoon) : row.saleEndingSoon || 0,
     };
   }
 
   /**
    * 人気タグを取得
    */
-  async function getPopularTags(options: {
-    limit?: number;
-    category?: string;
-  } = {}): Promise<Array<TagResult & { productCount: number }>> {
+  async function getPopularTags(
+    options: {
+      limit?: number;
+      category?: string;
+    } = {},
+  ): Promise<Array<TagResult & { productCount: number }>> {
     const db = getDb();
     const { limit = 20, category } = options;
 
-    const categoryCondition = category
-      ? sql`AND t.category = ${category}`
-      : sql``;
+    const categoryCondition = category ? sql`AND t.category = ${category}` : sql``;
 
     const aspFilter = getAspFilterCondition();
 
@@ -549,19 +538,18 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       LIMIT ${limit}
     `);
 
-    return (result.rows as Array<{
-      id: number;
-      name: string;
-      category: string | null;
-      productCount: string | number;
-    }>).map((row) => ({
+    return (
+      result.rows as Array<{
+        id: number;
+        name: string;
+        category: string | null;
+        productCount: string | number;
+      }>
+    ).map((row) => ({
       id: row['id'],
       name: row['name'],
       category: row.category,
-      productCount:
-        typeof row.productCount === 'string'
-          ? parseInt(row.productCount)
-          : row.productCount,
+      productCount: typeof row.productCount === 'string' ? parseInt(row.productCount) : row.productCount,
     }));
   }
 
@@ -571,7 +559,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   async function fuzzySearchQuery(
     searchTerm: string,
     table: 'products' | 'performers',
-    limit: number = 20
+    limit: number = 20,
   ): Promise<number[]> {
     const db = getDb();
     const escapedTerm = escapeLikePattern(searchTerm);
@@ -584,8 +572,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
           or(
             ilike(products['title'], `%${escapedTerm}%`),
             ilike(products['normalizedProductId'], `%${escapedTerm}%`),
-            ilike(products['description'], `%${escapedTerm}%`)
-          )
+            ilike(products['description'], `%${escapedTerm}%`),
+          ),
         )
         .limit(limit);
       return extractIds(result);
@@ -594,12 +582,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     const result = await db
       .select({ id: performers['id'] })
       .from(performers)
-      .where(
-        or(
-          ilike(performers['name'], `%${escapedTerm}%`),
-          ilike(performers['nameKana'], `%${escapedTerm}%`)
-        )
-      )
+      .where(or(ilike(performers['name'], `%${escapedTerm}%`), ilike(performers['nameKana'], `%${escapedTerm}%`)))
       .limit(limit);
     return extractIds(result);
   }
@@ -661,10 +644,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .from(tags)
         .innerJoin(productTags, eq(tags['id'], productTags['tagId']))
         .where(
-          and(
-            category ? eq(tags['category'], category) : undefined,
-            inArray(productTags['productId'], productIdList)
-          )
+          and(category ? eq(tags['category'], category) : undefined, inArray(productTags['productId'], productIdList)),
         )
         .orderBy(tags['name']);
 
@@ -682,13 +662,15 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   /**
    * 演者の別名を取得
    */
-  async function getPerformerAliases(performerId: number): Promise<Array<{
-    id: number;
-    aliasName: string;
-    source: string | null;
-    isPrimary: boolean | null;
-    createdAt: Date;
-  }>> {
+  async function getPerformerAliases(performerId: number): Promise<
+    Array<{
+      id: number;
+      aliasName: string;
+      source: string | null;
+      isPrimary: boolean | null;
+      createdAt: Date;
+    }>
+  > {
     try {
       const db = getDb();
 
@@ -714,10 +696,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   /**
    * 女優のサイト別作品数を取得
    */
-  async function getActressProductCountBySite(actressId: string): Promise<Array<{
-    siteName: string;
-    count: number;
-  }>> {
+  async function getActressProductCountBySite(actressId: string): Promise<
+    Array<{
+      siteName: string;
+      count: number;
+    }>
+  > {
     try {
       const db = getDb();
       const performerId = parseInt(actressId);
@@ -735,10 +719,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         .innerJoin(productPerformers, eq(products['id'], productPerformers['productId']))
         .innerJoin(productTags, eq(products['id'], productTags['productId']))
         .innerJoin(tags, eq(productTags['tagId'], tags['id']))
-        .where(and(
-          eq(productPerformers['performerId'], performerId),
-          eq(tags['category'], 'site')
-        ))
+        .where(and(eq(productPerformers['performerId'], performerId), eq(tags['category'], 'site')))
         .groupBy(tags['name'])
         .orderBy(desc(sql<number>`COUNT(DISTINCT ${products['id']})`));
 
@@ -833,8 +814,8 @@ export function createCoreQueries(deps: CoreQueryDeps) {
           and(
             eq(productSources['productId'], productId),
             eq(productSales['isActive'], true),
-            sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`
-          )
+            sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`,
+          ),
         )
         .limit(1),
     ]);
@@ -859,12 +840,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     // セールデータの変換
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const rawSale = rawSaleData[0] as any;
-    const saleData = rawSale ? {
-      regularPrice: rawSale.regularPrice as number,
-      salePrice: rawSale.salePrice as number,
-      discountPercent: rawSale.discountPercent as number | null,
-      endAt: rawSale.endAt as Date | null,
-    } : undefined;
+    const saleData = rawSale
+      ? {
+          regularPrice: rawSale.regularPrice as number,
+          salePrice: rawSale.salePrice as number,
+          discountPercent: rawSale.discountPercent as number | null,
+          endAt: rawSale.endAt as Date | null,
+        }
+      : undefined;
 
     return {
       performerData: performerData.filter(isValidPerformer),
@@ -893,7 +876,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       limitVideosPerProduct?: number;
       /** 一覧表示用軽量モード: タグ・セール情報をスキップ */
       lightMode?: boolean;
-    }
+    },
   ): Promise<BatchRelatedDataResult> {
     if (productIds.length === 0) {
       return {
@@ -923,7 +906,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
               display_order,
               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY display_order ASC NULLS LAST) as rn
             FROM product_images
-            WHERE product_id = ANY(ARRAY[${sql.join(productIds.map(id => sql`${id}`), sql`, `)}]::integer[])
+            WHERE product_id = ANY(ARRAY[${sql.join(
+              productIds.map((id) => sql`${id}`),
+              sql`, `,
+            )}]::integer[])
           ) ranked
           WHERE rn <= ${limitImages}
         `)
@@ -951,7 +937,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
               duration,
               ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY id ASC) as rn
             FROM product_videos
-            WHERE product_id = ANY(ARRAY[${sql.join(productIds.map(id => sql`${id}`), sql`, `)}]::integer[])
+            WHERE product_id = ANY(ARRAY[${sql.join(
+              productIds.map((id) => sql`${id}`),
+              sql`, `,
+            )}]::integer[])
           ) ranked
           WHERE rn <= ${limitVideos}
         `)
@@ -1002,37 +991,39 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     ];
 
     // 軽量モードではタグとセール情報をスキップ
-    const optionalQueries = lightMode ? [] : [
-      // タグ
-      db
-        .select({
-          productId: productTags['productId'],
-          id: tags['id'],
-          name: tags['name'],
-          category: tags['category'],
-        })
-        .from(productTags)
-        .innerJoin(tags, eq(productTags['tagId'], tags['id']))
-        .where(inArray(productTags['productId'], productIds)),
-      // アクティブなセール情報
-      db
-        .select({
-          productId: productSources['productId'],
-          regularPrice: productSales['regularPrice'],
-          salePrice: productSales['salePrice'],
-          discountPercent: productSales['discountPercent'],
-          endAt: productSales['endAt'],
-        })
-        .from(productSales)
-        .innerJoin(productSources, eq(productSales['productSourceId'], productSources['id']))
-        .where(
-          and(
-            inArray(productSources['productId'], productIds),
-            eq(productSales['isActive'], true),
-            sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`
-          )
-        ),
-    ];
+    const optionalQueries = lightMode
+      ? []
+      : [
+          // タグ
+          db
+            .select({
+              productId: productTags['productId'],
+              id: tags['id'],
+              name: tags['name'],
+              category: tags['category'],
+            })
+            .from(productTags)
+            .innerJoin(tags, eq(productTags['tagId'], tags['id']))
+            .where(inArray(productTags['productId'], productIds)),
+          // アクティブなセール情報
+          db
+            .select({
+              productId: productSources['productId'],
+              regularPrice: productSales['regularPrice'],
+              salePrice: productSales['salePrice'],
+              discountPercent: productSales['discountPercent'],
+              endAt: productSales['endAt'],
+            })
+            .from(productSales)
+            .innerJoin(productSources, eq(productSales['productSourceId'], productSources['id']))
+            .where(
+              and(
+                inArray(productSources['productId'], productIds),
+                eq(productSales['isActive'], true),
+                sql`(${productSales['endAt']} IS NULL OR ${productSales['endAt']} > NOW())`,
+              ),
+            ),
+        ];
 
     const allResults = await Promise.all([...coreQueries, ...optionalQueries]);
 
@@ -1195,7 +1186,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       };
       const rows = (result.rows || []) as CategoryRow[];
 
-      return rows.map(row => ({
+      return rows.map((row) => ({
         id: row['id'],
         name: row['name'],
         nameEn: row.name_en,
@@ -1259,13 +1250,13 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       `);
 
       const patternLabels: Record<string, string> = {
-        'SIRO': 'シロウトTV系',
+        SIRO: 'シロウトTV系',
         '200GANA': 'ナンパTV系',
-        'LUXU': 'ラグジュTV系',
-        'HEYZO': 'HEYZO',
-        'DTI': 'DTI系(カリビ/一本道)',
-        'DVD': 'DVD作品',
-        'OTHER': 'その他',
+        LUXU: 'ラグジュTV系',
+        HEYZO: 'HEYZO',
+        DTI: 'DTI系(カリビ/一本道)',
+        DVD: 'DVD作品',
+        OTHER: 'その他',
       };
 
       type AspRow = { asp_name: string; count: string };
@@ -1276,11 +1267,11 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const totalRows = (totalResult.rows || []) as CountRow[];
 
       return {
-        aspStats: aspRows.map(row => ({
+        aspStats: aspRows.map((row) => ({
           aspName: row.asp_name,
           count: parseInt(row['count'], 10),
         })),
-        patternStats: patternRows.map(row => ({
+        patternStats: patternRows.map((row) => ({
           pattern: row.pattern,
           label: patternLabels[row.pattern] || row.pattern,
           count: parseInt(row['count'], 10),
@@ -1295,10 +1286,12 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   /**
    * wiki_crawl_dataから商品コードに対応する候補演者を取得
    */
-  async function getCandidatePerformers(productCode: string): Promise<Array<{
-    name: string;
-    source: string;
-  }>> {
+  async function getCandidatePerformers(productCode: string): Promise<
+    Array<{
+      name: string;
+      source: string;
+    }>
+  > {
     try {
       const db = getDb();
 
@@ -1311,7 +1304,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
       type PerformerRow = { performer_name: string; source: string };
       const rows = (result.rows || []) as PerformerRow[];
-      return rows.map(row => ({
+      return rows.map((row) => ({
         name: row.performer_name,
         source: row['source'],
       }));
@@ -1332,7 +1325,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       hasVideo?: boolean;
       hasImage?: boolean;
       performerType?: 'solo' | 'multi';
-    }
+    },
   ): Promise<number> {
     try {
       const db = getDb();
@@ -1358,11 +1351,17 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       // ASPフィルター条件（対象/除外）
       let aspCondition = sql`TRUE`;
       if (includeAsp.length > 0) {
-        aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+        aspCondition = sql`ps.asp_name IN (${sql.join(
+          includeAsp.map((a) => sql`${a}`),
+          sql`, `,
+        )})`;
       }
       let excludeAspCondition = sql`TRUE`;
       if (excludeAsp.length > 0) {
-        excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+        excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(
+          excludeAsp.map((a) => sql`${a}`),
+          sql`, `,
+        )}))`;
       }
 
       // サンプルコンテンツフィルター条件
@@ -1406,9 +1405,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   /**
    * カテゴリ別のASP統計を取得
    */
-  async function getAspStatsByCategory(
-    tagId: number
-  ): Promise<Array<{ aspName: string; count: number }>> {
+  async function getAspStatsByCategory(tagId: number): Promise<Array<{ aspName: string; count: number }>> {
     try {
       const db = getDb();
       const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
@@ -1468,7 +1465,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         WHERE pt.tag_id = ${seriesTagId}
       `);
 
-      const stats = statsResult.rows?.[0] as Record<string, unknown> || {};
+      const stats = (statsResult.rows?.[0] as Record<string, unknown>) || {};
 
       // トップ出演者を取得
       const performersResult = await db.execute(sql`
@@ -1562,14 +1559,17 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       const limit = options?.limit || 20;
       const locale = options?.locale || 'ja';
 
-      const categoryCondition = category === 'both'
-        ? sql`t.category IN ('maker', 'label')`
-        : sql`t.category = ${category}`;
+      const categoryCondition =
+        category === 'both' ? sql`t.category IN ('maker', 'label')` : sql`t.category = ${category}`;
 
-      const nameColumn = locale === 'en' ? sql`COALESCE(t.name_en, t.name)`
-        : locale === 'zh' ? sql`COALESCE(t.name_zh, t.name)`
-        : locale === 'ko' ? sql`COALESCE(t.name_ko, t.name)`
-        : sql`t.name`;
+      const nameColumn =
+        locale === 'en'
+          ? sql`COALESCE(t.name_en, t.name)`
+          : locale === 'zh'
+            ? sql`COALESCE(t.name_zh, t.name)`
+            : locale === 'ko'
+              ? sql`COALESCE(t.name_ko, t.name)`
+              : sql`t.name`;
 
       const result = await db.execute(sql`
         SELECT
@@ -1600,18 +1600,19 @@ export function createCoreQueries(deps: CoreQueryDeps) {
   /**
    * ユーザーのお気に入り作品からメーカー傾向を分析
    */
-  async function analyzeMakerPreference(
-    productIds: number[],
-    locale: string = 'ja'
-  ): Promise<MakerPreference[]> {
+  async function analyzeMakerPreference(productIds: number[], locale: string = 'ja'): Promise<MakerPreference[]> {
     try {
       if (productIds.length === 0) return [];
       const db = getDb();
 
-      const nameColumn = locale === 'en' ? sql`COALESCE(t.name_en, t.name)`
-        : locale === 'zh' ? sql`COALESCE(t.name_zh, t.name)`
-        : locale === 'ko' ? sql`COALESCE(t.name_ko, t.name)`
-        : sql`t.name`;
+      const nameColumn =
+        locale === 'en'
+          ? sql`COALESCE(t.name_en, t.name)`
+          : locale === 'zh'
+            ? sql`COALESCE(t.name_zh, t.name)`
+            : locale === 'ko'
+              ? sql`COALESCE(t.name_ko, t.name)`
+              : sql`t.name`;
 
       const result = await db.execute(sql`
         SELECT
@@ -1623,7 +1624,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         FROM ${productTags} pt
         JOIN ${tags} t ON pt.tag_id = t.id
         LEFT JOIN product_rating_summary prs ON pt.product_id = prs.product_id
-        WHERE pt.product_id IN (${sql.join(productIds.map(id => sql`${id}`), sql`, `)})
+        WHERE pt.product_id IN (${sql.join(
+          productIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
           AND t.category IN ('maker', 'label')
         GROUP BY t.id, t.name, t.name_en, t.name_zh, t.name_ko, t.category
         ORDER BY COUNT(pt.product_id) DESC
@@ -1661,10 +1665,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }
 
       const tag = tagResult.rows[0] as Record<string, unknown>;
-      const makerName = locale === 'en' ? (tag['name_en'] || tag['name'])
-        : locale === 'zh' ? (tag['name_zh'] || tag['name'])
-        : locale === 'ko' ? (tag['name_ko'] || tag['name'])
-        : tag['name'];
+      const makerName =
+        locale === 'en'
+          ? tag['name_en'] || tag['name']
+          : locale === 'zh'
+            ? tag['name_zh'] || tag['name']
+            : locale === 'ko'
+              ? tag['name_ko'] || tag['name']
+              : tag['name'];
 
       // 作品数と平均評価を取得
       const statsResult = await db.execute(sql`
@@ -1678,9 +1686,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
 
       const statsRow = statsResult.rows?.[0] as Record<string, unknown> | undefined;
       const productCount = parseInt(String(statsRow?.['count'] || '0'), 10);
-      const averageRating = statsRow?.['avg_rating']
-        ? parseFloat(String(statsRow['avg_rating']))
-        : null;
+      const averageRating = statsRow?.['avg_rating'] ? parseFloat(String(statsRow['avg_rating'])) : null;
 
       // 人気女優トップ5
       const performersResult = await db.execute(sql`
@@ -1704,10 +1710,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }));
 
       // 人気ジャンルトップ5
-      const nameCol = locale === 'en' ? sql`g.name_en`
-        : locale === 'zh' ? sql`g.name_zh`
-        : locale === 'ko' ? sql`g.name_ko`
-        : sql`g.name`;
+      const nameCol =
+        locale === 'en'
+          ? sql`g.name_en`
+          : locale === 'zh'
+            ? sql`g.name_zh`
+            : locale === 'ko'
+              ? sql`g.name_ko`
+              : sql`g.name`;
 
       const genresResult = await db.execute(sql`
         SELECT
@@ -1748,10 +1758,14 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }));
 
       // 最新作品5件
-      const titleCol = locale === 'en' ? sql`p.title_en`
-        : locale === 'zh' ? sql`p.title_zh`
-        : locale === 'ko' ? sql`p.title_ko`
-        : sql`p.title`;
+      const titleCol =
+        locale === 'en'
+          ? sql`p.title_en`
+          : locale === 'zh'
+            ? sql`p.title_zh`
+            : locale === 'ko'
+              ? sql`p.title_ko`
+              : sql`p.title`;
 
       const recentResult = await db.execute(sql`
         SELECT DISTINCT
@@ -1808,16 +1822,24 @@ export function createCoreQueries(deps: CoreQueryDeps) {
       }
 
       const tag = tagResult.rows[0] as Record<string, unknown>;
-      const tagName = locale === 'en' ? (tag['name_en'] || tag['name'])
-        : locale === 'zh' ? (tag['name_zh'] || tag['name'])
-        : locale === 'ko' ? (tag['name_ko'] || tag['name'])
-        : tag['name'];
+      const tagName =
+        locale === 'en'
+          ? tag['name_en'] || tag['name']
+          : locale === 'zh'
+            ? tag['name_zh'] || tag['name']
+            : locale === 'ko'
+              ? tag['name_ko'] || tag['name']
+              : tag['name'];
 
       // タイトルのローカライズ
-      const titleColumn = locale === 'en' ? sql`COALESCE(p.title_en, p.title)`
-        : locale === 'zh' ? sql`COALESCE(p.title_zh, p.title)`
-        : locale === 'ko' ? sql`COALESCE(p.title_ko, p.title)`
-        : sql`p.title`;
+      const titleColumn =
+        locale === 'en'
+          ? sql`COALESCE(p.title_en, p.title)`
+          : locale === 'zh'
+            ? sql`COALESCE(p.title_zh, p.title)`
+            : locale === 'ko'
+              ? sql`COALESCE(p.title_ko, p.title)`
+              : sql`p.title`;
 
       // シリーズに属する作品を取得
       const productsResult = await db.execute(sql`
@@ -1849,7 +1871,10 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         price: row['price'] as number | null,
       }));
 
-      const totalDuration = seriesProducts.reduce((sum: number, p: { duration: number | null }) => sum + (p.duration || 0), 0);
+      const totalDuration = seriesProducts.reduce(
+        (sum: number, p: { duration: number | null }) => sum + (p.duration || 0),
+        0,
+      );
 
       return {
         id: tagId,
@@ -1871,7 +1896,7 @@ export function createCoreQueries(deps: CoreQueryDeps) {
     options?: {
       sortBy?: 'releaseDateAsc' | 'releaseDateDesc' | 'ratingDesc';
       locale?: string;
-    }
+    },
   ): Promise<SeriesProduct[]> {
     try {
       const db = getDb();
@@ -1912,11 +1937,13 @@ export function createCoreQueries(deps: CoreQueryDeps) {
         FROM ${products} p
         JOIN ${productTags} pt ON p.id = pt.product_id
         WHERE pt.tag_id = ${seriesTagId}
-        ORDER BY ${sortBy === 'ratingDesc'
-          ? sql`p.best_rating DESC NULLS LAST`
-          : sortBy === 'releaseDateDesc'
-          ? sql`p.release_date DESC NULLS LAST`
-          : sql`p.release_date ASC NULLS LAST`}
+        ORDER BY ${
+          sortBy === 'ratingDesc'
+            ? sql`p.best_rating DESC NULLS LAST`
+            : sortBy === 'releaseDateDesc'
+              ? sql`p.release_date DESC NULLS LAST`
+              : sql`p.release_date ASC NULLS LAST`
+        }
       `);
 
       return (result.rows || []).map((row: Record<string, unknown>): SeriesProduct => {

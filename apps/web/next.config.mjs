@@ -1,7 +1,12 @@
 import createNextIntlPlugin from 'next-intl/plugin';
 import { withSentryConfig } from '@sentry/nextjs';
+import bundleAnalyzer from '@next/bundle-analyzer';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+});
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,10 +15,27 @@ const monorepoRoot = path.resolve(__dirname, '../..');
 const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 const optimizePackageImports = [
-  'drizzle-orm', 'lucide-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu',
-  '@radix-ui/react-popover', '@radix-ui/react-select', '@radix-ui/react-slot', '@radix-ui/react-tooltip',
-  'firebase', 'firebase/app', 'firebase/auth', 'firebase/firestore', '@google-cloud/storage',
-  '@google/generative-ai', 'next-intl', 'cheerio', 'date-fns', 'clsx', 'lodash', 'zod', 'recharts',
+  'drizzle-orm',
+  'lucide-react',
+  '@radix-ui/react-dialog',
+  '@radix-ui/react-dropdown-menu',
+  '@radix-ui/react-popover',
+  '@radix-ui/react-select',
+  '@radix-ui/react-slot',
+  '@radix-ui/react-tooltip',
+  'firebase',
+  'firebase/app',
+  'firebase/auth',
+  'firebase/firestore',
+  '@google-cloud/storage',
+  '@google/generative-ai',
+  'next-intl',
+  'cheerio',
+  'date-fns',
+  'clsx',
+  'lodash',
+  'zod',
+  'recharts',
 ];
 
 const remotePatterns = [
@@ -62,7 +84,7 @@ const cspDirectives = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://apis.google.com https://accounts.google.com",
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://*.b10f.jp https://*.heyzo.com https://www.heyzo.com https://*.caribbeancompr.com https://*.caribbeancom.com https://*.1pondo.tv https://www.nyoshin.com https://*.nyoshin.com https://www.unkotare.com https://*.unkotare.com https://www.10musume.com https://*.10musume.com https://www.pacopacomama.com https://*.pacopacomama.com https://www.hitozuma-giri.com https://*.hitozuma-giri.com https://www.av-e-body.com https://*.av-e-body.com https://www.av-4610.com https://*.av-4610.com https://www.av-0230.com https://*.av-0230.com https://www.kin8tengoku.com https://*.kin8tengoku.com https://www.nozox.com https://*.nozox.com https://www.3d-eros.net https://*.3d-eros.net https://www.pikkur.com https://*.pikkur.com https://www.javholic.com https://*.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com https://*.heydouga.com http://heydouga.com https://*.x1x.com http://x1x.com https://*.googleusercontent.com https://www.minnano-av.com https://*.minnano-av.com",
+  "img-src 'self' data: blob: https://*.dmm.co.jp https://*.dmm.com https://pics.dmm.co.jp https://pic.duga.jp https://img.duga.jp https://ad.duga.jp https://*.duga.jp https://*.mgstage.com https://image.mgstage.com https://static.mgstage.com https://img.sokmil.com https://*.sokmil.com https://sokmil-ad.com https://*.japanska-xxx.com https://wimg2.golden-gateway.com https://*.fc2.com https://*.contents.fc2.com https://ads.b10f.jp https://b10f.jp https://*.b10f.jp https://*.heyzo.com https://www.heyzo.com https://*.caribbeancompr.com https://*.caribbeancom.com https://*.1pondo.tv https://www.nyoshin.com https://*.nyoshin.com https://www.unkotare.com https://*.unkotare.com https://www.10musume.com https://*.10musume.com https://www.pacopacomama.com https://*.pacopacomama.com https://www.hitozuma-giri.com https://*.hitozuma-giri.com https://www.av-e-body.com https://*.av-e-body.com https://www.av-4610.com https://*.av-4610.com https://www.av-0230.com https://*.av-0230.com https://www.kin8tengoku.com https://*.kin8tengoku.com https://www.nozox.com https://*.nozox.com https://www.3d-eros.net https://*.3d-eros.net https://www.pikkur.com https://*.pikkur.com https://www.javholic.com https://*.javholic.com https://smovie.1pondo.tv https://awsimgsrc.dmm.co.jp https://placehold.co https://pixelarchivenow.com https://www.googletagmanager.com https://www.google-analytics.com https://*.tokyo-hot.com https://my.cdn.tokyo-hot.com https://*.heydouga.com http://heydouga.com https://*.x1x.com http://x1x.com https://*.googleusercontent.com https://www.minnano-av.com https://*.minnano-av.com https://wsrv.nl",
   "font-src 'self' data:",
   "connect-src 'self' https://www.google-analytics.com https://www.googletagmanager.com https://region1.google-analytics.com https://analytics.google.com https://firebase.googleapis.com https://firebaseinstallations.googleapis.com https://firebaseremoteconfig.googleapis.com https://firebaselogging-pa.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://apis.google.com https://accounts.google.com https://*.googleapis.com https://*.sentry.io https://*.ingest.sentry.io",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://*.dmm.co.jp https://*.dmm.com https://*.mgstage.com https://accounts.google.com https://*.firebaseapp.com",
@@ -72,7 +94,7 @@ const cspDirectives = [
   "base-uri 'self'",
   "form-action 'self' https://accounts.google.com",
   "frame-ancestors 'self'",
-  "upgrade-insecure-requests",
+  'upgrade-insecure-requests',
 ].join('; ');
 
 const securityHeaders = [
@@ -88,9 +110,10 @@ const securityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
-    // 外部CDN画像を直接配信（/_next/image プロキシをバイパス）
-    // Firebase Cloud Run上での画像最適化はレイテンシが大きいため無効化
-    unoptimized: true,
+    // 外部CDN画像は wsrv.nl プロキシ経由で WebP 変換 + リサイズ
+    // Firebase Cloud Run の画像最適化レイテンシを回避しつつ最適化を実現
+    loader: 'custom',
+    loaderFile: '../../packages/shared/src/lib/image-loader.ts',
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -115,11 +138,26 @@ const nextConfig = {
   async headers() {
     return [
       { source: '/:path*', headers: securityHeaders },
-      { source: '/api/:path*', headers: [{ key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' }, { key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
-      { source: '/_next/static/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      { source: '/_next/image/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }] },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, no-cache, must-revalidate' },
+          { key: 'X-Robots-Tag', value: 'noindex, nofollow' },
+        ],
+      },
+      {
+        source: '/_next/static/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
+      },
+      {
+        source: '/_next/image/:path*',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
+      },
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      { source: '/:locale(ja|en|zh|ko)', headers: [{ key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }] },
+      {
+        source: '/:locale(ja|en|zh|ko)',
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }],
+      },
     ];
   },
   async rewrites() {
@@ -155,7 +193,11 @@ const nextConfig = {
       { source: '/uncategorized', destination: '/products?uncategorized=true', permanent: true },
       { source: '/reviews', destination: '/?hasReview=true', permanent: true },
       { source: '/actress', destination: '/', permanent: true },
-      { source: '/actress/:performerId/genre/:tagId', destination: '/actress/:performerId?include=:tagId', permanent: true },
+      {
+        source: '/actress/:performerId/genre/:tagId',
+        destination: '/actress/:performerId?include=:tagId',
+        permanent: true,
+      },
       { source: '/search', destination: '/products', permanent: true },
       { source: '/products/search', destination: '/products', permanent: true },
     ];
@@ -164,6 +206,9 @@ const nextConfig = {
 
 // Wrap with next-intl
 const configWithIntl = withNextIntl(nextConfig);
+
+// Wrap with bundle analyzer
+const configWithAnalyzer = withBundleAnalyzer(configWithIntl);
 
 // Sentry configuration
 const sentryBuildOptions = {
@@ -182,5 +227,5 @@ const sentryBuildOptions = {
 };
 
 export default process.env.SENTRY_DSN || process.env.NEXT_PUBLIC_SENTRY_DSN
-  ? withSentryConfig(configWithIntl, sentryBuildOptions)
-  : configWithIntl;
+  ? withSentryConfig(configWithAnalyzer, sentryBuildOptions)
+  : configWithAnalyzer;

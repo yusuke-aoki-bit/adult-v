@@ -14,12 +14,14 @@ import * as path from 'path';
 
 test.describe('CSS Generation Tests', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test.describe('Inline Styles Verification', () => {
@@ -57,7 +59,7 @@ test.describe('CSS Generation Tests', () => {
       }
 
       // 少なくとも1つのカードがインラインheightスタイルを持っていること
-      const hasInlineHeight = result.some(r => r.hasInlineHeight && r.height === '18rem');
+      const hasInlineHeight = result.some((r) => r.hasInlineHeight && r.height === '18rem');
       expect(hasInlineHeight).toBe(true);
     });
 
@@ -94,7 +96,7 @@ test.describe('CSS Generation Tests', () => {
       // IMGタグにアスペクト比が設定されていればOK
       if (result.length > 0) {
         // Any aspect ratio is acceptable (banner images, product images, etc.)
-        const hasAnyAspectRatio = result.some(r => r.aspectRatio && r.aspectRatio !== 'auto');
+        const hasAnyAspectRatio = result.some((r) => r.aspectRatio && r.aspectRatio !== 'auto');
         expect(hasAnyAspectRatio).toBe(true);
       }
     });
@@ -205,7 +207,7 @@ test.describe('CSS Generation Tests', () => {
         const h72Elements = document.querySelectorAll('[class*="h-72"]');
         const problems: { class: string; computedHeight: string }[] = [];
 
-        h72Elements.forEach(el => {
+        h72Elements.forEach((el) => {
           const computed = getComputedStyle(el);
           if (computed.height === '0px' || computed.height === 'auto') {
             problems.push({
@@ -236,7 +238,7 @@ test.describe('CSS Generation Tests', () => {
         const allElements = document.querySelectorAll('*');
         const problems: { class: string; aspectRatio: string }[] = [];
 
-        allElements.forEach(el => {
+        allElements.forEach((el) => {
           const className = el.className;
           if (typeof className === 'string' && /aspect-\[\d+\/\d+\]/.test(className)) {
             const computed = getComputedStyle(el);

@@ -14,7 +14,7 @@ export class DatabaseError extends Error {
   constructor(
     message: string,
     public readonly originalError?: unknown,
-    public readonly query?: string
+    public readonly query?: string,
   ) {
     super(message);
     this.name = 'DatabaseError';
@@ -28,7 +28,7 @@ export class ValidationError extends Error {
   constructor(
     message: string,
     public readonly field?: string,
-    public readonly value?: unknown
+    public readonly value?: unknown,
   ) {
     super(message);
     this.name = 'ValidationError';
@@ -63,7 +63,7 @@ export class ExternalServiceError extends Error {
     message: string,
     public readonly serviceName: string,
     public readonly statusCode?: number,
-    public readonly originalError?: unknown
+    public readonly originalError?: unknown,
   ) {
     super(message);
     this.name = 'ExternalServiceError';
@@ -76,7 +76,7 @@ export class ExternalServiceError extends Error {
 export class NotFoundError extends Error {
   constructor(
     public readonly resourceType: string,
-    public readonly resourceId: string | number
+    public readonly resourceId: string | number,
   ) {
     super(`${resourceType} not found: ${resourceId}`);
     this.name = 'NotFoundError';
@@ -125,7 +125,7 @@ function calculateDelay(
   attempt: number,
   initialDelayMs: number,
   maxDelayMs: number,
-  exponentialBackoff: boolean
+  exponentialBackoff: boolean,
 ): number {
   if (!exponentialBackoff) {
     return initialDelayMs;
@@ -139,10 +139,7 @@ function calculateDelay(
 /**
  * リトライ付きで関数を実行
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {}
-): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const opts = { ...DEFAULT_RETRY_OPTIONS, ...options };
   let lastError: unknown;
 
@@ -156,12 +153,7 @@ export async function withRetry<T>(
         throw error;
       }
 
-      const delayMs = calculateDelay(
-        attempt,
-        opts.initialDelayMs,
-        opts.maxDelayMs,
-        opts.exponentialBackoff
-      );
+      const delayMs = calculateDelay(attempt, opts.initialDelayMs, opts.maxDelayMs, opts.exponentialBackoff);
 
       opts.onRetry(error, attempt + 1, delayMs);
       await delay(delayMs);
@@ -178,16 +170,11 @@ export async function withRetry<T>(
 /**
  * データベース操作をラップしてエラーハンドリング
  */
-export async function withDatabaseErrorHandling<T>(
-  operation: () => Promise<T>,
-  context?: string
-): Promise<T> {
+export async function withDatabaseErrorHandling<T>(operation: () => Promise<T>, context?: string): Promise<T> {
   try {
     return await operation();
   } catch (error) {
-    const message = context
-      ? `Database operation failed: ${context}`
-      : 'Database operation failed';
+    const message = context ? `Database operation failed: ${context}` : 'Database operation failed';
     throw new DatabaseError(message, error);
   }
 }
@@ -197,7 +184,7 @@ export async function withDatabaseErrorHandling<T>(
  */
 export async function withExternalServiceErrorHandling<T>(
   serviceName: string,
-  operation: () => Promise<T>
+  operation: () => Promise<T>,
 ): Promise<T> {
   try {
     return await operation();
@@ -206,17 +193,9 @@ export async function withExternalServiceErrorHandling<T>(
       throw error;
     }
 
-    const statusCode =
-      error instanceof Error && 'status' in error
-        ? (error as { status: number }).status
-        : undefined;
+    const statusCode = error instanceof Error && 'status' in error ? (error as { status: number }).status : undefined;
 
-    throw new ExternalServiceError(
-      `External service call failed: ${serviceName}`,
-      serviceName,
-      statusCode,
-      error
-    );
+    throw new ExternalServiceError(`External service call failed: ${serviceName}`, serviceName, statusCode, error);
   }
 }
 
@@ -227,16 +206,12 @@ export async function withExternalServiceErrorHandling<T>(
 /**
  * 結果型（成功または失敗）
  */
-export type Result<T, E = Error> =
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 /**
  * 安全に関数を実行してResult型で返す
  */
-export async function safeExecute<T>(
-  fn: () => Promise<T>
-): Promise<Result<T, Error>> {
+export async function safeExecute<T>(fn: () => Promise<T>): Promise<Result<T, Error>> {
   try {
     const data = await fn();
     return { success: true, data };
@@ -364,6 +339,17 @@ export const ERROR_MESSAGES = {
     RATE_LIMITED: '请求过多。请稍后重试。',
     UNKNOWN: '发生意外错误。',
   },
+  'zh-TW': {
+    NETWORK_ERROR: '發生網路錯誤。請檢查您的連線。',
+    SERVER_ERROR: '發生伺服器錯誤。請稍後重試。',
+    NOT_FOUND: '找不到您要尋找的頁面。',
+    UNAUTHORIZED: '需要登入。',
+    FORBIDDEN: '您沒有權限存取此頁面。',
+    VALIDATION_ERROR: '輸入內容有誤。',
+    TIMEOUT: '請求逾時。請重試。',
+    RATE_LIMITED: '請求過多。請稍後重試。',
+    UNKNOWN: '發生意外錯誤。',
+  },
   ko: {
     NETWORK_ERROR: '네트워크 오류가 발생했습니다. 연결을 확인하세요.',
     SERVER_ERROR: '서버 오류가 발생했습니다. 나중에 다시 시도하세요.',
@@ -377,7 +363,7 @@ export const ERROR_MESSAGES = {
   },
 } as const;
 
-export type ErrorCode = keyof typeof ERROR_MESSAGES['ja'];
+export type ErrorCode = keyof (typeof ERROR_MESSAGES)['ja'];
 
 /**
  * HTTPステータスコードからエラーコードを取得
@@ -409,10 +395,7 @@ export function getErrorCodeFromStatus(status: number): ErrorCode {
 /**
  * ローカライズされたエラーメッセージを取得
  */
-export function getLocalizedErrorMessage(
-  errorCode: ErrorCode,
-  locale: string = 'ja'
-): string {
+export function getLocalizedErrorMessage(errorCode: ErrorCode, locale: string = 'ja'): string {
   const messages = ERROR_MESSAGES[locale as keyof typeof ERROR_MESSAGES] || ERROR_MESSAGES.ja;
   return messages[errorCode] || messages.UNKNOWN;
 }
@@ -420,10 +403,7 @@ export function getLocalizedErrorMessage(
 /**
  * エラーからユーザー向けメッセージを生成
  */
-export function getUserFriendlyErrorMessage(
-  error: unknown,
-  locale: string = 'ja'
-): string {
+export function getUserFriendlyErrorMessage(error: unknown, locale: string = 'ja'): string {
   // カスタムエラークラスの場合
   if (error instanceof NotFoundError) {
     return getLocalizedErrorMessage('NOT_FOUND', locale);

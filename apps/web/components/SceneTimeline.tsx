@@ -1,22 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import {
-  Clock,
-  Star,
-  Plus,
-  ThumbsUp,
-  ThumbsDown,
-  Trash2,
-  ChevronDown,
-  ChevronUp,
-} from 'lucide-react';
-import {
-  useSceneInfo,
-  formatTimestamp,
-  parseTimestamp,
-  type SceneMarker,
-} from '@adult-v/shared/hooks/useSceneInfo';
+import { Clock, Star, Plus, ThumbsUp, ThumbsDown, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useSceneInfo, formatTimestamp, parseTimestamp, type SceneMarker } from '@adult-v/shared/hooks/useSceneInfo';
 
 const translations = {
   ja: {
@@ -88,6 +74,29 @@ const translations = {
     alreadyVoted: '已投票',
     voted: '投票成功',
   },
+  'zh-TW': {
+    title: '場景資訊',
+    description: '使用者提交的場景構成',
+    noScenes: '暫無場景資訊',
+    addScene: '新增場景',
+    timestamp: '時間戳',
+    endTime: '結束時間（可選）',
+    label: '標籤',
+    labelPlaceholder: '例如：導入、場景1、最佳場景',
+    descPlaceholder: '描述（可選）',
+    rating: '評分',
+    submit: '提交',
+    cancel: '取消',
+    bestScene: '最佳場景',
+    popular: '熱門',
+    votes: '票',
+    showAll: '顯示全部',
+    hideExtra: '摺疊',
+    timestampError: '請輸入正確格式（例：5:30 或 1:05:30）',
+    confirmDelete: '確定要刪除嗎？',
+    alreadyVoted: '已投票',
+    voted: '投票成功',
+  },
   ko: {
     title: '씬 정보',
     description: '사용자 제출 씬 구성',
@@ -121,11 +130,7 @@ interface SceneTimelineProps {
   locale?: string;
 }
 
-export default function SceneTimeline({
-  productId,
-  totalDuration,
-  locale = 'ja',
-}: SceneTimelineProps) {
+export default function SceneTimeline({ productId, totalDuration, locale = 'ja' }: SceneTimelineProps) {
   const t = translations[locale as TranslationKey] || translations['ja'];
   const { sceneInfo, isLoaded, addScene, voteScene, removeScene, getVoteStatus } = useSceneInfo(productId);
 
@@ -179,9 +184,9 @@ export default function SceneTimeline({
 
   if (!isLoaded) {
     return (
-      <div className="bg-gray-800 rounded-xl p-4 animate-pulse">
-        <div className="h-6 bg-gray-700 rounded w-1/3 mb-4" />
-        <div className="h-24 bg-gray-700 rounded" />
+      <div className="animate-pulse rounded-xl bg-gray-800 p-4">
+        <div className="mb-4 h-6 w-1/3 rounded bg-gray-700" />
+        <div className="h-24 rounded bg-gray-700" />
       </div>
     );
   }
@@ -191,22 +196,22 @@ export default function SceneTimeline({
   const hasMore = scenes.length > 5;
 
   return (
-    <div className="bg-gray-800 rounded-xl p-4">
+    <div className="rounded-xl bg-gray-800 p-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-white flex items-center gap-2">
-            <Clock className="w-5 h-5 text-blue-400" />
+          <h3 className="flex items-center gap-2 font-semibold text-white">
+            <Clock className="h-5 w-5 text-blue-400" />
             {t.title}
           </h3>
-          <p className="text-xs text-gray-500 mt-0.5">{t.description}</p>
+          <p className="mt-0.5 text-xs text-gray-500">{t.description}</p>
         </div>
         {!showAddForm && (
           <button
             onClick={() => setShowAddForm(true)}
             className="flex items-center gap-1 text-sm text-blue-400 hover:text-blue-300"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             {t.addScene}
           </button>
         )}
@@ -219,12 +224,14 @@ export default function SceneTimeline({
             e.preventDefault();
             handleSubmit();
           }}
-          className="bg-gray-700/50 rounded-lg p-4 mb-4 space-y-3"
+          className="mb-4 space-y-3 rounded-lg bg-gray-700/50 p-4"
           aria-label={t.addScene}
         >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label htmlFor="scene-timestamp" className="text-xs text-gray-400 block mb-1">{t.timestamp}</label>
+              <label htmlFor="scene-timestamp" className="mb-1 block text-xs text-gray-400">
+                {t.timestamp}
+              </label>
               <input
                 id="scene-timestamp"
                 type="text"
@@ -233,12 +240,16 @@ export default function SceneTimeline({
                 placeholder="5:30"
                 maxLength={10}
                 aria-describedby="timestamp-hint"
-                className="w-full bg-gray-700 text-white px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
-              <span id="timestamp-hint" className="sr-only">Format: MM:SS or HH:MM:SS</span>
+              <span id="timestamp-hint" className="sr-only">
+                Format: MM:SS or HH:MM:SS
+              </span>
             </div>
             <div>
-              <label htmlFor="scene-end-timestamp" className="text-xs text-gray-400 block mb-1">{t.endTime}</label>
+              <label htmlFor="scene-end-timestamp" className="mb-1 block text-xs text-gray-400">
+                {t.endTime}
+              </label>
               <input
                 id="scene-end-timestamp"
                 type="text"
@@ -246,12 +257,14 @@ export default function SceneTimeline({
                 onChange={(e) => setFormData({ ...formData, endTimestamp: e.target.value })}
                 placeholder="15:00"
                 maxLength={10}
-                className="w-full bg-gray-700 text-white px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
               />
             </div>
           </div>
           <div>
-            <label htmlFor="scene-label" className="text-xs text-gray-400 block mb-1">{t.label}</label>
+            <label htmlFor="scene-label" className="mb-1 block text-xs text-gray-400">
+              {t.label}
+            </label>
             <input
               id="scene-label"
               type="text"
@@ -259,11 +272,13 @@ export default function SceneTimeline({
               onChange={(e) => setFormData({ ...formData, label: e.target.value })}
               placeholder={t.labelPlaceholder}
               maxLength={100}
-              className="w-full bg-gray-700 text-white px-3 py-2 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full rounded bg-gray-700 px-3 py-2 text-sm text-white focus:ring-2 focus:ring-blue-500 focus:outline-none"
             />
           </div>
           <div>
-            <label id="rating-label" className="text-xs text-gray-400 block mb-1">{t.rating}</label>
+            <label id="rating-label" className="mb-1 block text-xs text-gray-400">
+              {t.rating}
+            </label>
             <div className="flex gap-1" role="radiogroup" aria-labelledby="rating-label">
               {[1, 2, 3, 4, 5].map((star) => (
                 <button
@@ -273,20 +288,22 @@ export default function SceneTimeline({
                   onClick={() => setFormData({ ...formData, rating: star })}
                   aria-label={`${star} star${star > 1 ? 's' : ''}`}
                   aria-checked={formData.rating === star}
-                  className={`p-1 ${
-                    star <= formData.rating ? 'text-yellow-400' : 'text-gray-600'
-                  }`}
+                  className={`p-1 ${star <= formData.rating ? 'text-yellow-400' : 'text-gray-600'}`}
                 >
-                  <Star className="w-5 h-5 fill-current" />
+                  <Star className="h-5 w-5 fill-current" />
                 </button>
               ))}
             </div>
           </div>
-          {error && <p className="text-red-400 text-xs" role="alert">{error}</p>}
+          {error && (
+            <p className="text-xs text-red-400" role="alert">
+              {error}
+            </p>
+          )}
           <div className="flex gap-2">
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-500 text-white py-2 rounded text-sm font-medium"
+              className="flex-1 rounded bg-blue-600 py-2 text-sm font-medium text-white hover:bg-blue-500"
             >
               {t.submit}
             </button>
@@ -296,7 +313,7 @@ export default function SceneTimeline({
                 setShowAddForm(false);
                 setError('');
               }}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-300 py-2 rounded text-sm"
+              className="flex-1 rounded bg-gray-700 py-2 text-sm text-gray-300 hover:bg-gray-600"
             >
               {t.cancel}
             </button>
@@ -306,16 +323,16 @@ export default function SceneTimeline({
 
       {/* Scene List */}
       {scenes.length === 0 ? (
-        <div className="text-center py-8">
-          <Clock className="w-10 h-10 text-gray-600 mx-auto" />
-          <p className="text-gray-500 mt-2 text-sm">{t.noScenes}</p>
+        <div className="py-8 text-center">
+          <Clock className="mx-auto h-10 w-10 text-gray-600" />
+          <p className="mt-2 text-sm text-gray-500">{t.noScenes}</p>
         </div>
       ) : (
         <>
           {/* Timeline Visualization */}
           {totalDuration && (
             <div className="mb-4">
-              <div className="h-2 bg-gray-700 rounded-full relative">
+              <div className="relative h-2 rounded-full bg-gray-700">
                 {scenes.map((scene) => {
                   const position = (scene.timestamp / (totalDuration * 60)) * 100;
                   const width = scene.endTimestamp
@@ -325,11 +342,7 @@ export default function SceneTimeline({
                     <div
                       key={scene.id}
                       className={`absolute h-full rounded-full ${
-                        scene.rating >= 4
-                          ? 'bg-yellow-500'
-                          : scene.rating >= 3
-                          ? 'bg-blue-500'
-                          : 'bg-gray-500'
+                        scene.rating >= 4 ? 'bg-yellow-500' : scene.rating >= 3 ? 'bg-blue-500' : 'bg-gray-500'
                       }`}
                       style={{
                         left: `${Math.min(position, 100)}%`,
@@ -364,16 +377,16 @@ export default function SceneTimeline({
           {hasMore && (
             <button
               onClick={() => setShowAll(!showAll)}
-              className="w-full mt-3 py-2 text-sm text-gray-400 hover:text-white flex items-center justify-center gap-1"
+              className="mt-3 flex w-full items-center justify-center gap-1 py-2 text-sm text-gray-400 hover:text-white"
             >
               {showAll ? (
                 <>
-                  <ChevronUp className="w-4 h-4" />
+                  <ChevronUp className="h-4 w-4" />
                   {t.hideExtra}
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-4 h-4" />
+                  <ChevronDown className="h-4 w-4" />
                   {t.showAll} ({scenes.length})
                 </>
               )}
@@ -406,15 +419,11 @@ function SceneCard({
   const voteStatus = getVoteStatus(scene.id);
 
   return (
-    <div
-      className={`p-3 rounded-lg ${
-        bestScene ? 'bg-yellow-900/30 border border-yellow-700' : 'bg-gray-700/50'
-      }`}
-    >
+    <div className={`rounded-lg p-3 ${bestScene ? 'border border-yellow-700 bg-yellow-900/30' : 'bg-gray-700/50'}`}>
       <div className="flex items-start justify-between">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-blue-400 font-mono text-sm">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-mono text-sm text-blue-400">
               {formatTimestamp(scene.timestamp)}
               {scene.endTimestamp && (
                 <span className="text-gray-500">
@@ -424,68 +433,58 @@ function SceneCard({
               )}
             </span>
             {bestScene && (
-              <span className="text-xs px-2 py-0.5 bg-yellow-800 text-yellow-300 rounded">
-                {t.bestScene}
-              </span>
+              <span className="rounded bg-yellow-800 px-2 py-0.5 text-xs text-yellow-300">{t.bestScene}</span>
             )}
             {scene.votes >= 3 && (
-              <span className="text-xs px-2 py-0.5 bg-blue-900 text-blue-300 rounded">
-                {t.popular}
-              </span>
+              <span className="rounded bg-blue-900 px-2 py-0.5 text-xs text-blue-300">{t.popular}</span>
             )}
           </div>
-          <p className="text-white text-sm mt-1">{scene.label}</p>
-          {scene.description && (
-            <p className="text-gray-400 text-xs mt-0.5">{scene.description}</p>
-          )}
-          <div className="flex items-center gap-1 mt-1">
+          <p className="mt-1 text-sm text-white">{scene.label}</p>
+          {scene.description && <p className="mt-0.5 text-xs text-gray-400">{scene.description}</p>}
+          <div className="mt-1 flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <Star
                 key={star}
-                className={`w-3 h-3 ${
-                  star <= scene.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-600'
-                }`}
+                className={`h-3 w-3 ${star <= scene.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-600'}`}
               />
             ))}
           </div>
         </div>
 
         {/* Voting */}
-        <div className="flex items-center gap-1 ml-2" role="group" aria-label="Vote actions">
+        <div className="ml-2 flex items-center gap-1" role="group" aria-label="Vote actions">
           <button
             type="button"
             onClick={() => onVote(scene.id, true)}
             aria-label={`Upvote ${scene.label}`}
             aria-pressed={voteStatus === 'up'}
             className={`p-1 transition-colors ${
-              voteStatus === 'up'
-                ? 'text-green-400'
-                : 'text-gray-500 hover:text-green-400'
+              voteStatus === 'up' ? 'text-green-400' : 'text-gray-500 hover:text-green-400'
             }`}
           >
-            <ThumbsUp className={`w-4 h-4 ${voteStatus === 'up' ? 'fill-current' : ''}`} />
+            <ThumbsUp className={`h-4 w-4 ${voteStatus === 'up' ? 'fill-current' : ''}`} />
           </button>
-          <span className="text-xs text-gray-400 w-6 text-center" aria-label={`${scene.votes} votes`}>{scene.votes}</span>
+          <span className="w-6 text-center text-xs text-gray-400" aria-label={`${scene.votes} votes`}>
+            {scene.votes}
+          </span>
           <button
             type="button"
             onClick={() => onVote(scene.id, false)}
             aria-label={`Downvote ${scene.label}`}
             aria-pressed={voteStatus === 'down'}
             className={`p-1 transition-colors ${
-              voteStatus === 'down'
-                ? 'text-red-400'
-                : 'text-gray-500 hover:text-red-400'
+              voteStatus === 'down' ? 'text-red-400' : 'text-gray-500 hover:text-red-400'
             }`}
           >
-            <ThumbsDown className={`w-4 h-4 ${voteStatus === 'down' ? 'fill-current' : ''}`} />
+            <ThumbsDown className={`h-4 w-4 ${voteStatus === 'down' ? 'fill-current' : ''}`} />
           </button>
           <button
             type="button"
             onClick={() => onRemove(scene.id)}
             aria-label={`Delete ${scene.label}`}
-            className="p-1 text-gray-500 hover:text-red-400 ml-1"
+            className="ml-1 p-1 text-gray-500 hover:text-red-400"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </button>
         </div>
       </div>

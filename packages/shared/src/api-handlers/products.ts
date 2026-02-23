@@ -51,10 +51,7 @@ export interface ProductsHandlerOptions {
   adjustLimitOffsetForIds?: boolean;
 }
 
-export function createProductsHandler(
-  deps: ProductsHandlerDeps,
-  options: ProductsHandlerOptions = {}
-) {
+export function createProductsHandler(deps: ProductsHandlerDeps, options: ProductsHandlerOptions = {}) {
   return async function GET(request: Request) {
     try {
       const { searchParams } = new URL(request['url']);
@@ -70,7 +67,10 @@ export function createProductsHandler(
       const idsParam = searchParams.get('ids');
       let ids: number[] | undefined;
       if (idsParam) {
-        ids = idsParam.split(',').map(id => parseInt(id.trim(), 10)).filter(id => !isNaN(id));
+        ids = idsParam
+          .split(',')
+          .map((id) => parseInt(id.trim(), 10))
+          .filter((id) => !isNaN(id));
         if (ids.length === 0) {
           ids = undefined;
         }
@@ -83,12 +83,18 @@ export function createProductsHandler(
       // Parse includeAsp and excludeAsp (comma-separated lists)
       const includeAspParam = searchParams.get('includeAsp');
       const providers = includeAspParam
-        ? includeAspParam.split(',').map(s => s.trim()).filter(Boolean)
+        ? includeAspParam
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : undefined;
 
       const excludeAspParam = searchParams.get('excludeAsp');
       const excludeProviders = excludeAspParam
-        ? excludeAspParam.split(',').map(s => s.trim()).filter(Boolean)
+        ? excludeAspParam
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean)
         : undefined;
 
       const actressId = searchParams.get('actressId') || undefined;
@@ -100,9 +106,8 @@ export function createProductsHandler(
 
       // Validate sort option
       const sortByParam = searchParams.get('sort');
-      const sortBy: SortOption | undefined = sortByParam && VALID_SORT_OPTIONS.includes(sortByParam as SortOption)
-        ? (sortByParam as SortOption)
-        : undefined;
+      const sortBy: SortOption | undefined =
+        sortByParam && VALID_SORT_OPTIONS.includes(sortByParam as SortOption) ? (sortByParam as SortOption) : undefined;
 
       // Validate price range
       const { minPrice, maxPrice } = validatePriceRange(searchParams.get('priceRange'));
@@ -153,9 +158,9 @@ export function createProductsHandler(
         {
           headers: {
             'Cache-Control': cacheControl,
-            'Vary': 'Accept-Encoding',
-          }
-        }
+            Vary: 'Accept-Encoding',
+          },
+        },
       );
     } catch (error) {
       return createApiErrorResponse(error, 'Failed to fetch products', 500, {

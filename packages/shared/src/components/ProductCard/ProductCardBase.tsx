@@ -67,7 +67,8 @@ function useSafeProductCardTranslations(): (key: string, params?: Record<string,
 }
 
 // Blur placeholder for images
-const BLUR_DATA_URL = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==';
+const BLUR_DATA_URL =
+  'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q==';
 
 export type ProductCardSize = 'full' | 'compact' | 'mini';
 
@@ -120,7 +121,11 @@ export interface ProductCardBaseProps {
   /** Get A/B test variant */
   getVariant?: (testName: string) => string;
   /** Track CTA click */
-  trackCtaClick?: (testName: string, productId: string | number, params?: Record<string, string | number | boolean>) => void;
+  trackCtaClick?: (
+    testName: string,
+    productId: string | number,
+    params?: Record<string, string | number | boolean>,
+  ) => void;
   /** Affiliate URL options */
   affiliateUrlOptions?: GetAffiliateUrlOptions;
   /** Whether to hide FANZA purchase links (for adult-v site) */
@@ -164,14 +169,16 @@ function ProductCardBase({
   const resolvedSize: ProductCardSize = size ?? (compact ? 'compact' : 'full');
 
   // Use default placeholder based on theme if not provided
-  const resolvedPlaceholder = placeholderImage ?? (resolvedTheme === 'dark' ? DEFAULT_PLACEHOLDER_DARK : DEFAULT_PLACEHOLDER_LIGHT);
+  const resolvedPlaceholder =
+    placeholderImage ?? (resolvedTheme === 'dark' ? DEFAULT_PLACEHOLDER_DARK : DEFAULT_PLACEHOLDER_LIGHT);
 
   // Default formatPrice if not provided - memoize fallback
-  const resolvedFormatPrice = useMemo(() =>
-    formatPrice ?? ((price: number, currency?: string) =>
-      currency === 'USD' ? `$${price.toLocaleString()}` : `¥${price.toLocaleString()}`
-    ),
-    [formatPrice]
+  const resolvedFormatPrice = useMemo(
+    () =>
+      formatPrice ??
+      ((price: number, currency?: string) =>
+        currency === 'USD' ? `$${price.toLocaleString()}` : `¥${price.toLocaleString()}`),
+    [formatPrice],
   );
 
   // Hydration state - ABテストのバリアントはHydration後にのみ適用
@@ -191,10 +198,7 @@ function ProductCardBase({
   }, [getVariant, isHydrated]);
 
   // Default trackCtaClick if not provided - memoize fallback
-  const resolvedTrackCtaClick = useMemo(() =>
-    trackCtaClick ?? (() => {}),
-    [trackCtaClick]
-  );
+  const resolvedTrackCtaClick = useMemo(() => trackCtaClick ?? (() => {}), [trackCtaClick]);
 
   const hasValidImageUrl = product.imageUrl && product.imageUrl.trim() !== '';
   const [imgSrc, setImgSrc] = useState(hasValidImageUrl ? normalizeImageUrl(product.imageUrl) : resolvedPlaceholder);
@@ -204,7 +208,7 @@ function ProductCardBase({
   const [showVideoModal, setShowVideoModal] = useState(false);
 
   const hasSampleVideo = product.sampleVideos && product.sampleVideos.length > 0;
-  const primaryVideo = hasSampleVideo ? product.sampleVideos?.[0] ?? null : null;
+  const primaryVideo = hasSampleVideo ? (product.sampleVideos?.[0] ?? null) : null;
 
   const allImages = useMemo(() => {
     const imageSet = new Set<string>();
@@ -236,23 +240,26 @@ function ProductCardBase({
 
   const isActressPage = pathname.includes('/actress/');
 
-  const getTagFilterUrl = useCallback((tag: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    const existingInclude = params.get('include');
-    if (existingInclude) {
-      const existingTags = existingInclude.split(',').map(t => t.trim());
-      if (!existingTags.includes(tag)) {
-        params.set('include', [...existingTags, tag].join(','));
+  const getTagFilterUrl = useCallback(
+    (tag: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      const existingInclude = params.get('include');
+      if (existingInclude) {
+        const existingTags = existingInclude.split(',').map((t) => t.trim());
+        if (!existingTags.includes(tag)) {
+          params.set('include', [...existingTags, tag].join(','));
+        }
+      } else {
+        params.set('include', tag);
       }
-    } else {
-      params.set('include', tag);
-    }
-    params.delete('page');
-    if (isActressPage) {
-      return `${pathname}?${params.toString()}`;
-    }
-    return `/${locale}/products?${params.toString()}`;
-  }, [isActressPage, pathname, searchParams, locale]);
+      params.delete('page');
+      if (isActressPage) {
+        return `${pathname}?${params.toString()}`;
+      }
+      return `/${locale}/products?${params.toString()}`;
+    },
+    [isActressPage, pathname, searchParams, locale],
+  );
 
   const handleImageError = useCallback(() => {
     if (!hasError) {
@@ -263,26 +270,32 @@ function ProductCardBase({
 
   const isUncensored = isDtiUncensoredSite(imgSrc);
 
-  const handleImageClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (imgSrc !== resolvedPlaceholder && hasValidImageUrl && !hasError) {
-      setShowModal(true);
-    }
-  }, [imgSrc, hasValidImageUrl, hasError, resolvedPlaceholder]);
+  const handleImageClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (imgSrc !== resolvedPlaceholder && hasValidImageUrl && !hasError) {
+        setShowModal(true);
+      }
+    },
+    [imgSrc, hasValidImageUrl, hasError, resolvedPlaceholder],
+  );
 
   const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setModalImageIndex(0);
   }, []);
 
-  const handleVideoClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (hasSampleVideo) {
-      setShowVideoModal(true);
-    }
-  }, [hasSampleVideo]);
+  const handleVideoClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (hasSampleVideo) {
+        setShowVideoModal(true);
+      }
+    },
+    [hasSampleVideo],
+  );
 
   const handleCloseVideoModal = useCallback(() => {
     setShowVideoModal(false);
@@ -298,11 +311,25 @@ function ProductCardBase({
 
   const saleUrgencyInfo = useMemo(() => {
     if (!product.salePrice || !product.saleEndAt) {
-      return { diffHours: 0, diffDays: 0, isVeryUrgent: false, isUrgent: false, showBadge: false, showCountdown: false };
+      return {
+        diffHours: 0,
+        diffDays: 0,
+        isVeryUrgent: false,
+        isUrgent: false,
+        showBadge: false,
+        showCountdown: false,
+      };
     }
     // Hydration対策: サーバーサイドではセール緊急表示を無効化
     if (!clientNow) {
-      return { diffHours: 0, diffDays: 0, isVeryUrgent: false, isUrgent: false, showBadge: false, showCountdown: false };
+      return {
+        diffHours: 0,
+        diffDays: 0,
+        isVeryUrgent: false,
+        isUrgent: false,
+        showBadge: false,
+        showCountdown: false,
+      };
     }
     const endDate = new Date(product.saleEndAt);
     const diffMs = endDate.getTime() - clientNow.getTime();
@@ -330,32 +357,47 @@ function ProductCardBase({
     const showMiniCta = miniAffiliateUrl && !(hideFanzaPurchaseLinks && product.provider === 'fanza');
 
     return (
-      <div className={`group relative ${resolvedTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} rounded-lg overflow-hidden hover:ring-2 hover:ring-pink-500/60 hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300`}>
+      <div
+        className={`group relative ${resolvedTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:shadow-pink-500/20 hover:ring-pink-500/60`}
+      >
         <Link href={`/${locale}/products/${product['id']}`}>
-          <div className={`relative ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`} style={{ aspectRatio: '2/3' }}>
+          <div
+            className={`relative ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}
+            style={{ aspectRatio: '2/3' }}
+          >
             {hasValidImageUrl ? (
               <Image
                 src={imgSrc}
                 alt={altText}
                 fill
                 sizes="(max-width: 640px) 15vw, (max-width: 1024px) 10vw, 6vw"
-                className={`object-cover group-hover:scale-105 transition-transform duration-300 ${isUncensored ? 'blur-[1px]' : ''}`}
+                className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
-                loading={priority ? "eager" : "lazy"}
+                loading={priority ? 'eager' : 'lazy'}
                 priority={priority}
-                fetchPriority={priority ? "high" : "low"}
+                fetchPriority={priority ? 'high' : 'low'}
                 onError={handleImageError}
               />
             ) : (
-              <div className="flex items-center justify-center h-full">
-                <svg className={`h-8 w-8 ${resolvedTheme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z" />
+              <div className="flex h-full items-center justify-center">
+                <svg
+                  className={`h-8 w-8 ${resolvedTheme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
+                  />
                 </svg>
               </div>
             )}
             {product['rating'] && product['rating'] > 0 && (
-              <div className="absolute top-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1 py-0.5 rounded flex items-center gap-0.5">
+              <div className="absolute top-1 right-1 flex items-center gap-0.5 rounded bg-yellow-500 px-1 py-0.5 text-[10px] font-bold text-black">
                 <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
@@ -364,21 +406,27 @@ function ProductCardBase({
             )}
             {/* ホバー時CTA オーバーレイ */}
             {showMiniCta && (
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                <span className={`text-white text-[10px] font-bold px-2 py-1 rounded ${
-                  product.salePrice ? 'bg-linear-to-r from-orange-500 to-red-500' : 'bg-linear-to-r from-pink-500 to-rose-500'
-                }`}>
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <span
+                  className={`rounded px-2 py-1 text-[10px] font-bold text-white ${
+                    product.salePrice
+                      ? 'bg-linear-to-r from-orange-500 to-red-500'
+                      : 'bg-linear-to-r from-pink-500 to-rose-500'
+                  }`}
+                >
                   {product.salePrice ? t('viewSale') : t('viewDetails')}
                 </span>
               </div>
             )}
           </div>
           <div className="p-2">
-            <p className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} text-xs font-medium line-clamp-2 transition-colors leading-snug`}>
+            <p
+              className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} line-clamp-2 text-xs leading-snug font-medium transition-colors`}
+            >
               {product['title']}
             </p>
             {/* 品番 + コピーボタン */}
-            <div className="flex items-center gap-1 mt-1">
+            <div className="mt-1 flex items-center gap-1">
               <span className={`text-[9px] ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
                 {product.normalizedProductId || product['id']}
               </span>
@@ -386,7 +434,9 @@ function ProductCardBase({
                 text={product.normalizedProductId || String(product['id'])}
                 iconOnly
                 size="xs"
-                className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+                className={
+                  resolvedTheme === 'light' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800' : ''
+                }
               />
             </div>
           </div>
@@ -405,13 +455,14 @@ function ProductCardBase({
                 card_size: 'mini',
               });
             }}
-            className={`absolute bottom-0 left-0 right-0 py-1 text-center text-[9px] font-bold text-white transition-all duration-200 hover:py-1.5 ${
+            className={`absolute right-0 bottom-0 left-0 py-1 text-center text-[9px] font-bold text-white transition-all duration-200 hover:py-1.5 ${
               product.salePrice
                 ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
                 : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
             }`}
           >
-            {product.salePrice ? 'SALE ' : ''}{product.providerLabel} →
+            {product.salePrice ? 'SALE ' : ''}
+            {product.providerLabel} →
           </a>
         )}
       </div>
@@ -425,7 +476,9 @@ function ProductCardBase({
 
     return (
       <>
-        <div className={`relative block ${themeConfig.cardBg} rounded-lg overflow-hidden hover:ring-2 ${themeConfig.cardHoverRing} hover:shadow-xl hover:shadow-pink-500/20 transition-all duration-300 group`}>
+        <div
+          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-lg hover:ring-2 ${themeConfig.cardHoverRing} group transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20`}
+        >
           <Link href={`/${locale}/products/${product['id']}`}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
@@ -434,24 +487,28 @@ function ProductCardBase({
                 fill
                 className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
                 sizes="(max-width: 640px) 25vw, (max-width: 1024px) 16vw, 10vw"
-                loading={priority ? "eager" : "lazy"}
+                loading={priority ? 'eager' : 'lazy'}
                 priority={priority}
-                fetchPriority={priority ? "high" : "low"}
+                fetchPriority={priority ? 'high' : 'low'}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 onError={handleImageError}
                 quality={75}
               />
               {product.salePrice && (
-                <div className="absolute top-1 left-1 flex gap-1 z-10">
-                  <span className="bg-linear-to-r from-red-600 to-orange-500 text-white text-[10px] font-bold px-2 py-1 rounded-md flex items-center gap-0.5 shadow-lg">
-                    <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
-                      <path fillRule="evenodd" d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z" clipRule="evenodd" />
+                <div className="absolute top-1 left-1 z-10 flex gap-1">
+                  <span className="flex items-center gap-0.5 rounded-md bg-linear-to-r from-red-600 to-orange-500 px-2 py-1 text-[10px] font-bold text-white shadow-lg">
+                    <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+                      <path
+                        fillRule="evenodd"
+                        d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                     SALE
                   </span>
                   {product['discount'] && product['discount'] >= 30 && (
-                    <span className="bg-linear-to-r from-yellow-400 to-orange-500 text-black text-[10px] font-bold px-2 py-1 rounded-md shadow-lg">
+                    <span className="rounded-md bg-linear-to-r from-yellow-400 to-orange-500 px-2 py-1 text-[10px] font-bold text-black shadow-lg">
                       {product['discount']}%OFF
                     </span>
                   )}
@@ -459,8 +516,8 @@ function ProductCardBase({
               )}
               {/* 高評価バッジ */}
               {product['rating'] && product['rating'] >= 4.5 && (
-                <div className="absolute bottom-1 right-1 bg-yellow-500 text-black text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-0.5 z-10">
-                  <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute right-1 bottom-1 z-10 flex items-center gap-0.5 rounded bg-yellow-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
+                  <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                   </svg>
                   {product['rating'].toFixed(1)}
@@ -468,9 +525,13 @@ function ProductCardBase({
               )}
             </div>
             <div className="p-2">
-              <h3 className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-snug group-hover:text-pink-300 transition-colors`}>{product['title']}</h3>
+              <h3
+                className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-snug transition-colors group-hover:text-pink-300`}
+              >
+                {product['title']}
+              </h3>
               {/* 品番 + コピーボタン */}
-              <div className="flex items-center gap-1 mt-1">
+              <div className="mt-1 flex items-center gap-1">
                 <span className={`text-[10px] ${themeConfig.textMuted} truncate`}>
                   {product.normalizedProductId || product['id']}
                 </span>
@@ -478,7 +539,9 @@ function ProductCardBase({
                   text={product.normalizedProductId || String(product['id'])}
                   iconOnly
                   size="xs"
-                  className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+                  className={
+                    resolvedTheme === 'light' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800' : ''
+                  }
                 />
               </div>
               {/* 価格表示（compactモード） */}
@@ -507,7 +570,7 @@ function ProductCardBase({
                 <div className="mt-1 truncate">
                   <Link
                     href={`/${locale}/actress/${product.performers[0]['id']}`}
-                    className={`text-[10px] ${themeConfig.accentColor} hover:underline font-medium`}
+                    className={`text-[10px] ${themeConfig.accentColor} font-medium hover:underline`}
                     onClick={(e) => e.stopPropagation()}
                   >
                     {product.performers[0]['name']}
@@ -521,18 +584,18 @@ function ProductCardBase({
             <button
               type="button"
               onClick={handleVideoClick}
-              className="absolute top-0 left-0 z-20 bg-black/70 hover:bg-black/90 text-white min-w-[48px] min-h-[48px] flex items-center justify-center rounded-br-lg transition-all hover:scale-105"
+              className="absolute top-0 left-0 z-20 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-br-lg bg-black/70 text-white transition-all hover:scale-105 hover:bg-black/90"
               style={{ marginLeft: product.salePrice ? '40px' : '0' }}
               aria-label={t('playSampleVideo')}
             >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </button>
           )}
 
           {(FavoriteButton || ViewedButton) && (
-            <div className="absolute top-1 right-1 flex gap-0.5 z-20">
+            <div className="absolute top-1 right-1 z-20 flex gap-0.5">
               {FavoriteButton && <FavoriteButton type="product" id={product['id']} size="xs" />}
               {ViewedButton && (
                 <ViewedButton
@@ -540,8 +603,16 @@ function ProductCardBase({
                   title={product['title']}
                   imageUrl={product.imageUrl ?? null}
                   aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-                  {...(product.actressName ? { performerName: product.actressName } : product.performers?.[0]?.name ? { performerName: product.performers[0].name } : {})}
-                  {...(product.actressId ? { performerId: product.actressId } : product.performers?.[0]?.id ? { performerId: product.performers[0].id } : {})}
+                  {...(product.actressName
+                    ? { performerName: product.actressName }
+                    : product.performers?.[0]?.name
+                      ? { performerName: product.performers[0].name }
+                      : {})}
+                  {...(product.actressId
+                    ? { performerId: product.actressId }
+                    : product.performers?.[0]?.id
+                      ? { performerId: product.performers[0].id }
+                      : {})}
                   {...(product.tags ? { tags: product.tags } : {})}
                   {...(product['duration'] !== undefined ? { duration: product['duration'] } : {})}
                   size="xs"
@@ -565,7 +636,7 @@ function ProductCardBase({
                   card_size: 'compact',
                 });
               }}
-              className={`absolute bottom-0 left-0 right-0 py-1.5 text-center text-[10px] font-bold text-white transition-all duration-200 z-30 hover:py-2 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-1.5 text-center text-[10px] font-bold text-white transition-all duration-200 hover:py-2 ${
                 product.salePrice
                   ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
                   : resolvedTheme === 'dark'
@@ -573,7 +644,8 @@ function ProductCardBase({
                     : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
               }`}
             >
-              {product.salePrice ? `${product['discount'] || ''}%OFF ` : ''}{product.providerLabel}で見る →
+              {product.salePrice ? `${product['discount'] || ''}%OFF ` : ''}
+              {product.providerLabel}で見る →
             </a>
           )}
         </div>
@@ -586,17 +658,14 @@ function ProductCardBase({
             <button
               type="button"
               onClick={handleCloseVideoModal}
-              className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+              className="absolute top-4 right-4 z-50 text-white hover:text-gray-300"
               aria-label={t('close')}
             >
-              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div
-              className="relative w-full max-w-4xl mx-4"
-              onClick={(e) => e.stopPropagation()}
-            >
+            <div className="relative mx-4 w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
               <video
                 src={primaryVideo.url}
                 controls
@@ -615,12 +684,14 @@ function ProductCardBase({
 
   // Full mode
   return (
-    <div className={`${themeConfig.cardBg} rounded-2xl shadow-lg overflow-hidden flex flex-col hover:shadow-2xl transition-shadow duration-300 border ${themeConfig.cardBorder}`}>
+    <div
+      className={`${themeConfig.cardBg} flex flex-col overflow-hidden rounded-2xl border shadow-lg transition-shadow duration-300 hover:shadow-2xl ${themeConfig.cardBorder}`}
+    >
       <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
-        <div className="relative block h-full group">
+        <div className="group relative block h-full">
           {/* Action buttons - positioned at top right of image container */}
           {(FavoriteButton || ViewedButton) && (
-            <div className="absolute top-4 right-4 flex flex-col gap-1.5 z-20">
+            <div className="absolute top-4 right-4 z-20 flex flex-col gap-1.5">
               {FavoriteButton && (
                 <div className={`${themeConfig.favoriteButtonBg} rounded-full shadow-md`}>
                   <FavoriteButton type="product" id={product['id']} />
@@ -632,8 +703,16 @@ function ProductCardBase({
                   title={product['title']}
                   imageUrl={product.imageUrl ?? null}
                   aspName={product.providerLabel ?? product.provider ?? 'unknown'}
-                  {...(product.actressName ? { performerName: product.actressName } : product.performers?.[0]?.name ? { performerName: product.performers[0].name } : {})}
-                  {...(product.actressId ? { performerId: product.actressId } : product.performers?.[0]?.id ? { performerId: product.performers[0].id } : {})}
+                  {...(product.actressName
+                    ? { performerName: product.actressName }
+                    : product.performers?.[0]?.name
+                      ? { performerName: product.performers[0].name }
+                      : {})}
+                  {...(product.actressId
+                    ? { performerId: product.actressId }
+                    : product.performers?.[0]?.id
+                      ? { performerId: product.performers[0].id }
+                      : {})}
                   {...(product.tags ? { tags: product.tags } : {})}
                   {...(product['duration'] !== undefined ? { duration: product['duration'] } : {})}
                   size="sm"
@@ -655,30 +734,35 @@ function ProductCardBase({
             fill
             className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-            loading={priority ? "eager" : "lazy"}
+            loading={priority ? 'eager' : 'lazy'}
             placeholder="blur"
             blurDataURL={BLUR_DATA_URL}
             onError={handleImageError}
             priority={priority}
-            fetchPriority={priority ? "high" : "low"}
+            fetchPriority={priority ? 'high' : 'low'}
             quality={75}
           />
           {hasSampleVideo && (
             <button
               type="button"
               onClick={handleVideoClick}
-              className="absolute top-0 left-0 z-20 bg-black/70 hover:bg-black/90 text-white min-w-[48px] min-h-[48px] rounded-br-xl transition-all hover:scale-105 flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute top-0 left-0 z-20 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-br-xl bg-black/70 text-white transition-all hover:scale-105 hover:bg-black/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label={t('playSampleVideo')}
             >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+              <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
               </svg>
             </button>
           )}
           {hasValidImageUrl && !hasError && imgSrc !== resolvedPlaceholder && (
-            <div className="absolute bottom-2 right-2 bg-black/50 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+            <div className="pointer-events-none absolute right-2 bottom-2 rounded-full bg-black/50 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"
+                />
               </svg>
             </div>
           )}
@@ -686,16 +770,21 @@ function ProductCardBase({
           {((product.sampleImages?.length ?? 0) > 0 || (product.sampleVideos?.length ?? 0) > 0) && (
             <div className="absolute bottom-2 left-2 flex gap-1">
               {product.sampleImages && product.sampleImages.length > 0 && (
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-black/60 text-white flex items-center gap-0.5">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                <span className="flex items-center gap-0.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
                   </svg>
                   {product.sampleImages.length}
                 </span>
               )}
               {product.sampleVideos && product.sampleVideos.length > 0 && (
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-rose-600/80 text-white flex items-center gap-0.5">
-                  <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24">
+                <span className="flex items-center gap-0.5 rounded bg-rose-600/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                  <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
                   {product.sampleVideos.length}
@@ -704,9 +793,13 @@ function ProductCardBase({
             </div>
           )}
           {(hasError || imgSrc === resolvedPlaceholder || !hasValidImageUrl) && (
-            <div className={`absolute inset-0 flex flex-col items-center justify-center bg-linear-to-br ${themeConfig.noImageGradient}`}>
-              <div className={`text-7xl mb-3 ${themeConfig.noImageEmoji}`}>📷</div>
-              <span className={`inline-block px-4 py-1.5 ${themeConfig.noImageBadgeBg} ${themeConfig.noImageBadgeText} text-xs font-bold rounded-full shadow-md`}>
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center bg-linear-to-br ${themeConfig.noImageGradient}`}
+            >
+              <div className={`mb-3 text-7xl ${themeConfig.noImageEmoji}`}>📷</div>
+              <span
+                className={`inline-block px-4 py-1.5 ${themeConfig.noImageBadgeBg} ${themeConfig.noImageBadgeText} rounded-full text-xs font-bold shadow-md`}
+              >
                 NO IMAGE
               </span>
             </div>
@@ -714,144 +807,190 @@ function ProductCardBase({
         </div>
         {product.isFuture && (
           <div className="absolute top-4 left-4">
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-blue-600 text-white shadow-lg">
+            <span className="rounded-full bg-blue-600 px-3 py-1 text-xs font-bold text-white shadow-lg">
               {t('comingSoon')}
             </span>
           </div>
         )}
         {product.isNew && !product.isFuture && (
           <div className="absolute top-4 left-4">
-            <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-600 text-white shadow-lg">
-              NEW
-            </span>
+            <span className="rounded-full bg-red-600 px-3 py-1 text-xs font-bold text-white shadow-lg">NEW</span>
           </div>
         )}
         {/* Urgency badge for sales ending within 48 hours */}
         {saleUrgencyInfo.showBadge && (
           <div className="absolute top-4 right-4 z-20">
-            <span className={`text-[10px] font-bold px-2 py-1 rounded-full shadow-lg flex items-center gap-1 ${
-              saleUrgencyInfo.isVeryUrgent
-                ? 'bg-red-600 text-white animate-pulse'
-                : saleUrgencyInfo.isUrgent
-                  ? `${themeConfig.urgencyBadgeBg} ${themeConfig.urgencyBadgeText} animate-pulse`
-                  : 'bg-yellow-500 text-black'
-            }`}>
-              <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+            <span
+              className={`flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-bold shadow-lg ${
+                saleUrgencyInfo.isVeryUrgent
+                  ? 'animate-pulse bg-red-600 text-white'
+                  : saleUrgencyInfo.isUrgent
+                    ? `${themeConfig.urgencyBadgeBg} ${themeConfig.urgencyBadgeText} animate-pulse`
+                    : 'bg-yellow-500 text-black'
+              }`}
+            >
+              <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z"
+                  clipRule="evenodd"
+                />
               </svg>
-              {saleUrgencyInfo.diffHours <= 1 ? t('urgentLastHour') : saleUrgencyInfo.diffHours <= 24 ? t('urgentEndsIn', { hours: saleUrgencyInfo.diffHours }) : t('urgentEndsSoon', { hours: saleUrgencyInfo.diffHours })}
+              {saleUrgencyInfo.diffHours <= 1
+                ? t('urgentLastHour')
+                : saleUrgencyInfo.diffHours <= 24
+                  ? t('urgentEndsIn', { hours: saleUrgencyInfo.diffHours })
+                  : t('urgentEndsSoon', { hours: saleUrgencyInfo.diffHours })}
             </span>
           </div>
         )}
         {product.productType === 'dvd' && (
-          <div className="absolute top-4 left-4" style={{ marginTop: product.isFuture || product.isNew ? '28px' : '0' }}>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-600 text-white shadow-lg">
+          <div
+            className="absolute top-4 left-4"
+            style={{ marginTop: product.isFuture || product.isNew ? '28px' : '0' }}
+          >
+            <span className="rounded-full bg-amber-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg">
               DVD
             </span>
           </div>
         )}
         {product.productType === 'monthly' && (
-          <div className="absolute top-4 left-4" style={{ marginTop: product.isFuture || product.isNew ? '28px' : '0' }}>
-            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-600 text-white shadow-lg">
+          <div
+            className="absolute top-4 left-4"
+            style={{ marginTop: product.isFuture || product.isNew ? '28px' : '0' }}
+          >
+            <span className="rounded-full bg-purple-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-lg">
               {t('monthly')}
             </span>
           </div>
         )}
         {rankPosition && rankPosition <= 10 && (
           <div className="absolute top-14 right-4 z-20">
-            <span className={`text-xs font-bold px-2.5 py-1 rounded-full shadow-lg ${
-              rankPosition === 1 ? 'bg-linear-to-r from-yellow-400 to-amber-500 text-black' :
-              rankPosition === 2 ? 'bg-linear-to-r from-gray-300 to-gray-400 text-black' :
-              rankPosition === 3 ? 'bg-linear-to-r from-amber-600 to-amber-700 text-white' :
-              `${themeConfig.rankingDefaultBg} ${themeConfig.rankingDefaultText} border ${themeConfig.rankingDefaultBorder}`
-            }`}>
+            <span
+              className={`rounded-full px-2.5 py-1 text-xs font-bold shadow-lg ${
+                rankPosition === 1
+                  ? 'bg-linear-to-r from-yellow-400 to-amber-500 text-black'
+                  : rankPosition === 2
+                    ? 'bg-linear-to-r from-gray-300 to-gray-400 text-black'
+                    : rankPosition === 3
+                      ? 'bg-linear-to-r from-amber-600 to-amber-700 text-white'
+                      : `${themeConfig.rankingDefaultBg} ${themeConfig.rankingDefaultText} border ${themeConfig.rankingDefaultBorder}`
+              }`}
+            >
               {rankPosition <= 3 ? `🏆 ${rankPosition}位` : `${rankPosition}位`}
             </span>
           </div>
         )}
         {product['discount'] && !product.salePrice && (
-          <span className={`absolute bottom-4 right-4 ${themeConfig.badgeBg} text-white text-xs font-bold px-3 py-1 rounded-full`}>
+          <span
+            className={`absolute right-4 bottom-4 ${themeConfig.badgeBg} rounded-full px-3 py-1 text-xs font-bold text-white`}
+          >
             {product['discount']}%OFF
           </span>
         )}
-        {(product.salePrice || product['price'] > 0) && (() => {
-          const priceVariant = resolvedGetVariant('priceDisplayStyle');
-          const isEmphasized = priceVariant === 'emphasized';
-          const countdownVariant = resolvedGetVariant('saleCountdownStyle');
-          const isAnimated = countdownVariant === 'animated';
+        {(product.salePrice || product['price'] > 0) &&
+          (() => {
+            const priceVariant = resolvedGetVariant('priceDisplayStyle');
+            const isEmphasized = priceVariant === 'emphasized';
+            const countdownVariant = resolvedGetVariant('saleCountdownStyle');
+            const isAnimated = countdownVariant === 'animated';
 
-          return (
-            <div className={`absolute bottom-4 left-4 ${themeConfig.priceBadgeBg} backdrop-blur-sm rounded-lg px-2.5 py-1.5 shadow-lg border ${themeConfig.priceBadgeBorder}`}>
-              {product.salePrice ? (
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className={`font-bold ${themeConfig.salePriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>
-                      {resolvedFormatPrice(product.salePrice, product.currency)}
-                    </span>
-                    {product['discount'] && (
-                      <>
-                        <span className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}>
-                          -{product['discount']}%
-                        </span>
-                        {product['discount'] >= 30 && (
-                          <span className="font-bold text-black bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded text-[10px]">
-                            お得
+            return (
+              <div
+                className={`absolute bottom-4 left-4 ${themeConfig.priceBadgeBg} rounded-lg border px-2.5 py-1.5 shadow-lg backdrop-blur-sm ${themeConfig.priceBadgeBorder}`}
+              >
+                {product.salePrice ? (
+                  <div className="flex flex-col gap-0.5">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`font-bold ${themeConfig.salePriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}
+                      >
+                        {resolvedFormatPrice(product.salePrice, product.currency)}
+                      </span>
+                      {product['discount'] && (
+                        <>
+                          <span
+                            className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} rounded px-1 py-0.5 ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}
+                          >
+                            -{product['discount']}%
                           </span>
-                        )}
-                      </>
+                          {product['discount'] >= 30 && (
+                            <span className="rounded bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
+                              お得
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </div>
+                    {/* 節約額（画像オーバーレイ） */}
+                    {product.regularPrice && product.salePrice && product.regularPrice > product.salePrice && (
+                      <span className={`text-[10px] font-bold ${themeConfig.salePriceColor}`}>
+                        ¥{(product.regularPrice - product.salePrice).toLocaleString()}お得
+                      </span>
+                    )}
+                    {saleUrgencyInfo.showCountdown && (
+                      <span
+                        className={`text-[10px] font-bold ${themeConfig.countdownColor} ${isAnimated ? 'animate-pulse' : ''}`}
+                      >
+                        {saleUrgencyInfo.diffDays === 1
+                          ? '⏰ ' + t('saleTomorrow')
+                          : `⏰ ${t('saleEndsIn', { days: saleUrgencyInfo.diffDays })}`}
+                      </span>
                     )}
                   </div>
-                  {/* 節約額（画像オーバーレイ） */}
-                  {product.regularPrice && product.salePrice && product.regularPrice > product.salePrice && (
-                    <span className={`text-[10px] font-bold ${themeConfig.salePriceColor}`}>
-                      ¥{(product.regularPrice - product.salePrice).toLocaleString()}お得
-                    </span>
-                  )}
-                  {saleUrgencyInfo.showCountdown && (
-                    <span className={`text-[10px] font-bold ${themeConfig.countdownColor} ${isAnimated ? 'animate-pulse' : ''}`}>
-                      {saleUrgencyInfo.diffDays === 1 ? '⏰ ' + t('saleTomorrow') : `⏰ ${t('saleEndsIn', { days: saleUrgencyInfo.diffDays })}`}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <span className={`font-bold ${themeConfig.regularPriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}>
-                  {resolvedFormatPrice(product['price'], product.currency)}
-                </span>
-              )}
-            </div>
-          );
-        })()}
+                ) : (
+                  <span
+                    className={`font-bold ${themeConfig.regularPriceColor} ${isEmphasized ? 'text-base' : 'text-sm'}`}
+                  >
+                    {resolvedFormatPrice(product['price'], product.currency)}
+                  </span>
+                )}
+              </div>
+            );
+          })()}
       </div>
 
-      <div className="p-3 sm:p-4 flex flex-col gap-2 sm:gap-3 flex-1">
+      <div className="flex flex-1 flex-col gap-2 p-3 sm:gap-3 sm:p-4">
         <div>
           <div className={`text-[10px] sm:text-xs ${themeConfig.textSecondary} flex items-center gap-1 truncate`}>
             {product.actressId ? (
               <Link
                 href={`/${locale}/actress/${product.actressId}`}
-                className={`inline-flex items-center gap-0.5 ${themeConfig.accentColor} ${themeConfig.accentHover} hover:underline underline-offset-2 transition-colors font-medium truncate`}
+                className={`inline-flex items-center gap-0.5 ${themeConfig.accentColor} ${themeConfig.accentHover} truncate font-medium underline-offset-2 transition-colors hover:underline`}
                 onClick={(e) => e.stopPropagation()}
               >
-                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
                 <span className="truncate">{product.actressName ?? t('performerInfo')}</span>
               </Link>
             ) : product.performers && product.performers.length > 0 ? (
               <span className="inline-flex items-center gap-0.5 truncate">
-                <svg className="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                <svg className="h-3 w-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                  />
                 </svg>
                 {product.performers.slice(0, 2).map((performer, index) => (
                   <span key={performer['id']}>
                     <Link
                       href={`/${locale}/actress/${performer['id']}`}
-                      className={`${themeConfig.accentColor} ${themeConfig.accentHover} hover:underline underline-offset-2 transition-colors font-medium`}
+                      className={`${themeConfig.accentColor} ${themeConfig.accentHover} font-medium underline-offset-2 transition-colors hover:underline`}
                       onClick={(e) => e.stopPropagation()}
                     >
                       {performer['name']}
                     </Link>
-                    {index < Math.min(product.performers!.length, 2) - 1 && <span className={`mx-0.5 ${themeConfig.separatorColor}`}>/</span>}
+                    {index < Math.min(product.performers!.length, 2) - 1 && (
+                      <span className={`mx-0.5 ${themeConfig.separatorColor}`}>/</span>
+                    )}
                   </span>
                 ))}
               </span>
@@ -861,7 +1000,7 @@ function ProductCardBase({
             <span className={`${themeConfig.separatorColor} shrink-0`}>|</span>
             <span className={`${themeConfig.textMuted} shrink-0`}>{product['releaseDate'] ?? t('releaseDateTbd')}</span>
           </div>
-          <div className="flex items-center gap-1 mt-0.5">
+          <div className="mt-0.5 flex items-center gap-1">
             <Link href={`/${locale}/products/${product['id']}`}>
               <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} truncate`}>
                 {product.normalizedProductId || product['id']}
@@ -871,11 +1010,15 @@ function ProductCardBase({
               text={product.normalizedProductId || String(product['id'])}
               iconOnly
               size="xs"
-              className={resolvedTheme === 'light' ? 'bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-gray-800' : ''}
+              className={
+                resolvedTheme === 'light' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800' : ''
+              }
             />
           </div>
           <Link href={`/${locale}/products/${product['id']}`}>
-            <h3 className={`font-semibold text-sm sm:text-base leading-tight mt-0.5 line-clamp-2 ${themeConfig.textPrimary} hover:opacity-80`}>
+            <h3
+              className={`mt-0.5 line-clamp-2 text-sm leading-tight font-semibold sm:text-base ${themeConfig.textPrimary} hover:opacity-80`}
+            >
               {product['title']}
             </h3>
           </Link>
@@ -887,7 +1030,7 @@ function ProductCardBase({
               <Link
                 key={tag}
                 href={getTagFilterUrl(tag)}
-                className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded-full ${themeConfig.tagBg} ${themeConfig.tagText} ${themeConfig.tagHoverBg} ${themeConfig.tagHoverText} transition-all`}
+                className={`rounded-full px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-xs ${themeConfig.tagBg} ${themeConfig.tagText} ${themeConfig.tagHoverBg} ${themeConfig.tagHoverText} transition-all`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {tag}
@@ -907,14 +1050,21 @@ function ProductCardBase({
               />
             )}
             {/* 人気バッジ: 高評価かつレビュー多数 */}
-            {product['rating'] && product['rating'] >= 4.5 && product['reviewCount'] && product['reviewCount'] >= 20 && (
-              <span className="text-[10px] font-bold text-white bg-linear-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 rounded flex items-center gap-0.5">
-                <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd" />
-                </svg>
-                人気
-              </span>
-            )}
+            {product['rating'] &&
+              product['rating'] >= 4.5 &&
+              product['reviewCount'] &&
+              product['reviewCount'] >= 20 && (
+                <span className="flex items-center gap-0.5 rounded bg-linear-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                  <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  人気
+                </span>
+              )}
             {product['duration'] && <span className="shrink-0">・{product['duration']}分</span>}
           </div>
         )}
@@ -922,8 +1072,8 @@ function ProductCardBase({
         <div className="mt-auto space-y-1.5">
           {product.salePrice && product.regularPrice ? (
             <div>
-              <div className="flex items-baseline gap-1.5 flex-wrap">
-                <p className={`text-base sm:text-lg font-semibold ${themeConfig.salePriceColor}`}>
+              <div className="flex flex-wrap items-baseline gap-1.5">
+                <p className={`text-base font-semibold sm:text-lg ${themeConfig.salePriceColor}`}>
                   {resolvedFormatPrice(product.salePrice, product.currency)}
                 </p>
                 <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} line-through`}>
@@ -931,11 +1081,13 @@ function ProductCardBase({
                 </p>
                 {product['discount'] && (
                   <>
-                    <span className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} px-1 py-0.5 rounded`}>
+                    <span
+                      className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} rounded px-1 py-0.5`}
+                    >
                       -{product['discount']}%
                     </span>
                     {product['discount'] >= 30 && (
-                      <span className="text-[10px] font-bold text-black bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 rounded">
+                      <span className="rounded bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
                         お得
                       </span>
                     )}
@@ -945,19 +1097,19 @@ function ProductCardBase({
               {/* 節約額の表示 */}
               {product.regularPrice && product.salePrice && product.regularPrice > product.salePrice && (
                 <p className={`text-[10px] font-bold ${themeConfig.salePriceColor} flex items-center gap-0.5`}>
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                  <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                   ¥{(product.regularPrice - product.salePrice).toLocaleString()}お得
                 </p>
               )}
             </div>
           ) : product['price'] > 0 ? (
-            <p className={`text-base sm:text-lg font-semibold ${themeConfig.regularPriceColor}`}>
+            <p className={`text-base font-semibold sm:text-lg ${themeConfig.regularPriceColor}`}>
               {resolvedFormatPrice(product['price'], product.currency)}
             </p>
-          ) : (product.provider && isSubscriptionSite(product.provider)) ? (
-            <p className={`text-sm font-semibold ${themeConfig.subscriptionColor}`}>
-              {t('subscriptionOnly')}
-            </p>
+          ) : product.provider && isSubscriptionSite(product.provider) ? (
+            <p className={`text-sm font-semibold ${themeConfig.subscriptionColor}`}>{t('subscriptionOnly')}</p>
           ) : null}
 
           {(() => {
@@ -971,15 +1123,21 @@ function ProductCardBase({
               const provider = product.providerLabel;
               if (isSale) {
                 switch (ctaVariant) {
-                  case 'urgency': return `${provider}で今すぐ購入`;
-                  case 'action': return `${provider}でお得にゲット`;
-                  default: return `${provider}でお得に購入`;
+                  case 'urgency':
+                    return `${provider}で今すぐ購入`;
+                  case 'action':
+                    return `${provider}でお得にゲット`;
+                  default:
+                    return `${provider}でお得に購入`;
                 }
               } else {
                 switch (ctaVariant) {
-                  case 'urgency': return `${provider}で今すぐ見る`;
-                  case 'action': return `${provider}をチェック`;
-                  default: return `${provider}で見る`;
+                  case 'urgency':
+                    return `${provider}で今すぐ見る`;
+                  case 'action':
+                    return `${provider}をチェック`;
+                  default:
+                    return `${provider}で見る`;
                 }
               }
             };
@@ -990,7 +1148,7 @@ function ProductCardBase({
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 onClick={handleCtaClick}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-lg w-full px-3 py-2.5 text-sm font-bold shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all ${
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold shadow-md transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] ${
                   isSale
                     ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover}`
                     : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover}`
@@ -999,11 +1157,14 @@ function ProductCardBase({
                 aria-label={`${product.providerLabel}で購入（外部リンク）`}
               >
                 <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                  />
                 </svg>
-                <span className="truncate">
-                  {getCtaText()}
-                </span>
+                <span className="truncate">{getCtaText()}</span>
               </a>
             );
           })()}
@@ -1011,7 +1172,7 @@ function ProductCardBase({
           {/* 他のASPで購入オプション - 最大2社をインライン表示 */}
           {product.alternativeSources && product.alternativeSources.length > 0 && (
             <div className="mt-1.5">
-              <div className="flex flex-wrap gap-1 items-center">
+              <div className="flex flex-wrap items-center gap-1">
                 {product.alternativeSources.slice(0, 2).map((source, idx) => {
                   const isFanza = source.aspName.toUpperCase() === 'FANZA';
                   const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
@@ -1020,7 +1181,7 @@ function ProductCardBase({
                       key={idx}
                       href={href}
                       {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                      className={`text-[10px] px-2 py-0.5 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
+                      className={`rounded px-2 py-0.5 text-[10px] ${themeConfig.tagBg} ${themeConfig.tagText} flex items-center gap-1 transition-opacity hover:opacity-80`}
                     >
                       <span className="font-medium">{source.aspName}</span>
                       <span>{resolvedFormatPrice(source.salePrice || source.price)}</span>
@@ -1030,10 +1191,14 @@ function ProductCardBase({
                 {product.alternativeSources.length > 2 && (
                   <div className="relative">
                     <details className="group">
-                      <summary className={`text-[10px] ${themeConfig.textMuted} cursor-pointer hover:text-gray-400 transition-colors list-none [&::-webkit-details-marker]:hidden px-1.5 py-0.5 rounded ${themeConfig.tagBg}`}>
+                      <summary
+                        className={`text-[10px] ${themeConfig.textMuted} cursor-pointer list-none rounded px-1.5 py-0.5 transition-colors hover:text-gray-400 [&::-webkit-details-marker]:hidden ${themeConfig.tagBg}`}
+                      >
                         +{product.alternativeSources.length - 2}社
                       </summary>
-                      <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1 w-max max-w-[90vw] p-2 rounded-lg shadow-lg z-50 ${resolvedTheme === 'dark' ? 'bg-gray-800 border border-gray-700' : 'bg-white border border-gray-200'}`}>
+                      <div
+                        className={`absolute bottom-full left-1/2 z-50 mb-1 w-max max-w-[90vw] -translate-x-1/2 rounded-lg p-2 shadow-lg ${resolvedTheme === 'dark' ? 'border border-gray-700 bg-gray-800' : 'border border-gray-200 bg-white'}`}
+                      >
                         <div className="flex flex-wrap gap-1">
                           {product.alternativeSources.slice(2).map((source, idx) => {
                             const isFanza = source.aspName.toUpperCase() === 'FANZA';
@@ -1043,7 +1208,7 @@ function ProductCardBase({
                                 key={idx}
                                 href={href}
                                 {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-                                className={`text-[10px] px-2 py-1 rounded ${themeConfig.tagBg} ${themeConfig.tagText} hover:opacity-80 transition-opacity flex items-center gap-1`}
+                                className={`rounded px-2 py-1 text-[10px] ${themeConfig.tagBg} ${themeConfig.tagText} flex items-center gap-1 transition-opacity hover:opacity-80`}
                               >
                                 <span className="font-medium">{source.aspName}</span>
                                 <span>{resolvedFormatPrice(source.salePrice || source.price)}</span>
@@ -1080,24 +1245,15 @@ function ProductCardBase({
           <button
             type="button"
             onClick={handleCloseVideoModal}
-            className="absolute top-4 right-4 text-white hover:text-gray-300 z-50"
+            className="absolute top-4 right-4 z-50 text-white hover:text-gray-300"
             aria-label={t('close')}
           >
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
-          <div
-            className="relative w-full max-w-4xl mx-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <video
-              src={primaryVideo.url}
-              controls
-              autoPlay
-              className="w-full rounded-lg"
-              style={{ maxHeight: '80vh' }}
-            >
+          <div className="relative mx-4 w-full max-w-4xl" onClick={(e) => e.stopPropagation()}>
+            <video src={primaryVideo.url} controls autoPlay className="w-full rounded-lg" style={{ maxHeight: '80vh' }}>
               {t('videoNotSupported')}
             </video>
           </div>

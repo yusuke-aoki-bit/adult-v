@@ -41,11 +41,7 @@ export function isValidLocale(locale: string): locale is Locale {
  * localizedHref('/products/123', 'ja') // → '/products/123'
  * localizedHref('/products?page=2', 'zh') // → '/products?page=2&hl=zh'
  */
-export function localizedHref(
-  path: string,
-  locale: string,
-  existingParams?: Record<string, string>
-): string {
+export function localizedHref(path: string, locale: string, existingParams?: Record<string, string>): string {
   // パスにすでにクエリパラメータがあるか確認
   const [basePath, queryString] = path.split('?');
   const params = new URLSearchParams(queryString || '');
@@ -67,7 +63,7 @@ export function localizedHref(
 
   // クエリ文字列を構築
   const newQueryString = params.toString();
-  return newQueryString ? `${basePath ?? ''}?${newQueryString}` : basePath ?? '';
+  return newQueryString ? `${basePath ?? ''}?${newQueryString}` : (basePath ?? '');
 }
 
 /**
@@ -95,7 +91,7 @@ export function switchLocaleHref(currentPath: string, targetLocale: string): str
   }
 
   const newQueryString = params.toString();
-  return newQueryString ? `${basePath ?? ''}?${newQueryString}` : basePath ?? '';
+  return newQueryString ? `${basePath ?? ''}?${newQueryString}` : (basePath ?? '');
 }
 
 /**
@@ -105,8 +101,7 @@ export function switchLocaleHref(currentPath: string, targetLocale: string): str
  * @returns 言語コード（見つからない場合はデフォルトロケール）
  */
 export function getLocaleFromUrl(searchParams: URLSearchParams | string): Locale {
-  const params =
-    typeof searchParams === 'string' ? new URLSearchParams(searchParams) : searchParams;
+  const params = typeof searchParams === 'string' ? new URLSearchParams(searchParams) : searchParams;
   const hl = params.get('hl');
 
   if (hl && isValidLocale(hl)) {
@@ -123,10 +118,7 @@ export function getLocaleFromUrl(searchParams: URLSearchParams | string): Locale
  * @param baseUrl - サイトのベースURL（例: https://www.adult-v.com）
  * @returns 各言語のhreflangオブジェクト配列
  */
-export function generateHreflangLinks(
-  basePath: string,
-  baseUrl: string
-): Array<{ hreflang: string; href: string }> {
+export function generateHreflangLinks(basePath: string, baseUrl: string): Array<{ hreflang: string; href: string }> {
   return [
     // x-default（デフォルトロケール）
     { hreflang: 'x-default', href: `${baseUrl}${basePath}` },
@@ -166,11 +158,11 @@ export function generateAlternates(basePath: string, baseUrl: string) {
   return {
     canonical: `${baseUrl}${basePath}`,
     languages: {
-      'ja': `${baseUrl}${basePath}`,
-      'en': `${baseUrl}${basePath}${separator}hl=en`,
-      'zh': `${baseUrl}${basePath}${separator}hl=zh`,
+      ja: `${baseUrl}${basePath}`,
+      en: `${baseUrl}${basePath}${separator}hl=en`,
+      zh: `${baseUrl}${basePath}${separator}hl=zh`,
       'zh-TW': `${baseUrl}${basePath}${separator}hl=zh-TW`,
-      'ko': `${baseUrl}${basePath}${separator}hl=ko`,
+      ko: `${baseUrl}${basePath}${separator}hl=ko`,
       'x-default': `${baseUrl}${basePath}`,
     },
   };

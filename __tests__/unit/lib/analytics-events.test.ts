@@ -141,10 +141,14 @@ describe('A/B Testing Events', () => {
 
       trackExperimentEvent('impression', 'priceDisplayStyle');
 
-      expect(window.gtag).toHaveBeenCalledWith('event', 'impression', expect.objectContaining({
-        experiment_id: 'priceDisplayStyle',
-        experiment_variant: 'emphasized',
-      }));
+      expect(window.gtag).toHaveBeenCalledWith(
+        'event',
+        'impression',
+        expect.objectContaining({
+          experiment_id: 'priceDisplayStyle',
+          experiment_variant: 'emphasized',
+        }),
+      );
     });
   });
 
@@ -157,21 +161,29 @@ describe('A/B Testing Events', () => {
         provider: 'FANZA',
       });
 
-      expect(window.gtag).toHaveBeenCalledWith('event', 'cta_click', expect.objectContaining({
-        experiment_id: 'ctaButtonText',
-        experiment_variant: 'action',
-        product_id: '12345',
-        is_sale: true,
-        provider: 'FANZA',
-      }));
+      expect(window.gtag).toHaveBeenCalledWith(
+        'event',
+        'cta_click',
+        expect.objectContaining({
+          experiment_id: 'ctaButtonText',
+          experiment_variant: 'action',
+          product_id: '12345',
+          is_sale: true,
+          provider: 'FANZA',
+        }),
+      );
     });
 
     test('handles numeric product ID', () => {
       trackCtaClick('ctaButtonText', 12345);
 
-      expect(window.gtag).toHaveBeenCalledWith('event', 'cta_click', expect.objectContaining({
-        product_id: '12345',
-      }));
+      expect(window.gtag).toHaveBeenCalledWith(
+        'event',
+        'cta_click',
+        expect.objectContaining({
+          product_id: '12345',
+        }),
+      );
     });
   });
 
@@ -179,18 +191,26 @@ describe('A/B Testing Events', () => {
     test('tracks impression with product ID', () => {
       trackImpression('priceDisplayStyle', '54321');
 
-      expect(window.gtag).toHaveBeenCalledWith('event', 'experiment_impression', expect.objectContaining({
-        experiment_id: 'priceDisplayStyle',
-        product_id: '54321',
-      }));
+      expect(window.gtag).toHaveBeenCalledWith(
+        'event',
+        'experiment_impression',
+        expect.objectContaining({
+          experiment_id: 'priceDisplayStyle',
+          product_id: '54321',
+        }),
+      );
     });
 
     test('tracks impression without product ID', () => {
       trackImpression('saleCountdownStyle');
 
-      expect(window.gtag).toHaveBeenCalledWith('event', 'experiment_impression', expect.objectContaining({
-        experiment_id: 'saleCountdownStyle',
-      }));
+      expect(window.gtag).toHaveBeenCalledWith(
+        'event',
+        'experiment_impression',
+        expect.objectContaining({
+          experiment_id: 'saleCountdownStyle',
+        }),
+      );
     });
   });
 });
@@ -217,10 +237,7 @@ describe('Analytics Event Types Coverage', () => {
   });
 
   test('All expected A/B Testing events are documented', () => {
-    const abTestingEvents = [
-      'cta_click',
-      'experiment_impression',
-    ];
+    const abTestingEvents = ['cta_click', 'experiment_impression'];
 
     expect(abTestingEvents.length).toBe(2);
   });

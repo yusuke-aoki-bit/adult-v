@@ -100,13 +100,12 @@ async function main() {
     `);
     console.log('\n⭐ 評価サマリー統計:');
     console.table(ratingStats.rows);
-
   } finally {
     await closeDb();
   }
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error('❌ エラー:', e);
   process.exit(1);
 });

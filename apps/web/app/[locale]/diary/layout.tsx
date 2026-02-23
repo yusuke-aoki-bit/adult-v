@@ -10,13 +10,21 @@ const metadataTexts = {
     title: 'Viewing Diary',
     description: 'Track and manage your viewing history and notes',
   },
+  zh: {
+    title: '观看日记',
+    description: '记录和管理您的观看历史与笔记',
+  },
+  'zh-TW': {
+    title: '觀看日記',
+    description: '記錄和管理您的觀看歷史與筆記',
+  },
+  ko: {
+    title: '시청 일기',
+    description: '시청 기록과 메모를 관리합니다',
+  },
 } as const;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
@@ -37,10 +45,6 @@ export async function generateMetadata({
   };
 }
 
-export default function DiaryLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DiaryLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

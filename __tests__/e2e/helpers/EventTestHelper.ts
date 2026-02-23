@@ -24,19 +24,14 @@ export const ALL_EVENTS = {
     'notification_permission_denied',
   ],
   // A/B Testing Events
-  abTesting: [
-    'cta_click',
-    'experiment_impression',
-  ],
+  abTesting: ['cta_click', 'experiment_impression'],
   // Performance Events (Web Vitals)
-  performance: [
-    'web_vitals',
-  ],
+  performance: ['web_vitals'],
 } as const;
 
-export type AnalyticsEventName = typeof ALL_EVENTS.analytics[number];
-export type ABTestingEventName = typeof ALL_EVENTS.abTesting[number];
-export type PerformanceEventName = typeof ALL_EVENTS.performance[number];
+export type AnalyticsEventName = (typeof ALL_EVENTS.analytics)[number];
+export type ABTestingEventName = (typeof ALL_EVENTS.abTesting)[number];
+export type PerformanceEventName = (typeof ALL_EVENTS.performance)[number];
 export type AllEventName = AnalyticsEventName | ABTestingEventName | PerformanceEventName;
 
 export interface CapturedEvent {
@@ -78,7 +73,7 @@ export class EventTestHelper {
 
       // gtagをラップ
       const originalGtag = (window as any).gtag;
-      (window as any).gtag = function(...args: unknown[]) {
+      (window as any).gtag = function (...args: unknown[]) {
         if (args[0] === 'event' && typeof args[1] === 'string') {
           // @ts-expect-error グローバル変数
           window.__capturedEvents.push({
@@ -96,7 +91,7 @@ export class EventTestHelper {
       // dataLayerのpushメソッドをラップ (GTM/GA4用)
       (window as any).dataLayer = (window as any).dataLayer || [];
       const originalPush = (window as any).dataLayer.push;
-      (window as any).dataLayer.push = function(...args: unknown[]) {
+      (window as any).dataLayer.push = function (...args: unknown[]) {
         for (const arg of args) {
           if (arg && typeof arg === 'object' && 'event' in arg) {
             const eventObj = arg as { event: string; [key: string]: unknown };
@@ -114,7 +109,7 @@ export class EventTestHelper {
 
       // consoleにログを出力するカスタムイベントリスナー
       // @ts-expect-error グローバル変数
-      window.__logEvent = function(eventName: string, params: Record<string, unknown>) {
+      window.__logEvent = function (eventName: string, params: Record<string, unknown>) {
         // @ts-expect-error グローバル変数
         window.__capturedEvents.push({
           name: eventName,
@@ -171,7 +166,7 @@ export class EventTestHelper {
     }
 
     const total = allEventNames.length;
-    const captured = Object.values(events).filter(e => e.fired).length;
+    const captured = Object.values(events).filter((e) => e.fired).length;
     const percentage = Math.round((captured / total) * 100);
 
     return { total, captured, percentage, events };
@@ -182,7 +177,7 @@ export class EventTestHelper {
    */
   async hasEventFired(eventName: AllEventName): Promise<boolean> {
     await this.getCapturedEvents();
-    return this.capturedEvents.some(e => e.name === eventName);
+    return this.capturedEvents.some((e) => e.name === eventName);
   }
 
   /**
@@ -190,7 +185,7 @@ export class EventTestHelper {
    */
   async getEventCount(eventName: AllEventName): Promise<number> {
     await this.getCapturedEvents();
-    return this.capturedEvents.filter(e => e.name === eventName).length;
+    return this.capturedEvents.filter((e) => e.name === eventName).length;
   }
 
   /**
@@ -198,9 +193,7 @@ export class EventTestHelper {
    */
   async getEventParams(eventName: AllEventName): Promise<Record<string, unknown>[]> {
     await this.getCapturedEvents();
-    return this.capturedEvents
-      .filter(e => e.name === eventName)
-      .map(e => e.params);
+    return this.capturedEvents.filter((e) => e.name === eventName).map((e) => e.params);
   }
 
   /**
@@ -273,12 +266,14 @@ export class EventTestHelper {
  * age-verified cookieを設定
  */
 export async function setAgeVerifiedCookie(page: Page): Promise<void> {
-  await page.context().addCookies([{
-    name: 'age-verified',
-    value: 'true',
-    domain: 'localhost',
-    path: '/',
-  }]);
+  await page.context().addCookies([
+    {
+      name: 'age-verified',
+      value: 'true',
+      domain: 'localhost',
+      path: '/',
+    },
+  ]);
 }
 
 /**

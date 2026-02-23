@@ -25,7 +25,14 @@ if (!process.env['DATABASE_URL']) {
 }
 
 import { getDb } from '../lib/db';
-import { products, productSources, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
+import {
+  products,
+  productSources,
+  productImages,
+  productVideos,
+  productReviews,
+  productRatingSummary,
+} from '../lib/db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { validateProductData, savePerformersWithWikiPriority } from '../lib/crawler-utils';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
@@ -33,10 +40,7 @@ import { getAIHelper } from '../lib/crawler';
 import { translateProductLingva } from '../lib/translate';
 import { saveSaleInfo, SaleInfo } from '../lib/sale-helper';
 import { buildPriceInfoList, saveProductPricesBySourceId } from '../lib/price-helper';
-import {
-  upsertRawHtmlDataWithGcs,
-  markRawDataAsProcessed,
-} from '../lib/crawler/dedup-helper';
+import { upsertRawHtmlDataWithGcs, markRawDataAsProcessed } from '../lib/crawler/dedup-helper';
 import puppeteer from 'puppeteer-extra';
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import type { Browser, Page } from 'puppeteer';
@@ -103,7 +107,7 @@ interface FanzaProduct {
 async function rateLimit(): Promise<void> {
   const jitter = Math.random() * JITTER_MS;
   const delay = RATE_LIMIT_MS + jitter;
-  await new Promise(resolve => setTimeout(resolve, delay));
+  await new Promise((resolve) => setTimeout(resolve, delay));
 }
 
 /**
@@ -149,7 +153,9 @@ async function initializeSession(browserInstance: Browser): Promise<void> {
 
   const page = await browserInstance.newPage();
   try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢確認ページにアクセス
@@ -162,7 +168,7 @@ async function initializeSession(browserInstance: Browser): Promise<void> {
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
       { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
-      { name: 'i3_ab', value: 'affi_id:minpri-001', domain: '.dmm.co.jp' }
+      { name: 'i3_ab', value: 'affi_id:minpri-001', domain: '.dmm.co.jp' },
     );
 
     sessionInitialized = true;
@@ -194,13 +200,15 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
   const page = await browserInstance.newPage();
 
   try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢認証Cookie設定
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
-      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' }
+      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
     );
 
     // リクエストインターセプト（画像は取得して構造解析用に使用）
@@ -216,7 +224,7 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
 
     await page.setExtraHTTPHeaders({
       'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-      'Referer': 'https://www.dmm.co.jp/',
+      Referer: 'https://www.dmm.co.jp/',
     });
 
     const response = await page.goto(url, {
@@ -264,7 +272,11 @@ async function fetchPage(url: string): Promise<{ html: string; status: number } 
  * @param sort ソート順（date=新しい順, ranking=人気順, review=レビュー順）
  * @param direction ソート方向（new=新しい順, old=古い順）- dateソート時のみ有効
  */
-async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', direction: DateSortDirection = 'new'): Promise<string[]> {
+async function getCidsFromListPage(
+  pageNum: number,
+  sort: SortOrder = 'date',
+  direction: DateSortDirection = 'new',
+): Promise<string[]> {
   // 新FANZAはページネーションパラメータが異なる
   // direction=oldの場合はリリース日昇順（古い順）
   const sortParam = sort === 'date' && direction === 'old' ? 'release_date' : sort;
@@ -277,13 +289,15 @@ async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', di
   const page = await browserInstance.newPage();
 
   try {
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+    await page.setUserAgent(
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    );
     await page.setViewport({ width: 1920, height: 1080 });
 
     // 年齢認証Cookie設定
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
-      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' }
+      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
     );
 
     await page.goto(url, {
@@ -292,25 +306,25 @@ async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', di
     });
 
     // 商品リストがロードされるのを待つ
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    await new Promise((resolve) => setTimeout(resolve, 3000));
 
     // スクロールして商品をロード
     await page.evaluate(async () => {
       window.scrollTo(0, 500);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       window.scrollTo(0, 1000);
-      await new Promise(r => setTimeout(r, 500));
+      await new Promise((r) => setTimeout(r, 500));
       window.scrollTo(0, 1500);
     });
 
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    await new Promise((resolve) => setTimeout(resolve, 2000));
 
     // 商品画像URLからCIDを抽出
     const cids = await page.evaluate(() => {
       const cidSet = new Set<string>();
 
       // 画像URLからCIDを抽出（/video/XXXXX/ パターン）
-      document.querySelectorAll('img[src]').forEach(img => {
+      document.querySelectorAll('img[src]').forEach((img) => {
         const src = img.getAttribute('src') || '';
         // https://awsimgsrc.dmm.co.jp/pics_dig/digital/video/pxvr00352/pxvr00352ps.jpg
         const match = src.match(/\/video\/([a-z0-9]+)\//i);
@@ -320,7 +334,7 @@ async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', di
       });
 
       // aタグのhrefからもCIDを探す
-      document.querySelectorAll('a[href]').forEach(a => {
+      document.querySelectorAll('a[href]').forEach((a) => {
         const href = a.getAttribute('href') || '';
         // /av/detail/cid/ パターン
         const detailMatch = href.match(/\/av\/detail\/([a-z0-9]+)/i);
@@ -339,7 +353,6 @@ async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', di
 
     console.log(`  ✓ ${cids.length}件の商品CIDを取得`);
     return cids;
-
   } catch (error) {
     console.error(`  ❌ リストページ取得エラー: ${error}`);
     return [];
@@ -351,7 +364,10 @@ async function getCidsFromListPage(pageNum: number, sort: SortOrder = 'date', di
 /**
  * 商品詳細ページをパース
  */
-async function parseDetailPage(cid: string, forceReprocess: boolean): Promise<{
+async function parseDetailPage(
+  cid: string,
+  forceReprocess: boolean,
+): Promise<{
   product: FanzaProduct | null;
   rawDataId: number | null;
   shouldSkip: boolean;
@@ -365,12 +381,7 @@ async function parseDetailPage(cid: string, forceReprocess: boolean): Promise<{
     const existing = await db
       .select()
       .from(productSources)
-      .where(
-        and(
-          eq(productSources.aspName, 'FANZA'),
-          eq(productSources.originalProductId, cid)
-        )
-      )
+      .where(and(eq(productSources.aspName, 'FANZA'), eq(productSources.originalProductId, cid)))
       .limit(1);
 
     if (existing.length > 0) {
@@ -429,8 +440,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (jsonLdData?.name) {
       title = jsonLdData.name;
     } else {
-      const titleMatch = html.match(/<h1[^>]*>([^<]+)<\/h1>/i)
-        || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
+      const titleMatch =
+        html.match(/<h1[^>]*>([^<]+)<\/h1>/i) || html.match(/<title>([^<]+?)(?:\s*[｜|]\s*[^<]*)?<\/title>/i);
       title = titleMatch?.[1]?.trim() ?? `FANZA-${cid}`;
     }
     title = title.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
@@ -473,8 +484,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       thumbnailUrl = Array.isArray(jsonLdData.image) ? jsonLdData.image[0] : jsonLdData.image;
     }
     if (!thumbnailUrl) {
-      const thumbnailMatch = html.match(/src="(https:\/\/awsimgsrc\.dmm\.co\.jp\/[^"]*pl\.jpg[^"]*)"/i)
-        || html.match(/src="(https:\/\/[^"]*pics[^"]*\/[^"]+pl\.jpg[^"]*)"/i);
+      const thumbnailMatch =
+        html.match(/src="(https:\/\/awsimgsrc\.dmm\.co\.jp\/[^"]*pl\.jpg[^"]*)"/i) ||
+        html.match(/src="(https:\/\/[^"]*pics[^"]*\/[^"]+pl\.jpg[^"]*)"/i);
       thumbnailUrl = thumbnailMatch?.[1] ?? '';
     }
 
@@ -683,11 +695,11 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       if (priceMatches.length > 0) {
         // 500円〜10000円の範囲の価格を抽出（月額300円や高額セット除外）
         const validPrices = priceMatches
-          .map(m => parseInt(m[1]?.replace(/,/g, '') ?? '0', 10))
-          .filter(p => p >= 500 && p <= 10000);
+          .map((m) => parseInt(m[1]?.replace(/,/g, '') ?? '0', 10))
+          .filter((p) => p >= 500 && p <= 10000);
 
         if (validPrices.length > 0) {
-          const typicalPrices = validPrices.filter(p => p >= 800 && p <= 3500);
+          const typicalPrices = validPrices.filter((p) => p >= 800 && p <= 3500);
           if (typicalPrices.length > 0) {
             price = Math.max(...typicalPrices);
           } else {
@@ -713,7 +725,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // 価格のログ出力（デバッグ用）
     if (downloadPrice || streamingPrice || hdPrice || fourKPrice) {
-      console.log(`  💴 価格: DL=${downloadPrice || '-'}, Stream=${streamingPrice || '-'}, HD=${hdPrice || '-'}, 4K=${fourKPrice || '-'}円`);
+      console.log(
+        `  💴 価格: DL=${downloadPrice || '-'}, Stream=${streamingPrice || '-'}, HD=${hdPrice || '-'}, 4K=${fourKPrice || '-'}円`,
+      );
     }
 
     // セール価格検出
@@ -721,7 +735,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     // パターン1: 取り消し線付き元値 + 現在価格（FANZA典型パターン）
     // 例: <del>1,980円</del> → <span>980円</span> または %OFF表記
-    const strikeMatch = html.match(/<(?:del|s|strike)[^>]*>\s*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円\s*<\/(?:del|s|strike)>/i);
+    const strikeMatch = html.match(
+      /<(?:del|s|strike)[^>]*>\s*[¥￥]?\s*(\d{1,3}(?:,\d{3})*)\s*円\s*<\/(?:del|s|strike)>/i,
+    );
     if (strikeMatch?.[1] && price) {
       const regularPrice = parseInt(strikeMatch[1].replace(/,/g, ''), 10);
       if (regularPrice > price && regularPrice >= 500 && regularPrice <= 15000) {
@@ -790,7 +806,9 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
 
     if (saleInfo) {
       const endAtStr = saleInfo.endAt ? ` (〜${saleInfo.endAt.toLocaleDateString('ja-JP')})` : '';
-      console.log(`  💰 FANZA Sale detected: ¥${saleInfo.regularPrice.toLocaleString()} → ¥${price!.toLocaleString()} (${saleInfo.discountPercent}% OFF)${endAtStr}`);
+      console.log(
+        `  💰 FANZA Sale detected: ¥${saleInfo.regularPrice.toLocaleString()} → ¥${price!.toLocaleString()} (${saleInfo.discountPercent}% OFF)${endAtStr}`,
+      );
     }
 
     // 説明文（複数パターンでフォールバック）
@@ -813,13 +831,18 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     if (!description) {
       const summaryMatch = html.match(/<p[^>]*class="[^"]*summary[^"]*"[^>]*>([\s\S]{30,800}?)<\/p>/i);
       if (summaryMatch?.[1]) {
-        description = summaryMatch[1].replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+        description = summaryMatch[1]
+          .replace(/<[^>]+>/g, '')
+          .replace(/\s+/g, ' ')
+          .trim();
       }
     }
 
     // パターン4: 商品紹介・内容紹介セクション
     if (!description) {
-      const introMatch = html.match(/(?:商品紹介|内容紹介|あらすじ)[：:・]?\s*<\/[^>]+>[\s\S]{0,100}?<[^>]*>([^<]{30,800})/i);
+      const introMatch = html.match(
+        /(?:商品紹介|内容紹介|あらすじ)[：:・]?\s*<\/[^>]+>[\s\S]{0,100}?<[^>]*>([^<]{30,800})/i,
+      );
       if (introMatch?.[1]) {
         description = introMatch[1].replace(/\s+/g, ' ').trim();
       }
@@ -830,9 +853,15 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       const paragraphs = html.match(/<p[^>]*>([^<]{100,600})<\/p>/gi);
       if (paragraphs) {
         for (const p of paragraphs) {
-          const text = p.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
+          const text = p
+            .replace(/<[^>]+>/g, '')
+            .replace(/\s+/g, ' ')
+            .trim();
           // 価格・日付・技術情報を除外
-          if (text.length >= 100 && !text.match(/円|￥|\d{4}[\/年]\d{1,2}[\/月]|ダウンロード|ストリーミング|HD版|4K|収録時間/)) {
+          if (
+            text.length >= 100 &&
+            !text.match(/円|￥|\d{4}[\/年]\d{1,2}[\/月]|ダウンロード|ストリーミング|HD版|4K|収録時間/)
+          ) {
             description = text;
             break;
           }
@@ -862,11 +891,13 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       // パターン1: 「平均評価：」の近くにある数値
       const avgRatingMatch = html.match(/平均評価[：:]\s*<[^>]*>?\s*([0-9.]+)/i);
       // パターン2: 星評価のdata属性やclass（FANZAの新デザイン対応）
-      const starRatingMatch = html.match(/data-rating="([0-9.]+)"/i) ||
+      const starRatingMatch =
+        html.match(/data-rating="([0-9.]+)"/i) ||
         html.match(/rating[^>]*>([0-9.]+)</i) ||
         html.match(/評価[：:]?\s*([0-9.]+)\s*(?:点|\/)/i);
       // レビュー件数
-      const reviewCountMatch = html.match(/(\d+)\s*件のレビュー/i) ||
+      const reviewCountMatch =
+        html.match(/(\d+)\s*件のレビュー/i) ||
         html.match(/レビュー[：:]?\s*(\d+)\s*件/i) ||
         html.match(/(\d+)\s*(?:件|reviews)/i);
 
@@ -884,7 +915,10 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       const distribution: Record<number, number> = {};
       for (let star = 1; star <= 5; star++) {
         // パターン: 「★5」「5.00」の近くにある件数
-        const starPattern = new RegExp(`${star}(?:\\.0*)?\\s*(?:<[^>]*>\\s*)*(?:[(（])?\\s*(\\d+)\\s*(?:[件）)])?`, 'i');
+        const starPattern = new RegExp(
+          `${star}(?:\\.0*)?\\s*(?:<[^>]*>\\s*)*(?:[(（])?\\s*(\\d+)\\s*(?:[件）)])?`,
+          'i',
+        );
         const match = html.match(starPattern);
         if (match && match[1]) {
           distribution[star] = parseInt(match[1], 10) || 0;
@@ -898,7 +932,8 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
     // 個別レビューの抽出（レビューリストセクションから）
     // FANZAのレビュー構造: <div class="d-review">内の各レビュー項目
     const reviewBlocks = html.match(/<div[^>]*class="[^"]*review[^"]*"[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
-    for (const block of reviewBlocks.slice(0, 10)) { // 最大10件
+    for (const block of reviewBlocks.slice(0, 10)) {
+      // 最大10件
       // レビュワー名
       const reviewerMatch = block.match(/(?:投稿者|ニックネーム)[：:]\s*([^<\n]+)/i);
       // 評価（★の数）
@@ -910,13 +945,12 @@ function parseProductHtml(html: string, cid: string): FanzaProduct | null {
       const dateMatch = block.match(/(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})/);
 
       if (contentMatch || starsMatch || ratingMatch) {
-        const rating = ratingMatch
-          ? parseFloat(ratingMatch[1]!)
-          : starsMatch
-            ? starsMatch[0].length
-            : 0;
+        const rating = ratingMatch ? parseFloat(ratingMatch[1]!) : starsMatch ? starsMatch[0].length : 0;
 
-        const reviewDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3] ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}` : undefined;
+        const reviewDate =
+          dateMatch?.[1] && dateMatch[2] && dateMatch[3]
+            ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
+            : undefined;
         reviews.push({
           reviewerId: `fanza-${Date.now()}-${reviews.length}`,
           reviewerName: reviewerMatch?.[1]?.trim() ?? '匿名',
@@ -1015,14 +1049,16 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 
       // product_sources作成
       const affiliateUrl = generateAffiliateUrl(product.cid);
-      const [insertedSource] = await db['insert'](productSources).values({
-        productId,
-        aspName: 'FANZA',
-        originalProductId: product.cid,
-        affiliateUrl,
-        price: product['price'],
-        dataSource: 'CRAWL',
-      }).returning({ id: productSources.id });
+      const [insertedSource] = await db['insert'](productSources)
+        .values({
+          productId,
+          aspName: 'FANZA',
+          originalProductId: product.cid,
+          affiliateUrl,
+          price: product['price'],
+          dataSource: 'CRAWL',
+        })
+        .returning({ id: productSources.id });
 
       // product_prices に価格タイプ別の価格を保存
       const priceList = buildPriceInfoList({
@@ -1039,18 +1075,12 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       // 出演者登録（wiki_crawl_data優先）
       // クローラーから取得した演者名をバリデーション
       const validatedPerformers = product.performers
-        .filter(name => isValidPerformerName(name) && isValidPerformerForProduct(name, product['title']))
-        .map(name => normalizePerformerName(name))
+        .filter((name) => isValidPerformerName(name) && isValidPerformerForProduct(name, product['title']))
+        .map((name) => normalizePerformerName(name))
         .filter((name): name is string => name !== null);
 
       // wiki_crawl_data優先で演者を保存
-      const savedCount = await savePerformersWithWikiPriority(
-        db,
-        productId,
-        product.cid,
-        validatedPerformers,
-        'FANZA'
-      );
+      const savedCount = await savePerformersWithWikiPriority(db, productId, product.cid, validatedPerformers, 'FANZA');
 
       if (savedCount > 0) {
         console.log(`    ✓ 演者 ${savedCount}名を登録`);
@@ -1058,34 +1088,40 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 
       // サンプル画像保存
       if (product['thumbnailUrl']) {
-        await db['insert'](productImages).values({
-          productId,
-          imageUrl: product['thumbnailUrl'],
-          imageType: 'thumbnail',
-          displayOrder: 0,
-          aspName: 'FANZA',
-        }).onConflictDoNothing();
+        await db['insert'](productImages)
+          .values({
+            productId,
+            imageUrl: product['thumbnailUrl'],
+            imageType: 'thumbnail',
+            displayOrder: 0,
+            aspName: 'FANZA',
+          })
+          .onConflictDoNothing();
       }
 
       for (let i = 0; i < product.sampleImages.length; i++) {
-        await db['insert'](productImages).values({
-          productId,
-          imageUrl: product.sampleImages[i]!,
-          imageType: 'sample',
-          displayOrder: i + 1,
-          aspName: 'FANZA',
-        }).onConflictDoNothing();
+        await db['insert'](productImages)
+          .values({
+            productId,
+            imageUrl: product.sampleImages[i]!,
+            imageType: 'sample',
+            displayOrder: i + 1,
+            aspName: 'FANZA',
+          })
+          .onConflictDoNothing();
       }
 
       // サンプル動画保存
       for (let i = 0; i < product.sampleVideos.length; i++) {
-        await db['insert'](productVideos).values({
-          productId,
-          videoUrl: product.sampleVideos[i]!,
-          videoType: 'sample',
-          aspName: 'FANZA',
-          displayOrder: i,
-        }).onConflictDoNothing();
+        await db['insert'](productVideos)
+          .values({
+            productId,
+            videoUrl: product.sampleVideos[i]!,
+            videoType: 'sample',
+            aspName: 'FANZA',
+            displayOrder: i,
+          })
+          .onConflictDoNothing();
       }
     }
 
@@ -1109,7 +1145,9 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
             lastUpdated: sql`NOW()`,
           },
         });
-      console.log(`    ⭐ 評価サマリー保存: ${product.ratingSummary.averageRating}点 (${product.ratingSummary.totalReviews}件)`);
+      console.log(
+        `    ⭐ 評価サマリー保存: ${product.ratingSummary.averageRating}点 (${product.ratingSummary.totalReviews}件)`,
+      );
     }
 
     // 個別レビューの保存
@@ -1146,7 +1184,9 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
       try {
         const saved = await saveSaleInfo('FANZA', product.cid, product.saleInfo);
         if (saved) {
-          console.log(`    💰 セール情報保存: ¥${product.saleInfo.regularPrice.toLocaleString()} → ¥${product.saleInfo.salePrice.toLocaleString()} (${product.saleInfo.discountPercent}% OFF)`);
+          console.log(
+            `    💰 セール情報保存: ¥${product.saleInfo.regularPrice.toLocaleString()} → ¥${product.saleInfo.salePrice.toLocaleString()} (${product.saleInfo.discountPercent}% OFF)`,
+          );
         }
       } catch (saleError: unknown) {
         const errorMessage = saleError instanceof Error ? saleError.message : String(saleError);
@@ -1164,7 +1204,10 @@ async function saveProduct(product: FanzaProduct): Promise<number | null> {
 /**
  * AI機能: 説明文生成とタグ抽出（CrawlerAIHelper使用）
  */
-async function generateAIContent(product: FanzaProduct, enableAI: boolean): Promise<{
+async function generateAIContent(
+  product: FanzaProduct,
+  enableAI: boolean,
+): Promise<{
   aiDescription: { catchphrase: string; shortDescription: string } | null;
   aiTags: { genres: string[]; attributes: string[] } | null;
 }> {
@@ -1189,7 +1232,7 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
         extractTags: true,
         translate: false, // FANZAはLingvaで翻訳するため
         generateDescription: true,
-      }
+      },
     );
 
     // エラーがあれば警告
@@ -1226,7 +1269,7 @@ async function generateAIContent(product: FanzaProduct, enableAI: boolean): Prom
 async function saveAIContent(
   productId: number,
   aiDescription: { catchphrase: string; shortDescription: string } | null,
-  aiTags: { genres: string[]; attributes: string[] } | null
+  aiTags: { genres: string[]; attributes: string[] } | null,
 ): Promise<void> {
   if (!aiDescription && !aiTags) return;
 
@@ -1246,10 +1289,7 @@ async function saveAIContent(
     }
 
     if (Object.keys(updates).length > 0) {
-      await db
-        .update(products)
-        .set(updates)
-        .where(eq(products['id'], productId));
+      await db.update(products).set(updates).where(eq(products['id'], productId));
       console.log(`    💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -1283,10 +1323,7 @@ async function saveTranslations(productId: number, product: FanzaProduct): Promi
       }
 
       if (Object.keys(updateData).length > 0) {
-        await db
-          .update(products)
-          .set(updateData)
-          .where(eq(products['id'], productId));
+        await db.update(products).set(updateData).where(eq(products['id'], productId));
 
         console.log(`      EN: ${translations.en?.title?.substring(0, 50)}...`);
         console.log(`      ZH: ${translations.zh?.title?.substring(0, 50)}...`);
@@ -1324,9 +1361,7 @@ async function runFullScan(
   const processedCids = new Set<string>();
 
   // 双方向クロール: 新着順と古い順の両方でスキャン（MGSと同様）
-  const directions: DateSortDirection[] = bidirectional && sort === 'date'
-    ? ['new', 'old']
-    : ['new'];
+  const directions: DateSortDirection[] = bidirectional && sort === 'date' ? ['new', 'old'] : ['new'];
 
   for (const direction of directions) {
     console.log(`\n========================================`);
@@ -1359,7 +1394,7 @@ async function runFullScan(
         consecutiveEmptyPages = 0;
 
         // 重複を除外（全方向で共有）
-        const newCids = cids.filter(cid => !processedCids.has(cid));
+        const newCids = cids.filter((cid) => !processedCids.has(cid));
         console.log(`  📦 新規CID: ${newCids.length}件 (重複除外: ${cids.length - newCids.length}件)`);
 
         // 連続して新規がない場合はこの方向を終了
@@ -1421,18 +1456,21 @@ async function runFullScan(
         }
 
         // ページ単位の進捗表示
-        console.log(`\n  📊 ページ ${pageNum} 完了 - 累計: 保存=${totalSaved}, スキップ=${totalSkipped}, エラー=${totalErrors}`);
-
+        console.log(
+          `\n  📊 ページ ${pageNum} 完了 - 累計: 保存=${totalSaved}, スキップ=${totalSkipped}, エラー=${totalErrors}`,
+        );
       } catch (error) {
         console.error(`  ❌ ページ ${pageNum} でエラー: ${error}`);
         totalErrors++;
 
         // エラーが続いても少し待って続行
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       }
     }
 
-    console.log(`\n📊 ${direction === 'new' ? '新着順' : '古い順'}完了 - 累計: 処理=${processedCids.size}, 保存=${totalSaved}`);
+    console.log(
+      `\n📊 ${direction === 'new' ? '新着順' : '古い順'}完了 - 累計: 処理=${processedCids.size}, 保存=${totalSaved}`,
+    );
   }
 
   await closeBrowser();
@@ -1459,7 +1497,7 @@ async function main() {
 
   // ソートオプション
   let sort: SortOrder = 'date';
-  const sortArg = args.find(arg => arg.startsWith('--sort='));
+  const sortArg = args.find((arg) => arg.startsWith('--sort='));
   if (sortArg) {
     const sortValue = sortArg.split('=')[1];
     if (sortValue === 'ranking' || sortValue === 'review' || sortValue === 'date') {
@@ -1470,7 +1508,7 @@ async function main() {
   // フルスキャンモード
   if (fullScan) {
     let maxPages = 10000; // デフォルト最大ページ数
-    const maxPagesArg = args.find(arg => arg.startsWith('--max-pages='));
+    const maxPagesArg = args.find((arg) => arg.startsWith('--max-pages='));
     if (maxPagesArg) {
       maxPages = parseInt(maxPagesArg.split('=')[1] ?? '10000', 10);
     }

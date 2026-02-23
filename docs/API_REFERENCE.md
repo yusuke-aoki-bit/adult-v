@@ -23,6 +23,7 @@ DATABASE_URL=postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres
 ```
 
 **注意**: パスワードに `!` が含まれる場合、bash環境では以下のように対応:
+
 - URL エンコード: `AdultV2024%21Secure`
 - または単一引用符で囲む: `'AdultV2024!Secure'`
 
@@ -63,6 +64,7 @@ GET /item_list
 ```
 
 **パラメータ**:
+
 - `app_id` (必須): アプリケーションID
 - `agent_id` (必須): アフィリエイトID
 - `banner_id` (必須): バナーID
@@ -77,6 +79,7 @@ GET /item_detail
 ```
 
 **パラメータ**:
+
 - `app_id` (必須)
 - `agent_id` (必須)
 - `banner_id` (必須)
@@ -133,6 +136,7 @@ GET /products
 ```
 
 **パラメータ**:
+
 - `api_key` (必須): APIキー
 - `page`: ページ番号
 - `per_page`: 1ページあたりの取得件数
@@ -215,6 +219,7 @@ GET /ItemList
 ```
 
 **パラメータ**:
+
 - `api_id` (必須)
 - `affiliate_id` (必須)
 - `site`: サイトコード (例: `FANZA`)
@@ -262,17 +267,17 @@ DTI Servicesは以下の複数のアダルトサイトを運営:
 
 #### 対応済みサイト
 
-| サイト | Site ID | URL形式 | ID形式 | 実装状況 |
-|--------|---------|---------|--------|---------|
-| 一本道 (1pondo) | 2470 | `https://www.1pondo.tv/movies/{id}/` | MMDDYY_NNN | ✅ 実装済・検証済 |
-| カリビアンコム | 2478 | `https://www.caribbeancom.com/moviepages/{id}/index.html` | MMDDYY_NNN | ⚠️ 実装済・要調整 (startId) |
-| カリビアンコムプレミアム | 2477 | `https://www.caribbeancompr.com/moviepages/{id}/index.html` | MMDDYY_NNN | ✅ 実装済・検証済 |
-| HEYZO | 2665 | `https://www.heyzo.com/moviepages/{id}/index.html` | NNNN (0001~9999) | ✅ 実装済・検証済 |
-| 天然むすめ (10musume) | 2471 | `https://www.10musume.com/moviepages/{id}/index.html` | MMDDYY_NNN | ⚠️ 実装済・要調整 (startId) |
-| パコパコママ (Pacopacomama) | 2472 | `https://www.pacopacomama.com/moviepages/{id}/index.html` | MMDDYY_NNN | ⚠️ 実装済・要調整 (startId) |
-| 人妻斬り (Hitozumagiri) | 2473 | `https://www.hitozuma-giri.com/moviepages/{id}/index.html` | MMDDYY_NNN | ⚠️ 実装済・要調整 (startId) |
-| エッチな0930 (Etchi na 0930) | 2474 | `https://www.av-e-body.com/moviepages/{id}/index.html` | MMDDYY_NNN | ⚠️ 実装済・要調整 (startId) |
-| エッチな4610 (Etchi na 4610) | 2475 | `https://www.av-4610.com/moviepages/{id}/index.html` | MMDDYY_NNN | ⚠️ 実装済・要調整 (startId) |
+| サイト                       | Site ID | URL形式                                                     | ID形式           | 実装状況                    |
+| ---------------------------- | ------- | ----------------------------------------------------------- | ---------------- | --------------------------- |
+| 一本道 (1pondo)              | 2470    | `https://www.1pondo.tv/movies/{id}/`                        | MMDDYY_NNN       | ✅ 実装済・検証済           |
+| カリビアンコム               | 2478    | `https://www.caribbeancom.com/moviepages/{id}/index.html`   | MMDDYY_NNN       | ⚠️ 実装済・要調整 (startId) |
+| カリビアンコムプレミアム     | 2477    | `https://www.caribbeancompr.com/moviepages/{id}/index.html` | MMDDYY_NNN       | ✅ 実装済・検証済           |
+| HEYZO                        | 2665    | `https://www.heyzo.com/moviepages/{id}/index.html`          | NNNN (0001~9999) | ✅ 実装済・検証済           |
+| 天然むすめ (10musume)        | 2471    | `https://www.10musume.com/moviepages/{id}/index.html`       | MMDDYY_NNN       | ⚠️ 実装済・要調整 (startId) |
+| パコパコママ (Pacopacomama)  | 2472    | `https://www.pacopacomama.com/moviepages/{id}/index.html`   | MMDDYY_NNN       | ⚠️ 実装済・要調整 (startId) |
+| 人妻斬り (Hitozumagiri)      | 2473    | `https://www.hitozuma-giri.com/moviepages/{id}/index.html`  | MMDDYY_NNN       | ⚠️ 実装済・要調整 (startId) |
+| エッチな0930 (Etchi na 0930) | 2474    | `https://www.av-e-body.com/moviepages/{id}/index.html`      | MMDDYY_NNN       | ⚠️ 実装済・要調整 (startId) |
+| エッチな4610 (Etchi na 4610) | 2475    | `https://www.av-4610.com/moviepages/{id}/index.html`        | MMDDYY_NNN       | ⚠️ 実装済・要調整 (startId) |
 
 **注意**: ⚠️マークのサイトはstartId (開始日) の調整が必要です。現在の設定 (010124_001 = 2024年1月1日) では商品が見つかりません。より古い日付からのクロールが必要です。
 
@@ -285,6 +290,7 @@ GET https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/{id}.json
 ```
 
 **レスポンス例**:
+
 ```json
 {
   "ActressesJa": ["女優名1", "女優名2"],
@@ -294,7 +300,7 @@ GET https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/{id}.json
   "ThumbHigh": "https://...",
   "ThumbUltra": "https://...",
   "SampleFiles": [
-    {"url": "https://..."} // ⚠️ これはサンプルVIDEOのURL (画像ではない)
+    { "url": "https://..." } // ⚠️ これはサンプルVIDEOのURL (画像ではない)
   ]
 }
 ```
@@ -310,12 +316,14 @@ GET https://www.1pondo.tv/assets/sample/{id}/gallery.zip
 ```
 
 **実装方法**:
+
 1. gallery.zip をダウンロード
 2. ZIP内のJPG/PNG画像ファイルを抽出
 3. 各画像のURLを `https://www.1pondo.tv/assets/sample/{id}/{filename}` として構築
 4. `product_images` テーブルに `image_type='sample'` として保存
 
 **例**:
+
 ```typescript
 const galleryZipUrl = `https://www.1pondo.tv/assets/sample/111924_001/gallery.zip`;
 const response = await fetch(galleryZipUrl);
@@ -333,6 +341,7 @@ for (const entry of zipEntries) {
 ```
 
 **同様のパターンを持つサイト**:
+
 - 天然むすめ: `https://www.10musume.com/assets/sample/{id}/gallery.zip`
 - パコパコママ: `https://www.pacopacomama.com/assets/sample/{id}/gallery.zip`
 - カリビアンコムプレミアム: `https://www.caribbeancompr.com/moviepages/{id}/gallery.zip`
@@ -343,6 +352,7 @@ for (const entry of zipEntries) {
 #### エンコーディング
 
 DTIサイトは **EUC-JP** を使用しています:
+
 - 自動エンコーディング検出機能を実装
 - iconv-liteで適切にデコード
 
@@ -402,6 +412,7 @@ DATABASE_URL='...' npx tsx scripts/crawlers/crawl-dti-sites.ts
 #### 実装上の対応
 
 現在の実装では:
+
 - **DTI Services の商品のみを掲載**
 - DMMのAPIキーは `.env.example` に記載のみ
 - 実際のクローラーやAPIコールは実装しない
@@ -409,6 +420,7 @@ DATABASE_URL='...' npx tsx scripts/crawlers/crawl-dti-sites.ts
 #### 将来的な対応
 
 もしDMMを掲載したい場合:
+
 1. DTI Services の全商品をデータベースから削除
 2. DTI Services のクローラーをすべて停止
 3. DMMのAPIを有効化
@@ -435,13 +447,13 @@ CACHE_TTL_STOCK=1800       # 在庫情報キャッシュ: 30分
 
 ### Cloud Scheduler設定
 
-| クローラー | スケジュール | 並列数 | ステータス |
-|----------|------------|--------|----------|
-| DUGA | 5分ごと | 10並列 | ENABLED |
-| MGS | 5分ごと | 10並列 | ENABLED |
-| Sokmil | 毎日3:00 (JST) | 1 | 未デプロイ |
-| b10f | 毎日4:00 (JST) | 1 | 未デプロイ |
-| Performer Dedup | 毎日3:00 (JST) | 1 | ENABLED |
+| クローラー      | スケジュール   | 並列数 | ステータス |
+| --------------- | -------------- | ------ | ---------- |
+| DUGA            | 5分ごと        | 10並列 | ENABLED    |
+| MGS             | 5分ごと        | 10並列 | ENABLED    |
+| Sokmil          | 毎日3:00 (JST) | 1      | 未デプロイ |
+| b10f            | 毎日4:00 (JST) | 1      | 未デプロイ |
+| Performer Dedup | 毎日3:00 (JST) | 1      | ENABLED    |
 
 ### スケジューラーセットアップ
 
@@ -458,6 +470,7 @@ bash scripts/setup-all-schedulers.sh
 **問題**: パスワードに `!` が含まれている場合、bashが履歴展開として解釈してしまう
 
 **解決策**:
+
 ```bash
 # 方法1: URLエンコード
 DATABASE_URL='postgresql://adult-v:AdultV2024%21Secure@34.27.234.120:5432/postgres'
@@ -469,6 +482,7 @@ DATABASE_URL='postgresql://adult-v:AdultV2024!Secure@34.27.234.120:5432/postgres
 ### 2. レート制限エラー
 
 各ASPのレート制限を超えた場合:
+
 - DUGAの場合: 60秒待機後にリトライ
 - Cloud Schedulerの実行間隔を調整
 

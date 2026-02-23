@@ -80,8 +80,7 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
     const availableTagsResult = await db.execute(sql`
       SELECT name FROM tags WHERE category = 'performer_trait' ORDER BY name
     `);
-    const availableTraitTags = (availableTagsResult.rows as Array<{ name: string }>)
-      .map(r => r.name);
+    const availableTraitTags = (availableTagsResult.rows as Array<{ name: string }>).map((r) => r.name);
 
     console.log(`  Available trait tags: ${availableTraitTags.length}`);
 
@@ -120,10 +119,8 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
           genres: string[] | null;
         }>;
 
-        const productTitles = products.map(p => p.title).filter(Boolean);
-        const existingGenres = [...new Set(
-          products.flatMap(p => p.genres || []).filter(Boolean)
-        )];
+        const productTitles = products.map((p) => p.title).filter(Boolean);
+        const existingGenres = [...new Set(products.flatMap((p) => p.genres || []).filter(Boolean))];
 
         if (productTitles.length === 0) {
           skipped++;
@@ -137,8 +134,7 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
           INNER JOIN tags t ON pt.tag_id = t.id
           WHERE pt.performer_id = ${performer.id}
         `);
-        const existingTraits = (existingTraitsResult.rows as Array<{ name: string }>)
-          .map(r => r.name);
+        const existingTraits = (existingTraitsResult.rows as Array<{ name: string }>).map((r) => r.name);
 
         // Gemini呼び出し
         const classification = await deps.classifyPerformerByProducts({
@@ -160,8 +156,8 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
           const tagMap = await batchGetOrCreateTags(db, allTagNames, 'performer_trait');
 
           const links = allTagNames
-            .filter(name => tagMap.has(name))
-            .map(name => ({
+            .filter((name) => tagMap.has(name))
+            .map((name) => ({
               performerId: performer.id,
               tagId: tagMap.get(name)!,
               source: 'ai-gemini',
@@ -169,7 +165,9 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
 
           const inserted = await batchInsertPerformerTags(db, links);
           totalTagsAssigned += inserted;
-          console.log(`  [${processed + 1}] ${performer.name}: ${inserted} tags (confidence: ${classification.confidence})`);
+          console.log(
+            `  [${processed + 1}] ${performer.name}: ${inserted} tags (confidence: ${classification.confidence})`,
+          );
           consecutiveErrors = 0;
         } else {
           const reason = !classification ? 'API error' : `low confidence (${classification.confidence})`;
@@ -180,7 +178,7 @@ export function createClassifyPerformersAiHandler(deps: ClassifyPerformersAiDeps
         processed++;
 
         // Rate limiting: 1秒待機
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 1000));
       } catch (e) {
         errors++;
         consecutiveErrors++;

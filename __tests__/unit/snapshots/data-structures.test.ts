@@ -100,18 +100,7 @@ describe('Data Structure Snapshots', () => {
         endAt: FIXED_DATE,
       };
 
-      const result = mapProductToType(
-        product,
-        mockDeps,
-        performers,
-        tags,
-        source,
-        null,
-        images,
-        videos,
-        'ja',
-        sale
-      );
+      const result = mapProductToType(product, mockDeps, performers, tags, source, null, images, videos, 'ja', sale);
 
       // 動的な値を固定
       const snapshot = {
@@ -172,23 +161,17 @@ describe('Data Structure Snapshots', () => {
 
   describe('Utility Output Snapshots', () => {
     it('ASP normalization map snapshot', async () => {
-      const { JA_TO_EN_MAP, UPPER_TO_LOWER_MAP, DTI_URL_PATTERNS } = await import(
-        '@adult-v/shared/lib/asp-utils'
-      );
+      const { JA_TO_EN_MAP, UPPER_TO_LOWER_MAP, DTI_URL_PATTERNS } = await import('@adult-v/shared/lib/asp-utils');
 
       expect({
         JA_TO_EN_MAP,
         UPPER_TO_LOWER_MAP,
-        DTI_URL_PATTERNS: Object.fromEntries(
-          Object.entries(DTI_URL_PATTERNS).map(([k, v]) => [k, v.toString()])
-        ),
+        DTI_URL_PATTERNS: Object.fromEntries(Object.entries(DTI_URL_PATTERNS).map(([k, v]) => [k, v.toString()])),
       }).toMatchSnapshot();
     });
 
     it('Product ID variations snapshot', async () => {
-      const { generateProductIdVariations } = await import(
-        '@adult-v/shared/lib/product-id-utils'
-      );
+      const { generateProductIdVariations } = await import('@adult-v/shared/lib/product-id-utils');
 
       // 各パターンの代表例
       const testCases = {

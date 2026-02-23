@@ -22,12 +22,14 @@ function getDomain(baseURL: string | undefined): string {
 test.describe('全画面読み込みテスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('トップページ（演者一覧）が正しく読み込まれる', async ({ page }) => {
@@ -126,12 +128,14 @@ test.describe('全画面読み込みテスト', () => {
 test.describe('商品一覧ページ機能テスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('比較選択モードボタンが存在する', async ({ page }) => {
@@ -172,12 +176,14 @@ test.describe('商品一覧ページ機能テスト', () => {
 test.describe('セールページ機能テスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('割引率フィルターが動作する', async ({ page }) => {
@@ -222,12 +228,14 @@ test.describe('セールページ機能テスト', () => {
 test.describe('演者一覧ページ機能テスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('演者比較選択モードボタンが存在する', async ({ page }) => {
@@ -257,12 +265,14 @@ test.describe('演者一覧ページ機能テスト', () => {
 test.describe('詳細ページテスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('商品詳細ページにお気に入りボタンがある', async ({ page }) => {
@@ -278,7 +288,9 @@ test.describe('詳細ページテスト', () => {
       await page.waitForTimeout(2000);
 
       // お気に入りボタンを確認
-      const favoriteButton = page.locator('button[aria-label*="お気に入り"], button[aria-label*="favorite"], [data-testid="favorite-button"]');
+      const favoriteButton = page.locator(
+        'button[aria-label*="お気に入り"], button[aria-label*="favorite"], [data-testid="favorite-button"]',
+      );
       const buttonCount = await favoriteButton.count();
       console.log(`Favorite button count on product page: ${buttonCount}`);
     }
@@ -314,7 +326,9 @@ test.describe('詳細ページテスト', () => {
       await page.waitForTimeout(2000);
 
       // 比較ボタンを確認
-      const compareButton = page.locator('button[aria-label*="比較"], button[title*="比較"], [data-testid="compare-button"]');
+      const compareButton = page.locator(
+        'button[aria-label*="比較"], button[title*="比較"], [data-testid="compare-button"]',
+      );
       const buttonCount = await compareButton.count();
       console.log(`Compare button count: ${buttonCount}`);
     }
@@ -422,12 +436,14 @@ test.describe('APIエンドポイントテスト', () => {
 test.describe('インタラクションテスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('検索が動作する', async ({ page }) => {
@@ -435,7 +451,9 @@ test.describe('インタラクションテスト', () => {
     await page.waitForTimeout(2000);
 
     // 検索ボックスを探す（女優検索または商品検索のinput）
-    const searchInput = page.locator('input[type="text"][aria-label*="検索"], input[placeholder*="検索"], input[aria-label*="Search"]').first();
+    const searchInput = page
+      .locator('input[type="text"][aria-label*="検索"], input[placeholder*="検索"], input[aria-label*="Search"]')
+      .first();
 
     if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
       await searchInput.fill('テスト');
@@ -478,12 +496,14 @@ test.describe('インタラクションテスト', () => {
 test.describe('エラーハンドリングテスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('存在しない商品IDでも500エラーにならない', async ({ page }) => {
@@ -497,7 +517,10 @@ test.describe('エラーハンドリングテスト', () => {
   });
 
   test('不正なフィルターパラメータでも500エラーにならない', async ({ page }) => {
-    const response = await page.goto('/products?page=invalid&sort=invalid', { waitUntil: 'domcontentloaded', timeout: 90000 });
+    const response = await page.goto('/products?page=invalid&sort=invalid', {
+      waitUntil: 'domcontentloaded',
+      timeout: 90000,
+    });
     expect(response?.status()).toBeLessThan(500);
   });
 
@@ -510,12 +533,14 @@ test.describe('エラーハンドリングテスト', () => {
 test.describe('コンソールエラーチェック', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('トップページにクリティカルなJSエラーがない', async ({ page }) => {
@@ -528,16 +553,17 @@ test.describe('コンソールエラーチェック', () => {
     await page.waitForTimeout(3000);
 
     // 許容されるエラーをフィルター
-    const criticalErrors = errors.filter(e =>
-      !e.includes('ResizeObserver') &&
-      !e.includes('Non-Error promise rejection') &&
-      !e.includes('installations/request-failed') &&
-      !e.includes('PERMISSION_DENIED') &&
-      !e.includes('analytics') &&
-      !e.includes('Firebase') &&
-      !e.includes('parentNode') && // React/Next.js hydration関連
-      !e.includes('Database initialization failed') && // CI環境ではDBがない
-      !e.includes('DATABASE_URL') // CI環境ではDBがない
+    const criticalErrors = errors.filter(
+      (e) =>
+        !e.includes('ResizeObserver') &&
+        !e.includes('Non-Error promise rejection') &&
+        !e.includes('installations/request-failed') &&
+        !e.includes('PERMISSION_DENIED') &&
+        !e.includes('analytics') &&
+        !e.includes('Firebase') &&
+        !e.includes('parentNode') && // React/Next.js hydration関連
+        !e.includes('Database initialization failed') && // CI環境ではDBがない
+        !e.includes('DATABASE_URL'), // CI環境ではDBがない
     );
 
     if (criticalErrors.length > 0) {
@@ -555,16 +581,17 @@ test.describe('コンソールエラーチェック', () => {
     await page.goto('/products', { waitUntil: 'domcontentloaded', timeout: 90000 });
     await page.waitForTimeout(3000);
 
-    const criticalErrors = errors.filter(e =>
-      !e.includes('ResizeObserver') &&
-      !e.includes('Non-Error promise rejection') &&
-      !e.includes('installations/request-failed') &&
-      !e.includes('PERMISSION_DENIED') &&
-      !e.includes('analytics') &&
-      !e.includes('Firebase') &&
-      !e.includes('parentNode') && // React/Next.js hydration関連
-      !e.includes('Database initialization failed') && // CI環境ではDBがない
-      !e.includes('DATABASE_URL') // CI環境ではDBがない
+    const criticalErrors = errors.filter(
+      (e) =>
+        !e.includes('ResizeObserver') &&
+        !e.includes('Non-Error promise rejection') &&
+        !e.includes('installations/request-failed') &&
+        !e.includes('PERMISSION_DENIED') &&
+        !e.includes('analytics') &&
+        !e.includes('Firebase') &&
+        !e.includes('parentNode') && // React/Next.js hydration関連
+        !e.includes('Database initialization failed') && // CI環境ではDBがない
+        !e.includes('DATABASE_URL'), // CI環境ではDBがない
     );
 
     if (criticalErrors.length > 0) {
@@ -589,16 +616,17 @@ test.describe('コンソールエラーチェック', () => {
       await page.waitForLoadState('domcontentloaded');
       await page.waitForTimeout(3000);
 
-      const criticalErrors = errors.filter(e =>
-        !e.includes('ResizeObserver') &&
-        !e.includes('Non-Error promise rejection') &&
-        !e.includes('installations/request-failed') &&
-        !e.includes('PERMISSION_DENIED') &&
-        !e.includes('analytics') &&
-        !e.includes('Firebase') &&
-        !e.includes('parentNode') && // React/Next.js hydration関連
-        !e.includes('Database initialization failed') && // CI環境ではDBがない
-        !e.includes('DATABASE_URL') // CI環境ではDBがない
+      const criticalErrors = errors.filter(
+        (e) =>
+          !e.includes('ResizeObserver') &&
+          !e.includes('Non-Error promise rejection') &&
+          !e.includes('installations/request-failed') &&
+          !e.includes('PERMISSION_DENIED') &&
+          !e.includes('analytics') &&
+          !e.includes('Firebase') &&
+          !e.includes('parentNode') && // React/Next.js hydration関連
+          !e.includes('Database initialization failed') && // CI環境ではDBがない
+          !e.includes('DATABASE_URL'), // CI環境ではDBがない
       );
 
       if (criticalErrors.length > 0) {
@@ -612,12 +640,14 @@ test.describe('コンソールエラーチェック', () => {
 test.describe('レスポンシブ表示テスト', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('モバイル表示でもトップページが読み込まれる', async ({ page }) => {

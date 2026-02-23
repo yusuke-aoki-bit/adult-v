@@ -10,13 +10,21 @@ const metadataTexts = {
     title: 'Budget Manager',
     description: 'Set your monthly budget and track your watchlist purchases smartly',
   },
+  zh: {
+    title: '预算管理',
+    description: '设置月度预算，智能追踪观看列表中的购买情况',
+  },
+  'zh-TW': {
+    title: '預算管理',
+    description: '設定每月預算，智慧追蹤觀看清單中的購買情況',
+  },
+  ko: {
+    title: '예산 관리',
+    description: '월간 예산을 설정하고 관심 목록의 구매를 스마트하게 추적하세요',
+  },
 } as const;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
@@ -37,10 +45,6 @@ export async function generateMetadata({
   };
 }
 
-export default function BudgetLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function BudgetLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

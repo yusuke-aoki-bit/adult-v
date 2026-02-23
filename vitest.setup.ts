@@ -13,8 +13,24 @@ vi.mock('next/link', () => ({
 
 // Mock next/image - filter out Next.js specific props that aren't valid DOM attributes
 vi.mock('next/image', () => ({
-  default: ({ src, alt, blurDataURL: _blur, priority: _priority, fill: _fill, placeholder: _placeholder, loader: _loader, quality: _quality, sizes: _sizes, unoptimized: _unoptimized, onLoadingComplete: _onLoadingComplete, ...props }: { src: string; alt: string; [key: string]: unknown }) =>
-    React.createElement('img', { src, alt, ...props }),
+  default: ({
+    src,
+    alt,
+    blurDataURL: _blur,
+    priority: _priority,
+    fill: _fill,
+    placeholder: _placeholder,
+    loader: _loader,
+    quality: _quality,
+    sizes: _sizes,
+    unoptimized: _unoptimized,
+    onLoadingComplete: _onLoadingComplete,
+    ...props
+  }: {
+    src: string;
+    alt: string;
+    [key: string]: unknown;
+  }) => React.createElement('img', { src, alt, ...props }),
 }));
 
 // Mock next/navigation
@@ -41,10 +57,18 @@ vi.mock('next-intl', () => ({
 const store: Record<string, string> = {};
 const localStorageMock = {
   getItem: vi.fn((key: string) => store[key] ?? null),
-  setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
-  removeItem: vi.fn((key: string) => { delete store[key]; }),
-  clear: vi.fn(() => { Object.keys(store).forEach(k => delete store[k]); }),
-  get length() { return Object.keys(store).length; },
+  setItem: vi.fn((key: string, value: string) => {
+    store[key] = value;
+  }),
+  removeItem: vi.fn((key: string) => {
+    delete store[key];
+  }),
+  clear: vi.fn(() => {
+    Object.keys(store).forEach((k) => delete store[k]);
+  }),
+  get length() {
+    return Object.keys(store).length;
+  },
   key: vi.fn((index: number) => Object.keys(store)[index] ?? null),
 };
 

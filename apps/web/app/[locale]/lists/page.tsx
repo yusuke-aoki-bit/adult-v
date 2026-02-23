@@ -136,6 +136,48 @@ const translations = {
       saving: '保存中...',
     },
   },
+  'zh-TW': {
+    title: '公開列表',
+    description: '探索使用者建立的推薦列表',
+    myLists: '我的列表',
+    publicLists: '公開列表',
+    createList: '新建',
+    loading: '載入中...',
+    empty: '沒有列表',
+    emptyPublic: '暫無公開列表',
+    emptyMy: '建立你的第一個列表',
+    loginToCreate: '登入以建立列表',
+    error: '發生錯誤',
+    deleteConfirm: '刪除此列表？',
+    card: {
+      items: '{count}個',
+      views: '瀏覽',
+      likes: '喜歡',
+      private: '私密',
+      public: '公開',
+      edit: '編輯',
+      delete: '刪除',
+      deleteConfirm: '刪除此列表？',
+    },
+    modal: {
+      createTitle: '建立列表',
+      editTitle: '編輯列表',
+      titleLabel: '標題',
+      titlePlaceholder: '輸入列表名稱',
+      descriptionLabel: '描述',
+      descriptionPlaceholder: '輸入描述（選填）',
+      visibilityLabel: '可見性',
+      public: '公開',
+      publicDescription: '所有人可見',
+      private: '私密',
+      privateDescription: '僅自己可見',
+      cancel: '取消',
+      create: '建立',
+      save: '儲存',
+      creating: '建立中...',
+      saving: '儲存中...',
+    },
+  },
   ko: {
     title: '공개 리스트',
     description: '사용자가 만든 추천 리스트 탐색',
@@ -204,7 +246,12 @@ export default function ListsPage() {
 
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingList, setEditingList] = useState<{ id: number; title: string; description: string; isPublic: boolean } | null>(null);
+  const [editingList, setEditingList] = useState<{
+    id: number;
+    title: string;
+    description: string;
+    isPublic: boolean;
+  } | null>(null);
 
   // 初期データ取得
   useEffect(() => {
@@ -248,7 +295,7 @@ export default function ListsPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-3">
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white">
             <List className="h-8 w-8 text-rose-500" />
             {t.title}
           </h1>
@@ -256,14 +303,12 @@ export default function ListsPage() {
         </div>
 
         {/* Tabs and Create Button */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('public')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === 'public'
-                  ? 'bg-rose-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              className={`rounded-lg px-4 py-2 font-medium transition-colors ${
+                activeTab === 'public' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
               }`}
             >
               {t.publicLists}
@@ -271,10 +316,8 @@ export default function ListsPage() {
             {userId && (
               <button
                 onClick={() => setActiveTab('my')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === 'my'
-                    ? 'bg-rose-600 text-white'
-                    : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                className={`rounded-lg px-4 py-2 font-medium transition-colors ${
+                  activeTab === 'my' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
                 }`}
               >
                 {t.myLists} ({myLists.length})
@@ -285,19 +328,19 @@ export default function ListsPage() {
           {userId ? (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white transition-colors hover:bg-rose-700"
             >
               <Plus className="h-4 w-4" />
               {t.createList}
             </button>
-          ) : !isAuthLoading && (
-            <p className="text-sm text-gray-500">{t.loginToCreate}</p>
+          ) : (
+            !isAuthLoading && <p className="text-sm text-gray-500">{t.loginToCreate}</p>
           )}
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="text-center py-8 text-red-400">
+          <div className="py-8 text-center text-red-400">
             {t.error}: {error}
           </div>
         )}
@@ -312,11 +355,9 @@ export default function ListsPage() {
 
         {/* Lists Grid */}
         {!isLoading && displayLists.length === 0 ? (
-          <div className="text-center py-16">
-            <List className="h-16 w-16 text-gray-700 mx-auto mb-4" />
-            <p className="text-gray-400 text-lg">
-              {activeTab === 'public' ? t.emptyPublic : t.emptyMy}
-            </p>
+          <div className="py-16 text-center">
+            <List className="mx-auto mb-4 h-16 w-16 text-gray-700" />
+            <p className="text-lg text-gray-400">{activeTab === 'public' ? t.emptyPublic : t.emptyMy}</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

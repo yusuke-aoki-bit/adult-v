@@ -16,7 +16,7 @@ export function createRecommendationsHandler(deps: RecommendationsHandlerDeps) {
 
       // Convert string IDs to numbers
       const numericIds = productIds
-        .map((id: string | number) => typeof id === 'string' ? parseInt(id) : id)
+        .map((id: string | number) => (typeof id === 'string' ? parseInt(id) : id))
         .filter((id: number) => !isNaN(id));
 
       if (numericIds.length === 0) {

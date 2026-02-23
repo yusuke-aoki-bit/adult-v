@@ -26,11 +26,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '8', 10);
 
     const favoritePerformerIds = favoritePerformerIdsParam
-      ? favoritePerformerIdsParam.split(',').map((id) => parseInt(id, 10)).filter((id) => !isNaN(id))
+      ? favoritePerformerIdsParam
+          .split(',')
+          .map((id) => parseInt(id, 10))
+          .filter((id) => !isNaN(id))
       : [];
-    const recentProductIds = recentProductIdsParam
-      ? recentProductIdsParam.split(',').filter(Boolean)
-      : [];
+    const recentProductIds = recentProductIdsParam ? recentProductIdsParam.split(',').filter(Boolean) : [];
 
     const db = getDb();
     const products: ForYouProduct[] = [];
@@ -52,28 +53,16 @@ export async function GET(request: NextRequest) {
           performerName: schema.performers.name,
         })
         .from(schema.productSales)
-        .innerJoin(
-          schema.productSources,
-          eq(schema.productSales.productSourceId, schema.productSources.id)
-        )
-        .innerJoin(
-          schema.products,
-          eq(schema.productSources.productId, schema.products.id)
-        )
-        .innerJoin(
-          schema.productPerformers,
-          eq(schema.products.id, schema.productPerformers.productId)
-        )
-        .innerJoin(
-          schema.performers,
-          eq(schema.productPerformers.performerId, schema.performers.id)
-        )
+        .innerJoin(schema.productSources, eq(schema.productSales.productSourceId, schema.productSources.id))
+        .innerJoin(schema.products, eq(schema.productSources.productId, schema.products.id))
+        .innerJoin(schema.productPerformers, eq(schema.products.id, schema.productPerformers.productId))
+        .innerJoin(schema.performers, eq(schema.productPerformers.performerId, schema.performers.id))
         .where(
           and(
             eq(schema.productSales.isActive, true),
             inArray(schema.performers.id, favoritePerformerIds),
-            gt(schema.productSales.endAt, new Date())
-          )
+            gt(schema.productSales.endAt, new Date()),
+          ),
         )
         .orderBy(desc(schema.productSales.discountPercent))
         .limit(limit);
@@ -125,28 +114,16 @@ export async function GET(request: NextRequest) {
             performerName: schema.performers.name,
           })
           .from(schema.productSales)
-          .innerJoin(
-            schema.productSources,
-            eq(schema.productSales.productSourceId, schema.productSources.id)
-          )
-          .innerJoin(
-            schema.products,
-            eq(schema.productSources.productId, schema.products.id)
-          )
-          .innerJoin(
-            schema.productPerformers,
-            eq(schema.products.id, schema.productPerformers.productId)
-          )
-          .innerJoin(
-            schema.performers,
-            eq(schema.productPerformers.performerId, schema.performers.id)
-          )
+          .innerJoin(schema.productSources, eq(schema.productSales.productSourceId, schema.productSources.id))
+          .innerJoin(schema.products, eq(schema.productSources.productId, schema.products.id))
+          .innerJoin(schema.productPerformers, eq(schema.products.id, schema.productPerformers.productId))
+          .innerJoin(schema.performers, eq(schema.productPerformers.performerId, schema.performers.id))
           .where(
             and(
               eq(schema.productSales.isActive, true),
               inArray(schema.performers.id, recentPerformerIds),
-              gt(schema.productSales.endAt, new Date())
-            )
+              gt(schema.productSales.endAt, new Date()),
+            ),
           )
           .orderBy(desc(schema.productSales.discountPercent))
           .limit(limit - products.length);
@@ -186,20 +163,14 @@ export async function GET(request: NextRequest) {
           saleEndAt: schema.productSales.endAt,
         })
         .from(schema.productSales)
-        .innerJoin(
-          schema.productSources,
-          eq(schema.productSales.productSourceId, schema.productSources.id)
-        )
-        .innerJoin(
-          schema.products,
-          eq(schema.productSources.productId, schema.products.id)
-        )
+        .innerJoin(schema.productSources, eq(schema.productSales.productSourceId, schema.productSources.id))
+        .innerJoin(schema.products, eq(schema.productSources.productId, schema.products.id))
         .where(
           and(
             eq(schema.productSales.isActive, true),
             gt(schema.productSales.discountPercent, 30),
-            gt(schema.productSales.endAt, new Date())
-          )
+            gt(schema.productSales.endAt, new Date()),
+          ),
         )
         .orderBy(desc(schema.productSales.discountPercent))
         .limit(limit - products.length + 5);

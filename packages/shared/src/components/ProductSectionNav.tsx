@@ -3,12 +3,7 @@
 import { SectionNav, type SectionItem } from './SectionNav';
 import HomeSectionManager from './HomeSectionManager';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
-
-const navTexts = {
-  ja: { info: '商品情報', video: 'サンプル動画', prices: '価格比較', value: 'コスパ分析', aiReview: 'AIレビュー', scenes: 'シーン情報', performer: '出演者の他作品', series: 'シリーズ作品', maker: 'メーカー作品', similar: '類似ネットワーク', alsoViewed: 'この作品を見た人' },
-  en: { info: 'Info', video: 'Video', prices: 'Prices', value: 'Value', aiReview: 'AI Review', scenes: 'Scenes', performer: 'More by Actress', series: 'Series', maker: 'Maker', similar: 'Similar', alsoViewed: 'Also Viewed' },
-} as const;
-function getNavText(locale: string) { return navTexts[locale as keyof typeof navTexts] || navTexts.ja; }
+import { getTranslation, productSectionNavTranslations } from '../lib/translations';
 
 interface ProductSectionNavProps {
   locale: string;
@@ -34,11 +29,9 @@ export default function ProductSectionNav({
   hasAlsoViewed,
 }: ProductSectionNavProps) {
   const { theme } = useSiteTheme();
-  const nt = getNavText(locale);
+  const nt = getTranslation(productSectionNavTranslations, locale);
 
-  const sections: SectionItem[] = [
-    { id: 'product-info', label: nt.info },
-  ];
+  const sections: SectionItem[] = [{ id: 'product-info', label: nt.info }];
 
   if (hasSampleVideo) {
     sections.push({ id: 'sample-video', label: nt.video });

@@ -1,0 +1,679 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Adult Viewer API",
+    "version": "1.0.0",
+    "description": "API reference for product, performer, and user content endpoints"
+  },
+  "servers": [
+    {
+      "url": "https://adult-v--adult-v.asia-east1.hosted.app",
+      "description": "Production (web)"
+    },
+    {
+      "url": "https://adult-v--adult-v-1.asia-east1.hosted.app",
+      "description": "Production (fanza)"
+    },
+    {
+      "url": "http://localhost:3000",
+      "description": "Local development"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 12,
+            "maximum": 96,
+            "default": 48
+          },
+          "offset": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "default": 0
+          }
+        }
+      },
+      "SortOrder": {
+        "type": "string",
+        "enum": ["newest", "oldest", "rating", "price_asc", "price_desc", "popular", "relevance"],
+        "default": "newest"
+      },
+      "Locale": {
+        "type": "string",
+        "enum": ["ja", "en", "zh", "zh-TW", "ko"],
+        "default": "ja"
+      },
+      "ProductListParams": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 12,
+            "maximum": 96,
+            "default": 48
+          },
+          "offset": {
+            "type": ["integer", "null"],
+            "minimum": 0,
+            "default": 0
+          },
+          "sort": {
+            "type": "string",
+            "enum": ["newest", "oldest", "rating", "price_asc", "price_desc", "popular", "relevance"],
+            "default": "newest"
+          },
+          "category": {
+            "type": "string"
+          },
+          "maker": {
+            "type": "string"
+          },
+          "performer": {
+            "type": "string"
+          },
+          "q": {
+            "type": "string",
+            "maxLength": 200
+          }
+        }
+      },
+      "UserReview": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "rating": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
+          },
+          "comment": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": ["productId", "rating"]
+      },
+      "UserCorrection": {
+        "type": "object",
+        "properties": {
+          "targetType": {
+            "type": "string",
+            "enum": ["product", "performer"]
+          },
+          "targetId": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "fieldName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "currentValue": {
+            "type": "string"
+          },
+          "suggestedValue": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 500
+          }
+        },
+        "required": ["targetType", "targetId", "fieldName", "suggestedValue"]
+      },
+      "UserTagSuggestion": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "tagName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          }
+        },
+        "required": ["productId", "tagName"]
+      },
+      "PriceAlert": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "integer",
+            "exclusiveMinimum": 0
+          },
+          "targetPrice": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "notifyOnAnySale": {
+            "type": ["boolean", "null"],
+            "default": false
+          }
+        },
+        "required": ["productId", "targetPrice"]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/products": {
+      "get": {
+        "summary": "List products with filtering and pagination",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 96,
+              "default": 48
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["newest", "oldest", "rating", "price_asc", "price_desc", "popular", "relevance"],
+              "default": "newest"
+            },
+            "required": false,
+            "name": "sort",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "maker",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "name": "performer",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated product list"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/products/{id}": {
+      "get": {
+        "summary": "Get a single product by ID",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Product details with sources, performers, tags"
+          },
+          "404": {
+            "description": "Product not found"
+          }
+        }
+      }
+    },
+    "/api/products/{id}/price-history": {
+      "get": {
+        "summary": "Get price history for a product",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Price history data points"
+          }
+        }
+      }
+    },
+    "/api/products/{id}/reviews": {
+      "post": {
+        "summary": "Submit a product review",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "rating": {
+                    "type": "number",
+                    "minimum": 1,
+                    "maximum": 5
+                  },
+                  "comment": {
+                    "type": "string",
+                    "maxLength": 2000
+                  }
+                },
+                "required": ["productId", "rating"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Review submitted successfully"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/corrections": {
+      "post": {
+        "summary": "Submit a data correction",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "targetType": {
+                    "type": "string",
+                    "enum": ["product", "performer"]
+                  },
+                  "targetId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "fieldName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "currentValue": {
+                    "type": "string"
+                  },
+                  "suggestedValue": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 1000
+                  },
+                  "reason": {
+                    "type": "string",
+                    "maxLength": 500
+                  }
+                },
+                "required": ["targetType", "targetId", "fieldName", "suggestedValue"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Correction submitted"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/products/{id}/tag-suggestions": {
+      "post": {
+        "summary": "Suggest a tag for a product",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "tagName": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  }
+                },
+                "required": ["productId", "tagName"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Tag suggestion submitted"
+          }
+        }
+      }
+    },
+    "/api/price-alerts": {
+      "post": {
+        "summary": "Create a price alert",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0
+                  },
+                  "targetPrice": {
+                    "type": "number",
+                    "exclusiveMinimum": 0
+                  },
+                  "notifyOnAnySale": {
+                    "type": ["boolean", "null"],
+                    "default": false
+                  }
+                },
+                "required": ["productId", "targetPrice"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Price alert created"
+          },
+          "400": {
+            "description": "Validation error"
+          }
+        }
+      }
+    },
+    "/api/search/autocomplete": {
+      "get": {
+        "summary": "Search autocomplete suggestions",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["ja", "en", "zh", "zh-TW", "ko"],
+              "default": "ja"
+            },
+            "required": false,
+            "name": "locale",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Autocomplete results (products, performers, tags)"
+          }
+        }
+      }
+    },
+    "/api/actresses": {
+      "get": {
+        "summary": "List performers with pagination",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 96,
+              "default": 48
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Paginated performer list"
+          }
+        }
+      }
+    },
+    "/api/actresses/{id}": {
+      "get": {
+        "summary": "Get performer details",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "^[a-zA-Z0-9_-]+$"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Performer profile with career analysis"
+          },
+          "404": {
+            "description": "Performer not found"
+          }
+        }
+      }
+    },
+    "/api/recommendations": {
+      "post": {
+        "summary": "Get product recommendations based on favorites",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "productIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "integer",
+                      "exclusiveMinimum": 0
+                    }
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 48,
+                    "default": 12
+                  }
+                },
+                "required": ["productIds"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Recommended products"
+          }
+        }
+      }
+    },
+    "/api/sales": {
+      "get": {
+        "summary": "List products currently on sale",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 96,
+              "default": 48
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Products with active sales"
+          }
+        }
+      }
+    },
+    "/api/rankings": {
+      "get": {
+        "summary": "Get product rankings",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 12,
+              "maximum": 96,
+              "default": 48
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": ["integer", "null"],
+              "minimum": 0,
+              "default": 0
+            },
+            "required": false,
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": ["daily", "weekly", "monthly"],
+              "default": "weekly"
+            },
+            "required": false,
+            "name": "period",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Ranked products"
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}

@@ -18,15 +18,11 @@ const PROJECT_ID = 'adult-v';
 const SITES = [
   {
     siteUrl: 'https://www.adult-v.com',
-    sitemaps: [
-      'https://www.adult-v.com/sitemap.xml',
-    ],
+    sitemaps: ['https://www.adult-v.com/sitemap.xml'],
   },
   {
     siteUrl: 'https://www.f.adult-v.com',
-    sitemaps: [
-      'https://www.f.adult-v.com/sitemap.xml',
-    ],
+    sitemaps: ['https://www.f.adult-v.com/sitemap.xml'],
   },
 ];
 
@@ -134,14 +130,14 @@ async function main() {
 
   // 結果サマリー
   console.log('\n📈 送信結果サマリー:');
-  const successCount = results.filter(r => r.success).length;
-  const failCount = results.filter(r => !r.success).length;
+  const successCount = results.filter((r) => r.success).length;
+  const failCount = results.filter((r) => !r.success).length;
   console.log(`  ✅ 成功: ${successCount}件`);
   console.log(`  ❌ 失敗: ${failCount}件`);
 
   if (failCount > 0) {
     console.log('\n⚠️ 失敗したサイトマップ:');
-    for (const result of results.filter(r => !r.success)) {
+    for (const result of results.filter((r) => !r.success)) {
       console.log(`  - ${result.sitemapUrl}: ${result.error}`);
     }
   }

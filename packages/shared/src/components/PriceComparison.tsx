@@ -153,8 +153,8 @@ function PriceComparison({ productId, theme: themeProp }: PriceComparisonProps) 
 
   // 最安値を計算（月額会員限定の価格0は除外）- useMemoで再計算を最小化
   const lowestPrice = useMemo(() => {
-    const pricedOptions = prices.filter(p => p.inStock && p.price > 0);
-    return pricedOptions.length > 0 ? Math.min(...pricedOptions.map(p => p.price)) : 0;
+    const pricedOptions = prices.filter((p) => p.inStock && p.price > 0);
+    return pricedOptions.length > 0 ? Math.min(...pricedOptions.map((p) => p.price)) : 0;
   }, [prices]);
 
   if (error || prices.length === 0) {
@@ -168,10 +168,8 @@ function PriceComparison({ productId, theme: themeProp }: PriceComparisonProps) 
         {prices.map((option) => (
           <div
             key={`${option.asp}-${option.affiliateUrl}`}
-            className={`flex items-center justify-between p-4 rounded-lg border-2 ${
-              option.inStock && option.price > 0 && option.price === lowestPrice
-                ? colors.rowBest
-                : colors.rowDefault
+            className={`flex items-center justify-between rounded-lg border-2 p-4 ${
+              option.inStock && option.price > 0 && option.price === lowestPrice ? colors.rowBest : colors.rowDefault
             }`}
           >
             <div className="flex items-center gap-3">
@@ -186,24 +184,16 @@ function PriceComparison({ productId, theme: themeProp }: PriceComparisonProps) 
                 )}
               </div>
               {option.inStock && option.price > 0 && option.price === lowestPrice && (
-                <span className={colors.lowestBadge}>
-                  {t('lowestPrice')}
-                </span>
+                <span className={colors.lowestBadge}>{t('lowestPrice')}</span>
               )}
-              {!option.inStock && (
-                <span className={colors.outOfStockBadge}>
-                  {t('outOfStock')}
-                </span>
-              )}
+              {!option.inStock && <span className={colors.outOfStockBadge}>{t('outOfStock')}</span>}
             </div>
             <a
               href={normalizeAffiliateUrl(option.affiliateUrl)}
               target="_blank"
               rel="noopener noreferrer sponsored"
-              className={`inline-flex items-center gap-2 px-6 py-2 rounded-lg font-semibold ${
-                option.inStock
-                  ? colors.buyButtonActive
-                  : colors.buyButtonDisabled
+              className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold ${
+                option.inStock ? colors.buyButtonActive : colors.buyButtonDisabled
               }`}
               onClick={(e) => {
                 if (!option.inStock) {
@@ -225,9 +215,7 @@ function PriceComparison({ productId, theme: themeProp }: PriceComparisonProps) 
           </div>
         ))}
       </div>
-      <p className={colors.disclaimer}>
-        {t('priceDisclaimer')}
-      </p>
+      <p className={colors.disclaimer}>{t('priceDisclaimer')}</p>
     </div>
   );
 }

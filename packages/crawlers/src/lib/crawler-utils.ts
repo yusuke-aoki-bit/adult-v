@@ -11,15 +11,15 @@ type AnyDb = NodePgDatabase<any>;
 // トップページ/リダイレクトページの特徴的なパターン
 const TOP_PAGE_PATTERNS = {
   titles: [
-    /^ソクミル-\d+$/,                    // ソクミルプレースホルダー
-    /^Japanska-\d+$/,                   // Japanskaプレースホルダー
-    /^FC2動画アダルト$/,                 // FC2トップページ
-    /^MGS動画\(成人認証\)/,              // MGS認証ページ
-    /^アダルト動画.*ソクミル/,            // ソクミルトップ
-    /^無修正動画.*カリビアンコム/,        // カリビアンコムトップ
+    /^ソクミル-\d+$/, // ソクミルプレースホルダー
+    /^Japanska-\d+$/, // Japanskaプレースホルダー
+    /^FC2動画アダルト$/, // FC2トップページ
+    /^MGS動画\(成人認証\)/, // MGS認証ページ
+    /^アダルト動画.*ソクミル/, // ソクミルトップ
+    /^無修正動画.*カリビアンコム/, // カリビアンコムトップ
     // MGS トップページパターン
-    /^エロ動画・アダルトビデオ\s*-MGS動画/,   // MGSトップページタイトル
-    /^MGS動画＜プレステージ\s*グループ＞$/,   // MGSトップページ（リダイレクト後）
+    /^エロ動画・アダルトビデオ\s*-MGS動画/, // MGSトップページタイトル
+    /^MGS動画＜プレステージ\s*グループ＞$/, // MGSトップページ（リダイレクト後）
   ],
   descriptions: [
     /アダルト動画・エロ動画ソクミル/,
@@ -89,7 +89,7 @@ export function validateProductData(data: {
  */
 export function detectRedirect(
   originalUrl: string,
-  finalUrl: string
+  finalUrl: string,
 ): { isRedirected: boolean; redirectType?: string } {
   const originalHost = new URL(originalUrl).hostname;
   const finalHost = new URL(finalUrl).hostname;
@@ -101,12 +101,12 @@ export function detectRedirect(
 
   // 詳細ページから一覧/トップページへリダイレクト
   const topPagePatterns = [
-    /^\/?$/,                    // トップページ
-    /\/\?.*$/,                  // クエリパラメータのみ
-    /\/list\.html$/,            // 一覧ページ
-    /\/search/,                 // 検索ページ
-    /\/age[-_]?check/i,         // 年齢確認ページ
-    /\/confirm/i,               // 確認ページ
+    /^\/?$/, // トップページ
+    /\/\?.*$/, // クエリパラメータのみ
+    /\/list\.html$/, // 一覧ページ
+    /\/search/, // 検索ページ
+    /\/age[-_]?check/i, // 年齢確認ページ
+    /\/confirm/i, // 確認ページ
   ];
 
   const finalPath = new URL(finalUrl).pathname;
@@ -131,7 +131,7 @@ interface PuppeteerPage {
 export async function navigateWithRedirectCheck(
   page: PuppeteerPage,
   url: string,
-  options: { waitUntil?: string; timeout?: number } = {}
+  options: { waitUntil?: string; timeout?: number } = {},
 ): Promise<{ success: boolean; finalUrl: string; wasRedirected: boolean; redirectType?: string }> {
   const { waitUntil = 'networkidle2', timeout = 30000 } = options;
 
@@ -161,13 +161,7 @@ export async function navigateWithRedirectCheck(
  */
 export function isTopPageHtml(html: string, aspName: string): boolean {
   // 年齢確認ダイアログ/ページの検出
-  const ageCheckPatterns = [
-    /年齢確認/,
-    /18歳以上/,
-    /age[-_]?verification/i,
-    /confirm.*age/i,
-    /はい.*いいえ.*ボタン/,
-  ];
+  const ageCheckPatterns = [/年齢確認/, /18歳以上/, /age[-_]?verification/i, /confirm.*age/i, /はい.*いいえ.*ボタン/];
 
   for (const pattern of ageCheckPatterns) {
     if (pattern.test(html)) {
@@ -182,53 +176,23 @@ export function isTopPageHtml(html: string, aspName: string): boolean {
 
   // ASP固有のトップページパターン
   const aspPatterns: Record<string, RegExp[]> = {
-    'ソクミル': [
-      /ソクミル.*トップ/,
-      /人気ランキング.*新着動画/,
-    ],
-    'MGS': [
-      /MGS動画\(成人認証\)/,
-      /年齢確認.*18歳以上/,
-    ],
-    'FC2': [
-      /FC2動画.*トップ/,
-      /FC2コンテンツマーケット/,
-    ],
-    'Japanska': [
+    ソクミル: [/ソクミル.*トップ/, /人気ランキング.*新着動画/],
+    MGS: [/MGS動画\(成人認証\)/, /年齢確認.*18歳以上/],
+    FC2: [/FC2動画.*トップ/, /FC2コンテンツマーケット/],
+    Japanska: [
       /Japanska.*トップ/,
       /無修正動画一覧/,
-      /幅広いジャンル.*30日/,  // Japanskaホームページ
+      /幅広いジャンル.*30日/, // Japanskaホームページ
     ],
     // b10f
-    'b10f': [
-      /b10f.*トップ/i,
-      /b10f\.jp.*ホーム/i,
-    ],
+    b10f: [/b10f.*トップ/i, /b10f\.jp.*ホーム/i],
     // DTI系サイト
-    '一本道': [
-      /一本道.*トップ/,
-      /1pondo\.tv.*ホーム/i,
-    ],
-    'カリビアンコム': [
-      /カリビアンコム.*トップ/,
-      /caribbeancom\.com.*ホーム/i,
-    ],
-    'カリビアンコムプレミアム': [
-      /カリビアンコムプレミアム.*トップ/,
-      /caribbeancompr\.com.*ホーム/i,
-    ],
-    'HEYZO': [
-      /HEYZO.*トップ/i,
-      /heyzo\.com.*ホーム/i,
-    ],
-    '天然むすめ': [
-      /天然むすめ.*トップ/,
-      /10musume\.com.*ホーム/i,
-    ],
-    'DTI': [
-      /DTI.*トップ/i,
-      /アフィリエイトサービス/,
-    ],
+    一本道: [/一本道.*トップ/, /1pondo\.tv.*ホーム/i],
+    カリビアンコム: [/カリビアンコム.*トップ/, /caribbeancom\.com.*ホーム/i],
+    カリビアンコムプレミアム: [/カリビアンコムプレミアム.*トップ/, /caribbeancompr\.com.*ホーム/i],
+    HEYZO: [/HEYZO.*トップ/i, /heyzo\.com.*ホーム/i],
+    天然むすめ: [/天然むすめ.*トップ/, /10musume\.com.*ホーム/i],
+    DTI: [/DTI.*トップ/i, /アフィリエイトサービス/],
   };
 
   const patterns = aspPatterns[aspName] || [];
@@ -244,10 +208,10 @@ export function isTopPageHtml(html: string, aspName: string): boolean {
 /**
  * 商品データのサニタイズ
  */
-export function sanitizeProductData(data: {
-  title?: string;
-  description?: string;
-}): { title: string; description: string } {
+export function sanitizeProductData(data: { title?: string; description?: string }): {
+  title: string;
+  description: string;
+} {
   let { title = '', description = '' } = data;
 
   // HTMLタグを除去
@@ -274,7 +238,7 @@ export function sanitizeProductData(data: {
  */
 export async function fetchPerformersFromGoogleSearch(
   productCode: string,
-  existingPerformers: string[] = []
+  existingPerformers: string[] = [],
 ): Promise<string[]> {
   try {
     // 動的インポートでGoogle APIを読み込み
@@ -285,14 +249,16 @@ export async function fetchPerformersFromGoogleSearch(
 
     // バリデーションと重複チェック
     const validPerformers: string[] = [];
-    const existingSet = new Set(existingPerformers.map(n => n.toLowerCase()));
+    const existingSet = new Set(existingPerformers.map((n) => n.toLowerCase()));
 
     for (const name of performers) {
       const normalized = normalizePerformerName(name);
-      if (normalized &&
-          isValidPerformerName(normalized) &&
-          !existingSet.has(normalized.toLowerCase()) &&
-          !validPerformers.includes(normalized)) {
+      if (
+        normalized &&
+        isValidPerformerName(normalized) &&
+        !existingSet.has(normalized.toLowerCase()) &&
+        !validPerformers.includes(normalized)
+      ) {
         validPerformers.push(normalized);
       }
     }
@@ -318,11 +284,7 @@ export async function fetchPerformersFromGoogleSearch(
  * @param performerNames - 演者名の配列
  * @returns 挿入/更新された演者数
  */
-export async function savePerformersBatch(
-  db: AnyDb,
-  productId: number,
-  performerNames: string[]
-): Promise<number> {
+export async function savePerformersBatch(db: AnyDb, productId: number, performerNames: string[]): Promise<number> {
   if (performerNames.length === 0) {
     return 0;
   }
@@ -332,20 +294,26 @@ export async function savePerformersBatch(
   // 1. まず performers['name'] で既存の演者を検索
   const existingPerformers = await db.execute(sql`
     SELECT id, name FROM performers
-    WHERE name = ANY(ARRAY[${sql.join(performerNames.map(n => sql`${n}`), sql`, `)}]::text[])
+    WHERE name = ANY(ARRAY[${sql.join(
+      performerNames.map((n) => sql`${n}`),
+      sql`, `,
+    )}]::text[])
   `);
   for (const row of existingPerformers.rows as { id: number; name: string }[]) {
     performerMap.set(row['name'], row['id']);
   }
 
   // 2. 見つからなかった名前について performer_aliases で別名検索
-  const notFoundNames = performerNames.filter(name => !performerMap.has(name));
+  const notFoundNames = performerNames.filter((name) => !performerMap.has(name));
   if (notFoundNames.length > 0) {
     const aliasResults = await db.execute(sql`
       SELECT pa.alias_name, pa.performer_id, p.name as performer_name
       FROM performer_aliases pa
       JOIN performers p ON pa.performer_id = p.id
-      WHERE pa.alias_name = ANY(ARRAY[${sql.join(notFoundNames.map(n => sql`${n}`), sql`, `)}]::text[])
+      WHERE pa.alias_name = ANY(ARRAY[${sql.join(
+        notFoundNames.map((n) => sql`${n}`),
+        sql`, `,
+      )}]::text[])
     `);
     for (const row of aliasResults.rows as { alias_name: string; performer_id: number; performer_name: string }[]) {
       // 別名で見つかった場合、その演者IDを使用
@@ -355,11 +323,14 @@ export async function savePerformersBatch(
   }
 
   // 3. まだ見つからない名前は新規作成
-  const stillNotFound = performerNames.filter(name => !performerMap.has(name));
+  const stillNotFound = performerNames.filter((name) => !performerMap.has(name));
   if (stillNotFound.length > 0) {
     const upsertResult = await db.execute(sql`
       INSERT INTO performers (name)
-      SELECT unnest(ARRAY[${sql.join(stillNotFound.map(n => sql`${n}`), sql`, `)}]::text[])
+      SELECT unnest(ARRAY[${sql.join(
+        stillNotFound.map((n) => sql`${n}`),
+        sql`, `,
+      )}]::text[])
       ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
       RETURNING id, name
     `);
@@ -376,7 +347,10 @@ export async function savePerformersBatch(
   if (performerIds.length > 0) {
     await db.execute(sql`
       INSERT INTO product_performers (product_id, performer_id)
-      SELECT ${productId}, unnest(ARRAY[${sql.join(performerIds.map(id => sql`${id}`), sql`, `)}]::integer[])
+      SELECT ${productId}, unnest(ARRAY[${sql.join(
+        performerIds.map((id) => sql`${id}`),
+        sql`, `,
+      )}]::integer[])
       ON CONFLICT DO NOTHING
     `);
   }
@@ -404,7 +378,7 @@ export async function savePerformersWithWikiPriority(
   productId: number,
   productCode: string,
   crawledPerformers: string[],
-  aspPrefix?: string
+  aspPrefix?: string,
 ): Promise<number> {
   // 1. wiki_crawl_dataから演者名を検索
   const wikiPerformers = await getPerformersFromWikiCrawlData(db, productCode, aspPrefix);
@@ -438,11 +412,7 @@ export async function savePerformersWithWikiPriority(
  * @param tagNames - タグ名の配列
  * @returns 挿入/更新されたタグ数
  */
-export async function saveTagsBatch(
-  db: AnyDb,
-  productId: number,
-  tagNames: string[]
-): Promise<number> {
+export async function saveTagsBatch(db: AnyDb, productId: number, tagNames: string[]): Promise<number> {
   if (tagNames.length === 0) {
     return 0;
   }
@@ -450,7 +420,10 @@ export async function saveTagsBatch(
   // 1. 全タグを一括でUPSERT
   const upsertResult = await db.execute(sql`
     INSERT INTO tags (name)
-    SELECT unnest(ARRAY[${sql.join(tagNames.map(n => sql`${n}`), sql`, `)}]::text[])
+    SELECT unnest(ARRAY[${sql.join(
+      tagNames.map((n) => sql`${n}`),
+      sql`, `,
+    )}]::text[])
     ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
     RETURNING id, name
   `);
@@ -461,14 +434,15 @@ export async function saveTagsBatch(
   }
 
   // 2. product_tags リレーションを一括作成
-  const tagIds = tagNames
-    .map((name) => tagMap.get(name))
-    .filter((id): id is number => id !== undefined);
+  const tagIds = tagNames.map((name) => tagMap.get(name)).filter((id): id is number => id !== undefined);
 
   if (tagIds.length > 0) {
     await db.execute(sql`
       INSERT INTO product_tags (product_id, tag_id)
-      SELECT ${productId}, unnest(ARRAY[${sql.join(tagIds.map(id => sql`${id}`), sql`, `)}]::integer[])
+      SELECT ${productId}, unnest(ARRAY[${sql.join(
+        tagIds.map((id) => sql`${id}`),
+        sql`, `,
+      )}]::integer[])
       ON CONFLICT DO NOTHING
     `);
   }
@@ -541,7 +515,7 @@ export function extractProductCodes(normalizedId: string): string[] {
 export async function getPerformersFromWikiCrawlData(
   db: AnyDb,
   productCode: string,
-  aspPrefix?: string
+  aspPrefix?: string,
 ): Promise<string[]> {
   // 品番から複数の検索用品番形式を生成
   const normalizedId = aspPrefix ? `${aspPrefix}-${productCode}` : productCode;
@@ -558,12 +532,15 @@ export async function getPerformersFromWikiCrawlData(
   const result = await db.execute(sql`
     SELECT DISTINCT performer_name
     FROM wiki_crawl_data
-    WHERE UPPER(product_code) = ANY(ARRAY[${sql.join(uniqueCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])
+    WHERE UPPER(product_code) = ANY(ARRAY[${sql.join(
+      uniqueCodes.map((c) => sql`${c.toUpperCase()}`),
+      sql`, `,
+    )}]::text[])
   `);
 
   const performers = (result.rows as { performer_name: string }[])
-    .map(row => row.performer_name)
-    .filter(name => name && name.length > 0);
+    .map((row) => row.performer_name)
+    .filter((name) => name && name.length > 0);
 
   if (performers.length > 0) {
     console.log(`    📚 wiki_crawl_dataから演者取得: ${performers.join(', ')}`);

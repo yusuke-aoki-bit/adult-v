@@ -83,11 +83,7 @@ async function main() {
         }
 
         // レビュー件数
-        const countPatterns = [
-          /(\d+)\s*件のレビュー/i,
-          /レビュー[：:]?\s*(\d+)/i,
-          /review.*count.*?(\d+)/i,
-        ];
+        const countPatterns = [/(\d+)\s*件のレビュー/i, /レビュー[：:]?\s*(\d+)/i, /review.*count.*?(\d+)/i];
 
         for (const pattern of countPatterns) {
           const match = html.match(pattern);
@@ -105,12 +101,10 @@ async function main() {
         if (reviewClasses) {
           console.log('  Review classes:', [...new Set(reviewClasses)].slice(0, 5));
         }
-
       } catch (error) {
         console.error(`  Error: ${error}`);
       }
     }
-
   } finally {
     await browser.close();
   }

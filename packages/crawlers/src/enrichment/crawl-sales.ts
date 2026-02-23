@@ -10,13 +10,7 @@
 import { getDb } from '../lib/db';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
-import {
-  getFirstRow,
-  IdRow,
-  RateLimiter,
-  crawlerLog,
-  robustFetch,
-} from '../lib/crawler';
+import { getFirstRow, IdRow, RateLimiter, crawlerLog, robustFetch } from '../lib/crawler';
 import { getDugaClient, DugaProduct } from '../lib/providers/duga-client';
 import { getSokmilClient } from '../lib/providers/sokmil-client';
 import { StealthCrawler } from '../lib/stealth-browser';
@@ -55,10 +49,11 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       const response = await robustFetch(pageInfo.url, {
         init: {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Cookie': 'adc=1',
+            Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            Cookie: 'adc=1',
           },
         },
         timeoutMs: 30000,
@@ -78,10 +73,10 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       // セール商品を抽出（複数セレクタに対応）
       // MGSの検索結果ページ構造: .search_list内の各商品
       const selectors = [
-        '.search_list .data',      // 検索結果リスト
-        '.rank_list li',           // ランキングリスト
-        '.movie_list li',          // 動画リスト
-        '.sale_container',         // セールコンテナ（親要素）
+        '.search_list .data', // 検索結果リスト
+        '.rank_list li', // ランキングリスト
+        '.movie_list li', // 動画リスト
+        '.sale_container', // セールコンテナ（親要素）
       ];
 
       // 商品リンクを直接検索
@@ -97,7 +92,7 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
         const productId = productIdMatch[1];
 
         // 重複チェック
-        if (saleItems.some(item => item.originalProductId === productId)) return;
+        if (saleItems.some((item) => item.originalProductId === productId)) return;
 
         // 親要素から価格情報を探す
         const $parent = $(el).closest('.search_list, .rank_list, li, article, .data').first();
@@ -143,7 +138,6 @@ async function crawlMgsSales(limit: number = 100): Promise<SaleItem[]> {
       });
 
       crawlerLog.success(`Found ${saleItems.length} sale items from ${pageInfo.name}`);
-
     } catch (error) {
       crawlerLog.error(`Error crawling ${pageInfo.url}:`, error);
     }
@@ -174,7 +168,8 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
       const response = await robustFetch(pageInfo.url, {
         init: {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
           },
         },
@@ -205,7 +200,7 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
         if (!productId) return;
 
         // 重複チェック
-        if (saleItems.some(item => item.originalProductId === productId)) return;
+        if (saleItems.some((item) => item.originalProductId === productId)) return;
 
         // 価格情報を抽出
         const priceText = $item.find('.money').text();
@@ -240,7 +235,7 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
         const productId = productIdMatch[1];
 
         // 重複チェック
-        if (saleItems.some(item => item.originalProductId === productId)) return;
+        if (saleItems.some((item) => item.originalProductId === productId)) return;
 
         // 価格情報を抽出
         const $parent = $(el).closest('.contentslist, li, article');
@@ -263,7 +258,6 @@ async function crawlDugaSales(limit: number = 100): Promise<SaleItem[]> {
       });
 
       crawlerLog.success(`Found ${saleItems.length} sale items from ${pageInfo.name}`);
-
     } catch (error) {
       crawlerLog.error(`Error crawling DUGA sales:`, error);
     }
@@ -326,7 +320,6 @@ async function crawlSokmilSales(limit: number = 100): Promise<SaleItem[]> {
     }
 
     crawlerLog.success(`Found ${saleItems.length} sale items from SOKMIL API`);
-
   } catch (error) {
     crawlerLog.error('Error crawling SOKMIL sales via API:', error);
   }
@@ -355,7 +348,7 @@ async function crawlFanzaSales(limit: number = 100): Promise<SaleItem[]> {
     // 年齢認証Cookieを設定
     await page.setCookie(
       { name: 'age_check_done', value: '1', domain: '.dmm.co.jp' },
-      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' }
+      { name: 'cklg', value: 'ja', domain: '.dmm.co.jp' },
     );
 
     // まず年齢認証を通過
@@ -385,20 +378,20 @@ async function crawlFanzaSales(limit: number = 100): Promise<SaleItem[]> {
         }
 
         // 商品リストがロードされるのを待つ
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, 3000));
 
         // スクロールして商品をロード（商品クローラーと同じロジック）
         await page.evaluate(async () => {
           window.scrollTo(0, 500);
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
           window.scrollTo(0, 1000);
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
           window.scrollTo(0, 1500);
-          await new Promise(r => setTimeout(r, 500));
+          await new Promise((r) => setTimeout(r, 500));
           window.scrollTo(0, 2000);
         });
 
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, 3000));
 
         // HTMLを取得
         const html = await page.content();
@@ -476,14 +469,18 @@ async function crawlFanzaSales(limit: number = 100): Promise<SaleItem[]> {
           }
 
           // 通常の価格テキスト
-          const priceTexts = $container.find('span:contains("円")').map((_, e) => {
-            const $e = $(e);
-            // 取り消し線の価格は除外
-            if ($e.hasClass('line-through') || $e.closest('[class*="line-through"]').length > 0) {
-              return null;
-            }
-            return $e.text().trim();
-          }).get().filter(Boolean);
+          const priceTexts = $container
+            .find('span:contains("円")')
+            .map((_, e) => {
+              const $e = $(e);
+              // 取り消し線の価格は除外
+              if ($e.hasClass('line-through') || $e.closest('[class*="line-through"]').length > 0) {
+                return null;
+              }
+              return $e.text().trim();
+            })
+            .get()
+            .filter(Boolean);
 
           for (const text of priceTexts) {
             const match = text.match(/([\d,]+)円/);
@@ -523,8 +520,7 @@ async function crawlFanzaSales(limit: number = 100): Promise<SaleItem[]> {
         crawlerLog.success(`Found ${pricesFound} sale items with prices from ${pageInfo.name}`);
 
         // レート制限
-        await new Promise(r => setTimeout(r, 2000));
-
+        await new Promise((r) => setTimeout(r, 2000));
       } catch (error) {
         crawlerLog.error(`Error crawling FANZA sale page ${pageInfo.url}:`, error);
       }
@@ -568,11 +564,7 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
 
           // 「はいアダルト動画へ」ボタンをクリック
           // セレクタ: a.btn-ageauth-yes または a[href*="age=ok"]
-          const selectors = [
-            'a.btn-ageauth-yes',
-            'a[href*="age=ok"]',
-            'a[href*="over18"]',
-          ];
+          const selectors = ['a.btn-ageauth-yes', 'a[href*="age=ok"]', 'a[href*="over18"]'];
           let clicked = false;
           for (const selector of selectors) {
             try {
@@ -596,7 +588,7 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
         }
 
         // 追加の待機
-        await new Promise(r => setTimeout(r, 3000));
+        await new Promise((r) => setTimeout(r, 3000));
 
         const html = await page.content();
         const $ = cheerio.load(html);
@@ -631,7 +623,7 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
           const productId = itemMatch[1];
 
           // 重複チェック
-          if (saleItems.some(item => item.originalProductId === productId)) return;
+          if (saleItems.some((item) => item.originalProductId === productId)) return;
 
           // 割引率を抽出（.sale-label-XX クラスから）
           let discountPercent = 0;
@@ -689,8 +681,7 @@ async function crawlSokmilSalesScrape(limit: number = 100): Promise<SaleItem[]> 
         crawlerLog.success(`Found ${saleItems.length} sale items from ${pageInfo.name}`);
 
         // レート制限
-        await new Promise(r => setTimeout(r, 2000));
-
+        await new Promise((r) => setTimeout(r, 2000));
       } catch (error) {
         crawlerLog.error(`Error crawling SOKMIL sale page ${pageInfo.url}:`, error);
       }

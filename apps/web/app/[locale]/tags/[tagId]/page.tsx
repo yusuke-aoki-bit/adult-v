@@ -8,7 +8,13 @@ import ProductCard from '@/components/ProductCard';
 import { SocialShareButtons } from '@adult-v/shared/components';
 import Pagination from '@/components/Pagination';
 import { getTagById, getProducts, getProductsCount, getPopularTags } from '@/lib/db/queries';
-import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema, generateItemListSchema, generateFAQSchema } from '@/lib/seo';
+import {
+  generateBaseMetadata,
+  generateBreadcrumbSchema,
+  generateCollectionPageSchema,
+  generateItemListSchema,
+  generateFAQSchema,
+} from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 
 // force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
@@ -34,10 +40,14 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       return { title: 'タグが見つかりません' };
     }
 
-    const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
-      locale === 'zh' && tag.nameZh ? tag.nameZh :
-        locale === 'ko' && tag.nameKo ? tag.nameKo :
-          tag.name;
+    const tagName =
+      locale === 'en' && tag.nameEn
+        ? tag.nameEn
+        : locale === 'zh' && tag.nameZh
+          ? tag.nameZh
+          : locale === 'ko' && tag.nameKo
+            ? tag.nameKo
+            : tag.name;
 
     const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
     const title = `${tagName}の動画一覧 | Adult Viewer Lab`;
@@ -70,11 +80,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
       alternates: {
         canonical: `${baseUrl}/tags/${tagId}`,
         languages: {
-          'ja': `${baseUrl}/tags/${tagId}`,
-          'en': `${baseUrl}/tags/${tagId}?hl=en`,
-          'zh': `${baseUrl}/tags/${tagId}?hl=zh`,
+          ja: `${baseUrl}/tags/${tagId}`,
+          en: `${baseUrl}/tags/${tagId}?hl=en`,
+          zh: `${baseUrl}/tags/${tagId}?hl=zh`,
           'zh-TW': `${baseUrl}/tags/${tagId}?hl=zh-TW`,
-          'ko': `${baseUrl}/tags/${tagId}?hl=ko`,
+          ko: `${baseUrl}/tags/${tagId}?hl=ko`,
           'x-default': `${baseUrl}/tags/${tagId}`,
         },
       },
@@ -109,10 +119,14 @@ export default async function TagPage({ params, searchParams }: PageProps) {
     notFound();
   }
 
-  const tagName = locale === 'en' && tag.nameEn ? tag.nameEn :
-    locale === 'zh' && tag.nameZh ? tag.nameZh :
-      locale === 'ko' && tag.nameKo ? tag.nameKo :
-        tag.name;
+  const tagName =
+    locale === 'en' && tag.nameEn
+      ? tag.nameEn
+      : locale === 'zh' && tag.nameZh
+        ? tag.nameZh
+        : locale === 'ko' && tag.nameKo
+          ? tag.nameKo
+          : tag.name;
 
   const page = Math.max(1, Math.min(parseInt(resolvedSearchParams.page || '1', 10), 500));
   const perPage = 24;
@@ -141,7 +155,7 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   }
 
   const totalPages = Math.ceil(totalCount / perPage);
-  const filteredRelatedTags = relatedTags.filter((rt: typeof relatedTags[number]) => rt.id !== tagIdNum);
+  const filteredRelatedTags = relatedTags.filter((rt: (typeof relatedTags)[number]) => rt.id !== tagIdNum);
 
   // パンくずリスト
   const breadcrumbItems = [
@@ -185,7 +199,7 @@ export default async function TagPage({ params, searchParams }: PageProps) {
         ]}
       />
 
-      <section className="py-3 sm:py-4 md:py-6 scroll-mt-20">
+      <section className="scroll-mt-20 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <Breadcrumb
             items={[
@@ -196,15 +210,13 @@ export default async function TagPage({ params, searchParams }: PageProps) {
             className="mb-2 sm:mb-3"
           />
 
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-2">
-                {tagName}
-              </h1>
+              <h1 className="mb-2 text-xl font-bold text-white sm:text-2xl md:text-3xl">{tagName}</h1>
               <p className="text-gray-400">
                 {totalCount.toLocaleString()}件の作品
                 {tag.category && (
-                  <span className="ml-2 px-2 py-0.5 bg-gray-700 rounded text-xs">
+                  <span className="ml-2 rounded bg-gray-700 px-2 py-0.5 text-xs">
                     {tag.category === 'genre' && 'ジャンル'}
                     {tag.category === 'situation' && 'シチュエーション'}
                     {tag.category === 'play' && 'プレイ'}
@@ -214,30 +226,22 @@ export default async function TagPage({ params, searchParams }: PageProps) {
                 )}
               </p>
             </div>
-            <SocialShareButtons
-              title={`${tagName}の動画一覧`}
-              compact
-              hashtags={[tagName.replace(/\s/g, '')]}
-            />
+            <SocialShareButtons title={`${tagName}の動画一覧`} compact hashtags={[tagName.replace(/\s/g, '')]} />
           </div>
 
           {/* 関連タグ */}
           {filteredRelatedTags.length > 0 && (
-            <div className="mb-6 p-4 bg-gray-800/50 rounded-lg">
-              <h2 className="text-sm font-semibold text-gray-400 mb-3">
-                関連ジャンル
-              </h2>
+            <div className="mb-6 rounded-lg bg-gray-800/50 p-4">
+              <h2 className="mb-3 text-sm font-semibold text-gray-400">関連ジャンル</h2>
               <div className="flex flex-wrap gap-2">
                 {filteredRelatedTags.map((relatedTag) => (
                   <Link
                     key={relatedTag.id}
                     href={localizedHref(`/tags/${relatedTag.id}`, locale)}
-                    className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-full text-sm transition-colors"
+                    className="rounded-full bg-gray-700 px-3 py-1.5 text-sm text-gray-200 transition-colors hover:bg-gray-600"
                   >
                     {relatedTag.name}
-                    <span className="ml-1 text-gray-400 text-xs">
-                      ({relatedTag.count.toLocaleString()})
-                    </span>
+                    <span className="ml-1 text-xs text-gray-400">({relatedTag.count.toLocaleString()})</span>
                   </Link>
                 ))}
               </div>
@@ -246,18 +250,12 @@ export default async function TagPage({ params, searchParams }: PageProps) {
 
           {/* 商品一覧 */}
           {products.length === 0 ? (
-            <p className="text-gray-400 text-center py-12">
-              このジャンルの作品はまだありません
-            </p>
+            <p className="py-12 text-center text-gray-400">このジャンルの作品はまだありません</p>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
                 {products.map((product, index) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    priority={index < 6}
-                  />
+                  <ProductCard key={product.id} product={product} priority={index < 6} />
                 ))}
               </div>
 
@@ -275,12 +273,12 @@ export default async function TagPage({ params, searchParams }: PageProps) {
           )}
 
           {/* カテゴリ一覧へのリンク */}
-          <div className="mt-8 pt-6 border-t border-gray-700">
+          <div className="mt-8 border-t border-gray-700 pt-6">
             <Link
               href={localizedHref('/categories', locale)}
-              className="inline-flex items-center gap-2 text-rose-400 hover:text-rose-300 transition-colors"
+              className="inline-flex items-center gap-2 text-rose-400 transition-colors hover:text-rose-300"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               全カテゴリ一覧へ

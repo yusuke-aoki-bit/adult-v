@@ -10,11 +10,7 @@ import { getDb } from '../db';
 import { findMatchByProductCode } from './code-matcher';
 import { findMatchByTitleAndPerformers } from './title-matcher';
 import { createGroup, addToGroup, getProductGroup } from './group-manager';
-import type {
-  MatchResult,
-  ProductForMatching,
-  MatchingConfig,
-} from './types';
+import type { MatchResult, ProductForMatching, MatchingConfig } from './types';
 import { DEFAULT_MATCHING_CONFIG } from './types';
 
 /**
@@ -26,7 +22,7 @@ import { DEFAULT_MATCHING_CONFIG } from './types';
  */
 export async function findMatch(
   product: ProductForMatching,
-  config: MatchingConfig = DEFAULT_MATCHING_CONFIG
+  config: MatchingConfig = DEFAULT_MATCHING_CONFIG,
 ): Promise<MatchResult | null> {
   // 1. 品番マッチング（高優先度）
   const codeMatch = await findMatchByProductCode(product, config);
@@ -61,7 +57,7 @@ export async function findMatch(
  */
 export async function processProductIdentity(
   product: ProductForMatching,
-  config: MatchingConfig = DEFAULT_MATCHING_CONFIG
+  config: MatchingConfig = DEFAULT_MATCHING_CONFIG,
 ): Promise<{
   action: 'created' | 'added' | 'skipped';
   groupId?: number;
@@ -159,7 +155,7 @@ export async function fetchProductForMatching(productId: number): Promise<Produc
 export async function fetchUngroupedProducts(
   limit: number,
   offset: number = 0,
-  targetAsps?: string[]
+  targetAsps?: string[],
 ): Promise<ProductForMatching[]> {
   const db = getDb();
 
@@ -187,7 +183,7 @@ export async function fetchUngroupedProducts(
 
   if (targetAsps && targetAsps.length > 0) {
     // SQLインジェクション対策: パラメータ化
-    const aspList = targetAsps.map(asp => `'${asp.replace(/'/g, "''")}'`).join(',');
+    const aspList = targetAsps.map((asp) => `'${asp.replace(/'/g, "''")}'`).join(',');
     query = sql`${query} AND ps.asp_name IN (${sql.raw(aspList)})`;
   }
 
@@ -205,7 +201,7 @@ export async function fetchUngroupedProducts(
     performers: string | null;
   }>(query);
 
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     id: row['id'],
     normalizedProductId: row.normalized_product_id,
     makerProductCode: row.maker_product_code,
@@ -221,10 +217,7 @@ export async function fetchUngroupedProducts(
 /**
  * 最近追加された商品を取得（増分処理用）
  */
-export async function fetchRecentProducts(
-  hoursAgo: number = 24,
-  limit: number = 1000
-): Promise<ProductForMatching[]> {
+export async function fetchRecentProducts(hoursAgo: number = 24, limit: number = 1000): Promise<ProductForMatching[]> {
   const db = getDb();
 
   const result = await db.execute<{
@@ -262,7 +255,7 @@ export async function fetchRecentProducts(
     LIMIT ${limit}
   `);
 
-  return result.rows.map(row => ({
+  return result.rows.map((row) => ({
     id: row['id'],
     normalizedProductId: row.normalized_product_id,
     makerProductCode: row.maker_product_code,
@@ -290,7 +283,7 @@ export async function countUngroupedProducts(targetAsps?: string[]): Promise<num
   `;
 
   if (targetAsps && targetAsps.length > 0) {
-    const aspList = targetAsps.map(asp => `'${asp.replace(/'/g, "''")}'`).join(',');
+    const aspList = targetAsps.map((asp) => `'${asp.replace(/'/g, "''")}'`).join(',');
     query = sql`${query} AND ps.asp_name IN (${sql.raw(aspList)})`;
   }
 

@@ -8,7 +8,7 @@ import { useState } from 'react';
 
 // useLocalStorageをuseStateベースにモック（useSyncExternalStoreはjsdomで不安定）
 vi.mock('@adult-v/shared/hooks/useLocalStorage', () => ({
-  useLocalStorage: <T,>(_key: string, defaultValue: T): [T, (v: T | ((prev: T) => T)) => void] => {
+  useLocalStorage: <T>(_key: string, defaultValue: T): [T, (v: T | ((prev: T) => T)) => void] => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useState<T>(defaultValue);
   },
@@ -50,7 +50,7 @@ describe('useHomeSections', () => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      const saleSection = result.current.sections.find(s => s.id === 'sale');
+      const saleSection = result.current.sections.find((s) => s.id === 'sale');
       expect(saleSection?.label).toBe('On Sale');
     });
   });
@@ -63,13 +63,13 @@ describe('useHomeSections', () => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      const initialVisibility = result.current.sections.find(s => s.id === 'trending')?.visible;
+      const initialVisibility = result.current.sections.find((s) => s.id === 'trending')?.visible;
 
       act(() => {
         result.current.toggleVisibility('trending');
       });
 
-      const newVisibility = result.current.sections.find(s => s.id === 'trending')?.visible;
+      const newVisibility = result.current.sections.find((s) => s.id === 'trending')?.visible;
       expect(newVisibility).toBe(!initialVisibility);
     });
 
@@ -80,13 +80,13 @@ describe('useHomeSections', () => {
         expect(result.current.isLoaded).toBe(true);
       });
 
-      const before = result.current.sections.find(s => s.id === 'sale')?.visible;
+      const before = result.current.sections.find((s) => s.id === 'sale')?.visible;
 
       act(() => {
         result.current.toggleVisibility('sale');
       });
 
-      const after = result.current.sections.find(s => s.id === 'sale')?.visible;
+      const after = result.current.sections.find((s) => s.id === 'sale')?.visible;
       expect(after).toBe(!before);
     });
   });
@@ -147,7 +147,7 @@ describe('useHomeSections', () => {
 
       // デフォルトの順序に戻っていることを確認
       expect(result.current.sections[0]!.id).toBe('sale');
-      const trending = result.current.sections.find(s => s.id === 'trending');
+      const trending = result.current.sections.find((s) => s.id === 'trending');
       expect(trending?.visible).toBe(true);
     });
   });
@@ -165,7 +165,7 @@ describe('useHomeSections', () => {
         result.current.toggleVisibility('trending');
       });
 
-      const visibleIds = result.current.visibleSections.map(s => s.id);
+      const visibleIds = result.current.visibleSections.map((s) => s.id);
       expect(visibleIds).not.toContain('trending');
     });
 

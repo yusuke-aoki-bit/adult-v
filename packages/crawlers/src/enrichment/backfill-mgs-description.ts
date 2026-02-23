@@ -56,7 +56,7 @@ async function fetchMgsDescription(productId: string): Promise<string | null> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
   const dryRun = args.includes('--dry-run');
 
   const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '1000', 10) : 1000;
@@ -101,7 +101,7 @@ async function main() {
 
       // レート制限: 1.5秒待機
       if (i > 0) {
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise((resolve) => setTimeout(resolve, 1500));
       }
 
       // 商品ページからdescriptionを取得
@@ -131,7 +131,9 @@ async function main() {
 
       // 進捗表示
       if ((i + 1) % 100 === 0) {
-        console.log(`  進捗: ${i + 1}/${stats.total} (取得: ${stats.fetched}, スキップ: ${stats.skipped}, エラー: ${stats.errors})`);
+        console.log(
+          `  進捗: ${i + 1}/${stats.total} (取得: ${stats.fetched}, スキップ: ${stats.skipped}, エラー: ${stats.errors})`,
+        );
       }
     } catch (error) {
       stats.errors++;

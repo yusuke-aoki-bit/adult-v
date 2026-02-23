@@ -63,25 +63,26 @@ PostgreSQL (Cloud SQL) を使用。ORM は Drizzle ORM。
 
 名寄せ後の統合商品データ。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | SERIAL | 主キー |
+| カラム                | 型           | 説明                       |
+| --------------------- | ------------ | -------------------------- |
+| id                    | SERIAL       | 主キー                     |
 | normalized_product_id | VARCHAR(100) | 正規化済み品番（ユニーク） |
-| maker_product_code | VARCHAR(50) | メーカー品番 |
-| title | VARCHAR(500) | 商品タイトル |
-| release_date | DATE | 発売日 |
-| description | TEXT | 商品説明 |
-| duration | INTEGER | 再生時間（分） |
-| default_thumbnail_url | TEXT | サムネイルURL |
-| title_en | VARCHAR(500) | 英語タイトル |
-| title_zh | VARCHAR(500) | 中国語（簡体字）タイトル |
-| ai_description | JSONB | AI生成説明 |
-| ai_tags | JSONB | AI抽出タグ |
-| ai_review | TEXT | AI生成レビュー |
-| created_at | TIMESTAMP | 作成日時 |
-| updated_at | TIMESTAMP | 更新日時 |
+| maker_product_code    | VARCHAR(50)  | メーカー品番               |
+| title                 | VARCHAR(500) | 商品タイトル               |
+| release_date          | DATE         | 発売日                     |
+| description           | TEXT         | 商品説明                   |
+| duration              | INTEGER      | 再生時間（分）             |
+| default_thumbnail_url | TEXT         | サムネイルURL              |
+| title_en              | VARCHAR(500) | 英語タイトル               |
+| title_zh              | VARCHAR(500) | 中国語（簡体字）タイトル   |
+| ai_description        | JSONB        | AI生成説明                 |
+| ai_tags               | JSONB        | AI抽出タグ                 |
+| ai_review             | TEXT         | AI生成レビュー             |
+| created_at            | TIMESTAMP    | 作成日時                   |
+| updated_at            | TIMESTAMP    | 更新日時                   |
 
 **インデックス**:
+
 - `idx_products_normalized_id` (normalized_product_id)
 - `idx_products_maker_code` (maker_product_code)
 - `idx_products_release_date` (release_date)
@@ -90,18 +91,19 @@ PostgreSQL (Cloud SQL) を使用。ORM は Drizzle ORM。
 
 各ASPの商品情報。同一商品でもASPごとに価格・URLが異なる。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | SERIAL | 主キー |
-| product_id | INTEGER | 商品ID（FK） |
-| asp_name | VARCHAR(50) | ASP名 |
-| original_product_id | VARCHAR(100) | ASP側の商品ID |
-| affiliate_url | TEXT | アフィリエイトURL |
-| price | INTEGER | 価格（円） |
-| currency | VARCHAR(3) | 通貨（JPY/USD） |
-| data_source | VARCHAR(10) | データソース（API/CSV） |
+| カラム              | 型           | 説明                    |
+| ------------------- | ------------ | ----------------------- |
+| id                  | SERIAL       | 主キー                  |
+| product_id          | INTEGER      | 商品ID（FK）            |
+| asp_name            | VARCHAR(50)  | ASP名                   |
+| original_product_id | VARCHAR(100) | ASP側の商品ID           |
+| affiliate_url       | TEXT         | アフィリエイトURL       |
+| price               | INTEGER      | 価格（円）              |
+| currency            | VARCHAR(3)   | 通貨（JPY/USD）         |
+| data_source         | VARCHAR(10)  | データソース（API/CSV） |
 
 **インデックス**:
+
 - `idx_sources_product_asp` (product_id, asp_name) UNIQUE
 - `idx_sources_asp_original_id` (asp_name, original_product_id)
 
@@ -109,59 +111,59 @@ PostgreSQL (Cloud SQL) を使用。ORM は Drizzle ORM。
 
 アクティブなセール・割引情報。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | SERIAL | 主キー |
-| product_source_id | INTEGER | 商品ソースID（FK） |
-| regular_price | INTEGER | 通常価格 |
-| sale_price | INTEGER | セール価格 |
-| discount_percent | INTEGER | 割引率（%） |
-| start_at | TIMESTAMP | セール開始日時 |
-| end_at | TIMESTAMP | セール終了日時 |
-| sale_name | VARCHAR(200) | セール名 |
-| is_active | BOOLEAN | アクティブフラグ |
+| カラム            | 型           | 説明               |
+| ----------------- | ------------ | ------------------ |
+| id                | SERIAL       | 主キー             |
+| product_source_id | INTEGER      | 商品ソースID（FK） |
+| regular_price     | INTEGER      | 通常価格           |
+| sale_price        | INTEGER      | セール価格         |
+| discount_percent  | INTEGER      | 割引率（%）        |
+| start_at          | TIMESTAMP    | セール開始日時     |
+| end_at            | TIMESTAMP    | セール終了日時     |
+| sale_name         | VARCHAR(200) | セール名           |
+| is_active         | BOOLEAN      | アクティブフラグ   |
 
 ### performers（出演者マスタ）
 
 出演者情報。複数の別名を持つ場合あり。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | SERIAL | 主キー |
-| name | VARCHAR(200) | 名前 |
-| name_kana | VARCHAR(200) | 名前（カナ） |
-| name_en | VARCHAR(200) | 英語名 |
-| bust | INTEGER | バスト |
-| waist | INTEGER | ウエスト |
-| hip | INTEGER | ヒップ |
-| height | INTEGER | 身長 |
-| birth_date | DATE | 生年月日 |
-| blood_type | VARCHAR(2) | 血液型 |
-| profile_image_url | TEXT | プロフィール画像 |
-| is_fanza_only | BOOLEAN | FANZA専用フラグ |
+| カラム            | 型           | 説明             |
+| ----------------- | ------------ | ---------------- |
+| id                | SERIAL       | 主キー           |
+| name              | VARCHAR(200) | 名前             |
+| name_kana         | VARCHAR(200) | 名前（カナ）     |
+| name_en           | VARCHAR(200) | 英語名           |
+| bust              | INTEGER      | バスト           |
+| waist             | INTEGER      | ウエスト         |
+| hip               | INTEGER      | ヒップ           |
+| height            | INTEGER      | 身長             |
+| birth_date        | DATE         | 生年月日         |
+| blood_type        | VARCHAR(2)   | 血液型           |
+| profile_image_url | TEXT         | プロフィール画像 |
+| is_fanza_only     | BOOLEAN      | FANZA専用フラグ  |
 
 ### tags（タグマスタ）
 
 ジャンル、メーカー、シリーズなど。
 
-| カラム | 型 | 説明 |
-|--------|-----|------|
-| id | SERIAL | 主キー |
-| name | VARCHAR(200) | タグ名 |
-| category | VARCHAR(50) | カテゴリ（genre/maker/series） |
+| カラム   | 型           | 説明                           |
+| -------- | ------------ | ------------------------------ |
+| id       | SERIAL       | 主キー                         |
+| name     | VARCHAR(200) | タグ名                         |
+| category | VARCHAR(50)  | カテゴリ（genre/maker/series） |
 
 ## ASP一覧
 
-| ASP名 | 説明 | データソース |
-|-------|------|------------|
-| FANZA | DMM FANZA | HTML Scraping |
-| DUGA | DUGA/APEX | REST API |
-| SOKMIL | ソクミル | REST API |
-| MGS | MGS動画 | HTML Scraping |
-| DTI系 | カリビアンコム等8サイト | HTML Scraping |
-| FC2 | FC2コンテンツマーケット | HTML Scraping |
-| TOKYOHOT | Tokyo Hot | HTML Scraping |
-| B10F | 同人系 | CSV Import |
+| ASP名    | 説明                    | データソース  |
+| -------- | ----------------------- | ------------- |
+| FANZA    | DMM FANZA               | HTML Scraping |
+| DUGA     | DUGA/APEX               | REST API      |
+| SOKMIL   | ソクミル                | REST API      |
+| MGS      | MGS動画                 | HTML Scraping |
+| DTI系    | カリビアンコム等8サイト | HTML Scraping |
+| FC2      | FC2コンテンツマーケット | HTML Scraping |
+| TOKYOHOT | Tokyo Hot               | HTML Scraping |
+| B10F     | 同人系                  | CSV Import    |
 
 ## クエリ例
 

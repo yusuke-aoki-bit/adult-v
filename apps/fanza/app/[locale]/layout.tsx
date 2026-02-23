@@ -23,14 +23,11 @@ const localeDescriptions: Record<string, string> = {
   ja: 'DUGA、MGS、DTI、カリビアンコムなど主要動画配信サイトを横断したAV女優・作品データベース。38,000名以上の女優情報、出演作品、ジャンル別検索が可能。',
   en: 'Discover 38,000+ JAV actresses across DUGA, MGS, and DTI platforms. Browse by popularity, new releases, and genres.',
   zh: '跨越DUGA、MGS、DTI等主要视频平台的AV女优和作品数据库。可搜索38,000多名女优信息。',
+  'zh-TW': '跨越DUGA、MGS、DTI等主要影片平台的AV女優和作品資料庫。可搜尋38,000多名女優資訊。',
   ko: 'DUGA, MGS, DTI 등 주요 비디오 플랫폼을 아우르는 AV 여배우 및 작품 데이터베이스. 38,000명 이상의 여배우 정보 검색 가능.',
 };
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const description = localeDescriptions[locale] || localeDescriptions.ja;
 
@@ -49,7 +46,7 @@ export default async function LocaleLayout({
   const { locale } = await params;
 
   // Validate that the incoming `locale` parameter is valid
-  if (!locales.includes(locale as typeof locales[number])) {
+  if (!locales.includes(locale as (typeof locales)[number])) {
     notFound();
   }
 
@@ -79,9 +76,7 @@ export default async function LocaleLayout({
                 <JsonLD data={webSiteSchema} />
                 <JsonLD data={organizationSchema} />
                 <PerformanceMonitor />
-                <AgeVerification locale={locale}>
-                  {children}
-                </AgeVerification>
+                <AgeVerification locale={locale}>{children}</AgeVerification>
                 <ScrollToTop />
                 <OfflineIndicator locale={locale} />
                 <ChatBotWrapper locale={locale} />

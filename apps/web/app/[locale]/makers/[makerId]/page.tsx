@@ -67,6 +67,22 @@ const translations = {
     works: '部',
     makerList: '厂商列表',
   },
+  'zh-TW': {
+    notFound: '未找到廠商',
+    backToList: '返回廠商列表',
+    products: '部作品',
+    rating: '平均評分',
+    topPerformers: '人氣女優',
+    topGenres: '人氣類型',
+    yearlyProduction: '年度作品數',
+    recentProducts: '最新作品',
+    viewAll: '查看全部',
+    viewProducts: '查看作品',
+    maker: '廠商',
+    label: '品牌',
+    works: '部',
+    makerList: '廠商列表',
+  },
   ko: {
     notFound: '메이커를 찾을 수 없습니다',
     backToList: '메이커 목록으로',
@@ -110,10 +126,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       alternates: {
         canonical: `${baseUrl}/makers/${makerId}`,
         languages: {
-          'ja': `${baseUrl}/makers/${makerId}`,
-          'en': `${baseUrl}/makers/${makerId}?hl=en`,
-          'zh': `${baseUrl}/makers/${makerId}?hl=zh`,
-          'ko': `${baseUrl}/makers/${makerId}?hl=ko`,
+          ja: `${baseUrl}/makers/${makerId}`,
+          en: `${baseUrl}/makers/${makerId}?hl=en`,
+          zh: `${baseUrl}/makers/${makerId}?hl=zh`,
+          ko: `${baseUrl}/makers/${makerId}?hl=ko`,
           'x-default': `${baseUrl}/makers/${makerId}`,
         },
       },
@@ -132,10 +148,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
 
   let tNav, maker;
   try {
-    [tNav, maker] = await Promise.all([
-      getTranslations('nav'),
-      getMakerById(makerIdNum, locale),
-    ]);
+    [tNav, maker] = await Promise.all([getTranslations('nav'), getMakerById(makerIdNum, locale)]);
   } catch (error) {
     console.error(`[maker-detail] Error loading maker ${makerId}:`, error);
     notFound();
@@ -153,16 +166,16 @@ export default async function MakerDetailPage({ params }: PageProps) {
       name: product.title,
       url: localizedHref(`/products/${product.id}`, locale),
     })),
-    maker.name
+    maker.name,
   );
 
-  const maxYearlyCount = Math.max(...maker.yearlyStats.map(y => y.count), 1);
+  const maxYearlyCount = Math.max(...maker.yearlyStats.map((y) => y.count), 1);
 
   return (
     <>
       <JsonLD data={breadcrumbSchema} />
       <JsonLD data={itemListSchema} />
-      <div className="min-h-screen theme-body">
+      <div className="theme-body min-h-screen">
         <div className="container mx-auto px-4 py-8">
           {/* Breadcrumb */}
           <Breadcrumb
@@ -175,40 +188,40 @@ export default async function MakerDetailPage({ params }: PageProps) {
           />
 
           {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* Header */}
-          <div className="bg-gray-800 rounded-xl p-6 mb-6">
+          <div className="mb-6 rounded-xl bg-gray-800 p-6">
             <div className="flex items-start gap-4">
-              <div className="w-16 h-16 bg-linear-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-xl bg-linear-to-br from-blue-500 to-purple-600">
                 {maker.category === 'maker' ? (
-                  <Building2 className="w-8 h-8 text-white" />
+                  <Building2 className="h-8 w-8 text-white" />
                 ) : (
-                  <Tag className="w-8 h-8 text-white" />
+                  <Tag className="h-8 w-8 text-white" />
                 )}
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-2xl font-bold text-white">{maker.name}</h1>
-                  <span className={`text-xs px-2 py-0.5 rounded ${
-                    maker.category === 'maker'
-                      ? 'bg-blue-900 text-blue-300'
-                      : 'bg-purple-900 text-purple-300'
-                  }`}>
+                  <span
+                    className={`rounded px-2 py-0.5 text-xs ${
+                      maker.category === 'maker' ? 'bg-blue-900 text-blue-300' : 'bg-purple-900 text-purple-300'
+                    }`}
+                  >
                     {maker.category === 'maker' ? t.maker : t.label}
                   </span>
                 </div>
-                <div className="flex items-center gap-4 mt-2 text-gray-400">
+                <div className="mt-2 flex items-center gap-4 text-gray-400">
                   <span className="flex items-center gap-1">
-                    <Film className="w-4 h-4" />
+                    <Film className="h-4 w-4" />
                     {maker.productCount.toLocaleString()} {t.products}
                   </span>
                   {maker.averageRating && (
                     <span className="flex items-center gap-1">
-                      <Star className="w-4 h-4 text-yellow-400" />
+                      <Star className="h-4 w-4 text-yellow-400" />
                       {maker.averageRating.toFixed(1)}
                     </span>
                   )}
@@ -217,73 +230,70 @@ export default async function MakerDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="space-y-6 lg:col-span-2">
               {/* Yearly Stats */}
               {maker.yearlyStats.length > 0 && (
-                <div className="bg-gray-800 rounded-xl p-6">
-                  <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5 text-blue-400" />
+                <div className="rounded-xl bg-gray-800 p-6">
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+                    <Calendar className="h-5 w-5 text-blue-400" />
                     {t.yearlyProduction}
                   </h2>
                   <div className="space-y-2">
-                    {maker.yearlyStats.slice(0, 8).reverse().map((stat) => (
-                      <div key={stat.year} className="flex items-center gap-3">
-                        <span className="text-gray-400 w-12 text-sm">{stat.year}</span>
-                        <div className="flex-1 bg-gray-700 rounded-full h-6 overflow-hidden">
-                          <div
-                            className="h-full bg-linear-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-end pr-2"
-                            style={{ width: `${(stat.count / maxYearlyCount) * 100}%` }}
-                          >
-                            <span className="text-xs text-white font-medium">
-                              {stat.count}
-                            </span>
+                    {maker.yearlyStats
+                      .slice(0, 8)
+                      .reverse()
+                      .map((stat) => (
+                        <div key={stat.year} className="flex items-center gap-3">
+                          <span className="w-12 text-sm text-gray-400">{stat.year}</span>
+                          <div className="h-6 flex-1 overflow-hidden rounded-full bg-gray-700">
+                            <div
+                              className="flex h-full items-center justify-end rounded-full bg-linear-to-r from-blue-500 to-purple-500 pr-2"
+                              style={{ width: `${(stat.count / maxYearlyCount) * 100}%` }}
+                            >
+                              <span className="text-xs font-medium text-white">{stat.count}</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
                   </div>
                 </div>
               )}
 
               {/* Recent Products */}
               {maker.recentProducts.length > 0 && (
-                <div className="bg-gray-800 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold text-white flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-green-400" />
+                <div className="rounded-xl bg-gray-800 p-6">
+                  <div className="mb-4 flex items-center justify-between">
+                    <h2 className="flex items-center gap-2 text-lg font-semibold text-white">
+                      <TrendingUp className="h-5 w-5 text-green-400" />
                       {t.recentProducts}
                     </h2>
                     <Link
                       href={localizedHref(`/products?maker=${maker.id}`, locale)}
-                      className="text-blue-400 hover:text-blue-300 text-sm"
+                      className="text-sm text-blue-400 hover:text-blue-300"
                     >
                       {t.viewAll} →
                     </Link>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-5">
                     {maker.recentProducts.map((product) => (
-                      <Link
-                        key={product.id}
-                        href={localizedHref(`/products/${product.id}`, locale)}
-                        className="group"
-                      >
-                        <div className="relative rounded-lg overflow-hidden bg-gray-700" style={{ aspectRatio: '2/3' }}>
+                      <Link key={product.id} href={localizedHref(`/products/${product.id}`, locale)} className="group">
+                        <div className="relative overflow-hidden rounded-lg bg-gray-700" style={{ aspectRatio: '2/3' }}>
                           {product.imageUrl ? (
                             <Image
                               src={product.imageUrl}
                               alt={product.title}
                               fill
-                              className="object-cover group-hover:scale-105 transition-transform"
+                              className="object-cover transition-transform group-hover:scale-105"
                             />
                           ) : (
                             <div className="absolute inset-0 flex items-center justify-center">
-                              <Film className="w-8 h-8 text-gray-500" />
+                              <Film className="h-8 w-8 text-gray-500" />
                             </div>
                           )}
                         </div>
-                        <p className="text-xs text-gray-400 mt-1 line-clamp-2 group-hover:text-white transition-colors">
+                        <p className="mt-1 line-clamp-2 text-xs text-gray-400 transition-colors group-hover:text-white">
                           {product.title}
                         </p>
                       </Link>
@@ -297,9 +307,9 @@ export default async function MakerDetailPage({ params }: PageProps) {
             <div className="space-y-6">
               {/* Top Performers */}
               {maker.topPerformers.length > 0 && (
-                <div className="bg-gray-800 rounded-xl p-6">
-                  <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Users className="w-5 h-5 text-pink-400" />
+                <div className="rounded-xl bg-gray-800 p-6">
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+                    <Users className="h-5 w-5 text-pink-400" />
                     {t.topPerformers}
                   </h2>
                   <div className="space-y-3">
@@ -307,15 +317,20 @@ export default async function MakerDetailPage({ params }: PageProps) {
                       <Link
                         key={performer.id}
                         href={localizedHref(`/actress/${performer.id}`, locale)}
-                        className="flex items-center justify-between hover:bg-gray-700 p-2 rounded-lg transition-colors"
+                        className="flex items-center justify-between rounded-lg p-2 transition-colors hover:bg-gray-700"
                       >
                         <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
-                            index === 0 ? 'bg-yellow-500 text-black' :
-                            index === 1 ? 'bg-gray-400 text-black' :
-                            index === 2 ? 'bg-amber-600 text-white' :
-                            'bg-gray-700 text-gray-300'
-                          }`}>
+                          <span
+                            className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold ${
+                              index === 0
+                                ? 'bg-yellow-500 text-black'
+                                : index === 1
+                                  ? 'bg-gray-400 text-black'
+                                  : index === 2
+                                    ? 'bg-amber-600 text-white'
+                                    : 'bg-gray-700 text-gray-300'
+                            }`}
+                          >
                             {index + 1}
                           </span>
                           <span className="text-white">{performer.name}</span>
@@ -331,9 +346,9 @@ export default async function MakerDetailPage({ params }: PageProps) {
 
               {/* Top Genres */}
               {maker.topGenres.length > 0 && (
-                <div className="bg-gray-800 rounded-xl p-6">
-                  <h2 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-                    <Tag className="w-5 h-5 text-purple-400" />
+                <div className="rounded-xl bg-gray-800 p-6">
+                  <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold text-white">
+                    <Tag className="h-5 w-5 text-purple-400" />
                     {t.topGenres}
                   </h2>
                   <div className="flex flex-wrap gap-2">
@@ -341,7 +356,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
                       <Link
                         key={genre.id}
                         href={localizedHref(`/products?include=${genre.id}`, locale)}
-                        className="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-full text-sm text-gray-300 hover:text-white transition-colors"
+                        className="rounded-full bg-gray-700 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-600 hover:text-white"
                       >
                         {genre.name}
                         <span className="ml-1 text-gray-500">({genre.productCount})</span>
@@ -354,7 +369,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
               {/* View All Products Button */}
               <Link
                 href={localizedHref(`/products?maker=${maker.id}`, locale)}
-                className="block w-full py-3 bg-blue-600 hover:bg-blue-500 text-white text-center rounded-xl font-semibold transition-colors"
+                className="block w-full rounded-xl bg-blue-600 py-3 text-center font-semibold text-white transition-colors hover:bg-blue-500"
               >
                 {t.viewProducts} ({maker.productCount})
               </Link>

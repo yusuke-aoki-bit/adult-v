@@ -20,10 +20,11 @@ Google Cloud SQLに接続するには、以下の2つの方法があります：
 #### セットアップ手順
 
 1. **Cloud SQL Proxyをインストール**
+
    ```bash
    # Windows (PowerShell)
    (New-Object Net.WebClient).DownloadFile("https://dl.google.com/cloudsql/cloud_sql_proxy_x64.exe", "$env:USERPROFILE\cloud_sql_proxy.exe")
-   
+
    # Linux/Mac
    curl -o cloud_sql_proxy https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64
    chmod +x cloud_sql_proxy
@@ -39,27 +40,30 @@ Google Cloud SQLに接続するには、以下の2つの方法があります：
 3. **認証情報ファイルを設定**
    - プロジェクトルートの `adult-v-d8a2b1c2c90f.json` を使用するか、新しいサービスアカウントキーをダウンロード
    - 環境変数を設定：
+
      ```bash
      # Windows (PowerShell)
      $env:GOOGLE_APPLICATION_CREDENTIALS="C:\Users\yuuku\cursor\adult-v\adult-v-d8a2b1c2c90f.json"
-     
+
      # Linux/Mac/WSL
      export GOOGLE_APPLICATION_CREDENTIALS="./adult-v-d8a2b1c2c90f.json"
      ```
 
 4. **Cloud SQL Proxyを起動**
+
    ```bash
    # プロジェクト情報: adult-v (リージョン: asia-east1)
    # インスタンス接続名を指定（例: adult-v:asia-east1:INSTANCE_NAME）
    # Windows
    cloud_sql_proxy.exe -instances=adult-v:asia-east1:INSTANCE_NAME=tcp:5432
-   
+
    # Linux/Mac/WSL
    ./cloud_sql_proxy -instances=adult-v:asia-east1:INSTANCE_NAME=tcp:5432
    ```
-   
+
    **注意**: `INSTANCE_NAME` は実際のCloud SQLインスタンス名に置き換えてください。
    Cloud SQLインスタンス名を確認するには：
+
    ```bash
    gcloud sql instances list --project=adult-v
    ```
@@ -73,6 +77,7 @@ Google Cloud SQLに接続するには、以下の2つの方法があります：
 ### 2. パブリックIP経由（直接接続）
 
 #### 前提条件
+
 - Cloud SQLインスタンスにパブリックIPが設定されていること
 - 接続元のIPアドレスが許可リストに追加されていること
 - SSL証明書が必要な場合がある

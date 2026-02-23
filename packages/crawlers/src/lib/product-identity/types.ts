@@ -7,21 +7,21 @@
  */
 export interface MatchingConfig {
   // 品番マッチング信頼度
-  codeExactMatch: number;       // maker_product_code完全一致
-  codeNormalizedMatch: number;  // 正規化品番一致
+  codeExactMatch: number; // maker_product_code完全一致
+  codeNormalizedMatch: number; // 正規化品番一致
 
   // タイトル+演者マッチング信頼度
-  titlePerformerHigh: number;   // similarity >= 0.8 + 全演者
+  titlePerformerHigh: number; // similarity >= 0.8 + 全演者
   titlePerformerMedium: number; // similarity >= 0.7 + 2名以上
-  titlePerformerLow: number;    // similarity >= 0.6 + 1名
+  titlePerformerLow: number; // similarity >= 0.6 + 1名
 
   // タイトルのみマッチング信頼度（FC2, DUGA除外）
-  titleOnlyStrict: number;      // similarity >= 0.9 + 同一再生時間
-  titleOnlyRelaxed: number;     // similarity >= 0.85 + 同一発売日
+  titleOnlyStrict: number; // similarity >= 0.9 + 同一再生時間
+  titleOnlyRelaxed: number; // similarity >= 0.85 + 同一発売日
 
   // 自動処理閾値
-  autoMergeThreshold: number;   // 自動マージ閾値
-  reviewThreshold: number;      // 要レビュー閾値
+  autoMergeThreshold: number; // 自動マージ閾値
+  reviewThreshold: number; // 要レビュー閾値
 }
 
 /**
@@ -46,12 +46,7 @@ export const DEFAULT_MATCHING_CONFIG: MatchingConfig = {
  * タイトルマッチングから除外するASP
  * （同タイトルで異なる動画が多いため）
  */
-export const TITLE_MATCH_EXCLUDED_ASPS = new Set([
-  'FC2',
-  'fc2',
-  'DUGA',
-  'duga',
-]);
+export const TITLE_MATCH_EXCLUDED_ASPS = new Set(['FC2', 'fc2', 'DUGA', 'duga']);
 
 /**
  * ASP優先度（代表商品選択用）
@@ -75,14 +70,14 @@ export const ASP_PRIORITY: Record<string, number> = {
  * マッチング手法
  */
 export type MatchingMethod =
-  | 'product_code_exact'     // maker_product_code完全一致
+  | 'product_code_exact' // maker_product_code完全一致
   | 'product_code_normalized' // 正規化品番一致
-  | 'title_performer_high'   // タイトル類似(高) + 全演者
+  | 'title_performer_high' // タイトル類似(高) + 全演者
   | 'title_performer_medium' // タイトル類似(中) + 2名以上
-  | 'title_performer_low'    // タイトル類似(低) + 1名
-  | 'title_only_strict'      // タイトルのみ(厳格)
-  | 'title_only_relaxed'     // タイトルのみ(緩和)
-  | 'manual';                // 手動設定
+  | 'title_performer_low' // タイトル類似(低) + 1名
+  | 'title_only_strict' // タイトルのみ(厳格)
+  | 'title_only_relaxed' // タイトルのみ(緩和)
+  | 'manual'; // 手動設定
 
 /**
  * マッチング結果

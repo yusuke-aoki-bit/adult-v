@@ -42,18 +42,14 @@ export async function sendPushNotification(
     subject: string;
     publicKey: string;
     privateKey: string;
-  }
+  },
 ): Promise<SendResult> {
   try {
     // web-pushは動的インポート（サーバーサイドのみ）
     // @ts-ignore - web-push is optional dependency, only used in crawlers
     const webpush = await import('web-push');
 
-    webpush.setVapidDetails(
-      vapidDetails.subject,
-      vapidDetails.publicKey,
-      vapidDetails.privateKey
-    );
+    webpush.setVapidDetails(vapidDetails.subject, vapidDetails.publicKey, vapidDetails.privateKey);
 
     const pushPayload = JSON.stringify({
       title: payload.title,
@@ -70,7 +66,7 @@ export async function sendPushNotification(
         endpoint: subscription['endpoint'],
         keys: subscription.keys,
       },
-      pushPayload
+      pushPayload,
     );
 
     return {
@@ -103,14 +99,14 @@ export async function sendPushNotificationBatch(
     privateKey: string;
   },
   options?: {
-    concurrency?: number;  // 同時送信数
+    concurrency?: number; // 同時送信数
     onProgress?: (completed: number, total: number) => void;
-  }
+  },
 ): Promise<{
   results: SendResult[];
   successCount: number;
   failureCount: number;
-  expiredEndpoints: string[];  // 無効になった購読（削除対象）
+  expiredEndpoints: string[]; // 無効になった購読（削除対象）
 }> {
   const concurrency = options?.concurrency || 10;
   const results: SendResult[] = [];
@@ -120,9 +116,7 @@ export async function sendPushNotificationBatch(
   for (let i = 0; i < subscriptions.length; i += concurrency) {
     const batch = subscriptions.slice(i, i + concurrency);
 
-    const batchResults = await Promise.all(
-      batch.map((sub) => sendPushNotification(sub, payload, vapidDetails))
-    );
+    const batchResults = await Promise.all(batch.map((sub) => sendPushNotification(sub, payload, vapidDetails)));
 
     for (const result of batchResults) {
       results.push(result);
@@ -157,7 +151,7 @@ export function createPriceAlertPayload(
   originalPrice: number,
   salePrice: number,
   productUrl: string,
-  locale: string = 'ja'
+  locale: string = 'ja',
 ): NotificationPayload {
   const discountPercent = Math.round((1 - salePrice / originalPrice) * 100);
 
@@ -168,6 +162,18 @@ export function createPriceAlertPayload(
     },
     en: {
       title: `🎉 Sale! ${discountPercent}% off`,
+      body: `${productTitle}\n¥${originalPrice.toLocaleString()} → ¥${salePrice.toLocaleString()}`,
+    },
+    zh: {
+      title: `🎉 开始特卖！${discountPercent}%折扣`,
+      body: `${productTitle}\n¥${originalPrice.toLocaleString()} → ¥${salePrice.toLocaleString()}`,
+    },
+    'zh-TW': {
+      title: `🎉 開始特賣！${discountPercent}%折扣`,
+      body: `${productTitle}\n¥${originalPrice.toLocaleString()} → ¥${salePrice.toLocaleString()}`,
+    },
+    ko: {
+      title: `🎉 세일 시작! ${discountPercent}% 할인`,
       body: `${productTitle}\n¥${originalPrice.toLocaleString()} → ¥${salePrice.toLocaleString()}`,
     },
   };
@@ -196,7 +202,7 @@ export function createTargetPriceReachedPayload(
   targetPrice: number,
   currentPrice: number,
   productUrl: string,
-  locale: string = 'ja'
+  locale: string = 'ja',
 ): NotificationPayload {
   const messages = {
     ja: {
@@ -206,6 +212,18 @@ export function createTargetPriceReachedPayload(
     en: {
       title: `🔔 Target price reached!`,
       body: `${productTitle}\nTarget: ¥${targetPrice.toLocaleString()} → Now: ¥${currentPrice.toLocaleString()}`,
+    },
+    zh: {
+      title: `🔔 已达到目标价格！`,
+      body: `${productTitle}\n目标价: ¥${targetPrice.toLocaleString()} → 现价: ¥${currentPrice.toLocaleString()}`,
+    },
+    'zh-TW': {
+      title: `🔔 已達到目標價格！`,
+      body: `${productTitle}\n目標價: ¥${targetPrice.toLocaleString()} → 現價: ¥${currentPrice.toLocaleString()}`,
+    },
+    ko: {
+      title: `🔔 목표 가격에 도달!`,
+      body: `${productTitle}\n목표가: ¥${targetPrice.toLocaleString()} → 현재: ¥${currentPrice.toLocaleString()}`,
     },
   };
 

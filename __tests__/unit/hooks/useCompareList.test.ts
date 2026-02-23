@@ -11,7 +11,7 @@ import { useState } from 'react';
 
 // useLocalStorageをuseStateベースにモック（useSyncExternalStoreはjsdomで不安定）
 vi.mock('@adult-v/shared/hooks/useLocalStorage', () => ({
-  useLocalStorage: <T,>(_key: string, defaultValue: T): [T, (v: T | ((prev: T) => T)) => void] => {
+  useLocalStorage: <T>(_key: string, defaultValue: T): [T, (v: T | ((prev: T) => T)) => void] => {
     // eslint-disable-next-line react-hooks/rules-of-hooks
     return useState<T>(defaultValue);
   },

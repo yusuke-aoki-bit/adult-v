@@ -24,7 +24,7 @@ describe('Public Favorite Lists Handler', () => {
         { id: 3, isPublic: true, title: 'Another Public' },
       ];
 
-      const publicLists = allLists.filter(l => l.isPublic);
+      const publicLists = allLists.filter((l) => l.isPublic);
       expect(publicLists).toHaveLength(2);
     });
 
@@ -36,7 +36,7 @@ describe('Public Favorite Lists Handler', () => {
       ];
 
       const currentUserId = 'user-1';
-      const myLists = allLists.filter(l => l.userId === currentUserId);
+      const myLists = allLists.filter((l) => l.userId === currentUserId);
       expect(myLists).toHaveLength(2);
     });
 
@@ -161,7 +161,7 @@ describe('Public Favorite Lists Handler', () => {
       ];
 
       const listIdToDelete = 1;
-      const remainingItems = items.filter(i => i.listId !== listIdToDelete);
+      const remainingItems = items.filter((i) => i.listId !== listIdToDelete);
 
       expect(remainingItems).toHaveLength(1);
       expect(remainingItems[0]!.listId).toBe(2);
@@ -183,9 +183,7 @@ describe('List Items Handler', () => {
       const items = [{ listId: 1, productId: 123 }];
       const newItem = { listId: 1, productId: 123 };
 
-      const isDuplicate = items.some(
-        i => i.listId === newItem.listId && i.productId === newItem.productId
-      );
+      const isDuplicate = items.some((i) => i.listId === newItem.listId && i.productId === newItem.productId);
       expect(isDuplicate).toBe(true);
     });
 
@@ -206,7 +204,7 @@ describe('List Items Handler', () => {
       ];
 
       const productIdToRemove = 123;
-      const remainingItems = items.filter(i => i.productId !== productIdToRemove);
+      const remainingItems = items.filter((i) => i.productId !== productIdToRemove);
 
       expect(remainingItems).toHaveLength(1);
       expect(remainingItems[0]!.productId).toBe(456);
@@ -255,9 +253,7 @@ describe('List Like Handler', () => {
       const likes = [{ listId: 1, userId: 'user-1' }];
       const newLike = { listId: 1, userId: 'user-1' };
 
-      const alreadyLiked = likes.some(
-        l => l.listId === newLike.listId && l.userId === newLike.userId
-      );
+      const alreadyLiked = likes.some((l) => l.listId === newLike.listId && l.userId === newLike.userId);
       expect(alreadyLiked).toBe(true);
     });
   });
@@ -303,7 +299,9 @@ describe('AddToListButton Component Logic', () => {
 
   it('should require login for actions', () => {
     let loginRequiredCalled = false;
-    const onLoginRequired = () => { loginRequiredCalled = true; };
+    const onLoginRequired = () => {
+      loginRequiredCalled = true;
+    };
     const userId = null;
 
     if (!userId) {

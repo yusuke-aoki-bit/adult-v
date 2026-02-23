@@ -79,6 +79,22 @@ const translations = {
     emptyProducts: '暂无收藏的作品',
     emptyActresses: '暂无收藏的女优',
   },
+  'zh-TW': {
+    title: '收藏夾',
+    loading: '載入中...',
+    itemCount: '{count}個收藏項目',
+    all: '全部',
+    products: '作品',
+    actresses: '女優',
+    clearAll: '全部刪除',
+    confirmTitle: '刪除所有收藏？',
+    confirmMessage: '此操作無法撤銷。',
+    cancel: '取消',
+    delete: '刪除',
+    emptyAll: '暫無收藏',
+    emptyProducts: '暫無收藏的作品',
+    emptyActresses: '暫無收藏的女優',
+  },
   ko: {
     title: '즐겨찾기',
     loading: '로딩 중...',
@@ -102,28 +118,28 @@ function FavoritesSkeleton() {
     <div className="container mx-auto px-4 py-8">
       {/* Header skeleton */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="h-8 w-8 bg-gray-200 rounded animate-pulse" />
-          <div className="h-8 w-32 bg-gray-200 rounded animate-pulse" />
+        <div className="mb-2 flex items-center gap-3">
+          <div className="h-8 w-8 animate-pulse rounded bg-gray-200" />
+          <div className="h-8 w-32 animate-pulse rounded bg-gray-200" />
         </div>
-        <div className="h-5 w-48 bg-gray-200 rounded animate-pulse" />
+        <div className="h-5 w-48 animate-pulse rounded bg-gray-200" />
       </div>
 
       {/* Tabs skeleton */}
-      <div className="flex gap-2 mb-6">
-        <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="h-10 w-28 bg-gray-200 rounded-lg animate-pulse" />
-        <div className="h-10 w-24 bg-gray-200 rounded-lg animate-pulse" />
+      <div className="mb-6 flex gap-2">
+        <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200" />
+        <div className="h-10 w-28 animate-pulse rounded-lg bg-gray-200" />
+        <div className="h-10 w-24 animate-pulse rounded-lg bg-gray-200" />
       </div>
 
       {/* Grid skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="bg-white rounded-lg overflow-hidden animate-pulse border border-gray-200">
+          <div key={i} className="animate-pulse overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="aspect-3/4 bg-gray-200" />
-            <div className="p-3 space-y-2">
-              <div className="h-4 bg-gray-200 rounded w-full" />
-              <div className="h-3 bg-gray-200 rounded w-20" />
+            <div className="space-y-2 p-3">
+              <div className="h-4 w-full rounded bg-gray-200" />
+              <div className="h-3 w-20 rounded bg-gray-200" />
             </div>
           </div>
         ))}
@@ -147,13 +163,13 @@ export default function FavoritesPage() {
 
   useEffect(() => {
     fetch('/api/products/on-sale?limit=24&minDiscount=30')
-      .then(res => res.json())
-      .then(data => setSaleProducts(data.products || []))
+      .then((res) => res.json())
+      .then((data) => setSaleProducts(data.products || []))
       .catch(() => {});
 
     fetch('/api/products/uncategorized-count')
-      .then(res => res.json())
-      .then(data => setUncategorizedCount(data.count || 0))
+      .then((res) => res.json())
+      .then((data) => setUncategorizedCount(data.count || 0))
       .catch(() => {});
   }, []);
 
@@ -165,15 +181,13 @@ export default function FavoritesPage() {
     uncategorizedCount: `${uncategorizedCount.toLocaleString()}件`,
   };
 
-  const filteredFavorites = activeTab === 'all'
-    ? favorites
-    : getFavoritesByType(activeTab);
+  const filteredFavorites = activeTab === 'all' ? favorites : getFavoritesByType(activeTab);
 
   const productCount = getFavoritesByType('product').length;
   const actressCount = getFavoritesByType('actress').length;
 
   // お気に入り女優のID一覧
-  const favoriteActressIds = getFavoritesByType('actress').map(f => String(f.id));
+  const favoriteActressIds = getFavoritesByType('actress').map((f) => String(f.id));
 
   // ロケール別の日付フォーマット
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';
@@ -187,6 +201,7 @@ export default function FavoritesPage() {
     ja: { favorites: 'お気に入り' },
     en: { favorites: 'Favorites' },
     zh: { favorites: '收藏夹' },
+    'zh-TW': { favorites: '收藏夾' },
     ko: { favorites: '즐겨찾기' },
   };
 
@@ -199,7 +214,7 @@ export default function FavoritesPage() {
           hasSale: saleProducts.length > 0,
           hasRecentlyViewed: true,
           mainSectionId: 'favorites',
-          mainSectionLabel: sectionLabels[locale]?.favorites || sectionLabels.ja.favorites,
+          mainSectionLabel: sectionLabels[locale]?.favorites ?? sectionLabels['ja']!['favorites']!,
           hasRecommendations: true,
           hasWeeklyHighlights: true,
           hasTrending: true,
@@ -216,179 +231,157 @@ export default function FavoritesPage() {
         </div>
       </section>
 
-      <div id="favorites" className="container mx-auto px-4 py-8 scroll-mt-20">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
-          <Heart className="h-8 w-8 text-rose-700 fill-current" />
-          {t.title}
-        </h1>
-        <p className="text-gray-500">
-          {t.itemCount.replace('{count}', String(favorites.length))}
-        </p>
-      </div>
-
-      {/* Actress Recommendations Section - B1機能 */}
-      {actressCount > 0 && (
-        <div className="mb-6">
-          <ActressRecommendations
-            favoritePerformerIds={favoriteActressIds}
-            locale={locale}
-          />
+      <div id="favorites" className="container mx-auto scroll-mt-20 px-4 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-gray-800">
+            <Heart className="h-8 w-8 fill-current text-rose-700" />
+            {t.title}
+          </h1>
+          <p className="text-gray-500">{t.itemCount.replace('{count}', String(favorites.length))}</p>
         </div>
-      )}
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-6 flex-wrap">
-        <button
-          onClick={() => setActiveTab('all')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-            activeTab === 'all'
-              ? 'bg-rose-700 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          {t.all} ({favorites.length})
-        </button>
-        <button
-          onClick={() => setActiveTab('product')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            activeTab === 'product'
-              ? 'bg-rose-700 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <Film className="h-4 w-4" />
-          {t.products} ({productCount})
-        </button>
-        <button
-          onClick={() => setActiveTab('actress')}
-          className={`px-4 py-2 rounded-lg font-medium transition-colors flex items-center gap-2 ${
-            activeTab === 'actress'
-              ? 'bg-rose-700 text-white'
-              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-          }`}
-        >
-          <User className="h-4 w-4" />
-          {t.actresses} ({actressCount})
-        </button>
-
-        {/* Clear all button */}
-        {favorites.length > 0 && (
-          <button
-            onClick={() => setShowClearConfirm(true)}
-            className="ml-auto px-4 py-2 rounded-lg font-medium bg-gray-100 text-gray-700 hover:bg-red-100 hover:text-red-700 transition-colors flex items-center gap-2"
-          >
-            <Trash2 className="h-4 w-4" />
-            {t.clearAll}
-          </button>
+        {/* Actress Recommendations Section - B1機能 */}
+        {actressCount > 0 && (
+          <div className="mb-6">
+            <ActressRecommendations favoritePerformerIds={favoriteActressIds} locale={locale} />
+          </div>
         )}
-      </div>
 
-      {/* Clear confirmation dialog */}
-      {showClearConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-lg border border-gray-200 p-6 max-w-md w-full">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              {t.confirmTitle}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {t.confirmMessage}
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setShowClearConfirm(false)}
-                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
-              >
-                {t.cancel}
-              </button>
-              <button
-                onClick={() => {
-                  clearFavorites();
-                  setShowClearConfirm(false);
-                }}
-                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 transition-colors"
-              >
-                {t.delete}
-              </button>
+        {/* Tabs */}
+        <div className="mb-6 flex flex-wrap gap-2">
+          <button
+            onClick={() => setActiveTab('all')}
+            className={`rounded-lg px-4 py-2 font-medium transition-colors ${
+              activeTab === 'all' ? 'bg-rose-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            {t.all} ({favorites.length})
+          </button>
+          <button
+            onClick={() => setActiveTab('product')}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
+              activeTab === 'product' ? 'bg-rose-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <Film className="h-4 w-4" />
+            {t.products} ({productCount})
+          </button>
+          <button
+            onClick={() => setActiveTab('actress')}
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
+              activeTab === 'actress' ? 'bg-rose-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            <User className="h-4 w-4" />
+            {t.actresses} ({actressCount})
+          </button>
+
+          {/* Clear all button */}
+          {favorites.length > 0 && (
+            <button
+              onClick={() => setShowClearConfirm(true)}
+              className="ml-auto flex items-center gap-2 rounded-lg bg-gray-100 px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-red-100 hover:text-red-700"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t.clearAll}
+            </button>
+          )}
+        </div>
+
+        {/* Clear confirmation dialog */}
+        {showClearConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="w-full max-w-md rounded-lg border border-gray-200 bg-white p-6 shadow-lg">
+              <h3 className="mb-4 text-xl font-bold text-gray-800">{t.confirmTitle}</h3>
+              <p className="mb-6 text-gray-600">{t.confirmMessage}</p>
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="rounded-lg bg-gray-100 px-4 py-2 text-gray-700 transition-colors hover:bg-gray-200"
+                >
+                  {t.cancel}
+                </button>
+                <button
+                  onClick={() => {
+                    clearFavorites();
+                    setShowClearConfirm(false);
+                  }}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-white transition-colors hover:bg-red-700"
+                >
+                  {t.delete}
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Favorites grid */}
-      {filteredFavorites.length === 0 ? (
-        <div className="text-center py-16">
-          <Heart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <p className="text-gray-500 text-lg">
-            {activeTab === 'all'
-              ? t.emptyAll
-              : activeTab === 'product'
-              ? t.emptyProducts
-              : t.emptyActresses}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
-          {filteredFavorites.map((item) => {
-            const href = item.type === 'product'
-              ? localizedHref(`/products/${item.id}`, locale)
-              : localizedHref(`/actress/${item.id}`, locale);
+        {/* Favorites grid */}
+        {filteredFavorites.length === 0 ? (
+          <div className="py-16 text-center">
+            <Heart className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+            <p className="text-lg text-gray-500">
+              {activeTab === 'all' ? t.emptyAll : activeTab === 'product' ? t.emptyProducts : t.emptyActresses}
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            {filteredFavorites.map((item) => {
+              const href =
+                item.type === 'product'
+                  ? localizedHref(`/products/${item.id}`, locale)
+                  : localizedHref(`/actress/${item.id}`, locale);
 
-            return (
-              <div
-                key={`${item.type}-${item.id}`}
-                className="bg-white rounded-lg overflow-hidden shadow-sm border border-gray-200 hover:ring-2 hover:ring-rose-700 transition-all group relative"
-              >
-                <Link href={href}>
-                  {/* Thumbnail */}
-                  <div className="aspect-3/4 relative bg-gray-100">
-                    {(item.thumbnail || item.image) ? (
-                      <Image
-                        src={item.thumbnail || item.image || ''}
-                        alt={item.title || item.name || ''}
-                        fill
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        {item.type === 'product' ? (
-                          <Film className="h-12 w-12 text-gray-400" />
-                        ) : (
-                          <User className="h-12 w-12 text-gray-400" />
-                        )}
-                      </div>
-                    )}
+              return (
+                <div
+                  key={`${item.type}-${item.id}`}
+                  className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm transition-all hover:ring-2 hover:ring-rose-700"
+                >
+                  <Link href={href}>
+                    {/* Thumbnail */}
+                    <div className="relative aspect-3/4 bg-gray-100">
+                      {item.thumbnail || item.image ? (
+                        <Image
+                          src={item.thumbnail || item.image || ''}
+                          alt={item.title || item.name || ''}
+                          fill
+                          className="object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full items-center justify-center">
+                          {item.type === 'product' ? (
+                            <Film className="h-12 w-12 text-gray-400" />
+                          ) : (
+                            <User className="h-12 w-12 text-gray-400" />
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title/Name */}
+                    <div className="p-3">
+                      <h3 className="mb-1 line-clamp-2 text-sm font-medium text-gray-800">{item.title || item.name}</h3>
+                      <p className="text-xs text-gray-500">{new Date(item.addedAt).toLocaleDateString(dateLocale)}</p>
+                    </div>
+                  </Link>
+
+                  {/* Favorite button overlay */}
+                  <div className="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100">
+                    <FavoriteButton
+                      type={item.type}
+                      id={item.id}
+                      title={item.title}
+                      name={item.name}
+                      thumbnail={item.thumbnail}
+                      image={item.image}
+                      size="sm"
+                    />
                   </div>
-
-                  {/* Title/Name */}
-                  <div className="p-3">
-                    <h3 className="text-gray-800 text-sm font-medium line-clamp-2 mb-1">
-                      {item.title || item.name}
-                    </h3>
-                    <p className="text-xs text-gray-500">
-                      {new Date(item.addedAt).toLocaleDateString(dateLocale)}
-                    </p>
-                  </div>
-                </Link>
-
-                {/* Favorite button overlay */}
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <FavoriteButton
-                    type={item.type}
-                    id={item.id}
-                    title={item.title}
-                    name={item.name}
-                    thumbnail={item.thumbnail}
-                    image={item.image}
-                    size="sm"
-                  />
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* 下部セクション（おすすめ・注目・トレンド・リンク） */}

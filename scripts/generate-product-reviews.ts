@@ -4,7 +4,14 @@
  */
 
 import { db } from '../packages/database/src/client.js';
-import { products, productReviews, productPerformers, performers, productTags, tags } from '../packages/database/src/schema.js';
+import {
+  products,
+  productReviews,
+  productPerformers,
+  performers,
+  productTags,
+  tags,
+} from '../packages/database/src/schema.js';
 import { eq, sql, desc, isNull, and, lt } from 'drizzle-orm';
 import { generateProductReview, type GeneratedProductReview } from '../packages/shared/src/lib/google-apis.js';
 
@@ -44,9 +51,7 @@ async function getProductsNeedingReview(limit: number = 100): Promise<ProductWit
     })
     .from(products)
     .leftJoin(productReviews, eq(products.id, productReviews.productId))
-    .where(
-      sql`(${products.aiReview} IS NULL OR ${products.aiReviewUpdatedAt} < ${thirtyDaysAgo.toISOString()})`
-    )
+    .where(sql`(${products.aiReview} IS NULL OR ${products.aiReviewUpdatedAt} < ${thirtyDaysAgo.toISOString()})`)
     .groupBy(products.id)
     .having(sql`COUNT(${productReviews.id}) >= ${MIN_REVIEWS_REQUIRED}`)
     .orderBy(sql`COUNT(${productReviews.id}) DESC`)
@@ -63,7 +68,7 @@ async function getProductsNeedingReview(limit: number = 100): Promise<ProductWit
       .innerJoin(performers, eq(productPerformers.performerId, performers.id))
       .where(eq(productPerformers.productId, product.id));
 
-    const performerNames = performerList.map(p => p.name);
+    const performerNames = performerList.map((p) => p.name);
 
     // ジャンルを取得
     const tagList = await db
@@ -73,7 +78,7 @@ async function getProductsNeedingReview(limit: number = 100): Promise<ProductWit
       .where(eq(productTags.productId, product.id))
       .limit(10);
 
-    const genres = tagList.map(t => t.name);
+    const genres = tagList.map((t) => t.name);
 
     // レビューを取得
     const reviewList = await db
@@ -89,7 +94,7 @@ async function getProductsNeedingReview(limit: number = 100): Promise<ProductWit
       .limit(20);
 
     // レビュー内容がある商品のみ追加
-    const validReviews = reviewList.filter(r => r.content && r.content.trim().length > 10);
+    const validReviews = reviewList.filter((r) => r.content && r.content.trim().length > 10);
 
     if (validReviews.length >= MIN_REVIEWS_REQUIRED) {
       result.push({
@@ -99,7 +104,7 @@ async function getProductsNeedingReview(limit: number = 100): Promise<ProductWit
         aiReview: product.aiReview,
         performers: performerNames,
         genres,
-        reviews: validReviews.map(r => ({
+        reviews: validReviews.map((r) => ({
           rating: r.rating ? parseFloat(r.rating) : null,
           maxRating: r.maxRating ? parseFloat(r.maxRating) : null,
           content: r.content || '',
@@ -112,10 +117,7 @@ async function getProductsNeedingReview(limit: number = 100): Promise<ProductWit
   return result;
 }
 
-async function updateProductReview(
-  productId: number,
-  review: GeneratedProductReview
-): Promise<void> {
+async function updateProductReview(productId: number, review: GeneratedProductReview): Promise<void> {
   // レビューをJSON形式で保存
   const reviewJson = JSON.stringify(review);
 
@@ -133,7 +135,7 @@ async function main() {
 
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 100;
 
   if (dryRun) {
@@ -157,7 +159,9 @@ async function main() {
   for (let i = 0; i < productsToProcess.length; i += BATCH_SIZE) {
     const batch = productsToProcess.slice(i, i + BATCH_SIZE);
 
-    console.log(`\n--- バッチ ${Math.floor(i / BATCH_SIZE) + 1} (${i + 1}〜${Math.min(i + BATCH_SIZE, productsToProcess.length)}/${productsToProcess.length}) ---`);
+    console.log(
+      `\n--- バッチ ${Math.floor(i / BATCH_SIZE) + 1} (${i + 1}〜${Math.min(i + BATCH_SIZE, productsToProcess.length)}/${productsToProcess.length}) ---`,
+    );
 
     for (const product of batch) {
       console.log(`\n[${product.id}] ${product.title.substring(0, 50)}...`);
@@ -170,7 +174,7 @@ async function main() {
           description: product.description || undefined,
           performers: product.performers,
           genres: product.genres,
-          reviews: product.reviews.map(r => ({
+          reviews: product.reviews.map((r) => ({
             rating: r.rating || undefined,
             maxRating: r.maxRating || undefined,
             content: r.content,
@@ -202,13 +206,13 @@ async function main() {
       }
 
       // API制限対策
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
     // バッチ間の待機
     if (i + BATCH_SIZE < productsToProcess.length) {
       console.log(`\n${DELAY_BETWEEN_BATCHES / 1000}秒待機中...`);
-      await new Promise(resolve => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_BETWEEN_BATCHES));
     }
   }
 

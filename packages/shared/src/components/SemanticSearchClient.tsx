@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Loader2, Sparkles, ToggleLeft, ToggleRight } from 'lucide-react';
 import { localizedHref } from '../i18n';
+import { getTranslation, semanticSearchClientTranslations } from '../lib/translations';
 
 interface SearchResult {
   id: number;
@@ -41,39 +42,7 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
   const [searchMode, setSearchMode] = useState<'semantic' | 'hybrid'>('hybrid');
   const [hasSearched, setHasSearched] = useState(false);
 
-  const t = {
-    ja: {
-      resultCount: (count: number) => `${count}件の結果`,
-      noResults: '検索結果が見つかりませんでした',
-      tryDifferent: '別のキーワードで検索してみてください',
-      score: '関連度',
-      semanticScore: 'AI類似度',
-      keywordScore: 'キーワード一致',
-      price: '価格',
-      yen: '円〜',
-      releaseDate: '発売日',
-      performers: '出演者',
-      viewDetails: '詳細を見る',
-      searching: '検索中...',
-      errorOccurred: 'エラーが発生しました',
-    },
-    en: {
-      resultCount: (count: number) => `${count} results`,
-      noResults: 'No results found',
-      tryDifferent: 'Try searching with different keywords',
-      score: 'Relevance',
-      semanticScore: 'AI Similarity',
-      keywordScore: 'Keyword Match',
-      price: 'Price',
-      yen: 'JPY~',
-      releaseDate: 'Release Date',
-      performers: 'Performers',
-      viewDetails: 'View Details',
-      searching: 'Searching...',
-      errorOccurred: 'An error occurred',
-    },
-  };
-  const texts = t[locale as keyof typeof t] || t.ja;
+  const texts = getTranslation(semanticSearchClientTranslations, locale);
 
   // 初期クエリがある場合は自動検索
   useEffect(() => {
@@ -134,20 +103,16 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
               onChange={(e) => setQuery(e.target.value)}
               placeholder={translations.placeholder}
               disabled={!isConfigured}
-              className="w-full px-4 py-3 pl-12 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+              className="w-full rounded-lg border border-gray-700 bg-gray-800 px-4 py-3 pl-12 text-white placeholder-gray-400 focus:border-purple-500 focus:ring-1 focus:ring-purple-500 focus:outline-none disabled:opacity-50"
             />
-            <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-purple-400" />
+            <Sparkles className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-purple-400" />
           </div>
           <button
             type="submit"
             disabled={!query.trim() || loading || !isConfigured}
-            className="px-6 py-3 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:from-purple-500 hover:to-pink-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 font-medium text-white transition-all hover:from-purple-500 hover:to-pink-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            {loading ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <Search className="w-5 h-5" />
-            )}
+            {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
             {translations.searchButton}
           </button>
         </div>
@@ -161,32 +126,24 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
             disabled={!isConfigured}
           >
             {hybridMode ? (
-              <ToggleRight className="w-6 h-6 text-purple-400" />
+              <ToggleRight className="h-6 w-6 text-purple-400" />
             ) : (
-              <ToggleLeft className="w-6 h-6 text-gray-500" />
+              <ToggleLeft className="h-6 w-6 text-gray-500" />
             )}
-            <span className={hybridMode ? 'text-purple-300' : 'text-gray-500'}>
-              {translations.hybridMode}
-            </span>
+            <span className={hybridMode ? 'text-purple-300' : 'text-gray-500'}>{translations.hybridMode}</span>
           </button>
-          <span className="text-xs text-gray-500">
-            {translations.hybridModeDesc}
-          </span>
+          <span className="text-xs text-gray-500">{translations.hybridModeDesc}</span>
         </div>
       </form>
 
       {/* エラー表示 */}
-      {error && (
-        <div className="mb-6 p-4 rounded-lg bg-red-500/10 border border-red-500/30 text-red-300">
-          {error}
-        </div>
-      )}
+      {error && <div className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">{error}</div>}
 
       {/* ローディング */}
       {loading && (
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-purple-400 mx-auto mb-2" />
+            <Loader2 className="mx-auto mb-2 h-8 w-8 animate-spin text-purple-400" />
             <p className="theme-text-muted">{texts.searching}</p>
           </div>
         </div>
@@ -196,59 +153,51 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
       {!loading && hasSearched && (
         <div>
           {results.length === 0 ? (
-            <div className="text-center py-12">
+            <div className="py-12 text-center">
               <p className="theme-text-muted">{texts.noResults}</p>
-              <p className="text-sm text-gray-500 mt-1">{texts.tryDifferent}</p>
+              <p className="mt-1 text-sm text-gray-500">{texts.tryDifferent}</p>
             </div>
           ) : (
             <div className="space-y-4">
-              <p className="text-sm theme-text-muted">
+              <p className="theme-text-muted text-sm">
                 {texts.resultCount(results.length)}
                 {searchMode === 'hybrid' && (
-                  <span className="ml-2 px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-xs">
-                    Hybrid
-                  </span>
+                  <span className="ml-2 rounded bg-purple-500/20 px-2 py-0.5 text-xs text-purple-300">Hybrid</span>
                 )}
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {results.map((result) => (
                   <Link
                     key={result.id}
                     href={localizedHref(`/products/${result.normalizedProductId}`, locale)}
-                    className="block rounded-lg overflow-hidden theme-card hover:ring-2 hover:ring-purple-500/50 transition-all"
+                    className="theme-card block overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-purple-500/50"
                   >
                     {/* サムネイル */}
-                    <div className="aspect-video bg-gray-800 relative">
+                    <div className="relative aspect-video bg-gray-800">
                       {result.thumbnailUrl ? (
                         <img
                           src={result.thumbnailUrl}
                           alt={result.title}
-                          className="w-full h-full object-cover"
+                          className="h-full w-full object-cover"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-600">
-                          No Image
-                        </div>
+                        <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
                       )}
                       {/* スコアバッジ */}
-                      <div className="absolute top-2 right-2 px-2 py-1 rounded bg-black/70 text-xs">
-                        <span className="text-purple-400 font-medium">
-                          {(result.score * 100).toFixed(1)}%
-                        </span>
+                      <div className="absolute top-2 right-2 rounded bg-black/70 px-2 py-1 text-xs">
+                        <span className="font-medium text-purple-400">{(result.score * 100).toFixed(1)}%</span>
                       </div>
                     </div>
 
                     {/* 情報 */}
                     <div className="p-3">
-                      <h3 className="font-medium text-sm theme-text line-clamp-2 mb-2">
-                        {result.title}
-                      </h3>
+                      <h3 className="theme-text mb-2 line-clamp-2 text-sm font-medium">{result.title}</h3>
 
                       {/* 出演者 */}
                       {result.performers && result.performers.length > 0 && (
-                        <p className="text-xs theme-text-muted mb-2">
+                        <p className="theme-text-muted mb-2 text-xs">
                           {result.performers.map((p) => p.name).join(', ')}
                         </p>
                       )}
@@ -256,34 +205,25 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
                       <div className="flex items-center justify-between text-xs">
                         {/* 価格 */}
                         {result.minPrice && (
-                          <span className="text-pink-400 font-medium">
-                            ¥{result.minPrice.toLocaleString()}〜
-                          </span>
+                          <span className="font-medium text-pink-400">¥{result.minPrice.toLocaleString()}〜</span>
                         )}
 
                         {/* 発売日 */}
-                        {result.releaseDate && (
-                          <span className="theme-text-muted">
-                            {result.releaseDate}
-                          </span>
-                        )}
+                        {result.releaseDate && <span className="theme-text-muted">{result.releaseDate}</span>}
                       </div>
 
                       {/* ハイブリッドモードの詳細スコア */}
-                      {searchMode === 'hybrid' && (result.semanticScore !== undefined || result.keywordScore !== undefined) && (
-                        <div className="mt-2 pt-2 border-t border-gray-700/50 flex gap-2 text-xs">
-                          {result.semanticScore !== undefined && (
-                            <span className="text-purple-400">
-                              AI: {(result.semanticScore * 100).toFixed(0)}%
-                            </span>
-                          )}
-                          {result.keywordScore !== undefined && result.keywordScore > 0 && (
-                            <span className="text-green-400">
-                              KW: {(result.keywordScore * 100).toFixed(0)}%
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      {searchMode === 'hybrid' &&
+                        (result.semanticScore !== undefined || result.keywordScore !== undefined) && (
+                          <div className="mt-2 flex gap-2 border-t border-gray-700/50 pt-2 text-xs">
+                            {result.semanticScore !== undefined && (
+                              <span className="text-purple-400">AI: {(result.semanticScore * 100).toFixed(0)}%</span>
+                            )}
+                            {result.keywordScore !== undefined && result.keywordScore > 0 && (
+                              <span className="text-green-400">KW: {(result.keywordScore * 100).toFixed(0)}%</span>
+                            )}
+                          </div>
+                        )}
                     </div>
                   </Link>
                 ))}

@@ -67,10 +67,10 @@ const BENIGN_CONSOLE_PATTERNS = [
 
 /** 404レスポンスで無視するURLパターン */
 const BENIGN_404_PATTERNS = [
-  '/monitoring',       // Sentry tunnel (may not be deployed yet)
-  '/favicon.ico',      // Optional favicon
-  '/manifest.json',    // PWA manifest (optional)
-  '/sw.js',            // Service worker (optional)
+  '/monitoring', // Sentry tunnel (may not be deployed yet)
+  '/favicon.ico', // Optional favicon
+  '/manifest.json', // PWA manifest (optional)
+  '/sw.js', // Service worker (optional)
   'google-analytics',
   'googletagmanager',
   'firebaseinstallations',
@@ -98,12 +98,12 @@ function isSameOriginApi(reqUrl: string): boolean {
 
 /** URLが無視対象の404か */
 function isBenign404(reqUrl: string): boolean {
-  return BENIGN_404_PATTERNS.some(pattern => reqUrl.includes(pattern));
+  return BENIGN_404_PATTERNS.some((pattern) => reqUrl.includes(pattern));
 }
 
 /** メッセージが無視対象か */
 function isBenignMessage(msg: string, patterns: string[]): boolean {
-  return patterns.some(pattern => msg.toLowerCase().includes(pattern.toLowerCase()));
+  return patterns.some((pattern) => msg.toLowerCase().includes(pattern.toLowerCase()));
 }
 
 // ──────────────────────────────────────────
@@ -164,10 +164,14 @@ async function checkPageHealth(page: Page, targetUrl: string): Promise<PageHealt
   });
 
   // Cookie設定
-  await page.context().addCookies([{
-    name: 'age-verified', value: 'true',
-    domain: BASE_HOST, path: '/',
-  }]);
+  await page.context().addCookies([
+    {
+      name: 'age-verified',
+      value: 'true',
+      domain: BASE_HOST,
+      path: '/',
+    },
+  ]);
 
   // ページ遷移
   const response = await page.goto(targetUrl, { waitUntil: 'domcontentloaded' });

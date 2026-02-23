@@ -3,13 +3,24 @@
 import { useState } from 'react';
 import { useHomeSections, HomeSection } from '../../hooks/useHomeSections';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { getTranslation, sectionSettingsTranslations } from '../../lib/translations';
 
 export interface SectionSettingsProps {
   locale: string;
   theme?: 'dark' | 'light';
 }
 
-type PageId = 'home' | 'products' | 'product' | 'actress' | 'statistics' | 'categories' | 'discover' | 'series' | 'maker' | 'compare';
+type PageId =
+  | 'home'
+  | 'products'
+  | 'product'
+  | 'actress'
+  | 'statistics'
+  | 'categories'
+  | 'discover'
+  | 'series'
+  | 'maker'
+  | 'compare';
 
 interface PageTab {
   id: PageId;
@@ -29,45 +40,11 @@ const pageTabs: PageTab[] = [
   { id: 'compare', label: { ja: '比較', en: 'Compare' } },
 ];
 
-const translations = {
-  ja: {
-    title: 'セクション設定',
-    description: '各ページに表示するセクションを設定できます',
-    reset: 'リセット',
-    resetAll: 'すべてリセット',
-    dragHint: 'ドラッグして並び替え',
-    visible: '表示',
-    hidden: '非表示',
-  },
-  en: {
-    title: 'Section Settings',
-    description: 'Configure which sections to display on each page',
-    reset: 'Reset',
-    resetAll: 'Reset All',
-    dragHint: 'Drag to reorder',
-    visible: 'Visible',
-    hidden: 'Hidden',
-  },
-};
-
-function SectionList({
-  pageId,
-  locale,
-  theme,
-}: {
-  pageId: PageId;
-  locale: string;
-  theme: 'dark' | 'light';
-}) {
-  const {
-    sections,
-    toggleVisibility,
-    reorderSections,
-    resetToDefault,
-  } = useHomeSections({ locale, pageId });
+function SectionList({ pageId, locale, theme }: { pageId: PageId; locale: string; theme: 'dark' | 'light' }) {
+  const { sections, toggleVisibility, reorderSections, resetToDefault } = useHomeSections({ locale, pageId });
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const isDark = theme === 'dark';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(sectionSettingsTranslations, locale);
 
   const handleDragStart = (index: number) => {
     setDraggedIndex(index);
@@ -86,17 +63,15 @@ function SectionList({
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-3">
-        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-          {t.dragHint}
-        </p>
+      <div className="mb-3 flex items-center justify-between">
+        <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t.dragHint}</p>
         <button
           type="button"
           onClick={resetToDefault}
-          className={`text-xs px-2 py-1 rounded transition-colors ${
+          className={`rounded px-2 py-1 text-xs transition-colors ${
             isDark
-              ? 'text-gray-400 hover:text-gray-300 hover:bg-gray-700'
-              : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+              ? 'text-gray-400 hover:bg-gray-700 hover:text-gray-300'
+              : 'text-gray-500 hover:bg-gray-100 hover:text-gray-700'
           }`}
         >
           {t.reset}
@@ -110,25 +85,29 @@ function SectionList({
             onDragStart={() => handleDragStart(index)}
             onDragOver={(e) => handleDragOver(e, index)}
             onDragEnd={handleDragEnd}
-            className={`flex items-center gap-3 p-3 rounded-lg cursor-move transition-colors ${
+            className={`flex cursor-move items-center gap-3 rounded-lg p-3 transition-colors ${
               draggedIndex === index
-                ? isDark ? 'bg-blue-600/20 border border-blue-600' : 'bg-pink-50 border border-pink-300'
-                : isDark ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
+                ? isDark
+                  ? 'border border-blue-600 bg-blue-600/20'
+                  : 'border border-pink-300 bg-pink-50'
+                : isDark
+                  ? 'bg-gray-700/50 hover:bg-gray-700'
+                  : 'bg-gray-50 hover:bg-gray-100'
             }`}
           >
             {/* ドラッグハンドル */}
             <div className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
               </svg>
             </div>
 
             {/* ラベル */}
-            <span className={`flex-1 text-sm font-medium ${
-              section.visible
-                ? isDark ? 'text-white' : 'text-gray-900'
-                : isDark ? 'text-gray-500' : 'text-gray-400'
-            }`}>
+            <span
+              className={`flex-1 text-sm font-medium ${
+                section.visible ? (isDark ? 'text-white' : 'text-gray-900') : isDark ? 'text-gray-500' : 'text-gray-400'
+              }`}
+            >
               {section.label}
             </span>
 
@@ -136,14 +115,12 @@ function SectionList({
             <button
               type="button"
               onClick={() => toggleVisibility(section.id)}
-              className={`relative w-10 h-5 rounded-full transition-colors ${
-                section.visible
-                  ? isDark ? 'bg-blue-600' : 'bg-pink-600'
-                  : isDark ? 'bg-gray-600' : 'bg-gray-300'
+              className={`relative h-5 w-10 rounded-full transition-colors ${
+                section.visible ? (isDark ? 'bg-blue-600' : 'bg-pink-600') : isDark ? 'bg-gray-600' : 'bg-gray-300'
               }`}
             >
               <span
-                className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
                   section.visible ? 'translate-x-5' : 'translate-x-0'
                 }`}
               />
@@ -160,18 +137,14 @@ export function SectionSettings({ locale, theme: themeProp }: SectionSettingsPro
   const theme = themeProp ?? contextTheme;
   const [activeTab, setActiveTab] = useState<PageId>('home');
   const isDark = theme === 'dark';
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(sectionSettingsTranslations, locale);
 
   return (
     <div className={`rounded-xl ${isDark ? 'bg-gray-800' : 'bg-white'} shadow-lg`}>
       {/* ヘッダー */}
-      <div className={`p-6 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
-        <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-          {t.title}
-        </h2>
-        <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          {t.description}
-        </p>
+      <div className={`border-b p-6 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+        <h2 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.title}</h2>
+        <p className={`mt-1 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.description}</p>
       </div>
 
       {/* タブナビゲーション */}
@@ -182,7 +155,7 @@ export function SectionSettings({ locale, theme: themeProp }: SectionSettingsPro
               key={tab.id}
               type="button"
               onClick={() => setActiveTab(tab.id)}
-              className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              className={`border-b-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                 activeTab === tab.id
                   ? isDark
                     ? 'border-blue-500 text-blue-400'
@@ -200,12 +173,7 @@ export function SectionSettings({ locale, theme: themeProp }: SectionSettingsPro
 
       {/* セクションリスト */}
       <div className="p-6">
-        <SectionList
-          key={activeTab}
-          pageId={activeTab}
-          locale={locale}
-          theme={theme}
-        />
+        <SectionList key={activeTab} pageId={activeTab} locale={locale} theme={theme} />
       </div>
     </div>
   );

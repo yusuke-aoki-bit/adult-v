@@ -4,48 +4,9 @@ import { useState, useEffect, useCallback, useMemo, useSyncExternalStore } from 
 import { useParams } from 'next/navigation';
 import { Bell, BellOff } from 'lucide-react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, notificationSubscriberTranslations } from '../lib/translations';
 
 export type NotificationSubscriberTheme = 'dark' | 'light';
-
-// Client-side translations (ConditionalLayout is outside NextIntlClientProvider)
-const translations = {
-  ja: {
-    notificationsOff: '新着通知をオフ',
-    notificationsOn: '新着通知をオン',
-    turnOff: '通知オフ',
-    turnOn: '新着通知',
-    permissionDenied: '通知が許可されていません',
-    subscribeFailed: '通知の登録に失敗しました',
-    unsubscribeFailed: '通知の解除に失敗しました',
-  },
-  en: {
-    notificationsOff: 'Turn off notifications',
-    notificationsOn: 'Turn on notifications',
-    turnOff: 'Notify Off',
-    turnOn: 'Notify',
-    permissionDenied: 'Notification permission denied',
-    subscribeFailed: 'Failed to subscribe to notifications',
-    unsubscribeFailed: 'Failed to unsubscribe from notifications',
-  },
-  zh: {
-    notificationsOff: '关闭通知',
-    notificationsOn: '开启通知',
-    turnOff: '关闭通知',
-    turnOn: '新内容通知',
-    permissionDenied: '通知权限被拒绝',
-    subscribeFailed: '订阅通知失败',
-    unsubscribeFailed: '取消订阅通知失败',
-  },
-  ko: {
-    notificationsOff: '알림 끄기',
-    notificationsOn: '알림 켜기',
-    turnOff: '알림 끄기',
-    turnOn: '새 알림',
-    permissionDenied: '알림 권한이 거부되었습니다',
-    subscribeFailed: '알림 구독에 실패했습니다',
-    unsubscribeFailed: '알림 구독 취소에 실패했습니다',
-  },
-} as const;
 
 // Theme configuration
 const themeConfig = {
@@ -83,10 +44,7 @@ export default function NotificationSubscriber({ theme: themeProp }: Notificatio
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
   // Memoize translation object to prevent recreation on each render
-  const t = useMemo(
-    () => translations[locale as keyof typeof translations] || translations.ja,
-    [locale]
-  );
+  const t = useMemo(() => getTranslation(notificationSubscriberTranslations, locale), [locale]);
   const colors = themeConfig[theme];
 
   const checkSubscriptionStatus = useCallback(async () => {
@@ -210,7 +168,7 @@ export default function NotificationSubscriber({ theme: themeProp }: Notificatio
   return (
     <button
       onClick={handleToggle}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+      className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
         isSubscribed ? colors.subscribed : colors.unsubscribed
       }`}
       title={isSubscribed ? t.notificationsOff : t.notificationsOn}

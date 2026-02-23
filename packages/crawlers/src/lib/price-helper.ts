@@ -13,12 +13,12 @@ export type PriceType = 'download' | 'streaming' | 'hd' | '4k' | 'sd' | 'rental'
 // 価格タイプの表示順（小さいほど優先度が高い）
 const PRICE_TYPE_ORDER: Record<PriceType, number> = {
   '4k': 0,
-  'hd': 1,
-  'download': 2,
-  'streaming': 3,
-  'sd': 4,
-  'rental': 5,
-  'subscription': 6,
+  hd: 1,
+  download: 2,
+  streaming: 3,
+  sd: 4,
+  rental: 5,
+  subscription: 6,
 };
 
 // 価格タイプがデフォルトとして扱われるかどうか
@@ -57,7 +57,7 @@ async function getProductSourceId(aspName: string, originalProductId: string): P
 export async function saveProductPrice(
   aspName: string,
   originalProductId: string,
-  priceInfo: PriceInfo
+  priceInfo: PriceInfo,
 ): Promise<boolean> {
   const db = getDb();
 
@@ -93,7 +93,7 @@ export async function saveProductPrice(
 export async function saveProductPrices(
   aspName: string,
   originalProductId: string,
-  prices: PriceInfo[]
+  prices: PriceInfo[],
 ): Promise<{ success: number; failed: number }> {
   let success = 0;
   let failed = 0;
@@ -113,10 +113,7 @@ export async function saveProductPrices(
 /**
  * 商品ソースIDから価格を保存（productSourceIdを直接使用）
  */
-export async function saveProductPriceBySourceId(
-  productSourceId: number,
-  priceInfo: PriceInfo
-): Promise<boolean> {
+export async function saveProductPriceBySourceId(productSourceId: number, priceInfo: PriceInfo): Promise<boolean> {
   const db = getDb();
 
   try {
@@ -145,7 +142,7 @@ export async function saveProductPriceBySourceId(
  */
 export async function saveProductPricesBySourceId(
   productSourceId: number,
-  prices: PriceInfo[]
+  prices: PriceInfo[],
 ): Promise<{ success: number; failed: number }> {
   let success = 0;
   let failed = 0;
@@ -196,10 +193,7 @@ export function buildPriceInfoList(prices: {
 /**
  * 商品の全価格を取得
  */
-export async function getProductPrices(
-  aspName: string,
-  originalProductId: string
-): Promise<PriceInfo[]> {
+export async function getProductPrices(aspName: string, originalProductId: string): Promise<PriceInfo[]> {
   const db = getDb();
 
   const result = await db.execute(sql`
@@ -222,10 +216,7 @@ export async function getProductPrices(
 /**
  * 代表価格（デフォルト価格）を取得
  */
-export async function getDefaultPrice(
-  aspName: string,
-  originalProductId: string
-): Promise<number | null> {
+export async function getDefaultPrice(aspName: string, originalProductId: string): Promise<number | null> {
   const db = getDb();
 
   const result = await db.execute(sql`

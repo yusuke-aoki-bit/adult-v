@@ -7,10 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -129,7 +126,9 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
       for (const item of productsToProcess) {
         if (Date.now() - startTime > TIME_LIMIT) {
-          console.log(`[crawl-b10f] Time limit reached, processed ${stats.newProducts + stats.updatedProducts}/${productsToProcess.length}`);
+          console.log(
+            `[crawl-b10f] Time limit reached, processed ${stats.newProducts + stats.updatedProducts}/${productsToProcess.length}`,
+          );
           break;
         }
         try {
@@ -149,7 +148,8 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
           const row = productResult.rows[0] as { id: number; is_new: boolean };
           const productId = row.id;
-          if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
+          if (row.is_new) stats.newProducts++;
+          else stats.updatedProducts++;
 
           await db.execute(sql`
             INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated)
@@ -194,13 +194,15 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
           // 出演者をバッチ用に収集
           if (item.performers && item.performers.trim()) {
-            const performerNames = item.performers.split(',').map(n => n.trim()).filter(n => n);
+            const performerNames = item.performers
+              .split(',')
+              .map((n) => n.trim())
+              .filter((n) => n);
             for (const name of performerNames) {
               allPerformerNames.add(name);
             }
             pendingPerformerLinks.push({ productId, performerNames });
           }
-
         } catch (error) {
           stats.errors++;
           console.error(`Error processing product ${item['productId']}:`, error);
@@ -209,9 +211,9 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
@@ -234,12 +236,11 @@ export function createCrawlB10fHandler(deps: CrawlB10fHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('b10f crawl error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

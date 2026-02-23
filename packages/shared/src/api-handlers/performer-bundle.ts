@@ -4,10 +4,7 @@ import * as schema from '@adult-v/database/schema';
 
 export const revalidate = 300;
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
     const performerId = parseInt(id, 10);
@@ -31,32 +28,26 @@ export async function GET(
         isActiveSale: schema.productSales.isActive,
       })
       .from(schema.productPerformers)
-      .innerJoin(
-        schema.products,
-        eq(schema.productPerformers.productId, schema.products.id)
-      )
-      .leftJoin(
-        schema.productSources,
-        eq(schema.products.id, schema.productSources.productId)
-      )
-      .leftJoin(
-        schema.productSales,
-        eq(schema.productSources.id, schema.productSales.productSourceId)
-      )
+      .innerJoin(schema.products, eq(schema.productPerformers.productId, schema.products.id))
+      .leftJoin(schema.productSources, eq(schema.products.id, schema.productSources.productId))
+      .leftJoin(schema.productSales, eq(schema.productSources.id, schema.productSales.productSourceId))
       .where(eq(schema.productPerformers.performerId, performerId))
       .orderBy(desc(schema.products.releaseDate))
       .limit(100);
 
     // 重複を除去し、最低価格を選択
-    const productMap = new Map<number, {
-      id: number;
-      normalizedProductId: string;
-      title: string;
-      thumbnailUrl: string | null;
-      releaseDate: string;
-      price: number;
-      salePrice?: number;
-    }>();
+    const productMap = new Map<
+      number,
+      {
+        id: number;
+        normalizedProductId: string;
+        title: string;
+        thumbnailUrl: string | null;
+        releaseDate: string;
+        price: number;
+        salePrice?: number;
+      }
+    >();
 
     for (const p of products) {
       const existing = productMap.get(p.id);

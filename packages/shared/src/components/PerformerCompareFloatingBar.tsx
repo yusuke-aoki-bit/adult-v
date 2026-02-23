@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import Link from 'next/link';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, performerCompareFloatingBarTranslations } from '../lib/translations';
 
 interface PerformerCompareFloatingBarProps {
   locale: string;
@@ -32,11 +33,7 @@ export function PerformerCompareFloatingBar({
 
   const isDark = theme === 'dark';
 
-  const texts = {
-    ja: { compare: '比較する', clearAll: 'クリア', performers: '名', hint: '「比較する」ボタンで比較ページへ' },
-    en: { compare: 'Compare', clearAll: 'Clear', performers: 'performers', hint: 'Click "Compare" to view comparison' },
-  } as const;
-  const t = texts[locale as keyof typeof texts] || texts.ja;
+  const t = getTranslation(performerCompareFloatingBarTranslations, locale);
 
   // マウント時にセッションストレージをチェック
   useEffect(() => {
@@ -80,14 +77,16 @@ export function PerformerCompareFloatingBar({
   if (isSelectionMode === false || count === 0) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center gap-2">
+    <div className="fixed bottom-4 left-1/2 z-50 flex -translate-x-1/2 flex-col items-center gap-2">
       {/* ヒントメッセージ（初回表示時） */}
       {showHint && (
-        <div className={`px-4 py-2 rounded-lg text-sm animate-fade-in ${
-          isDark ? 'bg-purple-600 text-white' : 'bg-pink-600 text-white'
-        }`}>
+        <div
+          className={`animate-fade-in rounded-lg px-4 py-2 text-sm ${
+            isDark ? 'bg-purple-600 text-white' : 'bg-pink-600 text-white'
+          }`}
+        >
           <div className="flex items-center gap-2">
-            <svg className="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
             <span>{t.hint}</span>
@@ -96,86 +95,87 @@ export function PerformerCompareFloatingBar({
       )}
 
       {/* メインバー */}
-      <div className={`${
-        isDark ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'
-      } rounded-xl shadow-2xl border px-4 py-3 transition-all duration-300 animate-slide-up ${
-        isFirstShow ? 'ring-2 ring-offset-2 animate-pulse' : ''
-      } ${isFirstShow ? (isDark ? 'ring-purple-500 ring-offset-gray-900' : 'ring-pink-500 ring-offset-white') : ''}`}>
-      <div className="flex items-center gap-4">
-        {/* サムネイル一覧 */}
-        <div className="flex items-center -space-x-1">
-          {items.map((item, index) => (
-            <div
-              key={item['id']}
-              className="relative"
-              style={{ zIndex: items.length - index }}
-            >
-              {item.imageUrl ? (
-                <img
-                  src={item.imageUrl}
-                  alt={item['name']}
-                  className={`w-10 h-10 rounded-full object-cover border-2 ${
-                    isDark ? 'border-gray-800' : 'border-white'
+      <div
+        className={`${
+          isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+        } animate-slide-up rounded-xl border px-4 py-3 shadow-2xl transition-all duration-300 ${
+          isFirstShow ? 'animate-pulse ring-2 ring-offset-2' : ''
+        } ${isFirstShow ? (isDark ? 'ring-purple-500 ring-offset-gray-900' : 'ring-pink-500 ring-offset-white') : ''}`}
+      >
+        <div className="flex items-center gap-4">
+          {/* サムネイル一覧 */}
+          <div className="flex items-center -space-x-1">
+            {items.map((item, index) => (
+              <div key={item['id']} className="relative" style={{ zIndex: items.length - index }}>
+                {item.imageUrl ? (
+                  <img
+                    src={item.imageUrl}
+                    alt={item['name']}
+                    className={`h-10 w-10 rounded-full border-2 object-cover ${
+                      isDark ? 'border-gray-800' : 'border-white'
+                    }`}
+                  />
+                ) : (
+                  <div
+                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                      isDark ? 'border-gray-800 bg-gray-700 text-gray-400' : 'border-white bg-gray-100 text-gray-500'
+                    }`}
+                  >
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                      />
+                    </svg>
+                  </div>
+                )}
+                {/* 削除ボタン - 常に表示、クリック領域拡大 */}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    removeItem(item['id']);
+                  }}
+                  className={`absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold shadow-md ${
+                    isDark ? 'bg-red-600 text-white hover:bg-red-500' : 'bg-red-500 text-white hover:bg-red-400'
                   }`}
-                />
-              ) : (
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${
-                  isDark ? 'bg-gray-700 border-gray-800 text-gray-400' : 'bg-gray-100 border-white text-gray-500'
-                }`}>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                  </svg>
-                </div>
-              )}
-              {/* 削除ボタン - 常に表示、クリック領域拡大 */}
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  removeItem(item['id']);
-                }}
-                className={`absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shadow-md ${
-                  isDark ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-red-500 hover:bg-red-400 text-white'
-                }`}
-                aria-label={`Remove ${item['name']}`}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-        </div>
+                  aria-label={`Remove ${item['name']}`}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+          </div>
 
-        {/* カウンター */}
-        <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{count}</span>/{maxItems}
-          <span className="ml-1">{t.performers}</span>
-        </div>
+          {/* カウンター */}
+          <div className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+            <span className={`font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>{count}</span>/{maxItems}
+            <span className="ml-1">{t.performers}</span>
+          </div>
 
-        {/* アクションボタン */}
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={clearAll}
-            className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              isDark
-                ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
-            }`}
-          >
-            {t.clearAll}
-          </button>
-          <Link
-            href={`/${locale}${comparePagePath}?ids=${items.map(i => i.id).join(',')}`}
-            className={`px-4 py-1.5 text-sm font-medium rounded-lg transition-colors ${
-              isDark
-                ? 'bg-purple-600 hover:bg-purple-700 text-white'
-                : 'bg-pink-600 hover:bg-pink-700 text-white'
-            }`}
-          >
-            {t.compare}
-          </Link>
-        </div>
+          {/* アクションボタン */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={clearAll}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+                isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              {t.clearAll}
+            </button>
+            <Link
+              href={`/${locale}${comparePagePath}?ids=${items.map((i) => i.id).join(',')}`}
+              className={`rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
+                isDark ? 'bg-purple-600 text-white hover:bg-purple-700' : 'bg-pink-600 text-white hover:bg-pink-700'
+              }`}
+            >
+              {t.compare}
+            </Link>
+          </div>
         </div>
       </div>
     </div>

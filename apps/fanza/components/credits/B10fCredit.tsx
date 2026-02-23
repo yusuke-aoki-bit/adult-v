@@ -15,14 +15,14 @@ export function B10fCredit({ className = '' }: B10fCreditProps) {
       className={`inline-block ${className}`}
       aria-label="B10F.jp"
     >
-      { }
+      {}
       <img
         src="https://ads.b10f.jp/images/btn_member.png"
         alt="B10F.jp"
         width={180}
         height={50}
         loading="lazy"
-        className="block w-auto h-[50px] max-w-[180px] object-contain"
+        className="block h-[50px] w-auto max-w-[180px] object-contain"
         style={{ aspectRatio: '180/50' }}
       />
     </a>

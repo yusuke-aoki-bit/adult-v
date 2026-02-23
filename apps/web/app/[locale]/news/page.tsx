@@ -7,11 +7,7 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { Newspaper, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   try {
     const { locale } = await params;
     const t = await getTranslations({ locale, namespace: 'news' });
@@ -31,11 +27,11 @@ export async function generateMetadata({
       alternates: {
         canonical: `${baseUrl}/news`,
         languages: {
-          'ja': `${baseUrl}/news`,
-          'en': `${baseUrl}/news?hl=en`,
-          'zh': `${baseUrl}/news?hl=zh`,
+          ja: `${baseUrl}/news`,
+          en: `${baseUrl}/news?hl=en`,
+          zh: `${baseUrl}/news?hl=zh`,
           'zh-TW': `${baseUrl}/news?hl=zh-TW`,
-          'ko': `${baseUrl}/news?hl=ko`,
+          ko: `${baseUrl}/news?hl=ko`,
           'x-default': `${baseUrl}/news`,
         },
       },
@@ -54,7 +50,7 @@ const getCachedNews = unstable_cache(
     return getNewsByCategory(category, page, limit);
   },
   ['news-list'],
-  { revalidate: 600, tags: ['news'] }
+  { revalidate: 600, tags: ['news'] },
 );
 
 export default async function NewsPage({
@@ -92,19 +88,16 @@ export default async function NewsPage({
   ];
 
   return (
-    <div className="min-h-screen theme-body">
-      <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="theme-body min-h-screen">
+      <div className="mx-auto max-w-4xl px-4 py-8">
         <Breadcrumb
-          items={[
-            { label: tNav('home'), href: localizedHref('/', locale) },
-            { label: t('title') },
-          ]}
+          items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: t('title') }]}
           className="mb-4"
         />
 
         {/* ヘッダー */}
-        <div className="flex items-center gap-3 mb-6">
-          <Newspaper className="w-7 h-7 text-blue-400" />
+        <div className="mb-6 flex items-center gap-3">
+          <Newspaper className="h-7 w-7 text-blue-400" />
           <div>
             <h1 className="text-2xl font-bold text-white">{t('title')}</h1>
             <p className="text-sm text-gray-400">{t('metaDescription')}</p>
@@ -112,21 +105,17 @@ export default async function NewsPage({
         </div>
 
         {/* カテゴリフィルタ */}
-        <div className="flex flex-wrap gap-2 mb-6">
+        <div className="mb-6 flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => {
             const isActive = category === cat.key;
-            const href = cat.key
-              ? localizedHref(`/news?category=${cat.key}`, locale)
-              : localizedHref('/news', locale);
+            const href = cat.key ? localizedHref(`/news?category=${cat.key}`, locale) : localizedHref('/news', locale);
 
             return (
               <a
                 key={cat.key || 'all'}
                 href={href}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  isActive
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                className={`rounded-full px-3 py-1.5 text-sm font-medium transition-colors ${
+                  isActive ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                 }`}
               >
                 {cat.label}
@@ -137,15 +126,23 @@ export default async function NewsPage({
 
         {/* 記事一覧 */}
         {articles.length === 0 ? (
-          <div className="text-center py-16">
+          <div className="py-16 text-center">
             <p className="text-gray-400">{t('noArticles')}</p>
           </div>
         ) : (
           <div className="space-y-4">
             {articles.map((article) => {
-              const style = CATEGORY_STYLES[article.category] || CATEGORY_STYLES['site_update'];
+              const style = CATEGORY_STYLES[article.category] ?? CATEGORY_STYLES['site_update']!;
               const publishedDate = new Date(article.published_at).toLocaleDateString(
-                locale === 'ko' ? 'ko-KR' : locale === 'zh-TW' ? 'zh-TW' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP',
+                locale === 'ko'
+                  ? 'ko-KR'
+                  : locale === 'zh-TW'
+                    ? 'zh-TW'
+                    : locale === 'zh'
+                      ? 'zh-CN'
+                      : locale === 'en'
+                        ? 'en-US'
+                        : 'ja-JP',
                 { year: 'numeric', month: 'long', day: 'numeric' },
               );
 
@@ -153,31 +150,23 @@ export default async function NewsPage({
                 <a
                   key={article.id}
                   href={localizedHref(`/news/${article.slug}`, locale)}
-                  className={`block p-4 rounded-xl transition-colors ${
+                  className={`block rounded-xl p-4 transition-colors ${
                     article.featured
-                      ? 'bg-gradient-to-r from-gray-800 to-gray-800/60 border border-yellow-600/30 hover:border-yellow-500/50'
-                      : 'bg-gray-800 hover:bg-gray-750'
+                      ? 'border border-yellow-600/30 bg-gradient-to-r from-gray-800 to-gray-800/60 hover:border-yellow-500/50'
+                      : 'hover:bg-gray-750 bg-gray-800'
                   }`}
                 >
                   <div className="flex items-start gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-xs font-bold px-2 py-0.5 rounded ${style.bg} ${style.text}`}>
+                    <div className="min-w-0 flex-1">
+                      <div className="mb-2 flex items-center gap-2">
+                        <span className={`rounded px-2 py-0.5 text-xs font-bold ${style.bg} ${style.text}`}>
                           {style.label}
                         </span>
                         <span className="text-xs text-gray-400">{publishedDate}</span>
-                        {article.featured && (
-                          <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
-                        )}
+                        {article.featured && <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />}
                       </div>
-                      <h2 className="text-lg font-semibold text-white mb-1">
-                        {article.title}
-                      </h2>
-                      {article.excerpt && (
-                        <p className="text-sm text-gray-400 line-clamp-2">
-                          {article.excerpt}
-                        </p>
-                      )}
+                      <h2 className="mb-1 text-lg font-semibold text-white">{article.title}</h2>
+                      {article.excerpt && <p className="line-clamp-2 text-sm text-gray-400">{article.excerpt}</p>}
                     </div>
                   </div>
                 </a>
@@ -188,13 +177,13 @@ export default async function NewsPage({
 
         {/* ページネーション */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-center gap-2 mt-8">
+          <div className="mt-8 flex items-center justify-center gap-2">
             {page > 1 && (
               <a
                 href={localizedHref(`/news?${category ? `category=${category}&` : ''}page=${page - 1}`, locale)}
-                className="flex items-center gap-1 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                className="flex items-center gap-1 rounded-lg bg-gray-700 px-3 py-2 text-gray-300 transition-colors hover:bg-gray-600"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
               </a>
             )}
             <span className="px-4 py-2 text-sm text-gray-400">
@@ -203,9 +192,9 @@ export default async function NewsPage({
             {page < totalPages && (
               <a
                 href={localizedHref(`/news?${category ? `category=${category}&` : ''}page=${page + 1}`, locale)}
-                className="flex items-center gap-1 px-3 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-colors"
+                className="flex items-center gap-1 rounded-lg bg-gray-700 px-3 py-2 text-gray-300 transition-colors hover:bg-gray-600"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               </a>
             )}
           </div>

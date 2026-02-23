@@ -19,11 +19,7 @@ const DEEPL_API_URL = DEEPL_API_KEY.endsWith(':fx')
   : 'https://api.deepl.com/v2/translate';
 
 // Lingvaインスタンス（フォールバック用に複数用意）
-const LINGVA_INSTANCES = [
-  'https://lingva.ml',
-  'https://lingva.lunar.icu',
-  'https://translate.plausibility.cloud',
-];
+const LINGVA_INSTANCES = ['https://lingva.ml', 'https://lingva.lunar.icu', 'https://translate.plausibility.cloud'];
 
 // 言語コードマッピング（Lingvaは小文字を使用）
 const LINGVA_LANG_MAP: Record<string, string> = {
@@ -40,7 +36,7 @@ async function tryTranslateWithInstance(
   instance: string,
   text: string,
   sourceLang: string,
-  targetLang: string
+  targetLang: string,
 ): Promise<string | null> {
   const source = LINGVA_LANG_MAP[sourceLang] || sourceLang;
   const target = LINGVA_LANG_MAP[targetLang] || targetLang;
@@ -50,7 +46,7 @@ async function tryTranslateWithInstance(
     const response = await fetch(url, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -75,7 +71,7 @@ async function tryTranslateWithInstance(
 export async function translateText(
   text: string,
   targetLang: 'en' | 'zh' | 'ko',
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string> {
   if (!text || text.trim() === '') {
     return '';
@@ -104,7 +100,7 @@ export async function translateText(
 export async function translateBatch(
   texts: string[],
   targetLang: 'en' | 'zh' | 'ko',
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string[]> {
   if (texts.length === 0) {
     return [];
@@ -136,7 +132,7 @@ export async function translateBatch(
  */
 export async function translateToAll(
   text: string,
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<{
   en: string;
   zh: string;
@@ -222,7 +218,7 @@ function getGoogleAuth(): GoogleAuth {
 async function translateWithGoogleCloud(
   texts: string[],
   targetLang: string,
-  sourceLang: string = 'ja'
+  sourceLang: string = 'ja',
 ): Promise<string[] | null> {
   try {
     const auth = getGoogleAuth();
@@ -234,22 +230,19 @@ async function translateWithGoogleCloud(
       return null;
     }
 
-    const response = await fetch(
-      `https://translation.googleapis.com/v3/projects/${GOOGLE_PROJECT_ID}:translateText`,
-      {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken.token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          contents: texts,
-          sourceLanguageCode: sourceLang,
-          targetLanguageCode: targetLang,
-          mimeType: 'text/plain',
-        }),
-      }
-    );
+    const response = await fetch(`https://translation.googleapis.com/v3/projects/${GOOGLE_PROJECT_ID}:translateText`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken.token}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: texts,
+        sourceLanguageCode: sourceLang,
+        targetLanguageCode: targetLang,
+        mimeType: 'text/plain',
+      }),
+    });
 
     if (!response.ok) {
       const errorText = await response['text']();
@@ -269,10 +262,7 @@ async function translateWithGoogleCloud(
 /**
  * Google Cloud Translation APIで商品を翻訳
  */
-async function translateProductGoogleCloud(
-  title: string,
-  description?: string
-): Promise<ProductTranslation | null> {
+async function translateProductGoogleCloud(title: string, description?: string): Promise<ProductTranslation | null> {
   const result: ProductTranslation = {};
   const languages = [
     { key: 'en' as const, code: 'en' },
@@ -311,11 +301,7 @@ async function translateProductGoogleCloud(
 /**
  * DeepL APIで翻訳
  */
-async function translateWithDeepL(
-  text: string,
-  targetLang: string,
-  sourceLang: string = 'JA'
-): Promise<string | null> {
+async function translateWithDeepL(text: string, targetLang: string, sourceLang: string = 'JA'): Promise<string | null> {
   if (!DEEPL_API_KEY) {
     return null;
   }
@@ -324,7 +310,7 @@ async function translateWithDeepL(
     const response = await fetch(DEEPL_API_URL, {
       method: 'POST',
       headers: {
-        'Authorization': `DeepL-Auth-Key ${DEEPL_API_KEY}`,
+        Authorization: `DeepL-Auth-Key ${DEEPL_API_KEY}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -351,10 +337,7 @@ async function translateWithDeepL(
 /**
  * DeepL APIで商品を翻訳
  */
-async function translateProductDeepL(
-  title: string,
-  description?: string
-): Promise<ProductTranslation | null> {
+async function translateProductDeepL(title: string, description?: string): Promise<ProductTranslation | null> {
   const result: ProductTranslation = {};
   const languages = [
     { key: 'en' as const, deepl: 'EN' },
@@ -368,7 +351,7 @@ async function translateProductDeepL(
       if (translatedTitle) {
         let translatedDesc: string | undefined;
         if (description && description.trim()) {
-          translatedDesc = await translateWithDeepL(description, lang.deepl, 'JA') || undefined;
+          translatedDesc = (await translateWithDeepL(description, lang.deepl, 'JA')) || undefined;
         }
 
         result[lang.key] = {
@@ -397,10 +380,7 @@ async function translateProductDeepL(
  * @param description 説明
  * @returns 翻訳結果 { en, zh, ko }
  */
-export async function translateProductLingva(
-  title: string,
-  description?: string
-): Promise<ProductTranslation | null> {
+export async function translateProductLingva(title: string, description?: string): Promise<ProductTranslation | null> {
   if (!title || title.trim() === '') {
     return null;
   }
@@ -464,4 +444,3 @@ export async function translateProductLingva(
     return null;
   }
 }
-

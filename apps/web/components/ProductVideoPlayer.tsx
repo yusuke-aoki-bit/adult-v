@@ -26,7 +26,7 @@ function getVideoSource(url: string): 'dmm' | 'mgs' | 'other' {
 export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerProps) {
   const t = useTranslations('productVideoPlayer');
   const [selectedVideo, setSelectedVideo] = useState<VideoInfo | null>(
-    sampleVideos && sampleVideos.length > 0 ? sampleVideos[0] : null
+    sampleVideos && sampleVideos.length > 0 ? sampleVideos[0]! : null,
   );
   const [isPlaying, setIsPlaying] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -74,26 +74,27 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
   const getSourceLabel = (url: string) => {
     const source = getVideoSource(url);
     switch (source) {
-      case 'dmm': return 'FANZA';
-      case 'mgs': return 'MGS';
-      default: return '';
+      case 'dmm':
+        return 'FANZA';
+      case 'mgs':
+        return 'MGS';
+      default:
+        return '';
     }
   };
 
   return (
     <div className="space-y-4">
       {/* メイン動画プレイヤー */}
-      <div className="relative aspect-video w-full bg-gray-900 rounded-lg overflow-hidden">
+      <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-gray-900">
         {!isPlaying && (
           <button
             onClick={handlePlayClick}
-            className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 hover:bg-black/40 transition-colors group"
+            className="group absolute inset-0 flex flex-col items-center justify-center bg-black/50 transition-colors hover:bg-black/40"
           >
-            <Play className="w-20 h-20 text-white group-hover:scale-110 transition-transform" fill="white" />
-            <p className="text-white text-lg mt-4">{t('playSampleVideo')}</p>
-            {selectedVideo?.quality && (
-              <p className="text-gray-300 text-sm mt-1">{selectedVideo.quality}</p>
-            )}
+            <Play className="h-20 w-20 text-white transition-transform group-hover:scale-110" fill="white" />
+            <p className="mt-4 text-lg text-white">{t('playSampleVideo')}</p>
+            {selectedVideo?.quality && <p className="mt-1 text-sm text-gray-300">{selectedVideo.quality}</p>}
           </button>
         )}
         {isPlaying && selectedVideo && !hasError && (
@@ -103,7 +104,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
             controls
             autoPlay
             playsInline
-            className="w-full h-full"
+            className="h-full w-full"
             controlsList="nodownload"
             onError={handleVideoError}
             onLoadedData={() => setHasError(false)}
@@ -113,22 +114,20 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
         )}
         {hasError && selectedVideo && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-gray-900/95 p-4">
-            <ExternalLink className="w-12 h-12 text-gray-400 mb-4" />
-            <p className="text-white text-lg mb-2 text-center">{t('externalVideoTitle')}</p>
-            <p className="text-gray-400 text-sm mb-6 text-center max-w-md">
-              {t('externalVideoDescription')}
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
+            <ExternalLink className="mb-4 h-12 w-12 text-gray-400" />
+            <p className="mb-2 text-center text-lg text-white">{t('externalVideoTitle')}</p>
+            <p className="mb-6 max-w-md text-center text-sm text-gray-400">{t('externalVideoDescription')}</p>
+            <div className="flex flex-col gap-3 sm:flex-row">
               <a
                 href={selectedVideo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="px-6 py-3 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors flex items-center justify-center gap-2"
+                className="flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-6 py-3 text-white transition-colors hover:bg-rose-500"
               >
-                <ExternalLink className="w-5 h-5" />
+                <ExternalLink className="h-5 w-5" />
                 {t('playInNewTab')}
                 {getSourceLabel(selectedVideo.url) && (
-                  <span className="text-rose-200 text-sm">({getSourceLabel(selectedVideo.url)})</span>
+                  <span className="text-sm text-rose-200">({getSourceLabel(selectedVideo.url)})</span>
                 )}
               </a>
               <button
@@ -137,7 +136,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                   setIsPlaying(false);
                   setVideoLoadAttempted(false);
                 }}
-                className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                className="rounded-lg bg-gray-700 px-4 py-2 text-white transition-colors hover:bg-gray-600"
               >
                 {t('close')}
               </button>
@@ -148,7 +147,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
 
       {/* 動画一覧（複数動画がある場合のみ） */}
       {sampleVideos.length > 1 && (
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
           {sampleVideos.map((video, idx) => (
             <button
               key={video.url}
@@ -157,23 +156,19 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                 setIsPlaying(false);
                 setHasError(false);
               }}
-              className={`relative aspect-video rounded-lg overflow-hidden border-2 transition-all p-4 ${
+              className={`relative aspect-video overflow-hidden rounded-lg border-2 p-4 transition-all ${
                 selectedVideo === video
                   ? 'border-rose-600 bg-rose-950/30 ring-2 ring-rose-600/50'
-                  : 'border-gray-700 bg-gray-800 hover:border-gray-500 hover:bg-gray-750'
+                  : 'hover:bg-gray-750 border-gray-700 bg-gray-800 hover:border-gray-500'
               }`}
             >
-              <div className="flex flex-col items-center justify-center h-full">
-                <Film className="w-8 h-8 text-gray-400 mb-2" />
+              <div className="flex h-full flex-col items-center justify-center">
+                <Film className="mb-2 h-8 w-8 text-gray-400" />
                 <p className="text-sm text-gray-300">
                   {getVideoTypeLabel(video.type)} {idx + 1}
                 </p>
-                {video.quality && (
-                  <p className="text-xs text-gray-400 mt-1">{video.quality}</p>
-                )}
-                {video.duration && (
-                  <p className="text-xs text-gray-500 mt-1">{formatDuration(video.duration)}</p>
-                )}
+                {video.quality && <p className="mt-1 text-xs text-gray-400">{video.quality}</p>}
+                {video.duration && <p className="mt-1 text-xs text-gray-500">{formatDuration(video.duration)}</p>}
               </div>
             </button>
           ))}
@@ -181,9 +176,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
       )}
 
       {/* 動画本数表示 */}
-      <p className="text-sm text-gray-400 text-center">
-        {t('sampleVideoCount', { count: sampleVideos.length })}
-      </p>
+      <p className="text-center text-sm text-gray-400">{t('sampleVideoCount', { count: sampleVideos.length })}</p>
     </div>
   );
 }

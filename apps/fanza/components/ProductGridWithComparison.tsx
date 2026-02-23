@@ -27,12 +27,7 @@ export function ProductGridWithComparison({
   const theme = useSiteTheme();
 
   return (
-    <ProductListWithSelection
-      products={products}
-      locale={locale}
-      theme={theme}
-      className={className}
-    >
+    <ProductListWithSelection products={products} locale={locale} theme={theme} className={className}>
       {(product, index) => (
         <ProductCard
           key={product.id}

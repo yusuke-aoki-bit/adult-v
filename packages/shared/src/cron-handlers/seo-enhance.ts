@@ -46,7 +46,7 @@ interface SeoEnhanceHandlerDeps {
     dimensions: string[],
     metrics: string[],
     startDate: string,
-    endDate: string
+    endDate: string,
   ) => Promise<AnalyticsReportResult | null>;
   checkGoogleApiConfig: () => GoogleApiConfig;
   siteBaseUrl?: string;
@@ -60,7 +60,7 @@ async function requestIndexingForProducts(
   limit: number,
   deps: SeoEnhanceHandlerDeps,
   startTime?: number,
-  timeLimit?: number
+  timeLimit?: number,
 ): Promise<{ stats: IndexingStats; results: any[]; warning?: string }> {
   const stats: IndexingStats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
   const results: any[] = [];
@@ -168,7 +168,7 @@ async function requestIndexingForProducts(
         stats.errors++;
       }
 
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 100));
     } catch (error) {
       console.error(`[seo-enhance] Indexing error for ${product['id']}:`, error);
 
@@ -201,7 +201,8 @@ async function requestIndexingForProducts(
     return {
       stats,
       results,
-      warning: 'Search Console ownership verification required. Add the service account email as an owner in Google Search Console for this domain.',
+      warning:
+        'Search Console ownership verification required. Add the service account email as an owner in Google Search Console for this domain.',
     };
   }
 
@@ -214,7 +215,7 @@ async function requestIndexingForProducts(
 async function fetchAnalyticsData(
   db: ReturnType<SeoEnhanceHandlerDeps['getDb']>,
   reportType: string,
-  deps: SeoEnhanceHandlerDeps
+  deps: SeoEnhanceHandlerDeps,
 ): Promise<{ stats: Stats; results: any }> {
   const stats: Stats = { totalProcessed: 1, success: 0, errors: 0, skipped: 0 };
 
@@ -229,9 +230,7 @@ async function fetchAnalyticsData(
 
   const today = new Date();
   const endDate = today.toISOString().split('T')[0] ?? '';
-  const startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split('T')[0] ?? '';
+  const startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] ?? '';
   const dateRange = `${startDate}_${endDate}`;
 
   const cacheResult = await db.execute(sql`
@@ -276,13 +275,7 @@ async function fetchAnalyticsData(
         metrics = ['screenPageViews'];
     }
 
-    const report = await deps.getAnalyticsReport(
-      ga4PropertyId,
-      dimensions,
-      metrics,
-      startDate,
-      endDate
-    );
+    const report = await deps.getAnalyticsReport(ga4PropertyId, dimensions, metrics, startDate, endDate);
 
     if (report) {
       await db.execute(sql`
@@ -340,7 +333,7 @@ async function fetchAnalyticsData(
 async function getSitemapData(
   db: ReturnType<SeoEnhanceHandlerDeps['getDb']>,
   limit: number,
-  siteBaseUrl: string
+  siteBaseUrl: string,
 ): Promise<{ stats: Stats; results: any[] }> {
   const stats: Stats = { totalProcessed: 0, success: 0, errors: 0, skipped: 0 };
 
@@ -371,7 +364,7 @@ async function getSitemapData(
 
   return {
     stats,
-    results: products.map(p => ({
+    results: products.map((p) => ({
       url: `${siteBaseUrl}/products/${p.id}`,
       lastmod: p.updated_at,
       indexingStatus: p.indexing_status || 'not_requested',
@@ -415,11 +408,14 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
           break;
 
         default:
-          return NextResponse.json({
-            success: false,
-            error: `Unknown SEO enhancement type: ${type}`,
-            availableTypes: ['indexing', 'analytics', 'sitemap'],
-          }, { status: 400 });
+          return NextResponse.json(
+            {
+              success: false,
+              error: `Unknown SEO enhancement type: ${type}`,
+              availableTypes: ['indexing', 'analytics', 'sitemap'],
+            },
+            { status: 400 },
+          );
       }
 
       const duration = Math.round((Date.now() - startTime) / 1000);
@@ -435,9 +431,7 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
         },
         stats: result.stats,
         ...(result.warning && { warning: result.warning }),
-        results: Array.isArray(result.results)
-          ? result.results.slice(0, 10)
-          : result.results,
+        results: Array.isArray(result.results) ? result.results.slice(0, 10) : result.results,
         duration: `${duration}s`,
       });
     } catch (error) {
@@ -447,7 +441,7 @@ export function createSeoEnhanceHandler(deps: SeoEnhanceHandlerDeps) {
           success: false,
           error: error instanceof Error ? error.message : 'Unknown error',
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

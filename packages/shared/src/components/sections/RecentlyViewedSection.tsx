@@ -5,7 +5,7 @@ import { Clock, X, Users, RefreshCw, AlertCircle } from 'lucide-react';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
-import { recentlyViewedTranslations, getTranslation } from './translations';
+import { recentlyViewedTranslations, getTranslation } from '../../lib/translations';
 
 // Generic product type that works with both apps
 interface BaseProduct {
@@ -94,18 +94,21 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
   const [retryCount, setRetryCount] = useState(0);
 
   // 展開時にフェッチをトリガー
-  const handleToggle = useCallback((isOpen: boolean) => {
-    if (isOpen && !hasExpanded) {
-      setIsLoading(true);
-      setHasExpanded(true);
-    }
-  }, [hasExpanded]);
+  const handleToggle = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen && !hasExpanded) {
+        setIsLoading(true);
+        setHasExpanded(true);
+      }
+    },
+    [hasExpanded],
+  );
 
   // リトライハンドラー
   const handleRetry = useCallback(() => {
     setIsRetrying(true);
     setError(null);
-    setRetryCount(prev => prev + 1);
+    setRetryCount((prev) => prev + 1);
   }, []);
 
   // Fetch full product info from ID list (only when expanded)
@@ -123,7 +126,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
       setIsLoading(true);
       setError(null);
       try {
-        const ids = items.slice(0, 8).map(item => item['id']);
+        const ids = items.slice(0, 8).map((item) => item['id']);
 
         let fetchedProducts: T[];
         if (fetchProducts) {
@@ -176,11 +179,11 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
 
               if (uniquePerformers.length > 0) {
                 if (fetchActresses) {
-                  const actressIds = uniquePerformers.map(p => p.id);
+                  const actressIds = uniquePerformers.map((p) => p.id);
                   const fetchedActresses = await fetchActresses(actressIds);
                   setActresses(fetchedActresses);
                 } else if (toActressType) {
-                  const convertedActresses = uniquePerformers.map(p => toActressType(p));
+                  const convertedActresses = uniquePerformers.map((p) => toActressType(p));
                   setActresses(convertedActresses);
                 }
               } else {
@@ -207,15 +210,28 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
     if (!isViewedLoading) {
       doFetch();
     }
-  }, [items, isViewedLoading, fetchProducts, fetchActresses, toActressType, ActressCard, hasExpanded, retryCount, locale]);
+  }, [
+    items,
+    isViewedLoading,
+    fetchProducts,
+    fetchActresses,
+    toActressType,
+    ActressCard,
+    hasExpanded,
+    retryCount,
+    locale,
+  ]);
 
   // Memoized delete handler to avoid recreating function for each list item
   // NOTE: This hook must be called before any conditional returns to follow Rules of Hooks
-  const handleRemoveItem = useCallback((e: React.MouseEvent, productId: string | number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    removeItem(String(productId));
-  }, [removeItem]);
+  const handleRemoveItem = useCallback(
+    (e: React.MouseEvent, productId: string | number) => {
+      e.preventDefault();
+      e.stopPropagation();
+      removeItem(String(productId));
+    },
+    [removeItem],
+  );
 
   // Don't render if loading viewed items or no history
   if (isViewedLoading || items.length === 0) {
@@ -238,27 +254,23 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
     // エラー時はリトライボタンを表示
     if (error) {
       return (
-        <div className={`flex flex-col items-center justify-center py-8 px-4 rounded-lg ${
-          theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
-        }`}>
-          <AlertCircle className={`w-8 h-8 mb-3 ${
-            theme === 'dark' ? 'text-red-400' : 'text-red-500'
-          }`} />
-          <p className={`text-sm mb-4 text-center ${
-            theme === 'dark' ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            {error}
-          </p>
+        <div
+          className={`flex flex-col items-center justify-center rounded-lg px-4 py-8 ${
+            theme === 'dark' ? 'bg-gray-800/50' : 'bg-gray-100'
+          }`}
+        >
+          <AlertCircle className={`mb-3 h-8 w-8 ${theme === 'dark' ? 'text-red-400' : 'text-red-500'}`} />
+          <p className={`mb-4 text-center text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>{error}</p>
           <button
             onClick={handleRetry}
             disabled={isRetrying}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               theme === 'dark'
-                ? 'bg-rose-600 hover:bg-rose-700 text-white disabled:bg-gray-600'
-                : 'bg-rose-500 hover:bg-rose-600 text-white disabled:bg-gray-400'
+                ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
+                : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
             } disabled:cursor-not-allowed`}
           >
-            <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
             {isRetrying ? t.retrying : t.retry}
           </button>
         </div>
@@ -270,22 +282,28 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
         {/* 共演者セクション（遅延読み込み） */}
         {ActressCard && (isActressLoading || actresses.length > 0) && (
           <div>
-            <h4 className={`text-xs font-semibold mb-2 flex items-center gap-1.5 ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}>
-              <Users className="w-3.5 h-3.5" />
+            <h4
+              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}
+            >
+              <Users className="h-3.5 w-3.5" />
               {t.coStars}
-              {isActressLoading && <span className="text-[10px] theme-text-muted animate-pulse">{t.loadingActresses}</span>}
+              {isActressLoading && (
+                <span className="theme-text-muted animate-pulse text-[10px]">{t.loadingActresses}</span>
+              )}
             </h4>
             {isActressLoading ? (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="theme-skeleton-card rounded-lg animate-pulse overflow-hidden">
-                    <div className="aspect-square theme-skeleton-image" />
-                    <div className="p-1.5"><div className="h-2.5 theme-skeleton-image rounded w-3/4" /></div>
+                  <div key={i} className="theme-skeleton-card animate-pulse overflow-hidden rounded-lg">
+                    <div className="theme-skeleton-image aspect-square" />
+                    <div className="p-1.5">
+                      <div className="theme-skeleton-image h-2.5 w-3/4 rounded" />
+                    </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+              <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
                 {actresses.map((actress) => (
                   <ActressCard key={actress['id']} actress={actress} size="mini" />
                 ))}
@@ -297,22 +315,22 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
         {/* 作品セクション */}
         <div>
           {ActressCard && actresses.length > 0 && (
-            <h4 className={`text-xs font-semibold mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+            <h4 className={`mb-2 text-xs font-semibold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
               {t.products}
             </h4>
           )}
-          <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
             {products.map((product) => (
-              <div key={product['id']} className="relative group/card">
+              <div key={product['id']} className="group/card relative">
                 <ProductCard product={product} size="mini" />
                 {/* Delete button - shows on card hover */}
                 <button
                   type="button"
                   onClick={(e) => handleRemoveItem(e, product['id'])}
-                  className={`absolute -top-1 -right-1 z-30 w-5 h-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} hover:bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity shadow-lg`}
+                  className={`absolute -top-1 -right-1 z-30 h-5 w-5 ${themeConfig.recentlyViewed.deleteButtonBgClass} flex items-center justify-center rounded-full opacity-0 shadow-lg transition-opacity group-hover/card:opacity-100 hover:bg-red-600`}
                   aria-label={t.removeFromHistory}
                 >
-                  <X className="w-3 h-3 text-white" />
+                  <X className="h-3 w-3 text-white" />
                 </button>
               </div>
             ))}
@@ -326,7 +344,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
     <section className="py-3 sm:py-4">
       <div className="container mx-auto px-3 sm:px-4">
         <AccordionSection
-          icon={<Clock className="w-5 h-5" />}
+          icon={<Clock className="h-5 w-5" />}
           title={t.title}
           {...(hasExpanded && products.length > 0 && { itemCount: products.length })}
           defaultOpen={false}

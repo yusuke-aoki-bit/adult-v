@@ -5,10 +5,7 @@ export interface ViewingPatternsHandlerDeps {
 }
 
 export function createViewingPatternsHandler(deps: ViewingPatternsHandlerDeps) {
-  return async function GET(
-    _request: Request,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
       const productId = parseInt(id);

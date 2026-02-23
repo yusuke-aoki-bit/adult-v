@@ -21,11 +21,7 @@ export default function TrendingSection({ locale }: TrendingSectionProps) {
   return (
     <section className="py-3 sm:py-4">
       <div className="container mx-auto px-3 sm:px-4">
-        <TrendAnalysis
-          locale={locale}
-          onTagClick={handleTagClick}
-          onPerformerClick={handlePerformerClick}
-        />
+        <TrendAnalysis locale={locale} onTagClick={handleTagClick} onPerformerClick={handlePerformerClick} />
       </div>
     </section>
   );

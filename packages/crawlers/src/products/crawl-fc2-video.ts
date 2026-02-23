@@ -48,7 +48,7 @@ interface FC2VideoProduct {
 }
 
 function sleep(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 function randomDelay(min: number, max: number): Promise<void> {
@@ -62,9 +62,8 @@ function randomDelay(min: number, max: number): Promise<void> {
  */
 async function fetchVideoFC2ListPage(page: any, pageNum: number): Promise<string[]> {
   // ユーザー指定URL: https://video.fc2.com/a/?_tct=&d=2
-  const url = pageNum === 1
-    ? `https://video.fc2.com/a/?_tct=&d=2`
-    : `https://video.fc2.com/a/?_tct=&d=2&page=${pageNum}`;
+  const url =
+    pageNum === 1 ? `https://video.fc2.com/a/?_tct=&d=2` : `https://video.fc2.com/a/?_tct=&d=2&page=${pageNum}`;
   console.log(`📋 一覧ページ取得中: ${url}`);
 
   try {
@@ -86,7 +85,7 @@ async function fetchVideoFC2ListPage(page: any, pageNum: number): Promise<string
       const ids: string[] = [];
 
       // data-id 属性から取得（形式: 20231002yP66Dapk）
-      document.querySelectorAll('[data-id]').forEach(elem => {
+      document.querySelectorAll('[data-id]').forEach((elem) => {
         const dataId = elem.getAttribute('data-id');
         // video.fc2.comのID形式: 日付(8桁) + 英数字コード
         if (dataId && /^\d{8,}[a-zA-Z0-9]+$/.test(dataId) && !ids.includes(dataId)) {
@@ -114,9 +113,7 @@ async function fetchVideoFC2ListPage(page: any, pageNum: number): Promise<string
  */
 async function fetchContentsFC2ListPage(page: any, pageNum: number): Promise<string[]> {
   // ユーザー指定のURL（新着一覧）
-  const url = pageNum === 1
-    ? `https://adult.contents.fc2.com/`
-    : `https://adult.contents.fc2.com/?page=${pageNum}`;
+  const url = pageNum === 1 ? `https://adult.contents.fc2.com/` : `https://adult.contents.fc2.com/?page=${pageNum}`;
   console.log(`📋 一覧ページ取得中: ${url}`);
 
   try {
@@ -138,7 +135,7 @@ async function fetchContentsFC2ListPage(page: any, pageNum: number): Promise<str
       const ids: string[] = [];
 
       // 方法1: リンクから /article/数字/ パターンを抽出
-      document.querySelectorAll('a').forEach(link => {
+      document.querySelectorAll('a').forEach((link) => {
         const href = link.getAttribute('href') || '';
         const match = href.match(/\/article\/(\d+)/);
         if (match && match[1] && !ids.includes(match[1])) {
@@ -147,7 +144,7 @@ async function fetchContentsFC2ListPage(page: any, pageNum: number): Promise<str
       });
 
       // 方法2: data-id属性（純粋な数字のみ）
-      document.querySelectorAll('[data-id]').forEach(elem => {
+      document.querySelectorAll('[data-id]').forEach((elem) => {
         const id = elem.getAttribute('data-id');
         // 純粋な数字かつ適切な長さ（FC2 contents IDは7桁程度）
         if (id && /^\d{6,8}$/.test(id) && !ids.includes(id)) {
@@ -191,12 +188,7 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
     const existingRaw = await db
       .select({ id: rawHtmlData.id, hash: rawHtmlData.hash })
       .from(rawHtmlData)
-      .where(
-        and(
-          eq(rawHtmlData.source, 'FC2-video'),
-          eq(rawHtmlData.productId, videoId)
-        )
-      )
+      .where(and(eq(rawHtmlData.source, 'FC2-video'), eq(rawHtmlData.productId, videoId)))
       .limit(1);
 
     if (existingRaw.length > 0 && existingRaw[0]?.hash === hash) {
@@ -233,7 +225,10 @@ async function fetchVideoDetailPage(page: any, videoId: string): Promise<FC2Vide
       }
 
       // サムネイル
-      const thumbEl = document.querySelector('meta[property="og:image"], .video_main img, #video_player img') as HTMLMetaElement | HTMLImageElement | null;
+      const thumbEl = document.querySelector('meta[property="og:image"], .video_main img, #video_player img') as
+        | HTMLMetaElement
+        | HTMLImageElement
+        | null;
       const thumbnailUrl = (thumbEl as HTMLMetaElement)?.content || (thumbEl as HTMLImageElement)?.src || null;
 
       // 再生時間（分単位で保存）
@@ -342,12 +337,7 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
     const existingRaw = await db
       .select({ id: rawHtmlData.id, hash: rawHtmlData.hash })
       .from(rawHtmlData)
-      .where(
-        and(
-          eq(rawHtmlData.source, 'FC2-contents'),
-          eq(rawHtmlData.productId, articleId)
-        )
-      )
+      .where(and(eq(rawHtmlData.source, 'FC2-contents'), eq(rawHtmlData.productId, articleId)))
       .limit(1);
 
     if (existingRaw.length > 0 && existingRaw[0]?.hash === hash) {
@@ -392,7 +382,7 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
 
       // 出演者
       const performers: string[] = [];
-      document.querySelectorAll('a[href*="seller"], .seller_name, .author').forEach(el => {
+      document.querySelectorAll('a[href*="seller"], .seller_name, .author').forEach((el) => {
         const name = el.textContent?.trim();
         if (name && !performers.includes(name) && name.length > 1 && name.length < 30) {
           performers.push(name);
@@ -441,7 +431,10 @@ async function fetchContentsDetailPage(page: any, articleId: string): Promise<FC
       }
 
       // 説明
-      const descEl = document.querySelector('meta[name="description"], .description') as HTMLMetaElement | HTMLElement | null;
+      const descEl = document.querySelector('meta[name="description"], .description') as
+        | HTMLMetaElement
+        | HTMLElement
+        | null;
       const description = (descEl as HTMLMetaElement)?.content || descEl?.textContent?.trim() || undefined;
 
       return { title, thumbnailUrl, performers, price, regularPrice, discountPercent, duration, description };
@@ -564,10 +557,12 @@ async function saveProduct(product: FC2VideoProduct): Promise<number | null> {
           performerId = insertedPerformer.id;
         }
 
-        await db['insert'](productPerformers).values({
-          productId,
-          performerId,
-        }).onConflictDoNothing();
+        await db['insert'](productPerformers)
+          .values({
+            productId,
+            performerId,
+          })
+          .onConflictDoNothing();
       }
     }
 
@@ -576,7 +571,9 @@ async function saveProduct(product: FC2VideoProduct): Promise<number | null> {
       try {
         const saved = await saveSaleInfo('FC2', product.videoId, product.saleInfo);
         if (saved) {
-          console.log(`    💰 セール情報保存: ¥${product.saleInfo.regularPrice.toLocaleString()} → ¥${product.saleInfo.salePrice.toLocaleString()} (${product.saleInfo.discountPercent}% OFF)`);
+          console.log(
+            `    💰 セール情報保存: ¥${product.saleInfo.regularPrice.toLocaleString()} → ¥${product.saleInfo.salePrice.toLocaleString()} (${product.saleInfo.discountPercent}% OFF)`,
+          );
         }
       } catch (saleError: unknown) {
         const errorMessage = saleError instanceof Error ? saleError.message : String(saleError);
@@ -636,7 +633,7 @@ async function main() {
 
   // ユーザーエージェント設定
   await page.setUserAgent(
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   );
 
   await page.setViewport({ width: 1920, height: 1080 });

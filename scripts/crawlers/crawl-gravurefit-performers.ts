@@ -10,7 +10,8 @@ import { eq, sql } from 'drizzle-orm';
 import { execSync } from 'child_process';
 
 const BASE_URL = 'https://www.gravurefit.com';
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const DELAY_MS = 2000;
 
 interface PerformerProfile {
@@ -49,9 +50,19 @@ function fetchPage(url: string): string {
   }
 }
 
-function parseThreeSize(text: string): { bust: number | null; waist: number | null; hip: number | null; cup: string | null } {
+function parseThreeSize(text: string): {
+  bust: number | null;
+  waist: number | null;
+  hip: number | null;
+  cup: string | null;
+} {
   // "163cm - B87(E) - W60 - H84" のような形式をパース
-  const result = { bust: null as number | null, waist: null as number | null, hip: null as number | null, cup: null as string | null };
+  const result = {
+    bust: null as number | null,
+    waist: null as number | null,
+    hip: null as number | null,
+    cup: null as string | null,
+  };
 
   // バスト
   const bustMatch = text.match(/B(\d+)/);
@@ -152,7 +163,10 @@ async function parseProfilePage(html: string, url: string): Promise<PerformerPro
         break;
       case '他の活動名':
         if (td) {
-          profile.aliases = td.split(/[、,]/).map(s => s.trim()).filter(s => s);
+          profile.aliases = td
+            .split(/[、,]/)
+            .map((s) => s.trim())
+            .filter((s) => s);
         }
         break;
       case 'Name':
@@ -219,11 +233,7 @@ function getPerformerLinks(listPageUrl: string): string[] {
 
 async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
   // 既存のperformerを検索（名前で）
-  const existing = await db
-    .select()
-    .from(performers)
-    .where(eq(performers.name, profile.name))
-    .limit(1);
+  const existing = await db.select().from(performers).where(eq(performers.name, profile.name)).limit(1);
 
   // デビュー年を抽出
   let debutYear: number | null = null;
@@ -254,10 +264,7 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
     if (!performer.debutYear && debutYear) updates.debutYear = debutYear;
 
     if (Object.keys(updates).length > 0) {
-      await db
-        .update(performers)
-        .set(updates)
-        .where(eq(performers.id, performer.id));
+      await db.update(performers).set(updates).where(eq(performers.id, performer.id));
       console.log(`  Updated: ${profile.name} (${Object.keys(updates).join(', ')})`);
     } else {
       console.log(`  Skipped (no new data): ${profile.name}`);
@@ -336,7 +343,7 @@ async function savePerformerToDb(profile: PerformerProfile): Promise<void> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 50;
 
   console.log('=== gravurefit.com 女優情報クローラー ===\n');
@@ -355,16 +362,18 @@ async function main() {
     .from(performerExternalIds)
     .where(eq(performerExternalIds.provider, 'gravurefit'));
 
-  const crawledSet = new Set(crawledSlugs.map(r => r.externalId));
+  const crawledSet = new Set(crawledSlugs.map((r) => r.externalId));
 
   const urlsToCrawl = performerUrls
-    .filter(url => {
+    .filter((url) => {
       const slug = url.replace(BASE_URL + '/profile/', '').replace(/\/$/, '');
       return !crawledSet.has(slug);
     })
     .slice(0, limit);
 
-  console.log(`URLs to crawl: ${urlsToCrawl.length} (skipping ${performerUrls.length - urlsToCrawl.length} already crawled)`);
+  console.log(
+    `URLs to crawl: ${urlsToCrawl.length} (skipping ${performerUrls.length - urlsToCrawl.length} already crawled)`,
+  );
 
   let crawled = 0;
   let errors = 0;
@@ -384,7 +393,7 @@ async function main() {
       }
 
       // レート制限
-      await new Promise(resolve => setTimeout(resolve, DELAY_MS));
+      await new Promise((resolve) => setTimeout(resolve, DELAY_MS));
     } catch (error) {
       console.error(`  Error: ${error}`);
       errors++;
@@ -397,7 +406,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(error => {
+main().catch((error) => {
   console.error('Fatal error:', error);
   process.exit(1);
 });

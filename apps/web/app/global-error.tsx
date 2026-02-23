@@ -42,13 +42,7 @@ const translations = {
   },
 } as const;
 
-export default function GlobalError({
-  error,
-  reset,
-}: {
-  error: Error & { digest?: string };
-  reset: () => void;
-}) {
+export default function GlobalError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
   // ブラウザの言語設定から適切な翻訳を取得
   const getLocale = (): keyof typeof translations => {
     if (typeof window === 'undefined') return defaultLocale as keyof typeof translations;
@@ -56,7 +50,7 @@ export default function GlobalError({
     // zh-TW, zh-HK などの繁体字圏を検出
     if (lang.startsWith('zh-TW') || lang.startsWith('zh-HK')) return 'zh-TW';
     if (lang.startsWith('zh')) return 'zh';
-    const baseLang = lang.split('-')[0];
+    const baseLang = lang.split('-')[0]!;
     if (baseLang in translations) return baseLang as keyof typeof translations;
     return 'en';
   };
@@ -72,30 +66,28 @@ export default function GlobalError({
   return (
     <html lang={locale}>
       <body>
-        <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-          <div className="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8 text-center border border-gray-700">
-            <div className="text-6xl mb-4" role="img" aria-label="Error">⚠️</div>
-            <h1 className="text-2xl font-bold text-white mb-2">
-              {t.title}
-            </h1>
-            <p className="text-gray-400 mb-6">
-              {t.description}
-            </p>
+        <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
+          <div className="w-full max-w-md rounded-2xl border border-gray-700 bg-gray-800 p-8 text-center shadow-xl">
+            <div className="mb-4 text-6xl" role="img" aria-label="Error">
+              ⚠️
+            </div>
+            <h1 className="mb-2 text-2xl font-bold text-white">{t.title}</h1>
+            <p className="mb-6 text-gray-400">{t.description}</p>
             {error.digest && (
-              <p className="text-xs text-gray-500 mb-4 font-mono">
+              <p className="mb-4 font-mono text-xs text-gray-500">
                 {t.errorId}: {error.digest}
               </p>
             )}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+            <div className="flex flex-col justify-center gap-3 sm:flex-row">
               <button
                 onClick={reset}
-                className="px-6 py-3 bg-pink-600 text-white rounded-lg font-semibold hover:bg-pink-500 transition-colors"
+                className="rounded-lg bg-pink-600 px-6 py-3 font-semibold text-white transition-colors hover:bg-pink-500"
               >
                 {t.reload}
               </button>
               <a
                 href={`/${locale}`}
-                className="px-6 py-3 bg-gray-700 text-white rounded-lg font-semibold hover:bg-gray-600 transition-colors"
+                className="rounded-lg bg-gray-700 px-6 py-3 font-semibold text-white transition-colors hover:bg-gray-600"
               >
                 {t.home}
               </a>
@@ -106,4 +98,3 @@ export default function GlobalError({
     </html>
   );
 }
-

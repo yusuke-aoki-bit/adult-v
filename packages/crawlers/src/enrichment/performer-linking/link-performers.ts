@@ -11,7 +11,11 @@
 import { getDb } from '../../lib/db';
 import { products, performers, productPerformers, performerAliases, productSources } from '../../lib/db/schema';
 import { eq, sql, and, isNull, notInArray, inArray } from 'drizzle-orm';
-import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../../lib/performer-validation';
+import {
+  isValidPerformerName,
+  normalizePerformerName,
+  isValidPerformerForProduct,
+} from '../../lib/performer-validation';
 
 const db = getDb();
 
@@ -83,12 +87,7 @@ function extractPerformersFromTitle(title: string): string[] {
   // 3. 「出演：○○」「主演：○○」のパターン
 
   // 括弧内の名前を抽出
-  const bracketPatterns = [
-    /【([^】]+)】/g,
-    /（([^）]+)）/g,
-    /\(([^)]+)\)/g,
-    /「([^」]+)」/g,
-  ];
+  const bracketPatterns = [/【([^】]+)】/g, /（([^）]+)）/g, /\(([^)]+)\)/g, /「([^」]+)」/g];
 
   for (const pattern of bracketPatterns) {
     const matches = title.matchAll(pattern);
@@ -101,11 +100,7 @@ function extractPerformersFromTitle(title: string): string[] {
   }
 
   // 出演/主演パターン
-  const actorPatterns = [
-    /出演[：:]\s*([^\s【（]+)/,
-    /主演[：:]\s*([^\s【（]+)/,
-    /女優[：:]\s*([^\s【（]+)/,
-  ];
+  const actorPatterns = [/出演[：:]\s*([^\s【（]+)/, /主演[：:]\s*([^\s【（]+)/, /女優[：:]\s*([^\s【（]+)/];
 
   for (const pattern of actorPatterns) {
     const match = title.match(pattern);
@@ -152,7 +147,7 @@ function isFullName(name: string): boolean {
 function matchPerformersInTitle(
   title: string,
   performerIndex: Map<string, number>,
-  allPerformerNames: string[]
+  allPerformerNames: string[],
 ): PerformerMatch[] {
   const matches: PerformerMatch[] = [];
   const matchedIds = new Set<number>();
@@ -210,7 +205,7 @@ async function main() {
 
   // 演者インデックスを構築
   const performerIndex = await loadPerformerIndex();
-  const allPerformerNames = [...performerIndex.keys()].filter(n => n && n.length >= 2);
+  const allPerformerNames = [...performerIndex.keys()].filter((n) => n && n.length >= 2);
 
   // 商品を取得
   console.log('\n🔍 商品を取得中...');
@@ -266,7 +261,7 @@ async function main() {
       if (!normalized) continue;
       const performerId = performerIndex.get(normalized) || performerIndex.get(name);
 
-      if (performerId && !matches.some(m => m.performerId === performerId)) {
+      if (performerId && !matches.some((m) => m.performerId === performerId)) {
         matches.push({
           performerId,
           performerName: name,
@@ -290,10 +285,7 @@ async function main() {
             .select()
             .from(productPerformers)
             .where(
-              and(
-                eq(productPerformers.productId, product.id),
-                eq(productPerformers.performerId, match.performerId)
-              )
+              and(eq(productPerformers.productId, product.id), eq(productPerformers.performerId, match.performerId)),
             )
             .limit(1);
 
@@ -311,7 +303,7 @@ async function main() {
 
       if (i < 20 && matches.length > 0) {
         console.log(`  📌 ${product.title.substring(0, 40)}...`);
-        console.log(`     → ${matches.map(m => m.performerName).join(', ')}`);
+        console.log(`     → ${matches.map((m) => m.performerName).join(', ')}`);
       }
     }
   }

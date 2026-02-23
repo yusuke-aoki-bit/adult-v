@@ -33,6 +33,42 @@ const translations = {
       `Browse ${count} products from ${name}. ${ratingStr} View popular performers and genres.`,
     avgRating: (rating: string) => `Average rating: ${rating}.`,
   },
+  zh: {
+    makerDetails: '廠商詳情',
+    makerNotFound: '未找到廠商',
+    makerCategory: '廠商',
+    labelCategory: '品牌',
+    titleSuffix: '詳情',
+    productsSuffix: '作品',
+    makersList: '廠商列表',
+    descriptionTemplate: (name: string, count: number, ratingStr: string) =>
+      `${name}的作品一览。收录${count}部视频作品。${ratingStr}可查看人气女优和类型信息。`,
+    avgRating: (rating: string) => `平均评分${rating}分。`,
+  },
+  'zh-TW': {
+    makerDetails: '廠商詳情',
+    makerNotFound: '未找到廠商',
+    makerCategory: '廠商',
+    labelCategory: '品牌',
+    titleSuffix: '詳情',
+    productsSuffix: '作品',
+    makersList: '廠商列表',
+    descriptionTemplate: (name: string, count: number, ratingStr: string) =>
+      `${name}的作品一覽。收錄${count}部影片作品。${ratingStr}可查看人氣女優和類型資訊。`,
+    avgRating: (rating: string) => `平均評分${rating}分。`,
+  },
+  ko: {
+    makerDetails: '메이커 상세',
+    makerNotFound: '메이커를 찾을 수 없습니다',
+    makerCategory: '메이커',
+    labelCategory: '레이블',
+    titleSuffix: '상세',
+    productsSuffix: '작품',
+    makersList: '메이커 목록',
+    descriptionTemplate: (name: string, count: number, ratingStr: string) =>
+      `${name}의 작품 목록. ${count}편의 동영상 작품 수록. ${ratingStr}인기 배우와 장르 정보를 확인할 수 있습니다.`,
+    avgRating: (rating: string) => `평균 평점 ${rating}점.`,
+  },
 } as const;
 
 function getT(locale: string) {
@@ -75,10 +111,10 @@ export async function generateMetadata({
   const alternates = {
     canonical: `${baseUrl}/${locale}/makers/${makerId}`,
     languages: {
-      'ja': `${baseUrl}/ja/makers/${makerId}`,
-      'en': `${baseUrl}/en/makers/${makerId}`,
-      'zh': `${baseUrl}/zh/makers/${makerId}`,
-      'ko': `${baseUrl}/ko/makers/${makerId}`,
+      ja: `${baseUrl}/ja/makers/${makerId}`,
+      en: `${baseUrl}/en/makers/${makerId}`,
+      zh: `${baseUrl}/zh/makers/${makerId}`,
+      ko: `${baseUrl}/ko/makers/${makerId}`,
       'x-default': `${baseUrl}/ja/makers/${makerId}`,
     },
   };
@@ -100,10 +136,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function MakerDetailLayout({
-  children,
-  params,
-}: MakerLayoutProps) {
+export default async function MakerDetailLayout({ children, params }: MakerLayoutProps) {
   const { locale, makerId } = await params;
   const t = getT(locale);
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';

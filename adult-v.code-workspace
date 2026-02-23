@@ -1,14 +1,12 @@
 {
-	"folders": [
-		{
-			"name": "adult-v",
-			"path": "."
-		}
-	],
-	"settings": {
-		"git.ignoreLimitWarning": true,
-		"claude-code.environmentVariables": [
-			
-		]
-	}
+  "folders": [
+    {
+      "name": "adult-v",
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "git.ignoreLimitWarning": true,
+    "claude-code.environmentVariables": [],
+  },
 }

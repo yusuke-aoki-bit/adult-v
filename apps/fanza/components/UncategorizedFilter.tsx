@@ -20,10 +20,7 @@ interface UncategorizedFilterProps {
   aspStats: AspStat[];
 }
 
-export default function UncategorizedFilter({
-  patternStats,
-  aspStats,
-}: UncategorizedFilterProps) {
+export default function UncategorizedFilter({ patternStats, aspStats }: UncategorizedFilterProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -70,28 +67,30 @@ export default function UncategorizedFilter({
   const activeFilterCount = (selectedPattern ? 1 : 0) + (selectedAsp ? 1 : 0);
 
   return (
-    <details
-      className="mb-4 sm:mb-8 bg-white rounded-lg border border-gray-200 shadow-sm"
-      open={hasActiveFilters}
-    >
-      <summary className="px-4 py-4 sm:py-3 cursor-pointer font-semibold text-gray-900 hover:bg-gray-50 active:bg-gray-100 flex items-center justify-between min-h-[56px] sm:min-h-0 select-none">
+    <details className="mb-4 rounded-lg border border-gray-200 bg-white shadow-sm sm:mb-8" open={hasActiveFilters}>
+      <summary className="flex min-h-[56px] cursor-pointer items-center justify-between px-4 py-4 font-semibold text-gray-900 select-none hover:bg-gray-50 active:bg-gray-100 sm:min-h-0 sm:py-3">
         <div className="flex items-center gap-3 sm:gap-2">
-          <svg className="w-6 h-6 sm:w-5 sm:h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+          <svg className="h-6 w-6 text-gray-500 sm:h-5 sm:w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+            />
           </svg>
           <span className="text-base sm:text-sm">フィルター設定</span>
         </div>
         {hasActiveFilters && (
-          <span className="text-xs bg-pink-500 text-white px-2.5 py-1 sm:px-2 sm:py-0.5 rounded-full font-medium">
+          <span className="rounded-full bg-pink-500 px-2.5 py-1 text-xs font-medium text-white sm:px-2 sm:py-0.5">
             {activeFilterCount}
           </span>
         )}
       </summary>
-      <div className="px-4 pb-4 space-y-5 sm:space-y-6">
+      <div className="space-y-5 px-4 pb-4 sm:space-y-6">
         {/* 品番パターンフィルター */}
         {patternStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">品番パターン</h3>
+            <h3 className="mb-3 text-base font-semibold text-gray-900 sm:text-sm">品番パターン</h3>
             <div className="flex flex-wrap gap-2">
               {patternStats.map((stat) => {
                 const isSelected = selectedPattern === stat.pattern;
@@ -99,7 +98,7 @@ export default function UncategorizedFilter({
                   <button
                     key={stat.pattern}
                     onClick={() => handlePatternChange(stat.pattern)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                       isSelected
                         ? 'bg-pink-500 text-white ring-2 ring-pink-500'
                         : 'bg-gray-100 text-gray-700 hover:bg-pink-50'
@@ -117,7 +116,7 @@ export default function UncategorizedFilter({
         {/* 配信サイト（ASP）フィルター */}
         {aspStats.length > 0 && (
           <div>
-            <h3 className="text-base sm:text-sm font-semibold text-gray-900 mb-3">配信サイト</h3>
+            <h3 className="mb-3 text-base font-semibold text-gray-900 sm:text-sm">配信サイト</h3>
             <div className="flex flex-wrap gap-2">
               {aspStats.map((asp) => {
                 const providerId = ASP_TO_PROVIDER_ID[asp.aspName];
@@ -127,10 +126,8 @@ export default function UncategorizedFilter({
                   <button
                     key={asp.aspName}
                     onClick={() => handleAspChange(asp.aspName)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                      isSelected
-                        ? 'ring-2 ring-pink-500'
-                        : 'hover:opacity-80'
+                    className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+                      isSelected ? 'ring-2 ring-pink-500' : 'hover:opacity-80'
                     } bg-linear-to-r ${meta?.accentClass || 'from-gray-600 to-gray-500'} text-white`}
                   >
                     {meta?.label || asp.aspName}
@@ -144,11 +141,11 @@ export default function UncategorizedFilter({
 
         {/* クリアボタン */}
         {hasActiveFilters && (
-          <div className="flex flex-col sm:flex-row gap-2 pt-2">
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
             <button
               type="button"
               onClick={handleClear}
-              className="flex-1 sm:flex-none text-center px-6 py-3.5 sm:py-2 border border-gray-300 text-gray-700 rounded-lg sm:rounded-md font-medium hover:bg-gray-100 active:bg-gray-200 transition-colors min-h-[52px] sm:min-h-0"
+              className="min-h-[52px] flex-1 rounded-lg border border-gray-300 px-6 py-3.5 text-center font-medium text-gray-700 transition-colors hover:bg-gray-100 active:bg-gray-200 sm:min-h-0 sm:flex-none sm:rounded-md sm:py-2"
             >
               クリア
             </button>

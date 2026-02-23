@@ -96,7 +96,6 @@ async function updatePerformerStats() {
 
     console.log('\n=== Performer stats update completed successfully ===');
     process.exit(0);
-
   } catch (error) {
     console.error('Error updating performer stats:', error);
     process.exit(1);

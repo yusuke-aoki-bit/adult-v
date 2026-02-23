@@ -9,21 +9,12 @@ interface SimilarProductMapWrapperProps {
   locale: string;
 }
 
-export default function SimilarProductMapWrapper({
-  productId,
-  locale,
-}: SimilarProductMapWrapperProps) {
+export default function SimilarProductMapWrapper({ productId, locale }: SimilarProductMapWrapperProps) {
   const router = useRouter();
 
   const handleProductClick = (clickedProductId: number) => {
     router.push(localizedHref(`/products/${clickedProductId}`, locale));
   };
 
-  return (
-    <SimilarProductMap
-      productId={productId}
-      locale={locale}
-      onProductClick={handleProductClick}
-    />
-  );
+  return <SimilarProductMap productId={productId} locale={locale} onProductClick={handleProductClick} />;
 }

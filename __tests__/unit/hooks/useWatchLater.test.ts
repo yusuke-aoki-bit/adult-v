@@ -156,7 +156,7 @@ describe('useWatchLater', () => {
       expect(result.current.items).toHaveLength(100);
       expect(result.current.items[0]!.productId).toBe('new-item');
       // 最後に追加したもの（id-0）が削除されている
-      expect(result.current.items.find(i => i.productId === 'id-0')).toBeUndefined();
+      expect(result.current.items.find((i) => i.productId === 'id-0')).toBeUndefined();
     });
 
     it('localStorageに保存', () => {
@@ -166,10 +166,7 @@ describe('useWatchLater', () => {
         result.current.addItem({ productId: '123', title: 'Test' });
       });
 
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'watch-later-list',
-        expect.stringContaining('123')
-      );
+      expect(localStorageMock.setItem).toHaveBeenCalledWith('watch-later-list', expect.stringContaining('123'));
     });
   });
 
@@ -289,9 +286,7 @@ describe('useWatchLaterItem', () => {
 
   it('アイテムがリストにあるかチェック', () => {
     // 事前にデータを設定
-    const existingItems: WatchLaterItem[] = [
-      { productId: '123', title: 'Existing', addedAt: Date.now() },
-    ];
+    const existingItems: WatchLaterItem[] = [{ productId: '123', title: 'Existing', addedAt: Date.now() }];
     localStorageMock.setItem('watch-later-list', JSON.stringify(existingItems));
 
     const { result } = renderHook(() => useWatchLaterItem('123'));

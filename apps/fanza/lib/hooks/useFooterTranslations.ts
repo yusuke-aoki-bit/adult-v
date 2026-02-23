@@ -10,21 +10,26 @@ export const footerTranslations = {
     terms: '利用規約',
     contact: 'お問い合わせ',
     contactDescription: 'ご質問・ご要望はメールにてお問い合わせください。',
-    copyrightNotice: '当サイトはFANZAから収集した情報を表示しています。すべての画像・動画コンテンツの著作権は各権利者に帰属します。当サイトはFANZA/DMMの公式サービスではありません。',
-    disclaimer2257: '18 U.S.C. § 2257 免責: 当サイトはコンテンツの制作者ではありません。すべてのコンテンツは第三者のプラットフォームから提供されており、各プラットフォームが記録保持の責任を負います。',
+    copyrightNotice:
+      '当サイトはFANZAから収集した情報を表示しています。すべての画像・動画コンテンツの著作権は各権利者に帰属します。当サイトはFANZA/DMMの公式サービスではありません。',
+    disclaimer2257:
+      '18 U.S.C. § 2257 免責: 当サイトはコンテンツの制作者ではありません。すべてのコンテンツは第三者のプラットフォームから提供されており、各プラットフォームが記録保持の責任を負います。',
     admin: '管理ページ',
     copyright: '© {year} AVVIEWER LAB. All rights reserved.',
   },
   en: {
     siteName: 'AVVIEWER LAB',
-    description: 'FANZA product search and comparison service with actress information, rankings, and sale updates for heavy users.',
+    description:
+      'FANZA product search and comparison service with actress information, rankings, and sale updates for heavy users.',
     legal: 'Site Policies',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
     contact: 'Contact',
     contactDescription: 'For questions or requests, please contact us by email.',
-    copyrightNotice: 'This site displays information collected from FANZA. All image and video content copyrights belong to their respective owners. This site is NOT affiliated with FANZA/DMM.',
-    disclaimer2257: '18 U.S.C. § 2257 Exemption: This site is not the producer of any content. All content is provided by third-party platforms, which are responsible for record-keeping compliance.',
+    copyrightNotice:
+      'This site displays information collected from FANZA. All image and video content copyrights belong to their respective owners. This site is NOT affiliated with FANZA/DMM.',
+    disclaimer2257:
+      '18 U.S.C. § 2257 Exemption: This site is not the producer of any content. All content is provided by third-party platforms, which are responsible for record-keeping compliance.',
     admin: 'Admin',
     copyright: '© {year} AVVIEWER LAB. All rights reserved.',
   },
@@ -37,9 +42,24 @@ export const footerTranslations = {
     contact: '联系我们',
     contactDescription: '如有问题或需求，请通过电子邮件联系我们。',
     copyrightNotice: '本站展示从FANZA收集的信息。所有图片和视频内容的版权归各权利人所有。本站与FANZA/DMM无关联。',
-    disclaimer2257: '18 U.S.C. § 2257 免责声明：本站不是任何内容的制作者。所有内容均由第三方平台提供，各平台负责记录保存合规。',
+    disclaimer2257:
+      '18 U.S.C. § 2257 免责声明：本站不是任何内容的制作者。所有内容均由第三方平台提供，各平台负责记录保存合规。',
     admin: '管理页面',
     copyright: '© {year} AVVIEWER LAB. 保留所有权利。',
+  },
+  'zh-TW': {
+    siteName: 'AVVIEWER LAB',
+    description: 'FANZA作品搜尋和比較服務，提供女優資訊、排行榜和促銷活動更新。',
+    legal: '網站政策',
+    privacy: '隱私權政策',
+    terms: '服務條款',
+    contact: '聯絡我們',
+    contactDescription: '如有問題或需求，請透過電子郵件聯絡我們。',
+    copyrightNotice: '本站展示從FANZA收集的資訊。所有圖片和影片內容的版權歸各權利人所有。本站與FANZA/DMM無關聯。',
+    disclaimer2257:
+      '18 U.S.C. § 2257 免責聲明：本站不是任何內容的製作者。所有內容均由第三方平台提供，各平台負責記錄保存合規。',
+    admin: '管理頁面',
+    copyright: '© {year} AVVIEWER LAB. 保留所有權利。',
   },
   ko: {
     siteName: 'AVVIEWER LAB',
@@ -49,15 +69,17 @@ export const footerTranslations = {
     terms: '이용약관',
     contact: '문의',
     contactDescription: '질문이나 요청 사항은 이메일로 문의해 주세요.',
-    copyrightNotice: '이 사이트는 FANZA에서 수집한 정보를 표시합니다. 모든 이미지 및 동영상 콘텐츠의 저작권은 각 권리자에게 있습니다. 이 사이트는 FANZA/DMM과 관련이 없습니다.',
-    disclaimer2257: '18 U.S.C. § 2257 면책: 이 사이트는 콘텐츠 제작자가 아닙니다. 모든 콘텐츠는 제3자 플랫폼에서 제공되며, 각 플랫폼이 기록 보관 규정 준수를 담당합니다.',
+    copyrightNotice:
+      '이 사이트는 FANZA에서 수집한 정보를 표시합니다. 모든 이미지 및 동영상 콘텐츠의 저작권은 각 권리자에게 있습니다. 이 사이트는 FANZA/DMM과 관련이 없습니다.',
+    disclaimer2257:
+      '18 U.S.C. § 2257 면책: 이 사이트는 콘텐츠 제작자가 아닙니다. 모든 콘텐츠는 제3자 플랫폼에서 제공되며, 각 플랫폼이 기록 보관 규정 준수를 담당합니다.',
     admin: '관리 페이지',
     copyright: '© {year} AVVIEWER LAB. All rights reserved.',
   },
 } as const;
 
 export type FooterTranslationKey = keyof typeof footerTranslations;
-export type FooterTranslation = typeof footerTranslations[FooterTranslationKey];
+export type FooterTranslation = (typeof footerTranslations)[FooterTranslationKey];
 
 export function getFooterTranslation(locale: string): FooterTranslation {
   return footerTranslations[locale as FooterTranslationKey] || footerTranslations.ja;

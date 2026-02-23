@@ -1,15 +1,6 @@
 'use client';
 
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 interface YearlyStats {
   year: number;
@@ -26,12 +17,9 @@ export default function YearlyStatsChart({ data }: Props) {
   const sortedData = [...data].sort((a, b) => a.year - b.year);
 
   return (
-    <div className="w-full h-[300px] md:h-[400px]">
+    <div className="h-[300px] w-full md:h-[400px]">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart
-          data={sortedData}
-          margin={{ top: 10, right: 30, left: 10, bottom: 0 }}
-        >
+        <AreaChart data={sortedData} margin={{ top: 10, right: 30, left: 10, bottom: 0 }}>
           <defs>
             <linearGradient id="colorProducts" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8} />
@@ -43,11 +31,7 @@ export default function YearlyStatsChart({ data }: Props) {
             </linearGradient>
           </defs>
           <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200 dark:stroke-gray-700" />
-          <XAxis
-            dataKey="year"
-            tick={{ fontSize: 12 }}
-            className="text-gray-600 dark:text-gray-400"
-          />
+          <XAxis dataKey="year" tick={{ fontSize: 12 }} className="text-gray-600 dark:text-gray-400" />
           <YAxis
             tick={{ fontSize: 12 }}
             className="text-gray-600 dark:text-gray-400"
@@ -65,16 +49,8 @@ export default function YearlyStatsChart({ data }: Props) {
             ]}
             labelFormatter={(label) => `${label}年`}
           />
-          <Legend
-            formatter={(value) => (value === 'totalProducts' ? '作品数' : '出演女優数')}
-          />
-          <Area
-            type="monotone"
-            dataKey="totalProducts"
-            stroke="#6366f1"
-            fillOpacity={1}
-            fill="url(#colorProducts)"
-          />
+          <Legend formatter={(value) => (value === 'totalProducts' ? '作品数' : '出演女優数')} />
+          <Area type="monotone" dataKey="totalProducts" stroke="#6366f1" fillOpacity={1} fill="url(#colorProducts)" />
           <Area
             type="monotone"
             dataKey="totalPerformers"

@@ -80,7 +80,7 @@ function calculateDelay(
   attempt: number,
   initialDelayMs: number,
   exponentialBackoff: boolean,
-  maxDelayMs: number
+  maxDelayMs: number,
 ): number {
   if (!exponentialBackoff) {
     return initialDelayMs;
@@ -123,10 +123,7 @@ function sleep(ms: number): Promise<void> {
  * );
  * ```
  */
-export async function withRetry<T>(
-  fn: () => Promise<T>,
-  options: RetryOptions = {}
-): Promise<T> {
+export async function withRetry<T>(fn: () => Promise<T>, options: RetryOptions = {}): Promise<T> {
   const opts = { ...DEFAULT_OPTIONS, ...options };
   let lastError: Error = new Error('Unknown error');
 
@@ -142,12 +139,7 @@ export async function withRetry<T>(
       }
 
       // 遅延時間を計算
-      const delayMs = calculateDelay(
-        attempt,
-        opts.initialDelayMs,
-        opts.exponentialBackoff,
-        opts.maxDelayMs
-      );
+      const delayMs = calculateDelay(attempt, opts.initialDelayMs, opts.exponentialBackoff, opts.maxDelayMs);
 
       // リトライコールバック
       opts.onRetry(lastError, attempt + 1, delayMs);
@@ -167,11 +159,7 @@ export async function withRetry<T>(
  * @param init - fetch オプション
  * @param retryOptions - リトライオプション
  */
-export async function fetchWithRetry(
-  url: string,
-  init?: RequestInit,
-  retryOptions?: RetryOptions
-): Promise<Response> {
+export async function fetchWithRetry(url: string, init?: RequestInit, retryOptions?: RetryOptions): Promise<Response> {
   return withRetry(
     async () => {
       const response = await fetch(url, init);
@@ -191,6 +179,6 @@ export async function fetchWithRetry(
     {
       shouldRetry: (error) => isRetryableError(error),
       ...retryOptions,
-    }
+    },
   );
 }

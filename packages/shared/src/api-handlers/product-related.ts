@@ -41,7 +41,7 @@ export function createProductRelatedHandler(deps: ProductRelatedHandlerDeps) {
         limit,
       });
 
-      const productsWithScore = relatedProducts.map(product => {
+      const productsWithScore = relatedProducts.map((product) => {
         const dbScore = Number(product.match_score) || 0;
         const matchScore = Math.min(95, Math.max(50, 50 + dbScore * 15));
 

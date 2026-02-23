@@ -17,7 +17,7 @@ async function main() {
   // 1. 品番から生成される検索パターン
   const searchCodes = extractProductCodes(productCode);
   console.log('1. 生成される検索パターン:');
-  searchCodes.forEach(code => console.log(`   - ${code}`));
+  searchCodes.forEach((code) => console.log(`   - ${code}`));
 
   // 2. wiki_crawl_dataから検索
   console.log('\n2. wiki_crawl_data検索:');
@@ -33,7 +33,9 @@ async function main() {
 
     // 「黒島玲衣」のデータがあるか検索
     console.log('\n   黒島玲衣の検索:');
-    const kuroResult = await db.execute(sql`SELECT product_code, performer_name FROM wiki_crawl_data WHERE performer_name LIKE '%黒島%' LIMIT 5`);
+    const kuroResult = await db.execute(
+      sql`SELECT product_code, performer_name FROM wiki_crawl_data WHERE performer_name LIKE '%黒島%' LIMIT 5`,
+    );
     if (kuroResult.rows.length > 0) {
       kuroResult.rows.forEach((row) => {
         const r = row as { product_code: string; performer_name: string };
@@ -55,7 +57,12 @@ async function main() {
       title: products['title'],
     })
     .from(products)
-    .where(sql`UPPER(${products.normalizedProductId}) = ANY(ARRAY[${sql.join(searchCodes.map(c => sql`${c.toUpperCase()}`), sql`, `)}]::text[])`)
+    .where(
+      sql`UPPER(${products.normalizedProductId}) = ANY(ARRAY[${sql.join(
+        searchCodes.map((c) => sql`${c.toUpperCase()}`),
+        sql`, `,
+      )}]::text[])`,
+    )
     .limit(1);
 
   if (product) {
@@ -70,7 +77,7 @@ async function main() {
       .where(eq(productPerformers.productId, product['id']));
 
     if (currentPerformers.length > 0) {
-      console.log(`   現在の演者: ${currentPerformers.map(p => p.name).join(', ')}`);
+      console.log(`   現在の演者: ${currentPerformers.map((p) => p.name).join(', ')}`);
     } else {
       console.log('   現在の演者: (なし)');
     }

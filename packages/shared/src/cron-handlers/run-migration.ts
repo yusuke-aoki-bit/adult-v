@@ -87,8 +87,8 @@ export function createRunMigrationHandler(deps: RunMigrationDeps) {
       return {
         success: true,
         migration: migrationName,
-        productsColumns: (productsResult.rows as Array<{ column_name: string }>).map(r => r.column_name),
-        performersColumns: (performersResult.rows as Array<{ column_name: string }>).map(r => r.column_name),
+        productsColumns: (productsResult.rows as Array<{ column_name: string }>).map((r) => r.column_name),
+        performersColumns: (performersResult.rows as Array<{ column_name: string }>).map((r) => r.column_name),
         duration,
       };
     } catch (error) {

@@ -11,7 +11,19 @@
 import * as cheerio from 'cheerio';
 import crypto from 'crypto';
 import { getDb } from '../lib/db';
-import { rawHtmlData, productSources, products, performers, productPerformers, tags, productTags, productImages, productVideos, productReviews, productRatingSummary } from '../lib/db/schema';
+import {
+  rawHtmlData,
+  productSources,
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productImages,
+  productVideos,
+  productReviews,
+  productRatingSummary,
+} from '../lib/db/schema';
 import { eq, and } from 'drizzle-orm';
 import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../lib/performer-validation';
 import { validateProductData, isTopPageHtml, savePerformersWithWikiPriority } from '../lib/crawler-utils';
@@ -152,17 +164,20 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     }
 
     // タイトルがトップページのタイトルかチェック
-    if (title.includes('エロ動画・アダルトビデオ -MGS動画') ||
-        title.includes('MGS動画＜プレステージ グループ＞') ||
-        title === 'エロ動画・アダルトビデオ -MGS動画＜プレステージ グループ＞') {
+    if (
+      title.includes('エロ動画・アダルトビデオ -MGS動画') ||
+      title.includes('MGS動画＜プレステージ グループ＞') ||
+      title === 'エロ動画・アダルトビデオ -MGS動画＜プレステージ グループ＞'
+    ) {
       console.error(`  ⚠️ トップページのタイトルが検出されました（商品が存在しない）: ${productId}`);
       return null;
     }
 
     // 商品詳細ページの特徴がないかチェック
-    const hasProductDetails = $('th:contains("配信開始日")').length > 0 ||
-                              $('th:contains("出演")').length > 0 ||
-                              $('th:contains("価格")').length > 0;
+    const hasProductDetails =
+      $('th:contains("配信開始日")').length > 0 ||
+      $('th:contains("出演")').length > 0 ||
+      $('th:contains("価格")').length > 0;
     if (!hasProductDetails) {
       console.error(`  ⚠️ 商品詳細情報がありません（商品が存在しない）: ${productId}`);
       return null;
@@ -174,12 +189,15 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     // 出演者を抽出（バリデーション付き）
     const rawPerformerNames: string[] = [];
-    $('th:contains("出演")').next('td').find('a').each((_, elem) => {
-      const name = $(elem).text().trim();
-      if (name) {
-        rawPerformerNames.push(name);
-      }
-    });
+    $('th:contains("出演")')
+      .next('td')
+      .find('a')
+      .each((_, elem) => {
+        const name = $(elem).text().trim();
+        if (name) {
+          rawPerformerNames.push(name);
+        }
+      });
 
     // 出演者がリンクでない場合もある
     if (rawPerformerNames.length === 0) {
@@ -197,10 +215,12 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     // バリデーションを適用して有効な名前のみフィルタリング
     const performerNames = rawPerformerNames
-      .map(name => normalizePerformerName(name))
+      .map((name) => normalizePerformerName(name))
       .filter((name): name is string => name !== null && isValidPerformerForProduct(name, title));
 
-    console.log(`  Found ${performerNames.length} valid performer(s): ${performerNames.join(', ')} (raw: ${rawPerformerNames.length})`);
+    console.log(
+      `  Found ${performerNames.length} valid performer(s): ${performerNames.join(', ')} (raw: ${rawPerformerNames.length})`,
+    );
 
     // サムネイル画像を抽出
     let thumbnailUrl: string | undefined;
@@ -292,7 +312,9 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
     if (!sampleVideoUrl) {
       const sampleMovieLink = $('a[href*="sample_movie"]').attr('href');
       if (sampleMovieLink) {
-        sampleVideoUrl = sampleMovieLink.startsWith('http') ? sampleMovieLink : `https://www.mgstage.com${sampleMovieLink}`;
+        sampleVideoUrl = sampleMovieLink.startsWith('http')
+          ? sampleMovieLink
+          : `https://www.mgstage.com${sampleMovieLink}`;
       }
     }
 
@@ -489,7 +511,9 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
         };
 
         const endAtStr = saleEndAt ? ` (〜${saleEndAt.toLocaleDateString('ja-JP')})` : '';
-        console.log(`  💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${price.toLocaleString()} (${discountPercent}% OFF)${endAtStr}`);
+        console.log(
+          `  💰 Sale detected: ¥${regularPrice.toLocaleString()} → ¥${price.toLocaleString()} (${discountPercent}% OFF)${endAtStr}`,
+        );
       }
     }
 
@@ -518,7 +542,9 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
         averageRating: parseFloat(summaryMatch[2]),
         totalReviews: parseInt(summaryMatch[3], 10),
       };
-      console.log(`  Found rating summary: ${ratingSummary.averageRating}/${ratingSummary.maxRating} (${ratingSummary.totalReviews} reviews)`);
+      console.log(
+        `  Found rating summary: ${ratingSummary.averageRating}/${ratingSummary.maxRating} (${ratingSummary.totalReviews} reviews)`,
+      );
     }
 
     // 個別レビューを抽出
@@ -530,7 +556,10 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       // レビュアー名 (例: "カカシさんのレビュー" → "カカシ")
       const reviewerNameText = $userDate.find('.name').text().trim();
       const reviewerNameMatch = reviewerNameText.match(/^(.+?)さんのレビュー$/);
-      const reviewerName = (reviewerNameMatch && reviewerNameMatch[1]) ? reviewerNameMatch[1] : reviewerNameText.replace(/さんのレビュー$/, '');
+      const reviewerName =
+        reviewerNameMatch && reviewerNameMatch[1]
+          ? reviewerNameMatch[1]
+          : reviewerNameText.replace(/さんのレビュー$/, '');
 
       // 評価（star_XX_XX または star_XX クラスから）
       // star_50 = 5.0, star_40_44 = 4.0-4.4 (実質4.0)
@@ -545,12 +574,15 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
       // レビュー内容（user_dateの次の兄弟要素p.text）
       const $textElem = $userDate.nextAll('p.text').first();
       const contentHtml = $textElem.html() || '';
-      const content = contentHtml.replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+      const content = contentHtml
+        .replace(/<br\s*\/?>/gi, '\n')
+        .replace(/<[^>]+>/g, '')
+        .trim();
 
       if (reviewerName && content) {
         // 重複チェック（同じ投稿者・同じ内容の先頭50文字）
         const isDuplicate = reviews.some(
-          r => r.reviewerName === reviewerName && r.content.substring(0, 50) === content.substring(0, 50)
+          (r) => r.reviewerName === reviewerName && r.content.substring(0, 50) === content.substring(0, 50),
         );
         if (!isDuplicate) {
           reviews.push({
@@ -575,12 +607,15 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 
     // ジャンル/カテゴリを抽出
     const genres: string[] = [];
-    $('th:contains("ジャンル")').next('td').find('a').each((_, elem) => {
-      const genre = $(elem).text().trim();
-      if (genre) {
-        genres.push(genre);
-      }
-    });
+    $('th:contains("ジャンル")')
+      .next('td')
+      .find('a')
+      .each((_, elem) => {
+        const genre = $(elem).text().trim();
+        if (genre) {
+          genres.push(genre);
+        }
+      });
 
     console.log(`  Found ${genres.length} genre(s): ${genres.join(', ')}`);
 
@@ -646,11 +681,7 @@ async function crawlMgsProduct(productUrl: string): Promise<MgsProduct | null> {
 /**
  * 生HTMLデータをデータベースに保存（GCS優先）
  */
-async function saveRawHtmlData(
-  productId: string,
-  url: string,
-  html: string,
-): Promise<void> {
+async function saveRawHtmlData(productId: string, url: string, html: string): Promise<void> {
   const db = getDb();
   const hash = calculateHash(html);
 
@@ -750,7 +781,9 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         .returning();
 
       productId = newProduct!.id;
-      console.log(`Created new product: ${normalizedProductId}${mgsProduct.duration ? ` (${mgsProduct.duration}分)` : ''}`);
+      console.log(
+        `Created new product: ${normalizedProductId}${mgsProduct.duration ? ` (${mgsProduct.duration}分)` : ''}`,
+      );
     } else {
       productId = productRecord[0]!['id'];
       // 既存作品のduration・descriptionが未設定の場合は更新
@@ -762,12 +795,10 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         updateData['description'] = mgsProduct.description;
       }
       if (Object.keys(updateData).length > 0) {
-        await db
-          .update(products)
-          .set(updateData)
-          .where(eq(products['id'], productId));
+        await db.update(products).set(updateData).where(eq(products['id'], productId));
         if (updateData['duration']) console.log(`  Updated duration: ${updateData['duration']}分`);
-        if (updateData['description']) console.log(`  Updated description: ${updateData['description'].substring(0, 50)}...`);
+        if (updateData['description'])
+          console.log(`  Updated description: ${updateData['description'].substring(0, 50)}...`);
       }
     }
 
@@ -778,12 +809,7 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
     const existing = await db
       .select()
       .from(productSources)
-      .where(
-        and(
-          eq(productSources.productId, productId),
-          eq(productSources.aspName, SOURCE_NAME),
-        ),
-      )
+      .where(and(eq(productSources.productId, productId), eq(productSources.aspName, SOURCE_NAME)))
       .limit(1);
 
     let sourceId: number;
@@ -800,20 +826,26 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
         })
         .where(eq(productSources.id, sourceId));
 
-      console.log(`Updated affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
+      console.log(
+        `Updated affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`,
+      );
     } else {
       // 新規挿入
-      const [inserted] = await db['insert'](productSources).values({
-        productId,
-        aspName: SOURCE_NAME,
-        originalProductId: mgsProduct.productId,
-        affiliateUrl: affiliateUrl,
-        price: mgsProduct.price,
-        dataSource: 'HTML',
-      }).returning({ id: productSources.id });
+      const [inserted] = await db['insert'](productSources)
+        .values({
+          productId,
+          aspName: SOURCE_NAME,
+          originalProductId: mgsProduct.productId,
+          affiliateUrl: affiliateUrl,
+          price: mgsProduct.price,
+          dataSource: 'HTML',
+        })
+        .returning({ id: productSources.id });
       sourceId = inserted!.id;
 
-      console.log(`Saved affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`);
+      console.log(
+        `Saved affiliate link for product ${productId}${mgsProduct.price ? ` (¥${mgsProduct.price.toLocaleString()})` : ''}`,
+      );
     }
 
     // product_prices に価格タイプ別の価格を保存
@@ -836,22 +868,12 @@ async function saveAffiliateLink(mgsProduct: MgsProduct): Promise<void> {
  * 女優データを保存して、作品と紐付け
  * wiki_crawl_dataから品番で演者名を検索し、見つかった場合はそれを優先使用
  */
-async function savePerformers(
-  productId: number,
-  productCode: string,
-  performerNames: string[],
-): Promise<void> {
+async function savePerformers(productId: number, productCode: string, performerNames: string[]): Promise<void> {
   const db = getDb();
 
   try {
     // wiki_crawl_data優先で演者を保存
-    const savedCount = await savePerformersWithWikiPriority(
-      db,
-      productId,
-      productCode,
-      performerNames || [],
-      'MGS'
-    );
+    const savedCount = await savePerformersWithWikiPriority(db, productId, productCode, performerNames || [], 'MGS');
 
     if (savedCount > 0) {
       console.log(`  Saved ${savedCount} performer(s) to product ${productId}`);
@@ -872,11 +894,7 @@ async function linkMgsTag(productId: number): Promise<void> {
 
   try {
     // MGSタグを検索または作成
-    const mgsTag = await db
-      .select()
-      .from(tags)
-      .where(eq(tags.name, SOURCE_NAME))
-      .limit(1);
+    const mgsTag = await db.select().from(tags).where(eq(tags.name, SOURCE_NAME)).limit(1);
 
     let tagId: number;
 
@@ -900,12 +918,7 @@ async function linkMgsTag(productId: number): Promise<void> {
     const existingLink = await db
       .select()
       .from(productTags)
-      .where(
-        and(
-          eq(productTags.productId, productId),
-          eq(productTags.tagId, tagId),
-        ),
-      )
+      .where(and(eq(productTags.productId, productId), eq(productTags.tagId, tagId)))
       .limit(1);
 
     if (existingLink.length === 0) {
@@ -924,11 +937,7 @@ async function linkMgsTag(productId: number): Promise<void> {
 /**
  * 作品画像を product_images テーブルに保存
  */
-async function saveProductImages(
-  productId: number,
-  thumbnailUrl?: string,
-  sampleImages?: string[],
-): Promise<void> {
+async function saveProductImages(productId: number, thumbnailUrl?: string, sampleImages?: string[]): Promise<void> {
   if (!thumbnailUrl && (!sampleImages || sampleImages.length === 0)) {
     return;
   }
@@ -941,12 +950,7 @@ async function saveProductImages(
       const existing = await db
         .select()
         .from(productImages)
-        .where(
-          and(
-            eq(productImages.productId, productId),
-            eq(productImages.imageUrl, thumbnailUrl),
-          ),
-        )
+        .where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, thumbnailUrl)))
         .limit(1);
 
       if (existing.length === 0) {
@@ -969,12 +973,7 @@ async function saveProductImages(
         const existing = await db
           .select()
           .from(productImages)
-          .where(
-            and(
-              eq(productImages.productId, productId),
-              eq(productImages.imageUrl, imageUrl),
-            ),
-          )
+          .where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, imageUrl)))
           .limit(1);
 
         if (existing.length === 0) {
@@ -998,10 +997,7 @@ async function saveProductImages(
 /**
  * サンプル動画を product_videos テーブルに保存
  */
-async function saveProductVideo(
-  productId: number,
-  sampleVideoUrl?: string,
-): Promise<void> {
+async function saveProductVideo(productId: number, sampleVideoUrl?: string): Promise<void> {
   if (!sampleVideoUrl) {
     return;
   }
@@ -1013,22 +1009,19 @@ async function saveProductVideo(
     const existing = await db
       .select()
       .from(productVideos)
-      .where(
-        and(
-          eq(productVideos.productId, productId),
-          eq(productVideos.videoUrl, sampleVideoUrl),
-        ),
-      )
+      .where(and(eq(productVideos.productId, productId), eq(productVideos.videoUrl, sampleVideoUrl)))
       .limit(1);
 
     if (existing.length === 0) {
-      await db['insert'](productVideos).values({
-        productId,
-        videoUrl: sampleVideoUrl,
-        videoType: 'sample',
-        displayOrder: 0,
-        aspName: SOURCE_NAME,
-      }).onConflictDoNothing();
+      await db['insert'](productVideos)
+        .values({
+          productId,
+          videoUrl: sampleVideoUrl,
+          videoType: 'sample',
+          displayOrder: 0,
+          aspName: SOURCE_NAME,
+        })
+        .onConflictDoNothing();
       console.log(`  🎬 Saved sample video to product_videos`);
     }
   } catch (error) {
@@ -1053,12 +1046,7 @@ async function saveProductReviews(
       const existing = await db
         .select()
         .from(productRatingSummary)
-        .where(
-          and(
-            eq(productRatingSummary.productId, productId),
-            eq(productRatingSummary.aspName, SOURCE_NAME),
-          ),
-        )
+        .where(and(eq(productRatingSummary.productId, productId), eq(productRatingSummary.aspName, SOURCE_NAME)))
         .limit(1);
 
       if (existing.length > 0 && existing[0]) {
@@ -1156,7 +1144,7 @@ async function generateAIContent(
       extractTags: true,
       translate: false, // MGSはLingva翻訳を使うため
       generateDescription: true,
-    }
+    },
   );
 
   // エラーがあれば警告
@@ -1175,7 +1163,13 @@ async function generateAIContent(
   }
 
   // AIタグ
-  if (result.tags && (result.tags.genres.length > 0 || result.tags.attributes.length > 0 || result.tags.plays.length > 0 || result.tags.situations.length > 0)) {
+  if (
+    result.tags &&
+    (result.tags.genres.length > 0 ||
+      result.tags.attributes.length > 0 ||
+      result.tags.plays.length > 0 ||
+      result.tags.situations.length > 0)
+  ) {
     aiTags = result.tags;
     console.log(`    ✅ AIタグ抽出完了`);
     console.log(`       ジャンル: ${result.tags.genres.join(', ') || 'なし'}`);
@@ -1216,10 +1210,7 @@ async function saveAIContent(
     }
 
     if (Object.keys(updateData).length > 0) {
-      await db
-        .update(products)
-        .set(updateData)
-        .where(eq(products['id'], productId));
+      await db.update(products).set(updateData).where(eq(products['id'], productId));
       console.log(`  💾 AI生成データを保存しました`);
     }
   } catch (error) {
@@ -1279,10 +1270,7 @@ async function translateAndSave(
 
     if (Object.keys(updateData).length > 0) {
       updateData['updatedAt'] = new Date();
-      await db
-        .update(products)
-        .set(updateData)
-        .where(eq(products['id'], productId));
+      await db.update(products).set(updateData).where(eq(products['id'], productId));
       console.log(`  💾 翻訳データを保存しました`);
     }
   } catch (error) {
@@ -1298,7 +1286,7 @@ async function main() {
 
   // オプション解析
   const enableAI = !args.includes('--no-ai');
-  const urls = args.filter(arg => !arg.startsWith('--'));
+  const urls = args.filter((arg) => !arg.startsWith('--'));
 
   if (urls.length === 0) {
     console.log('Usage: npx tsx scripts/crawlers/crawl-mgs.ts [options] <product-url> [<product-url> ...]');
@@ -1306,7 +1294,9 @@ async function main() {
     console.log('Options:');
     console.log('  --no-ai  AI説明文生成をスキップ');
     console.log('');
-    console.log('Example: npx tsx scripts/crawlers/crawl-mgs.ts https://www.mgstage.com/product/product_detail/857OMG-018/');
+    console.log(
+      'Example: npx tsx scripts/crawlers/crawl-mgs.ts https://www.mgstage.com/product/product_detail/857OMG-018/',
+    );
     process.exit(1);
   }
 
@@ -1387,10 +1377,7 @@ async function main() {
 
         // products['defaultThumbnailUrl']を更新
         if (thumbnailUrl) {
-          await db
-            .update(products)
-            .set({ defaultThumbnailUrl: thumbnailUrl })
-            .where(eq(products['id'], productId));
+          await db.update(products).set({ defaultThumbnailUrl: thumbnailUrl }).where(eq(products['id'], productId));
           console.log(`  Updated products['defaultThumbnailUrl']`);
         }
 

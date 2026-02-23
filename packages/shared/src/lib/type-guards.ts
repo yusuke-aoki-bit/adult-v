@@ -48,20 +48,14 @@ export function isArray<T = unknown>(value: unknown): value is T[] {
 /**
  * オブジェクトが特定のキーを持つことを確認
  */
-export function hasProperty<K extends string>(
-  obj: unknown,
-  key: K
-): obj is Record<K, unknown> {
+export function hasProperty<K extends string>(obj: unknown, key: K): obj is Record<K, unknown> {
   return isObject(obj) && key in obj;
 }
 
 /**
  * DBクエリ結果の行が特定の構造を持つことを確認
  */
-export function isDbRow<T extends Record<string, unknown>>(
-  row: unknown,
-  requiredKeys: (keyof T)[]
-): row is T {
+export function isDbRow<T extends Record<string, unknown>>(row: unknown, requiredKeys: (keyof T)[]): row is T {
   if (!isObject(row)) return false;
   return requiredKeys.every((key) => key in row);
 }
@@ -69,9 +63,7 @@ export function isDbRow<T extends Record<string, unknown>>(
 /**
  * performerId を含む行の型ガード
  */
-export function hasPerformerId(
-  row: unknown
-): row is { performerId: number } {
+export function hasPerformerId(row: unknown): row is { performerId: number } {
   return hasProperty(row, 'performerId') && isNumber(row['performerId']);
 }
 
@@ -79,12 +71,8 @@ export function hasPerformerId(
  * performerIdを持つ行の配列から、performerIdの配列を抽出
  * 型安全にfilter + mapを1ステップで行う
  */
-export function extractPerformerIds(
-  rows: { performerId: unknown }[]
-): number[] {
-  return rows
-    .filter(hasPerformerId)
-    .map((row) => row['performerId']);
+export function extractPerformerIds(rows: { performerId: unknown }[]): number[] {
+  return rows.filter(hasPerformerId).map((row) => row['performerId']);
 }
 
 /**
@@ -105,9 +93,7 @@ export function extractIds(rows: { id: unknown }[]): number[] {
 /**
  * productId を含む行の型ガード
  */
-export function hasProductId(
-  row: unknown
-): row is { productId: number } {
+export function hasProductId(row: unknown): row is { productId: number } {
   return hasProperty(row, 'productId') && isNumber(row['productId']);
 }
 
@@ -115,18 +101,14 @@ export function hasProductId(
  * productIdを持つ行の配列から、productIdの配列を抽出
  * 型安全にfilter + mapを1ステップで行う
  */
-export function extractProductIds(
-  rows: { productId: unknown }[]
-): number[] {
+export function extractProductIds(rows: { productId: unknown }[]): number[] {
   return rows.filter(hasProductId).map((row) => row['productId']);
 }
 
 /**
  * count を含む行の型ガード（文字列または数値）
  */
-export function hasCount(
-  row: unknown
-): row is { count: string | number } {
+export function hasCount(row: unknown): row is { count: string | number } {
   if (!hasProperty(row, 'count')) return false;
   return isString(row['count']) || isNumber(row['count']);
 }
@@ -141,10 +123,7 @@ export function hasAspName(row: unknown): row is { aspName: string } {
 /**
  * 配列の各要素をフィルタリングしながら型を絞り込む
  */
-export function filterMap<T, U>(
-  array: T[],
-  predicate: (item: T) => item is T & U
-): (T & U)[] {
+export function filterMap<T, U>(array: T[], predicate: (item: T) => item is T & U): (T & U)[] {
   return array.filter(predicate);
 }
 
@@ -382,14 +361,14 @@ export function toBatchSourceRows(rows: unknown[]): BatchSourceRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      id: ((r['id'] ?? 0) as number),
-      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
-      aspName: ((r['asp_name'] ?? r['aspName'] ?? '') as string),
-      originalProductId: ((r['original_product_id'] ?? r['originalProductId'] ?? null) as string | null),
-      affiliateUrl: ((r['affiliate_url'] ?? r['affiliateUrl'] ?? null) as string | null),
-      price: ((r['price'] ?? null) as number | null),
-      currency: ((r['currency'] ?? null) as string | null),
-      productType: ((r['product_type'] ?? r['productType'] ?? null) as string | null),
+      id: (r['id'] ?? 0) as number,
+      productId: (r['product_id'] ?? r['productId'] ?? 0) as number,
+      aspName: (r['asp_name'] ?? r['aspName'] ?? '') as string,
+      originalProductId: (r['original_product_id'] ?? r['originalProductId'] ?? null) as string | null,
+      affiliateUrl: (r['affiliate_url'] ?? r['affiliateUrl'] ?? null) as string | null,
+      price: (r['price'] ?? null) as number | null,
+      currency: (r['currency'] ?? null) as string | null,
+      productType: (r['product_type'] ?? r['productType'] ?? null) as string | null,
     };
   });
 }
@@ -411,10 +390,10 @@ export function toBatchImageRows(rows: unknown[]): BatchImageRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
-      imageUrl: ((r['image_url'] ?? r['imageUrl'] ?? '') as string),
-      imageType: ((r['image_type'] ?? r['imageType'] ?? '') as string),
-      displayOrder: ((r['display_order'] ?? r['displayOrder'] ?? null) as number | null),
+      productId: (r['product_id'] ?? r['productId'] ?? 0) as number,
+      imageUrl: (r['image_url'] ?? r['imageUrl'] ?? '') as string,
+      imageType: (r['image_type'] ?? r['imageType'] ?? '') as string,
+      displayOrder: (r['display_order'] ?? r['displayOrder'] ?? null) as number | null,
     };
   });
 }
@@ -437,11 +416,11 @@ export function toBatchVideoRows(rows: unknown[]): BatchVideoRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
-      videoUrl: ((r['video_url'] ?? r['videoUrl'] ?? '') as string),
-      videoType: ((r['video_type'] ?? r['videoType'] ?? null) as string | null),
-      quality: ((r['quality'] ?? null) as string | null),
-      duration: ((r['duration'] ?? null) as number | null),
+      productId: (r['product_id'] ?? r['productId'] ?? 0) as number,
+      videoUrl: (r['video_url'] ?? r['videoUrl'] ?? '') as string,
+      videoType: (r['video_type'] ?? r['videoType'] ?? null) as string | null,
+      quality: (r['quality'] ?? null) as string | null,
+      duration: (r['duration'] ?? null) as number | null,
     };
   });
 }
@@ -464,11 +443,11 @@ export function toBatchSaleRows(rows: unknown[]): BatchSaleRow[] {
   return rows.map((row) => {
     const r = row as Record<string, unknown>;
     return {
-      productId: ((r['product_id'] ?? r['productId'] ?? 0) as number),
-      regularPrice: ((r['regular_price'] ?? r['regularPrice'] ?? 0) as number),
-      salePrice: ((r['sale_price'] ?? r['salePrice'] ?? 0) as number),
-      discountPercent: ((r['discount_percent'] ?? r['discountPercent'] ?? null) as number | null),
-      endAt: ((r['end_at'] ?? r['endAt'] ?? null) as Date | null),
+      productId: (r['product_id'] ?? r['productId'] ?? 0) as number,
+      regularPrice: (r['regular_price'] ?? r['regularPrice'] ?? 0) as number,
+      salePrice: (r['sale_price'] ?? r['salePrice'] ?? 0) as number,
+      discountPercent: (r['discount_percent'] ?? r['discountPercent'] ?? null) as number | null,
+      endAt: (r['end_at'] ?? r['endAt'] ?? null) as Date | null,
     };
   });
 }

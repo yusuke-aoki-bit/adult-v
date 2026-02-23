@@ -21,10 +21,9 @@ describe('useDebounce', () => {
   });
 
   it('delay後に新しい値を返す', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 500 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 500 },
+    });
 
     expect(result.current).toBe('initial');
 
@@ -44,10 +43,9 @@ describe('useDebounce', () => {
   });
 
   it('delay内の連続した変更は最後の値のみ反映', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'v1', delay: 500 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'v1', delay: 500 },
+    });
 
     // 連続して値を変更
     rerender({ value: 'v2', delay: 500 });
@@ -75,10 +73,9 @@ describe('useDebounce', () => {
   });
 
   it('異なるdelay値でも動作する', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 1000 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 1000 },
+    });
 
     rerender({ value: 'updated', delay: 1000 });
 
@@ -94,10 +91,9 @@ describe('useDebounce', () => {
   });
 
   it('delay=0でも正常に動作', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 0 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 0 },
+    });
 
     rerender({ value: 'updated', delay: 0 });
 
@@ -109,10 +105,9 @@ describe('useDebounce', () => {
   });
 
   it('数値型でも動作', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 100, delay: 300 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 100, delay: 300 },
+    });
 
     rerender({ value: 200, delay: 300 });
 
@@ -127,10 +122,9 @@ describe('useDebounce', () => {
     const initialObj = { name: 'initial' };
     const updatedObj = { name: 'updated' };
 
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: initialObj, delay: 300 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: initialObj, delay: 300 },
+    });
 
     rerender({ value: updatedObj, delay: 300 });
 
@@ -144,10 +138,9 @@ describe('useDebounce', () => {
   it('アンマウント時にタイマーをクリア', () => {
     const clearTimeoutSpy = vi.spyOn(global, 'clearTimeout');
 
-    const { unmount, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 500 } }
-    );
+    const { unmount, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 500 },
+    });
 
     rerender({ value: 'updated', delay: 500 });
 
@@ -161,10 +154,9 @@ describe('useDebounce', () => {
   });
 
   it('null値も扱える', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: null as string | null, delay: 300 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: null as string | null, delay: 300 },
+    });
 
     expect(result.current).toBe(null);
 
@@ -178,10 +170,9 @@ describe('useDebounce', () => {
   });
 
   it('undefined値も扱える', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: undefined as string | undefined, delay: 300 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: undefined as string | undefined, delay: 300 },
+    });
 
     expect(result.current).toBe(undefined);
 
@@ -195,10 +186,9 @@ describe('useDebounce', () => {
   });
 
   it('delay変更時にタイマーをリセット', () => {
-    const { result, rerender } = renderHook(
-      ({ value, delay }) => useDebounce(value, delay),
-      { initialProps: { value: 'initial', delay: 500 } }
-    );
+    const { result, rerender } = renderHook(({ value, delay }) => useDebounce(value, delay), {
+      initialProps: { value: 'initial', delay: 500 },
+    });
 
     rerender({ value: 'updated', delay: 500 });
 

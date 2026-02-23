@@ -10,13 +10,21 @@ const metadataTexts = {
     title: 'Makers & Labels',
     description: 'Browse products by popular makers and labels',
   },
+  zh: {
+    title: '制造商与厂牌一览',
+    description: '按热门制造商和厂牌浏览作品',
+  },
+  'zh-TW': {
+    title: '製造商與廠牌一覽',
+    description: '依熱門製造商和廠牌瀏覽作品',
+  },
+  ko: {
+    title: '제조사 및 레이블 목록',
+    description: '인기 제조사 및 레이블별로 작품 탐색',
+  },
 } as const;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
@@ -29,10 +37,10 @@ export async function generateMetadata({
   const alternates = {
     canonical: `${baseUrl}${localizedHref('/makers', locale)}`,
     languages: {
-      'ja': `${baseUrl}${localizedHref('/makers', 'ja')}`,
-      'en': `${baseUrl}${localizedHref('/makers', 'en')}`,
-      'zh': `${baseUrl}${localizedHref('/makers', 'zh')}`,
-      'ko': `${baseUrl}${localizedHref('/makers', 'ko')}`,
+      ja: `${baseUrl}${localizedHref('/makers', 'ja')}`,
+      en: `${baseUrl}${localizedHref('/makers', 'en')}`,
+      zh: `${baseUrl}${localizedHref('/makers', 'zh')}`,
+      ko: `${baseUrl}${localizedHref('/makers', 'ko')}`,
       'x-default': `${baseUrl}${localizedHref('/makers', 'ja')}`,
     },
   };
@@ -48,10 +56,6 @@ export async function generateMetadata({
   };
 }
 
-export default function MakersLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function MakersLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

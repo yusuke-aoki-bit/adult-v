@@ -14,10 +14,7 @@ export async function POST(request: NextRequest) {
     const { message, conversationHistory, availableGenres, popularPerformers } = body;
 
     if (!message || typeof message !== 'string') {
-      return NextResponse.json(
-        { error: 'メッセージが必要です' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'メッセージが必要です' }, { status: 400 });
     }
 
     const response = await generateChatResponse({
@@ -30,18 +27,12 @@ export async function POST(request: NextRequest) {
     });
 
     if (!response) {
-      return NextResponse.json(
-        { error: '応答の生成に失敗しました' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: '応答の生成に失敗しました' }, { status: 500 });
     }
 
     return NextResponse.json(response);
   } catch (error) {
     console.error('[Chat API] Error:', error);
-    return NextResponse.json(
-      { error: 'サーバーエラーが発生しました' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'サーバーエラーが発生しました' }, { status: 500 });
   }
 }

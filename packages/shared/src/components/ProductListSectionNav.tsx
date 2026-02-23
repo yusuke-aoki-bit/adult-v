@@ -2,24 +2,16 @@
 
 import { SectionNav, type SectionItem } from './SectionNav';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
-
-const navTexts = {
-  ja: { onSale: 'セール中', products: '商品一覧' },
-  en: { onSale: 'On Sale', products: 'Products' },
-} as const;
-function getNavText(locale: string) { return navTexts[locale as keyof typeof navTexts] || navTexts.ja; }
+import { getTranslation, productListSectionNavTranslations } from '../lib/translations';
 
 interface ProductListSectionNavProps {
   locale: string;
   hasSaleProducts: boolean;
 }
 
-export default function ProductListSectionNav({
-  locale,
-  hasSaleProducts,
-}: ProductListSectionNavProps) {
+export default function ProductListSectionNav({ locale, hasSaleProducts }: ProductListSectionNavProps) {
   const { theme } = useSiteTheme();
-  const nt = getNavText(locale);
+  const nt = getTranslation(productListSectionNavTranslations, locale);
 
   const sections: SectionItem[] = [];
 

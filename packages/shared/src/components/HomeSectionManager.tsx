@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useHomeSections, HomeSection } from '../hooks/useHomeSections';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, homeSectionManagerTranslations } from '../lib/translations';
 
 interface HomeSectionManagerProps {
   locale: string;
@@ -24,12 +25,7 @@ export function HomeSectionManager({
 }: HomeSectionManagerProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const {
-    sections,
-    toggleVisibility,
-    reorderSections,
-    resetToDefault,
-  } = useHomeSections({
+  const { sections, toggleVisibility, reorderSections, resetToDefault } = useHomeSections({
     locale,
     pageId,
     ...(customSections && { customSections }),
@@ -39,11 +35,7 @@ export function HomeSectionManager({
 
   const isDark = theme === 'dark';
 
-  const texts = {
-    ja: { defaultTitle: 'セクションをカスタマイズ', description: 'セクションの表示/非表示と順序を変更できます', reset: 'リセット', close: '閉じる', dragHint: 'ドラッグして並び替え' },
-    en: { defaultTitle: 'Customize Sections', description: 'Show/hide and reorder sections', reset: 'Reset', close: 'Close', dragHint: 'Drag to reorder' },
-  } as const;
-  const tt = texts[locale as keyof typeof texts] || texts.ja;
+  const tt = getTranslation(homeSectionManagerTranslations, locale);
   const t = { ...tt, title: title || tt.defaultTitle };
 
   const handleDragStart = (index: number) => {
@@ -68,21 +60,21 @@ export function HomeSectionManager({
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className={`hidden md:block fixed bottom-36 right-4 z-40 p-3 rounded-full shadow-lg transition-colors ${
+        className={`fixed right-4 bottom-36 z-40 hidden rounded-full p-3 shadow-lg transition-colors md:block ${
           isDark
-            ? 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
-            : 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-200'
+            ? 'border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
+            : 'border border-gray-200 bg-white text-gray-700 hover:bg-gray-50'
         }`}
         title={t.title}
       >
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
         </svg>
       </button>
 
       {/* モーダル */}
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-end justify-center sm:items-center">
           {/* オーバーレイ */}
           <div
             className={`absolute inset-0 ${isDark ? 'bg-black/60' : 'bg-black/40'}`}
@@ -90,28 +82,26 @@ export function HomeSectionManager({
           />
 
           {/* モーダルコンテンツ */}
-          <div className={`relative w-full sm:max-w-md max-h-[80vh] overflow-hidden rounded-t-xl sm:rounded-xl ${
-            isDark ? 'bg-gray-800' : 'bg-white'
-          }`}>
+          <div
+            className={`relative max-h-[80vh] w-full overflow-hidden rounded-t-xl sm:max-w-md sm:rounded-xl ${
+              isDark ? 'bg-gray-800' : 'bg-white'
+            }`}
+          >
             {/* ヘッダー */}
-            <div className={`p-4 border-b ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`border-b p-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    {t.title}
-                  </h3>
-                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                    {t.description}
-                  </p>
+                  <h3 className={`font-semibold ${isDark ? 'text-white' : 'text-gray-900'}`}>{t.title}</h3>
+                  <p className={`text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{t.description}</p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className={`p-2 rounded-lg transition-colors ${
-                    isDark ? 'hover:bg-gray-700 text-gray-400' : 'hover:bg-gray-100 text-gray-500'
+                  className={`rounded-lg p-2 transition-colors ${
+                    isDark ? 'text-gray-400 hover:bg-gray-700' : 'text-gray-500 hover:bg-gray-100'
                   }`}
                 >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -119,10 +109,8 @@ export function HomeSectionManager({
             </div>
 
             {/* セクションリスト */}
-            <div className="p-4 overflow-y-auto max-h-[50vh]">
-              <p className={`text-xs mb-3 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                {t.dragHint}
-              </p>
+            <div className="max-h-[50vh] overflow-y-auto p-4">
+              <p className={`mb-3 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{t.dragHint}</p>
               <div className="space-y-2">
                 {sections.map((section, index) => (
                   <div
@@ -131,25 +119,35 @@ export function HomeSectionManager({
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={(e) => handleDragOver(e, index)}
                     onDragEnd={handleDragEnd}
-                    className={`flex items-center gap-3 p-3 rounded-lg cursor-move transition-colors ${
+                    className={`flex cursor-move items-center gap-3 rounded-lg p-3 transition-colors ${
                       draggedIndex === index
-                        ? isDark ? 'bg-blue-600/20 border border-blue-600' : 'bg-pink-50 border border-pink-300'
-                        : isDark ? 'bg-gray-700/50 hover:bg-gray-700' : 'bg-gray-50 hover:bg-gray-100'
+                        ? isDark
+                          ? 'border border-blue-600 bg-blue-600/20'
+                          : 'border border-pink-300 bg-pink-50'
+                        : isDark
+                          ? 'bg-gray-700/50 hover:bg-gray-700'
+                          : 'bg-gray-50 hover:bg-gray-100'
                     }`}
                   >
                     {/* ドラッグハンドル */}
                     <div className={`${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
                       </svg>
                     </div>
 
                     {/* ラベル */}
-                    <span className={`flex-1 text-sm font-medium ${
-                      section.visible
-                        ? isDark ? 'text-white' : 'text-gray-900'
-                        : isDark ? 'text-gray-500' : 'text-gray-400'
-                    }`}>
+                    <span
+                      className={`flex-1 text-sm font-medium ${
+                        section.visible
+                          ? isDark
+                            ? 'text-white'
+                            : 'text-gray-900'
+                          : isDark
+                            ? 'text-gray-500'
+                            : 'text-gray-400'
+                      }`}
+                    >
                       {section.label}
                     </span>
 
@@ -157,14 +155,18 @@ export function HomeSectionManager({
                     <button
                       type="button"
                       onClick={() => toggleVisibility(section.id)}
-                      className={`relative w-10 h-5 rounded-full transition-colors ${
+                      className={`relative h-5 w-10 rounded-full transition-colors ${
                         section.visible
-                          ? isDark ? 'bg-blue-600' : 'bg-pink-600'
-                          : isDark ? 'bg-gray-600' : 'bg-gray-300'
+                          ? isDark
+                            ? 'bg-blue-600'
+                            : 'bg-pink-600'
+                          : isDark
+                            ? 'bg-gray-600'
+                            : 'bg-gray-300'
                       }`}
                     >
                       <span
-                        className={`absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full transition-transform ${
+                        className={`absolute top-0.5 left-0.5 h-4 w-4 rounded-full bg-white transition-transform ${
                           section.visible ? 'translate-x-5' : 'translate-x-0'
                         }`}
                       />
@@ -175,14 +177,12 @@ export function HomeSectionManager({
             </div>
 
             {/* フッター */}
-            <div className={`p-4 border-t ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
+            <div className={`border-t p-4 ${isDark ? 'border-gray-700' : 'border-gray-200'}`}>
               <button
                 type="button"
                 onClick={resetToDefault}
-                className={`w-full py-2 rounded-lg text-sm font-medium transition-colors ${
-                  isDark
-                    ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
-                    : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                className={`w-full rounded-lg py-2 text-sm font-medium transition-colors ${
+                  isDark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 {t.reset}

@@ -93,9 +93,9 @@ function logProgress(current: number, total: number, stats: BatchProcessingStats
 
   process.stdout.write(
     `\r[${percent}%] ${current}/${total} | ` +
-    `New: ${stats.newGroupsCreated} | Added: ${stats.addedToExistingGroups} | ` +
-    `Skip: ${stats.skippedAlreadyGrouped + stats.skippedNoMatch} | ` +
-    `Err: ${stats['errorCount']} | ${rate}/sec`
+      `New: ${stats.newGroupsCreated} | Added: ${stats.addedToExistingGroups} | ` +
+      `Skip: ${stats.skippedAlreadyGrouped + stats.skippedNoMatch} | ` +
+      `Err: ${stats['errorCount']} | ${rate}/sec`,
   );
 }
 
@@ -177,9 +177,10 @@ async function main(): Promise<void> {
 
   while (processed < limit) {
     // 商品をフェッチ
-    const products = args.mode === 'full'
-      ? await fetchUngroupedProducts(args.batchSize, offset, args.targetAsps)
-      : await fetchRecentProducts(24, args.batchSize);
+    const products =
+      args.mode === 'full'
+        ? await fetchUngroupedProducts(args.batchSize, offset, args.targetAsps)
+        : await fetchRecentProducts(24, args.batchSize);
 
     if (products.length === 0) {
       break;
@@ -220,8 +221,8 @@ async function main(): Promise<void> {
           if (args.verbose && result.matchResult) {
             log(
               `${product['id']}: ${result.action} (${result.matchResult.matchingMethod}, ` +
-              `confidence: ${result.matchResult.confidenceScore})`,
-              true
+                `confidence: ${result.matchResult.confidenceScore})`,
+              true,
             );
           }
         }
@@ -257,7 +258,9 @@ async function main(): Promise<void> {
   console.log('');
   console.log('Final Group Stats:');
   console.log(`  Total Groups: ${finalStats.totalGroups} (+${finalStats.totalGroups - initialStats.totalGroups})`);
-  console.log(`  Total Grouped Products: ${finalStats.totalGroupedProducts} (+${finalStats.totalGroupedProducts - initialStats.totalGroupedProducts})`);
+  console.log(
+    `  Total Grouped Products: ${finalStats.totalGroupedProducts} (+${finalStats.totalGroupedProducts - initialStats.totalGroupedProducts})`,
+  );
   console.log(`  Avg Members/Group: ${finalStats.avgMembersPerGroup.toFixed(2)}`);
 }
 

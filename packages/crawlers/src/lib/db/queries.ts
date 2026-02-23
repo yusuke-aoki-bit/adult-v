@@ -1,12 +1,30 @@
 import { getDb } from './index';
-import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales } from './schema';
+import {
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productSources,
+  performerAliases,
+  productImages,
+  productVideos,
+  productSales,
+} from './schema';
 import { eq, and, or, desc, asc, gte, sql, inArray, notInArray } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType, ProductCategory, ProviderId } from '../../types/product';
 import type { InferSelectModel } from 'drizzle-orm';
 import { mapLegacyProvider } from '../provider-utils';
 import { getDtiServiceFromUrl } from '../image-utils';
 import { ASP_TO_PROVIDER_ID } from '../constants/filters';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '../localization';
+import {
+  getLocalizedTitle,
+  getLocalizedDescription,
+  getLocalizedPerformerName,
+  getLocalizedPerformerBio,
+  getLocalizedTagName,
+  getLocalizedAiReview,
+} from '../localization';
 
 type DbProduct = InferSelectModel<typeof products>;
 type DbPerformer = InferSelectModel<typeof performers>;
@@ -41,7 +59,6 @@ export function generateActressId(name: string): string {
     .replace(/^-+|-+$/g, '');
 }
 
-
 // ============================================================
 // 商品関連データのバッチ取得ヘルパー（型定義）
 // ============================================================
@@ -65,7 +82,7 @@ interface BatchRelatedDataResult {
  */
 async function batchFetchProductRelatedData(
   db: ReturnType<typeof getDb>,
-  productIds: number[]
+  productIds: number[],
 ): Promise<BatchRelatedDataResult> {
   if (productIds.length === 0) {
     return {
@@ -98,10 +115,7 @@ async function batchFetchProductRelatedData(
       .from(productTags)
       .innerJoin(tags, eq(productTags.tagId, tags.id))
       .where(inArray(productTags.productId, productIds)),
-    db
-      .select()
-      .from(productSources)
-      .where(inArray(productSources.productId, productIds)),
+    db.select().from(productSources).where(inArray(productSources.productId, productIds)),
     db
       .select({
         productId: productImages.productId,
@@ -126,8 +140,8 @@ async function batchFetchProductRelatedData(
         and(
           inArray(productSources.productId, productIds),
           eq(productSales.isActive, true),
-          sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-        )
+          sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`,
+        ),
       ),
   ]);
 
@@ -144,7 +158,7 @@ async function batchFetchProductRelatedData(
     tagsMap.get(t.productId)!.push({ id: t.id, name: t.name, category: t.category });
   }
 
-  const sourcesMap = new Map<number, typeof allSources[0]>();
+  const sourcesMap = new Map<number, (typeof allSources)[0]>();
   for (const s of allSources) {
     if (!sourcesMap.has(s.productId)) sourcesMap.set(s.productId, s);
   }
@@ -173,14 +187,24 @@ async function batchFetchProductRelatedData(
 function mapProductsWithBatchData(
   productList: DbProduct[],
   batchData: BatchRelatedDataResult,
-  locale: string = 'ja'
+  locale: string = 'ja',
 ): ProductType[] {
   return productList.map((product) => {
     const performerData = (batchData.performersMap.get(product['id']) || []).filter(isValidPerformer);
     const tagData = batchData.tagsMap.get(product['id']) || [];
     const imagesData = batchData.imagesMap.get(product['id']);
     const saleData = batchData.salesMap.get(product['id']);
-    return mapProductToType(product, performerData, tagData, batchData.sourcesMap.get(product['id']), undefined, imagesData, undefined, locale, saleData);
+    return mapProductToType(
+      product,
+      performerData,
+      tagData,
+      batchData.sourcesMap.get(product['id']),
+      undefined,
+      imagesData,
+      undefined,
+      locale,
+      saleData,
+    );
   });
 }
 
@@ -212,11 +236,7 @@ async function fetchProductRelatedData(db: ReturnType<typeof getDb>, productId: 
       .where(eq(productTags.productId, productId)),
 
     // ASP情報を取得
-    db
-      .select()
-      .from(productSources)
-      .where(eq(productSources.productId, productId))
-      .limit(1),
+    db.select().from(productSources).where(eq(productSources.productId, productId)).limit(1),
 
     // サンプル画像を取得
     db
@@ -226,10 +246,7 @@ async function fetchProductRelatedData(db: ReturnType<typeof getDb>, productId: 
       .orderBy(asc(productImages.displayOrder)),
 
     // サンプル動画を取得
-    db
-      .select()
-      .from(productVideos)
-      .where(eq(productVideos.productId, productId)),
+    db.select().from(productVideos).where(eq(productVideos.productId, productId)),
   ]);
 
   return {
@@ -265,7 +282,10 @@ export async function getProductById(id: string, locale: string = 'ja'): Promise
     if (!product) return null;
 
     // 関連データを並列で取得
-    const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
+    const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(
+      db,
+      product.id,
+    );
 
     return mapProductToType(product, performerData, tagData, sourceData, undefined, imagesData, videosData, locale);
   } catch (error) {
@@ -295,7 +315,10 @@ export async function searchProductByProductId(productId: string, locale: string
       if (!product) return null;
 
       // 関連データを並列で取得
-      const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product.id);
+      const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(
+        db,
+        product.id,
+      );
 
       return mapProductToType(product, performerData, tagData, sourceData, undefined, imagesData, videosData, locale);
     }
@@ -315,11 +338,7 @@ export async function searchProductByProductId(productId: string, locale: string
     if (!source) return null;
 
     // 商品情報を取得
-    const product = await db
-      .select()
-      .from(products)
-      .where(eq(products['id'], source.productId))
-      .limit(1);
+    const product = await db.select().from(products).where(eq(products['id'], source.productId)).limit(1);
 
     if (product.length === 0) {
       return null;
@@ -358,13 +377,19 @@ export async function searchProductByProductId(productId: string, locale: string
         .orderBy(asc(productImages.displayOrder)),
 
       // サンプル動画を取得
-      db
-        .select()
-        .from(productVideos)
-        .where(eq(productVideos.productId, productData.id)),
+      db.select().from(productVideos).where(eq(productVideos.productId, productData.id)),
     ]);
 
-    return mapProductToType(productData, performerData.filter(isValidPerformer), tagData, source, undefined, imagesData, videosData, locale);
+    return mapProductToType(
+      productData,
+      performerData.filter(isValidPerformer),
+      tagData,
+      source,
+      undefined,
+      imagesData,
+      videosData,
+      locale,
+    );
   } catch (error) {
     console.error(`Error searching product by product ID ${productId}:`, error);
     throw error;
@@ -374,14 +399,14 @@ export async function searchProductByProductId(productId: string, locale: string
 /**
  * 商品一覧を取得
  */
-export type SortOption = 
-  | 'releaseDateDesc'    // リリース日（新しい順）
-  | 'releaseDateAsc'     // リリース日（古い順）
-  | 'priceDesc'          // 価格（高い順）
-  | 'priceAsc'           // 価格（安い順）
-  | 'ratingDesc'         // 評価（高い順）
-  | 'ratingAsc'          // 評価（低い順）
-  | 'titleAsc';          // タイトル（あいうえお順）
+export type SortOption =
+  | 'releaseDateDesc' // リリース日（新しい順）
+  | 'releaseDateAsc' // リリース日（古い順）
+  | 'priceDesc' // 価格（高い順）
+  | 'priceAsc' // 価格（安い順）
+  | 'ratingDesc' // 評価（高い順）
+  | 'ratingAsc' // 評価（低い順）
+  | 'titleAsc'; // タイトル（あいうえお順）
 
 export interface GetProductsOptions {
   limit?: number;
@@ -415,10 +440,10 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
     if (options?.provider) {
       // Map frontend provider names to ASP names
       const aspMapping: Record<string, string[]> = {
-        'duga': ['DUGA', 'APEX'],
-        'dti': ['DTI'],
-        'dmm': ['DMM'],
-        'sokmil': ['SOKMIL'],
+        duga: ['DUGA', 'APEX'],
+        dti: ['DTI'],
+        dmm: ['DMM'],
+        sokmil: ['SOKMIL'],
       };
       const aspNames = aspMapping[options.provider.toLowerCase()] || [options.provider];
 
@@ -429,15 +454,18 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
             SELECT 1 FROM ${productSources} ps
             WHERE ps.product_id = ${products['id']}
             AND ps.asp_name = ${aspNames[0]}
-          )`
+          )`,
         );
       } else {
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productSources} ps
             WHERE ps.product_id = ${products['id']}
-            AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-          )`
+            AND ps.asp_name IN (${sql.join(
+              aspNames.map((name) => sql`${name}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
@@ -449,8 +477,11 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products['id']}
-          AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-        )`
+          AND ps.asp_name IN (${sql.join(
+            aspNames.map((name) => sql`${name}`),
+            sql`, `,
+          )})
+        )`,
       );
     }
 
@@ -470,7 +501,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products['id']}
           AND ${sql.join(priceConditions, sql` AND `)}
-        )`
+        )`,
       );
     }
 
@@ -484,37 +515,43 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
             SELECT 1 FROM ${productPerformers} pp
             WHERE pp.product_id = ${products['id']}
             AND pp.performer_id = ${performerId}
-          )`
+          )`,
         );
       }
     }
 
     // タグでフィルタ（対象タグ - いずれかを含む）
     if (options?.tags && options.tags.length > 0) {
-      const tagIds = options.tags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const tagIds = options.tags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (tagIds.length > 0) {
         // EXISTSを使用
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productTags} pt
             WHERE pt.product_id = ${products['id']}
-            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
-          )`
+            AND pt.tag_id IN (${sql.join(
+              tagIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
 
     // 除外タグでフィルタ（いずれも含まない）
     if (options?.excludeTags && options.excludeTags.length > 0) {
-      const excludeTagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const excludeTagIds = options.excludeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (excludeTagIds.length > 0) {
         // NOT EXISTSを使用
         conditions.push(
           sql`NOT EXISTS (
             SELECT 1 FROM ${productTags} pt
             WHERE pt.product_id = ${products['id']}
-            AND pt.tag_id IN (${sql.join(excludeTagIds.map(id => sql`${id}`), sql`, `)})
-          )`
+            AND pt.tag_id IN (${sql.join(
+              excludeTagIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
@@ -529,7 +566,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`(
           ${products}.search_vector @@ plainto_tsquery('simple', ${options.query})
           OR ${products['aiDescription']}::text ILIKE ${searchPattern}
-        )`
+        )`,
       );
     }
 
@@ -539,7 +576,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`EXISTS (
           SELECT 1 FROM ${productVideos} pv
           WHERE pv.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -549,7 +586,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`EXISTS (
           SELECT 1 FROM ${productImages} pi
           WHERE pi.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -560,7 +597,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        ) = 1`
+        ) = 1`,
       );
     } else if (options?.performerType === 'multi') {
       // 複数出演: 出演者が2人以上
@@ -568,7 +605,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        ) >= 2`
+        ) >= 2`,
       );
     }
 
@@ -581,7 +618,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
           WHERE ps.product_id = ${products['id']}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
-        )`
+        )`,
       );
     }
 
@@ -591,7 +628,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -609,17 +646,13 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
         .from(products)
         .innerJoin(productSources, eq(products['id'], productSources.productId))
         .where(whereClause)
-        .orderBy(
-          options.sortBy === 'priceAsc'
-            ? asc(productSources.price)
-            : desc(productSources.price)
-        )
+        .orderBy(options.sortBy === 'priceAsc' ? asc(productSources.price) : desc(productSources.price))
         .limit(options?.limit || 100)
         .offset(options?.offset || 0);
 
       // バッチでデータを取得（共通ヘルパー使用）
-      const productList = results.map(r => r.product);
-      const productIds = productList.map(p => p.id);
+      const productList = results.map((r) => r.product);
+      const productIds = productList.map((p) => p.id);
       if (productIds.length === 0) return [];
 
       const batchData = await batchFetchProductRelatedData(db, productIds);
@@ -650,7 +683,7 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
       .offset(options?.offset || 0);
 
     // バッチでデータを取得（共通ヘルパー使用）
-    const productIds = results.map(p => p.id);
+    const productIds = results.map((p) => p.id);
     if (productIds.length === 0) return [];
 
     const batchData = await batchFetchProductRelatedData(db, productIds);
@@ -665,7 +698,9 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
  * 商品数を取得（フィルタ条件付き）
  * getProductsと同じ条件でカウントのみ取得
  */
-export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
+export async function getProductsCount(
+  options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>,
+): Promise<number> {
   try {
     const db = getDb();
     const conditions = [];
@@ -673,10 +708,10 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
     // プロバイダー（ASP）でフィルタ（単一）
     if (options?.provider) {
       const aspMapping: Record<string, string[]> = {
-        'duga': ['DUGA', 'APEX'],
-        'dti': ['DTI'],
-        'dmm': ['DMM'],
-        'sokmil': ['SOKMIL'],
+        duga: ['DUGA', 'APEX'],
+        dti: ['DTI'],
+        dmm: ['DMM'],
+        sokmil: ['SOKMIL'],
       };
       const aspNames = aspMapping[options.provider.toLowerCase()] || [options.provider];
 
@@ -686,15 +721,18 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
             SELECT 1 FROM ${productSources} ps
             WHERE ps.product_id = ${products['id']}
             AND ps.asp_name = ${aspNames[0]}
-          )`
+          )`,
         );
       } else {
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productSources} ps
             WHERE ps.product_id = ${products['id']}
-            AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-          )`
+            AND ps.asp_name IN (${sql.join(
+              aspNames.map((name) => sql`${name}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
@@ -706,8 +744,11 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         sql`EXISTS (
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products['id']}
-          AND ps.asp_name IN (${sql.join(aspNames.map(name => sql`${name}`), sql`, `)})
-        )`
+          AND ps.asp_name IN (${sql.join(
+            aspNames.map((name) => sql`${name}`),
+            sql`, `,
+          )})
+        )`,
       );
     }
 
@@ -720,7 +761,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
             SELECT 1 FROM ${productPerformers} pp
             WHERE pp.product_id = ${products['id']}
             AND pp.performer_id = ${performerId}
-          )`
+          )`,
         );
       }
     }
@@ -731,7 +772,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         sql`EXISTS (
           SELECT 1 FROM ${productVideos} pv
           WHERE pv.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -741,7 +782,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         sql`EXISTS (
           SELECT 1 FROM ${productImages} pi
           WHERE pi.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -751,14 +792,14 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        ) = 1`
+        ) = 1`,
       );
     } else if (options?.performerType === 'multi') {
       conditions.push(
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        ) >= 2`
+        ) >= 2`,
       );
     }
 
@@ -771,7 +812,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
           WHERE ps.product_id = ${products['id']}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
-        )`
+        )`,
       );
     }
 
@@ -781,7 +822,7 @@ export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -817,11 +858,11 @@ export async function getProductsByActress(actressId: string, locale: string = '
  * 女優一覧を取得
  */
 export type ActressSortOption =
-  | 'nameAsc'           // 名前（あいうえお順）
-  | 'nameDesc'          // 名前（逆順）
-  | 'productCountDesc'  // 作品数（多い順）
-  | 'productCountAsc'   // 作品数（少ない順）
-  | 'recent';           // 新着順
+  | 'nameAsc' // 名前（あいうえお順）
+  | 'nameDesc' // 名前（逆順）
+  | 'productCountDesc' // 作品数（多い順）
+  | 'productCountAsc' // 作品数（少ない順）
+  | 'recent'; // 新着順
 
 export async function getActresses(options?: {
   limit?: number;
@@ -849,7 +890,7 @@ export async function getActresses(options?: {
         SELECT 1 FROM ${productPerformers} pp
         INNER JOIN products p2 ON pp.product_id = p2.id
         WHERE pp.performer_id = ${performers['id']}
-      )`
+      )`,
     );
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
@@ -857,14 +898,14 @@ export async function getActresses(options?: {
       conditions.push(
         sql`NOT (
           LEFT(${performers['name']}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
-        )`
+        )`,
       );
     }
 
     // 対象タグでフィルタ（いずれかを含む）
     if (options?.includeTags && options.includeTags.length > 0) {
       try {
-        const tagIds = options.includeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+        const tagIds = options.includeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
         if (tagIds.length > 0) {
           // このタグのいずれかを持つ商品に出演している女優IDを取得
           const performerIds = await db
@@ -874,10 +915,8 @@ export async function getActresses(options?: {
             .where(inArray(productTags.tagId, tagIds));
 
           if (performerIds.length > 0) {
-            const performerIdValues = performerIds.map(p => p.performerId);
-            conditions.push(
-              inArray(performers['id'], performerIdValues)
-            );
+            const performerIdValues = performerIds.map((p) => p.performerId);
+            conditions.push(inArray(performers['id'], performerIdValues));
           } else {
             // 該当女優なし
             return [];
@@ -892,7 +931,7 @@ export async function getActresses(options?: {
     // 除外タグでフィルタ（いずれも含まない）
     if (options?.excludeTags && options.excludeTags.length > 0) {
       try {
-        const tagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+        const tagIds = options.excludeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
         if (tagIds.length > 0) {
           // この除外タグのいずれかを持つ商品に出演している女優IDを取得
           const excludedPerformerIds = await db
@@ -902,10 +941,8 @@ export async function getActresses(options?: {
             .where(inArray(productTags.tagId, tagIds));
 
           if (excludedPerformerIds.length > 0) {
-            const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
-            conditions.push(
-              notInArray(performers['id'], excludedPerformerIdValues)
-            );
+            const excludedPerformerIdValues = excludedPerformerIds.map((p) => p.performerId);
+            conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
           }
         }
       } catch (excludeTagsError) {
@@ -925,10 +962,8 @@ export async function getActresses(options?: {
           .where(inArray(productSources.aspName, options.includeAsps));
 
         if (performerIds.length > 0) {
-          const performerIdValues = performerIds.map(p => p.performerId);
-          conditions.push(
-            inArray(performers['id'], performerIdValues)
-          );
+          const performerIdValues = performerIds.map((p) => p.performerId);
+          conditions.push(inArray(performers['id'], performerIdValues));
         } else {
           // 該当女優なし
           return [];
@@ -950,10 +985,8 @@ export async function getActresses(options?: {
           .where(inArray(productSources.aspName, options.excludeAsps));
 
         if (excludedPerformerIds.length > 0) {
-          const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
-          conditions.push(
-            notInArray(performers['id'], excludedPerformerIdValues)
-          );
+          const excludedPerformerIdValues = excludedPerformerIds.map((p) => p.performerId);
+          conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
         }
       } catch (excludeAspsError) {
         console.error('[GET ACTRESSES] Error in excludeAsps processing:', excludeAspsError);
@@ -970,10 +1003,8 @@ export async function getActresses(options?: {
           .innerJoin(productPerformers, eq(productVideos.productId, productPerformers.productId));
 
         if (performerIds.length > 0) {
-          const performerIdValues = performerIds.map(p => p.performerId);
-          conditions.push(
-            inArray(performers['id'], performerIdValues)
-          );
+          const performerIdValues = performerIds.map((p) => p.performerId);
+          conditions.push(inArray(performers['id'], performerIdValues));
         } else {
           return [];
         }
@@ -992,10 +1023,8 @@ export async function getActresses(options?: {
           .innerJoin(productPerformers, eq(productImages.productId, productPerformers.productId));
 
         if (performerIds.length > 0) {
-          const performerIdValues = performerIds.map(p => p.performerId);
-          conditions.push(
-            inArray(performers['id'], performerIdValues)
-          );
+          const performerIdValues = performerIds.map((p) => p.performerId);
+          conditions.push(inArray(performers['id'], performerIdValues));
         } else {
           return [];
         }
@@ -1025,8 +1054,8 @@ export async function getActresses(options?: {
           .where(
             or(
               sql`similarity(${performerAliases.aliasName}, ${options.query}) > 0.2`,
-              sql`${performerAliases.aliasName} ILIKE ${searchPattern}`
-            )!
+              sql`${performerAliases.aliasName} ILIKE ${searchPattern}`,
+            )!,
           );
 
         // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
@@ -1040,7 +1069,7 @@ export async function getActresses(options?: {
               sql`${performers['name']} ILIKE ${searchPattern}`,
               sql`${performers['nameKana']} ILIKE ${searchPattern}`,
               // AIレビュー本文も検索対象に追加（2文字以上の検索時のみ）
-              sql`${performers.aiReview} ILIKE ${searchPattern}`
+              sql`${performers.aiReview} ILIKE ${searchPattern}`,
             )!;
 
         // 別名から一致した女優IDがあれば追加
@@ -1048,8 +1077,11 @@ export async function getActresses(options?: {
           conditions.push(
             or(
               nameConditions,
-              inArray(performers['id'], matchingPerformerIds.map(p => p.performerId))
-            )!
+              inArray(
+                performers['id'],
+                matchingPerformerIds.map((p) => p.performerId),
+              ),
+            )!,
           );
         } else {
           conditions.push(nameConditions);
@@ -1082,13 +1114,13 @@ export async function getActresses(options?: {
             sortBy === 'productCountDesc'
               ? desc(sql`COALESCE(COUNT(${productPerformers.productId}), 0)`)
               : asc(sql`COALESCE(COUNT(${productPerformers.productId}), 0)`),
-            desc(performers['id'])
+            desc(performers['id']),
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
         // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(r => r.performer['id']);
+        const performerIds = results.map((r) => r.performer['id']);
         const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerProductCounts(db, performerIds),
           batchGetPerformerThumbnails(db, performerIds),
@@ -1097,15 +1129,16 @@ export async function getActresses(options?: {
         ]);
 
         const locale = options?.locale || 'ja';
-        const actresses = results
-          .map(r => mapPerformerToActressTypeSync(
+        const actresses = results.map((r) =>
+          mapPerformerToActressTypeSync(
             r.performer,
             productCounts.get(r.performer['id']) || 0,
             thumbnails.get(r.performer['id']),
             servicesMap.get(r.performer['id']),
             aliasesMap.get(r.performer['id']),
-            locale
-          ));
+            locale,
+          ),
+        );
 
         return actresses;
       } catch (sortError) {
@@ -1132,7 +1165,7 @@ export async function getActresses(options?: {
           .offset(options?.offset || 0);
 
         // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(r => r.performer['id']);
+        const performerIds = results.map((r) => r.performer['id']);
         const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerProductCounts(db, performerIds),
           batchGetPerformerThumbnails(db, performerIds),
@@ -1141,15 +1174,16 @@ export async function getActresses(options?: {
         ]);
 
         const locale = options?.locale || 'ja';
-        const actresses = results
-          .map(r => mapPerformerToActressTypeSync(
+        const actresses = results.map((r) =>
+          mapPerformerToActressTypeSync(
             r.performer,
             productCounts.get(r.performer['id']) || 0,
             thumbnails.get(r.performer['id']),
             servicesMap.get(r.performer['id']),
             aliasesMap.get(r.performer['id']),
-            locale
-          ));
+            locale,
+          ),
+        );
 
         return actresses;
       } catch (sortError) {
@@ -1181,7 +1215,7 @@ export async function getActresses(options?: {
           .offset(options?.offset || 0);
 
         // バッチで作品数、サムネイル、ASPサービス、別名を取得
-        const performerIds = results.map(p => p.id);
+        const performerIds = results.map((p) => p.id);
         const [productCounts, thumbnails, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerProductCounts(db, performerIds),
           batchGetPerformerThumbnails(db, performerIds),
@@ -1190,15 +1224,16 @@ export async function getActresses(options?: {
         ]);
 
         const locale = options?.locale || 'ja';
-        const actresses = results
-          .map(performer => mapPerformerToActressTypeSync(
+        const actresses = results.map((performer) =>
+          mapPerformerToActressTypeSync(
             performer,
             productCounts.get(performer['id']) || 0,
             thumbnails.get(performer['id']),
             servicesMap.get(performer['id']),
             aliasesMap.get(performer['id']),
-            locale
-          ));
+            locale,
+          ),
+        );
 
         return actresses;
       } catch (sortError) {
@@ -1217,7 +1252,10 @@ export async function getActresses(options?: {
 /**
  * バッチで複数女優の作品数を取得
  */
-async function batchGetPerformerProductCounts(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, number>> {
+async function batchGetPerformerProductCounts(
+  db: ReturnType<typeof getDb>,
+  performerIds: number[],
+): Promise<Map<number, number>> {
   if (performerIds.length === 0) return new Map();
 
   const results = await db
@@ -1240,7 +1278,10 @@ async function batchGetPerformerProductCounts(db: ReturnType<typeof getDb>, perf
  * バッチで複数女優のサムネイル画像を取得（最新作品のサムネイルを使用）
  * ROW_NUMBER()を使って各女優につき1件だけ取得する
  */
-async function batchGetPerformerThumbnails(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, string>> {
+async function batchGetPerformerThumbnails(
+  db: ReturnType<typeof getDb>,
+  performerIds: number[],
+): Promise<Map<number, string>> {
   if (performerIds.length === 0) return new Map();
 
   // 各女優のサムネイルURLを取得（DTI以外を優先、各女優につき1件のみ）
@@ -1260,7 +1301,10 @@ async function batchGetPerformerThumbnails(db: ReturnType<typeof getDb>, perform
       FROM product_performers pp
       INNER JOIN products p ON pp.product_id = p.id
       INNER JOIN product_sources ps ON pp.product_id = ps.product_id
-      WHERE pp.performer_id IN (${sql.join(performerIds.map(id => sql`${id}`), sql`, `)})
+      WHERE pp.performer_id IN (${sql.join(
+        performerIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
         AND p.default_thumbnail_url IS NOT NULL
         AND p.default_thumbnail_url != ''
     )
@@ -1282,7 +1326,10 @@ async function batchGetPerformerThumbnails(db: ReturnType<typeof getDb>, perform
  * バッチで複数女優のASPサービス一覧を取得
  * DTI系サービスはサムネイルURLからサービスを判別して個別に分類
  */
-async function batchGetPerformerServices(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, string[]>> {
+async function batchGetPerformerServices(
+  db: ReturnType<typeof getDb>,
+  performerIds: number[],
+): Promise<Map<number, string[]>> {
   if (performerIds.length === 0) return new Map();
 
   // DTI系の場合はサムネイルURLも取得してサービスを判別
@@ -1329,7 +1376,10 @@ async function batchGetPerformerServices(db: ReturnType<typeof getDb>, performer
 /**
  * バッチで複数女優の別名を取得
  */
-async function batchGetPerformerAliases(db: ReturnType<typeof getDb>, performerIds: number[]): Promise<Map<number, string[]>> {
+async function batchGetPerformerAliases(
+  db: ReturnType<typeof getDb>,
+  performerIds: number[],
+): Promise<Map<number, string[]>> {
   if (performerIds.length === 0) return new Map();
 
   const results = await db
@@ -1357,7 +1407,9 @@ async function batchGetPerformerAliases(db: ReturnType<typeof getDb>, performerI
 /**
  * タグ一覧を取得（カテゴリ別）
  */
-export async function getTags(category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+export async function getTags(
+  category?: string,
+): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
   try {
     const db = getDb();
 
@@ -1375,7 +1427,7 @@ export async function getTags(category?: string): Promise<Array<{ id: number; na
       .groupBy(tags.id, tags.name, tags.category)
       .orderBy(desc(sql`count(${productTags.productId})`));
 
-    return results.map(r => ({
+    return results.map((r) => ({
       id: r.id,
       name: r.name,
       category: r.category,
@@ -1390,7 +1442,10 @@ export async function getTags(category?: string): Promise<Array<{ id: number; na
 /**
  * 女優の作品に絞ったタグ一覧を取得（カテゴリ別）
  */
-export async function getTagsForActress(actressId: string, category?: string): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+export async function getTagsForActress(
+  actressId: string,
+  category?: string,
+): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
   try {
     const db = getDb();
     const performerId = parseInt(actressId);
@@ -1409,7 +1464,7 @@ export async function getTagsForActress(actressId: string, category?: string): P
       return [];
     }
 
-    const productIdList = actressProductIds.map(p => p.productId);
+    const productIdList = actressProductIds.map((p) => p.productId);
 
     // タグとその使用数を取得（女優の作品に絞る）
     const results = await db
@@ -1421,16 +1476,11 @@ export async function getTagsForActress(actressId: string, category?: string): P
       })
       .from(tags)
       .innerJoin(productTags, eq(tags.id, productTags.tagId))
-      .where(
-        and(
-          category ? eq(tags.category, category) : undefined,
-          inArray(productTags.productId, productIdList)
-        )
-      )
+      .where(and(category ? eq(tags.category, category) : undefined, inArray(productTags.productId, productIdList)))
       .groupBy(tags.id, tags.name, tags.category)
       .orderBy(desc(sql`count(${productTags.productId})`));
 
-    return results.map(r => ({
+    return results.map((r) => ({
       id: r.id,
       name: r.name,
       category: r.category,
@@ -1467,7 +1517,7 @@ export async function getActressesCount(options?: {
         SELECT 1 FROM ${productPerformers} pp
         INNER JOIN products p2 ON pp.product_id = p2.id
         WHERE pp.performer_id = ${performers['id']}
-      )`
+      )`,
     );
 
     // 'etc'フィルタ: 50音・アルファベット以外で始まる名前
@@ -1475,13 +1525,13 @@ export async function getActressesCount(options?: {
       conditions.push(
         sql`NOT (
           LEFT(${performers['name']}, 1) ~ '^[ぁ-んァ-ヴーA-Za-z]'
-        )`
+        )`,
       );
     }
 
     // 対象タグでフィルタ（いずれかを含む）
     if (options?.includeTags && options.includeTags.length > 0) {
-      const tagIds = options.includeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const tagIds = options.includeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (tagIds.length > 0) {
         const performerIds = await db
           .selectDistinct({ performerId: productPerformers.performerId })
@@ -1490,10 +1540,8 @@ export async function getActressesCount(options?: {
           .where(inArray(productTags.tagId, tagIds));
 
         if (performerIds.length > 0) {
-          const performerIdValues = performerIds.map(p => p.performerId);
-          conditions.push(
-            inArray(performers['id'], performerIdValues)
-          );
+          const performerIdValues = performerIds.map((p) => p.performerId);
+          conditions.push(inArray(performers['id'], performerIdValues));
         } else {
           return 0;
         }
@@ -1502,7 +1550,7 @@ export async function getActressesCount(options?: {
 
     // 除外タグでフィルタ（いずれも含まない）
     if (options?.excludeTags && options.excludeTags.length > 0) {
-      const tagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const tagIds = options.excludeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (tagIds.length > 0) {
         const excludedPerformerIds = await db
           .selectDistinct({ performerId: productPerformers.performerId })
@@ -1511,10 +1559,8 @@ export async function getActressesCount(options?: {
           .where(inArray(productTags.tagId, tagIds));
 
         if (excludedPerformerIds.length > 0) {
-          const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
-          conditions.push(
-            notInArray(performers['id'], excludedPerformerIdValues)
-          );
+          const excludedPerformerIdValues = excludedPerformerIds.map((p) => p.performerId);
+          conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
         }
       }
     }
@@ -1528,10 +1574,8 @@ export async function getActressesCount(options?: {
         .where(inArray(productSources.aspName, options.includeAsps));
 
       if (performerIds.length > 0) {
-        const performerIdValues = performerIds.map(p => p.performerId);
-        conditions.push(
-          inArray(performers['id'], performerIdValues)
-        );
+        const performerIdValues = performerIds.map((p) => p.performerId);
+        conditions.push(inArray(performers['id'], performerIdValues));
       } else {
         return 0;
       }
@@ -1546,10 +1590,8 @@ export async function getActressesCount(options?: {
         .where(inArray(productSources.aspName, options.excludeAsps));
 
       if (excludedPerformerIds.length > 0) {
-        const excludedPerformerIdValues = excludedPerformerIds.map(p => p.performerId);
-        conditions.push(
-          notInArray(performers['id'], excludedPerformerIdValues)
-        );
+        const excludedPerformerIdValues = excludedPerformerIds.map((p) => p.performerId);
+        conditions.push(notInArray(performers['id'], excludedPerformerIdValues));
       }
     }
 
@@ -1561,10 +1603,8 @@ export async function getActressesCount(options?: {
         .innerJoin(productPerformers, eq(productVideos.productId, productPerformers.productId));
 
       if (performerIds.length > 0) {
-        const performerIdValues = performerIds.map(p => p.performerId);
-        conditions.push(
-          inArray(performers['id'], performerIdValues)
-        );
+        const performerIdValues = performerIds.map((p) => p.performerId);
+        conditions.push(inArray(performers['id'], performerIdValues));
       } else {
         return 0;
       }
@@ -1578,10 +1618,8 @@ export async function getActressesCount(options?: {
         .innerJoin(productPerformers, eq(productImages.productId, productPerformers.productId));
 
       if (performerIds.length > 0) {
-        const performerIdValues = performerIds.map(p => p.performerId);
-        conditions.push(
-          inArray(performers['id'], performerIdValues)
-        );
+        const performerIdValues = performerIds.map((p) => p.performerId);
+        conditions.push(inArray(performers['id'], performerIdValues));
       } else {
         return 0;
       }
@@ -1606,8 +1644,8 @@ export async function getActressesCount(options?: {
         .where(
           or(
             sql`similarity(${performerAliases.aliasName}, ${options.query}) > 0.2`,
-            sql`${performerAliases.aliasName} ILIKE ${searchPattern}`
-          )!
+            sql`${performerAliases.aliasName} ILIKE ${searchPattern}`,
+          )!,
         );
 
       // pg_trgmを使用した類似性検索（similarity > 0.2 の結果を返す）
@@ -1619,7 +1657,7 @@ export async function getActressesCount(options?: {
             sql`similarity(${performers['name']}, ${options.query}) > 0.2`,
             sql`similarity(${performers['nameKana']}, ${options.query}) > 0.2`,
             sql`${performers['name']} ILIKE ${searchPattern}`,
-            sql`${performers['nameKana']} ILIKE ${searchPattern}`
+            sql`${performers['nameKana']} ILIKE ${searchPattern}`,
           )!;
 
       // 別名から一致した女優IDがあれば追加
@@ -1627,8 +1665,11 @@ export async function getActressesCount(options?: {
         conditions.push(
           or(
             nameConditions,
-            inArray(performers['id'], matchingPerformerIds.map(p => p.performerId))
-          )!
+            inArray(
+              performers['id'],
+              matchingPerformerIds.map((p) => p.performerId),
+            ),
+          )!,
         );
       } else {
         conditions.push(nameConditions);
@@ -1664,11 +1705,7 @@ export async function getActressById(id: string, locale: string = 'ja'): Promise
       return null;
     }
 
-    const result = await db
-      .select()
-      .from(performers)
-      .where(eq(performers['id'], performerId))
-      .limit(1);
+    const result = await db.select().from(performers).where(eq(performers['id'], performerId)).limit(1);
 
     if (result.length === 0) {
       return null;
@@ -1689,13 +1726,15 @@ export async function getActressById(id: string, locale: string = 'ja'): Promise
 /**
  * 女優の別名を取得
  */
-export async function getPerformerAliases(performerId: number): Promise<Array<{
-  id: number;
-  aliasName: string;
-  source: string | null;
-  isPrimary: boolean | null;
-  createdAt: Date;
-}>> {
+export async function getPerformerAliases(performerId: number): Promise<
+  Array<{
+    id: number;
+    aliasName: string;
+    source: string | null;
+    isPrimary: boolean | null;
+    createdAt: Date;
+  }>
+> {
   try {
     const db = getDb();
 
@@ -1715,10 +1754,12 @@ export async function getPerformerAliases(performerId: number): Promise<Array<{
 /**
  * 女優のサイト別作品数を取得
  */
-export async function getActressProductCountBySite(actressId: string): Promise<Array<{
-  siteName: string;
-  count: number;
-}>> {
+export async function getActressProductCountBySite(actressId: string): Promise<
+  Array<{
+    siteName: string;
+    count: number;
+  }>
+> {
   try {
     const db = getDb();
     const performerId = parseInt(actressId);
@@ -1736,14 +1777,11 @@ export async function getActressProductCountBySite(actressId: string): Promise<A
       .innerJoin(productPerformers, eq(products['id'], productPerformers.productId))
       .innerJoin(productTags, eq(products['id'], productTags.productId))
       .innerJoin(tags, eq(productTags.tagId, tags.id))
-      .where(and(
-        eq(productPerformers.performerId, performerId),
-        eq(tags.category, 'site')
-      ))
+      .where(and(eq(productPerformers.performerId, performerId), eq(tags.category, 'site')))
       .groupBy(tags.name)
       .orderBy(desc(sql<number>`COUNT(DISTINCT ${products['id']})`));
 
-    return results.map(r => ({
+    return results.map((r) => ({
       siteName: r.siteName,
       count: Number(r.count),
     }));
@@ -1756,10 +1794,12 @@ export async function getActressProductCountBySite(actressId: string): Promise<A
 /**
  * 女優のASP別作品数を取得（product_sourcesベース）
  */
-export async function getActressProductCountByAsp(actressId: string): Promise<Array<{
-  aspName: string;
-  count: number;
-}>> {
+export async function getActressProductCountByAsp(actressId: string): Promise<
+  Array<{
+    aspName: string;
+    count: number;
+  }>
+> {
   try {
     const db = getDb();
     const performerId = parseInt(actressId);
@@ -1813,8 +1853,8 @@ export async function getActressProductCountByAsp(actressId: string): Promise<Ar
     `);
 
     return (results.rows || [])
-      .filter(r => r.asp_name !== null)
-      .map(r => ({
+      .filter((r) => r.asp_name !== null)
+      .map((r) => ({
         aspName: r.asp_name,
         count: parseInt(r.count, 10),
       }));
@@ -1880,14 +1920,28 @@ export async function getProductSources(productId: number) {
  */
 function mapProductToType(
   product: DbProduct,
-  performerData: Array<{ id: number; name: string; nameKana: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
-  tagData: Array<{ id: number; name: string; category: string | null; nameEn?: string | null; nameZh?: string | null; nameKo?: string | null }> = [],
+  performerData: Array<{
+    id: number;
+    name: string;
+    nameKana: string | null;
+    nameEn?: string | null;
+    nameZh?: string | null;
+    nameKo?: string | null;
+  }> = [],
+  tagData: Array<{
+    id: number;
+    name: string;
+    category: string | null;
+    nameEn?: string | null;
+    nameZh?: string | null;
+    nameKo?: string | null;
+  }> = [],
   source?: any,
   cache?: any,
   imagesData?: Array<{ imageUrl: string; imageType: string; displayOrder: number | null }>,
   videosData?: Array<{ videoUrl: string; videoType: string; quality: string | null; duration: number | null }>,
   locale: string = 'ja',
-  saleData?: { regularPrice: number; salePrice: number; discountPercent: number | null }
+  saleData?: { regularPrice: number; salePrice: number; discountPercent: number | null },
 ): ProductType {
   // ASP情報から provider を取得
   const aspName = source?.aspName || 'DUGA';
@@ -1895,24 +1949,24 @@ function mapProductToType(
 
   // ASP名を表示用ラベルにマッピング
   const providerLabelMap: Record<string, string> = {
-    'APEX': 'DUGA',
-    'DUGA': 'DUGA',
-    'DTI': 'DTI',
-    'DMM': 'DMM',
-    'MGS': 'MGS動画',
-    'SOKMIL': 'ソクミル',
-    'ソクミル': 'ソクミル',
-    'B10F': 'b10f.jp',
-    'JAPANSKA': 'Japanska',
-    'FC2': 'FC2',
+    APEX: 'DUGA',
+    DUGA: 'DUGA',
+    DTI: 'DTI',
+    DMM: 'DMM',
+    MGS: 'MGS動画',
+    SOKMIL: 'ソクミル',
+    ソクミル: 'ソクミル',
+    B10F: 'b10f.jp',
+    JAPANSKA: 'Japanska',
+    FC2: 'FC2',
     // DTI系サイト
-    'HEYZO': 'HEYZO',
-    'カリビアンコムプレミアム': 'カリビアンコムプレミアム',
-    'CARIBBEANCOMPR': 'カリビアンコムプレミアム',
-    'CARIBBEANCOM': 'カリビアンコム',
+    HEYZO: 'HEYZO',
+    カリビアンコムプレミアム: 'カリビアンコムプレミアム',
+    CARIBBEANCOMPR: 'カリビアンコムプレミアム',
+    CARIBBEANCOM: 'カリビアンコム',
     '1PONDO': '一本道',
     '10MUSUME': '天然むすめ',
-    'PACOPACOMAMA': 'パコパコママ',
+    PACOPACOMAMA: 'パコパコママ',
   };
   const providerLabel = providerLabelMap[aspName.toUpperCase()] || providerLabelMap[aspName] || aspName;
 
@@ -1925,7 +1979,7 @@ function mapProductToType(
   let imageUrl = cache?.thumbnailUrl || product['defaultThumbnailUrl'];
   if (!imageUrl && imagesData && imagesData.length > 0) {
     // thumbnailタイプの画像を優先、なければ最初の画像
-    const thumbnailImg = imagesData.find(img => img.imageType === 'thumbnail');
+    const thumbnailImg = imagesData.find((img) => img.imageType === 'thumbnail');
     imageUrl = thumbnailImg?.imageUrl || imagesData[0]?.imageUrl;
   }
   if (!imageUrl) {
@@ -1935,9 +1989,10 @@ function mapProductToType(
   const affiliateUrl = source?.affiliateUrl || cache?.affiliateUrl || '';
 
   // サンプル画像を取得（product_imagesテーブルまたはcache）
-  const sampleImages = imagesData && imagesData.length > 0
-    ? imagesData.map(img => img.imageUrl)
-    : (cache?.sampleImages as string[] | undefined);
+  const sampleImages =
+    imagesData && imagesData.length > 0
+      ? imagesData.map((img) => img.imageUrl)
+      : (cache?.sampleImages as string[] | undefined);
 
   // タグからカテゴリを推定（仮実装）
   const category: ProductCategory = 'premium';
@@ -1948,40 +2003,43 @@ function mapProductToType(
   const actressName = firstPerformer ? getLocalizedPerformerName(firstPerformer, locale) : undefined;
 
   // 全出演者情報 - ローカライズ対応
-  const performersList = performerData.map(p => ({
+  const performersList = performerData.map((p) => ({
     id: String(p.id),
-    name: getLocalizedPerformerName(p, locale)
+    name: getLocalizedPerformerName(p, locale),
   }));
 
   // タグ名の配列 - ローカライズ対応
-  const tagsList = tagData.map(t => getLocalizedTagName(t, locale));
+  const tagsList = tagData.map((t) => getLocalizedTagName(t, locale));
 
   // 新作判定・発売予定判定
-  const { isNew, isFuture } = product['releaseDate'] ? (() => {
-    const releaseDate = new Date(product['releaseDate']);
-    const now = new Date();
-    const diffTime = now.getTime() - releaseDate.getTime();
-    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-    // 未来の日付 = 発売予定
-    if (diffDays < 0) {
-      return { isNew: false, isFuture: true };
-    }
-    // 過去7日以内 = 新作
-    return { isNew: diffDays <= 7, isFuture: false };
-  })() : { isNew: false, isFuture: false };
+  const { isNew, isFuture } = product['releaseDate']
+    ? (() => {
+        const releaseDate = new Date(product['releaseDate']);
+        const now = new Date();
+        const diffTime = now.getTime() - releaseDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // 未来の日付 = 発売予定
+        if (diffDays < 0) {
+          return { isNew: false, isFuture: true };
+        }
+        // 過去7日以内 = 新作
+        return { isNew: diffDays <= 7, isFuture: false };
+      })()
+    : { isNew: false, isFuture: false };
 
   // サンプル動画を整形
-  const sampleVideos = videosData && videosData.length > 0
-    ? videosData.map(video => {
-        const result: { url: string; type: string; quality?: string; duration?: number } = {
-          url: video.videoUrl,
-          type: video.videoType,
-        };
-        if (video.quality) result.quality = video.quality;
-        if (video.duration) result.duration = video.duration;
-        return result;
-      })
-    : undefined;
+  const sampleVideos =
+    videosData && videosData.length > 0
+      ? videosData.map((video) => {
+          const result: { url: string; type: string; quality?: string; duration?: number } = {
+            url: video.videoUrl,
+            type: video.videoType,
+          };
+          if (video.quality) result.quality = video.quality;
+          if (video.duration) result.duration = video.duration;
+          return result;
+        })
+      : undefined;
 
   const result: ProductType = {
     id: String(product['id']),
@@ -2022,12 +2080,19 @@ const ACTRESS_PLACEHOLDER = 'https://placehold.co/400x520/1f2937/ffffff?text=NO+
  * 画像優先順位: 1. profileImageUrl（女優プロフィール画像） 2. thumbnailUrl（商品画像） 3. プレースホルダー
  * @param locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）。指定された言語の名前/バイオを使用
  */
-function mapPerformerToActressTypeSync(performer: DbPerformer, releaseCount: number, thumbnailUrl?: string, services?: string[], aliases?: string[], locale: string = 'ja'): ActressType {
+function mapPerformerToActressTypeSync(
+  performer: DbPerformer,
+  releaseCount: number,
+  thumbnailUrl?: string,
+  services?: string[],
+  aliases?: string[],
+  locale: string = 'ja',
+): ActressType {
   // 画像の優先順位: profileImageUrl > thumbnailUrl（商品画像） > プレースホルダー
   const imageUrl = performer['profileImageUrl'] || thumbnailUrl || ACTRESS_PLACEHOLDER;
   // ASP名をProviderId型に変換（共通定数を使用）
   const providerIds = (services || [])
-    .map(s => ASP_TO_PROVIDER_ID[s])
+    .map((s) => ASP_TO_PROVIDER_ID[s])
     .filter((p): p is ProviderId => p !== undefined);
 
   // AIレビューをパース（ローカライズ対応）
@@ -2080,13 +2145,10 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
         and(
           eq(productPerformers.performerId, performer['id']),
           sql`${products['defaultThumbnailUrl']} IS NOT NULL`,
-          sql`${products['defaultThumbnailUrl']} != ''`
-        )
+          sql`${products['defaultThumbnailUrl']} != ''`,
+        ),
       )
-      .orderBy(
-        sql`CASE WHEN ${productSources.aspName} != 'DTI' THEN 0 ELSE 1 END`,
-        desc(products['createdAt'])
-      )
+      .orderBy(sql`CASE WHEN ${productSources.aspName} != 'DTI' THEN 0 ELSE 1 END`, desc(products['createdAt']))
       .limit(1),
     // ASPサービス一覧（DTIは個別サービスに分割）
     db.execute<{ asp_name: string }>(sql`
@@ -2117,10 +2179,17 @@ async function mapPerformerToActressType(performer: DbPerformer, locale: string 
   const releaseCount = productCountResult[0]?.count || 0;
   const thumbnailUrl = thumbnailResult[0]?.thumbnailUrl;
   const services = (servicesResult.rows as { asp_name: string }[])
-    .map(r => r.asp_name)
+    .map((r) => r.asp_name)
     .filter((s): s is string => s !== null && s !== '');
 
-  return mapPerformerToActressTypeSync(performer, Number(releaseCount), thumbnailUrl ?? undefined, services, undefined, locale);
+  return mapPerformerToActressTypeSync(
+    performer,
+    Number(releaseCount),
+    thumbnailUrl ?? undefined,
+    services,
+    undefined,
+    locale,
+  );
 }
 
 /**
@@ -2146,15 +2215,15 @@ export async function fuzzySearchProducts(query: string, limit: number = 20): Pr
       .where(
         or(
           sql`${products.normalizedProductId} ILIKE ${searchPattern}`,
-          sql`${products['title']} ILIKE ${searchPattern}`
-        )!
+          sql`${products['title']} ILIKE ${searchPattern}`,
+        )!,
       )
       .limit(limit);
 
     // 重複を排除してproduct IDsを集める
     const productIds = new Set<string>();
-    sourceMatches.forEach(m => productIds.add(m.productId.toString()));
-    productMatches.forEach(m => productIds.add(m.id.toString()));
+    sourceMatches.forEach((m) => productIds.add(m.productId.toString()));
+    productMatches.forEach((m) => productIds.add(m.id.toString()));
 
     if (productIds.size === 0) {
       return [];
@@ -2162,7 +2231,9 @@ export async function fuzzySearchProducts(query: string, limit: number = 20): Pr
 
     // 各商品の詳細情報を取得
     const productDetails = await Promise.all(
-      Array.from(productIds).slice(0, limit).map(id => getProductById(id))
+      Array.from(productIds)
+        .slice(0, limit)
+        .map((id) => getProductById(id)),
     );
 
     return productDetails.filter((p): p is ProductType => p !== null);
@@ -2175,11 +2246,13 @@ export async function fuzzySearchProducts(query: string, limit: number = 20): Pr
 /**
  * 新作が出た女優を取得（最近リリースされた商品に出演している女優）
  */
-export async function getActressesWithNewReleases(options: {
-  limit?: number;
-  daysAgo?: number; // 何日前までの新作を対象とするか（デフォルト: 30日）
-  locale?: string;
-} = {}) {
+export async function getActressesWithNewReleases(
+  options: {
+    limit?: number;
+    daysAgo?: number; // 何日前までの新作を対象とするか（デフォルト: 30日）
+    locale?: string;
+  } = {},
+) {
   const { limit = 20, daysAgo = 30, locale = 'ja' } = options;
 
   try {
@@ -2225,24 +2298,27 @@ export async function getActressesWithNewReleases(options: {
     const actressesWithDetails = await Promise.all(
       result.rows.map(async (actress) => {
         const fullActress = await getActressById(actress['id'].toString(), locale);
-        return fullActress || {
-          id: actress['id'].toString(),
-          name: actress['name'],
-          catchcopy: '',
-          description: '',
-          heroImage: '',
-          thumbnail: '',
-          primaryGenres: [],
-          services: [],
-          metrics: {
-            releaseCount: parseInt(actress.product_count, 10),
-            trendingScore: 0,
-            fanScore: 0,
-          },
-          highlightWorks: [],
-          tags: [],
-        } as ActressType;
-      })
+        return (
+          fullActress ||
+          ({
+            id: actress['id'].toString(),
+            name: actress['name'],
+            catchcopy: '',
+            description: '',
+            heroImage: '',
+            thumbnail: '',
+            primaryGenres: [],
+            services: [],
+            metrics: {
+              releaseCount: parseInt(actress.product_count, 10),
+              trendingScore: 0,
+              fanScore: 0,
+            },
+            highlightWorks: [],
+            tags: [],
+          } as ActressType)
+        );
+      }),
     );
 
     return actressesWithDetails;
@@ -2255,10 +2331,12 @@ export async function getActressesWithNewReleases(options: {
 /**
  * 人気タグ(作品数が多いタグ)を取得
  */
-export async function getPopularTags(options: {
-  category?: string;
-  limit?: number;
-} = {}): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
+export async function getPopularTags(
+  options: {
+    category?: string;
+    limit?: number;
+  } = {},
+): Promise<Array<{ id: number; name: string; category: string | null; count: number }>> {
   try {
     const { category, limit = 20 } = options;
     const db = getDb();
@@ -2289,10 +2367,7 @@ export async function getPopularTags(options: {
  * 最新の商品を取得（RSS用）
  * @param options.locale - ロケール（'ja' | 'en' | 'zh' | 'ko'）
  */
-export async function getRecentProducts(options?: {
-  limit?: number;
-  locale?: string;
-}): Promise<ProductType[]> {
+export async function getRecentProducts(options?: { limit?: number; locale?: string }): Promise<ProductType[]> {
   try {
     const db = getDb();
     const limit = options?.limit || 100;
@@ -2308,19 +2383,13 @@ export async function getRecentProducts(options?: {
     // 関連データを並列で取得
     const productsWithData = await Promise.all(
       results.map(async (product) => {
-        const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product['id']);
-
-        return mapProductToType(
-          product,
-          performerData,
-          tagData,
-          sourceData,
-          undefined,
-          imagesData,
-          videosData,
-          locale
+        const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(
+          db,
+          product['id'],
         );
-      })
+
+        return mapProductToType(product, performerData, tagData, sourceData, undefined, imagesData, videosData, locale);
+      }),
     );
 
     return productsWithData;
@@ -2400,11 +2469,17 @@ export async function getUncategorizedProducts(options?: {
     // ASPフィルター条件（対象/除外）
     let aspCondition = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`ps.asp_name IN (${sql.join(
+        includeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )})`;
     }
     let excludeAspCondition = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(
+        excludeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )}))`;
     }
 
     // サンプルコンテンツフィルター条件
@@ -2463,20 +2538,26 @@ export async function getUncategorizedProducts(options?: {
         const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, product['id']);
 
         // ローカライズ適用
-        const localizedTitle = getLocalizedTitle({
-          title: product['title'] || '',
-          titleEn: product.title_en,
-          titleZh: product.title_zh,
-          titleZhTw: product.title_zh_tw,
-          titleKo: product.title_ko,
-        }, locale);
-        const localizedDescription = getLocalizedDescription({
-          description: product['description'],
-          descriptionEn: product.description_en,
-          descriptionZh: product.description_zh,
-          descriptionZhTw: product.description_zh_tw,
-          descriptionKo: product.description_ko,
-        }, locale);
+        const localizedTitle = getLocalizedTitle(
+          {
+            title: product['title'] || '',
+            titleEn: product.title_en,
+            titleZh: product.title_zh,
+            titleZhTw: product.title_zh_tw,
+            titleKo: product.title_ko,
+          },
+          locale,
+        );
+        const localizedDescription = getLocalizedDescription(
+          {
+            description: product['description'],
+            descriptionEn: product.description_en,
+            descriptionZh: product.description_zh,
+            descriptionZhTw: product.description_zh_tw,
+            descriptionKo: product.description_ko,
+          },
+          locale,
+        );
 
         return {
           id: String(product['id']),
@@ -2492,16 +2573,16 @@ export async function getUncategorizedProducts(options?: {
           provider: (sourceData?.aspName?.toLowerCase() || 'duga') as any,
           providerLabel: sourceData?.aspName || '',
           performers: [],
-          tags: tagData.map(t => getLocalizedTagName(t, locale)),
-          sampleImages: imagesData.map(img => img.imageUrl),
-          sampleVideos: videosData.map(v => ({
+          tags: tagData.map((t) => getLocalizedTagName(t, locale)),
+          sampleImages: imagesData.map((img) => img.imageUrl),
+          sampleVideos: videosData.map((v) => ({
             url: v.videoUrl,
             type: v.videoType || 'streaming',
             quality: v.quality || undefined,
             duration: v.duration || undefined,
           })),
         } as ProductType;
-      })
+      }),
     );
 
     return productsWithData;
@@ -2573,11 +2654,17 @@ export async function getUncategorizedProductsCount(options?: {
     // ASPフィルター条件（対象/除外）
     let aspCondition = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`ps.asp_name IN (${sql.join(
+        includeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )})`;
     }
     let excludeAspCondition = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(
+        excludeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )}))`;
     }
 
     // サンプルコンテンツフィルター条件
@@ -2617,10 +2704,12 @@ export async function getUncategorizedProductsCount(options?: {
  * マルチASP女優を取得（複数のサイトに出演している女優）
  * コンセプト: アフィリエイトサイトを横断して作品を探す
  */
-export async function getMultiAspActresses(options: {
-  limit?: number;
-  minAspCount?: number; // 最低何サイト以上に出演しているか
-} = {}): Promise<ActressType[]> {
+export async function getMultiAspActresses(
+  options: {
+    limit?: number;
+    minAspCount?: number; // 最低何サイト以上に出演しているか
+  } = {},
+): Promise<ActressType[]> {
   const { limit = 20, minAspCount = 2 } = options;
 
   try {
@@ -2659,7 +2748,7 @@ export async function getMultiAspActresses(options: {
       result.rows.map(async (row) => {
         const fullActress = await getActressById(row.performer_id.toString());
         return fullActress;
-      })
+      }),
     );
 
     return actresses.filter((a): a is ActressType => a !== null);
@@ -2672,10 +2761,12 @@ export async function getMultiAspActresses(options: {
 /**
  * ASP別人気女優を取得
  */
-export async function getActressesByAsp(options: {
-  aspName: string;
-  limit?: number;
-} = { aspName: 'DUGA' }): Promise<ActressType[]> {
+export async function getActressesByAsp(
+  options: {
+    aspName: string;
+    limit?: number;
+  } = { aspName: 'DUGA' },
+): Promise<ActressType[]> {
   const { aspName, limit = 10 } = options;
 
   try {
@@ -2706,7 +2797,7 @@ export async function getActressesByAsp(options: {
       result.rows.map(async (row) => {
         const fullActress = await getActressById(row.performer_id.toString());
         return fullActress;
-      })
+      }),
     );
 
     return actresses.filter((a): a is ActressType => a !== null);
@@ -2740,18 +2831,18 @@ export async function getProviderProductCounts(): Promise<Record<string, number>
 
     // ASP名からproviderIdへのマッピング
     const aspToProviderId: Record<string, string> = {
-      'DUGA': 'duga',
-      'APEX': 'duga',
-      'DTI': 'dti',
-      'DMM': 'dmm',
-      'MGS': 'mgs',
-      'SOKMIL': 'sokmil',
-      'Sokmil': 'sokmil',
-      'B10F': 'b10f',
-      'b10f': 'b10f',
-      'FC2': 'fc2',
-      'Japanska': 'japanska',
-      'JAPANSKA': 'japanska',
+      DUGA: 'duga',
+      APEX: 'duga',
+      DTI: 'dti',
+      DMM: 'dmm',
+      MGS: 'mgs',
+      SOKMIL: 'sokmil',
+      Sokmil: 'sokmil',
+      B10F: 'b10f',
+      b10f: 'b10f',
+      FC2: 'fc2',
+      Japanska: 'japanska',
+      JAPANSKA: 'japanska',
     };
 
     const counts: Record<string, number> = {};
@@ -2828,7 +2919,7 @@ export async function getAspStats(): Promise<Array<{ aspName: string; productCou
 
     if (!result.rows) return [];
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       aspName: row.asp_name,
       productCount: parseInt(row.product_count, 10),
       actressCount: parseInt(row.actress_count, 10),
@@ -2891,7 +2982,7 @@ export async function getCategories(options?: {
 
     if (!result.rows) return [];
 
-    return result.rows.map(row => ({
+    return result.rows.map((row) => ({
       id: row['id'],
       name: row['name'],
       nameEn: row.name_en,
@@ -2922,7 +3013,7 @@ export async function getProductsByCategory(
     hasImage?: boolean;
     performerType?: 'solo' | 'multi';
     locale?: string;
-  }
+  },
 ): Promise<ProductType[]> {
   try {
     const db = getDb();
@@ -2951,11 +3042,17 @@ export async function getProductsByCategory(
     // ASPフィルター条件（対象/除外）
     let aspCondition = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`ps.asp_name IN (${sql.join(
+        includeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )})`;
     }
     let excludeAspCondition = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(
+        excludeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )}))`;
     }
 
     // サンプルコンテンツフィルター条件
@@ -2997,13 +3094,16 @@ export async function getProductsByCategory(
     const results = await db.execute(query);
 
     // フル情報を取得
-    const productIds = (results.rows as any[]).map(r => r.id);
+    const productIds = (results.rows as any[]).map((r) => r.id);
     if (productIds.length === 0) return [];
 
     const fullProducts = await Promise.all(
       productIds.map(async (productId) => {
-        const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(db, productId);
-        const baseProduct = (results.rows as any[]).find(r => r.id === productId)!;
+        const { performerData, tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(
+          db,
+          productId,
+        );
+        const baseProduct = (results.rows as any[]).find((r) => r.id === productId)!;
         return mapProductToType(
           {
             id: baseProduct.id,
@@ -3037,9 +3137,9 @@ export async function getProductsByCategory(
           undefined,
           imagesData,
           videosData,
-          locale
+          locale,
         );
-      })
+      }),
     );
 
     return fullProducts;
@@ -3061,7 +3161,7 @@ export async function getProductCountByCategory(
     hasVideo?: boolean;
     hasImage?: boolean;
     performerType?: 'solo' | 'multi';
-  }
+  },
 ): Promise<number> {
   try {
     const db = getDb();
@@ -3087,11 +3187,17 @@ export async function getProductCountByCategory(
     // ASPフィルター条件（対象/除外）
     let aspCondition = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`ps.asp_name IN (${sql.join(
+        includeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )})`;
     }
     let excludeAspCondition = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(
+        excludeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )}))`;
     }
 
     // サンプルコンテンツフィルター条件
@@ -3135,9 +3241,7 @@ export async function getProductCountByCategory(
 /**
  * カテゴリ別のASP統計を取得
  */
-export async function getAspStatsByCategory(
-  tagId: number
-): Promise<Array<{ aspName: string; count: number }>> {
+export async function getAspStatsByCategory(tagId: number): Promise<Array<{ aspName: string; count: number }>> {
   try {
     const db = getDb();
     // DTIはproductsテーブルのdefault_thumbnail_urlから個別サービス名を取得
@@ -3207,11 +3311,7 @@ export async function getTagById(tagId: number): Promise<{
 } | null> {
   try {
     const db = getDb();
-    const result = await db
-      .select()
-      .from(tags)
-      .where(eq(tags.id, tagId))
-      .limit(1);
+    const result = await db.select().from(tags).where(eq(tags.id, tagId)).limit(1);
 
     if (result.length === 0) return null;
     const tag = result[0];
@@ -3316,25 +3416,27 @@ export async function getUncategorizedStats(): Promise<UncategorizedStats> {
     `);
 
     const patternLabels: Record<string, string> = {
-      'SIRO': 'シロウトTV系',
+      SIRO: 'シロウトTV系',
       '200GANA': 'ナンパTV系',
-      'LUXU': 'ラグジュTV系',
-      'HEYZO': 'HEYZO',
-      'DTI': 'DTI系(カリビ/一本道)',
-      'DVD': 'DVD作品',
-      'OTHER': 'その他',
+      LUXU: 'ラグジュTV系',
+      HEYZO: 'HEYZO',
+      DTI: 'DTI系(カリビ/一本道)',
+      DVD: 'DVD作品',
+      OTHER: 'その他',
     };
 
     return {
-      aspStats: aspResult.rows?.map(row => ({
-        aspName: row.asp_name,
-        count: parseInt(row['count'], 10),
-      })) || [],
-      patternStats: patternResult.rows?.map(row => ({
-        pattern: row.pattern,
-        label: patternLabels[row.pattern] || row.pattern,
-        count: parseInt(row['count'], 10),
-      })) || [],
+      aspStats:
+        aspResult.rows?.map((row) => ({
+          aspName: row.asp_name,
+          count: parseInt(row['count'], 10),
+        })) || [],
+      patternStats:
+        patternResult.rows?.map((row) => ({
+          pattern: row.pattern,
+          label: patternLabels[row.pattern] || row.pattern,
+          count: parseInt(row['count'], 10),
+        })) || [],
       totalCount: parseInt(totalResult.rows?.[0]?.count || '0', 10),
     };
   } catch (error) {
@@ -3346,10 +3448,12 @@ export async function getUncategorizedStats(): Promise<UncategorizedStats> {
 /**
  * wiki_crawl_dataから商品コードに対応する候補演者を取得
  */
-export async function getCandidatePerformers(productCode: string): Promise<Array<{
-  name: string;
-  source: string;
-}>> {
+export async function getCandidatePerformers(productCode: string): Promise<
+  Array<{
+    name: string;
+    source: string;
+  }>
+> {
   try {
     const db = getDb();
 
@@ -3360,10 +3464,12 @@ export async function getCandidatePerformers(productCode: string): Promise<Array
       LIMIT 10
     `);
 
-    return result.rows?.map(row => ({
-      name: row.performer_name,
-      source: row['source'],
-    })) || [];
+    return (
+      result.rows?.map((row) => ({
+        name: row.performer_name,
+        source: row['source'],
+      })) || []
+    );
   } catch (error) {
     console.error('Error getting candidate performers:', error);
     return [];
@@ -3434,18 +3540,19 @@ export async function getSaleProducts(options?: {
       .limit(limit);
 
     // 出演者情報を取得
-    const productIds = results.map(r => r.productId);
-    const performerData = productIds.length > 0
-      ? await db
-          .select({
-            productId: productPerformers.productId,
-            performerId: performers['id'],
-            performerName: performers['name'],
-          })
-          .from(productPerformers)
-          .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
-          .where(inArray(productPerformers.productId, productIds))
-      : [];
+    const productIds = results.map((r) => r.productId);
+    const performerData =
+      productIds.length > 0
+        ? await db
+            .select({
+              productId: productPerformers.productId,
+              performerId: performers['id'],
+              performerName: performers['name'],
+            })
+            .from(productPerformers)
+            .innerJoin(performers, eq(productPerformers.performerId, performers['id']))
+            .where(inArray(productPerformers.productId, productIds))
+        : [];
 
     // 商品IDごとに出演者をグループ化
     const performersByProduct = new Map<number, Array<{ id: number; name: string }>>();
@@ -3455,7 +3562,7 @@ export async function getSaleProducts(options?: {
       performersByProduct.set(p.productId, arr);
     }
 
-    return results.map(r => ({
+    return results.map((r) => ({
       productId: r.productId,
       normalizedProductId: r.normalizedProductId,
       title: r.title,
@@ -3490,10 +3597,9 @@ export async function getSaleStats(): Promise<{
     const totalResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(productSales)
-      .where(and(
-        eq(productSales.isActive, true),
-        sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-      ));
+      .where(
+        and(eq(productSales.isActive, true), sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`),
+      );
 
     const total = Number(totalResult[0]?.count || 0);
 
@@ -3506,16 +3612,15 @@ export async function getSaleStats(): Promise<{
       })
       .from(productSales)
       .innerJoin(productSources, eq(productSales.productSourceId, productSources.id))
-      .where(and(
-        eq(productSales.isActive, true),
-        sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`
-      ))
+      .where(
+        and(eq(productSales.isActive, true), sql`(${productSales.endAt} IS NULL OR ${productSales.endAt} > NOW())`),
+      )
       .groupBy(productSources.aspName)
       .orderBy(desc(sql`count(*)`));
 
     return {
       totalSales: total,
-      byAsp: byAspResult.map(r => ({
+      byAsp: byAspResult.map((r) => ({
         aspName: r.aspName,
         count: Number(r.count),
         avgDiscount: Math.round(Number(r.avgDiscount) || 0),
@@ -3526,4 +3631,3 @@ export async function getSaleStats(): Promise<{
     return { totalSales: 0, byAsp: [] };
   }
 }
-

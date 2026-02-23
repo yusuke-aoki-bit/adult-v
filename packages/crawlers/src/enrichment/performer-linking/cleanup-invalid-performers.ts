@@ -32,9 +32,7 @@ async function main() {
     })
     .from(wikiCrawlData);
 
-  const invalidWikiEntries = allWikiEntries.filter(
-    entry => !isValidPerformerName(entry['performerName'])
-  );
+  const invalidWikiEntries = allWikiEntries.filter((entry) => !isValidPerformerName(entry['performerName']));
 
   console.log(`   総レコード: ${allWikiEntries.length}件`);
   console.log(`   ✓ ${invalidWikiEntries.length}件の無効エントリを発見`);
@@ -58,9 +56,7 @@ async function main() {
     })
     .from(performers);
 
-  const invalidPerformers = allPerformers.filter(
-    p => !isValidPerformerName(p.name)
-  );
+  const invalidPerformers = allPerformers.filter((p) => !isValidPerformerName(p.name));
 
   console.log(`   総演者: ${allPerformers.length}件`);
   console.log(`   ✓ ${invalidPerformers.length}件の無効演者を発見`);
@@ -75,7 +71,7 @@ async function main() {
   // 3. product_performersから該当する紐付けを検索
   console.log('\n3. product_performersの無効紐付け検索...');
   let invalidLinkCount = 0;
-  const invalidPerformerIds = invalidPerformers.map(p => p.id);
+  const invalidPerformerIds = invalidPerformers.map((p) => p.id);
 
   if (invalidPerformerIds.length > 0) {
     // バッチで取得
@@ -93,7 +89,7 @@ async function main() {
     }
     const sortedCounts = [...linkCounts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
     for (const [performerId, count] of sortedCounts) {
-      const performer = invalidPerformers.find(p => p.id === performerId);
+      const performer = invalidPerformers.find((p) => p.id === performerId);
       console.log(`   - "${performer?.name}": ${count}件の紐付け`);
     }
   }
@@ -113,7 +109,7 @@ async function main() {
     let deletedCount = 0;
     for (let i = 0; i < invalidWikiEntries.length; i += batchSize) {
       const batch = invalidWikiEntries.slice(i, i + batchSize);
-      const ids = batch.map(e => e.id);
+      const ids = batch.map((e) => e.id);
       await db['delete'](wikiCrawlData).where(inArray(wikiCrawlData.id, ids));
       deletedCount += ids.length;
       console.log(`   wiki_crawl_data: ${deletedCount}/${invalidWikiEntries.length}件削除`);

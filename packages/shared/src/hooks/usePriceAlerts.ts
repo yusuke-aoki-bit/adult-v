@@ -85,9 +85,7 @@ export function usePriceAlerts() {
   // アラートを更新
   const updateAlert = useCallback(
     (productId: string, updates: Partial<Omit<PriceAlert, 'productId' | 'createdAt'>>) => {
-      const newAlerts = alerts.map((a) =>
-        a.productId === productId ? { ...a, ...updates } : a,
-      );
+      const newAlerts = alerts.map((a) => (a.productId === productId ? { ...a, ...updates } : a));
       saveAlerts(newAlerts);
     },
     [alerts, saveAlerts],
@@ -183,7 +181,9 @@ export function useNotificationPreferences() {
   }, [prefsRaw]);
 
   const updatePreferences = useCallback((updates: Partial<NotificationPreferences>) => {
-    const current = JSON.parse(localStorage.getItem(STORAGE_KEYS.NOTIFICATION_PREFERENCES) || JSON.stringify(DEFAULT_PREFERENCES));
+    const current = JSON.parse(
+      localStorage.getItem(STORAGE_KEYS.NOTIFICATION_PREFERENCES) || JSON.stringify(DEFAULT_PREFERENCES),
+    );
     const newPrefs = { ...current, ...updates };
     localStorage.setItem(STORAGE_KEYS.NOTIFICATION_PREFERENCES, JSON.stringify(newPrefs));
     window.dispatchEvent(new CustomEvent('local-storage-update'));

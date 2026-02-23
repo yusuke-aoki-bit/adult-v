@@ -25,7 +25,10 @@ export function createPriceAlertsRouteHandler(deps: PriceAlertsRouteHandlerDeps)
 
       const subscription = await getSubscriptionByEndpoint(db, endpoint);
       if (!subscription) {
-        return NextResponse.json({ error: 'Subscription not found. Please enable notifications first.' }, { status: 404 });
+        return NextResponse.json(
+          { error: 'Subscription not found. Please enable notifications first.' },
+          { status: 404 },
+        );
       }
 
       const existingResult = await db.execute(deps.sql`
@@ -42,7 +45,11 @@ export function createPriceAlertsRouteHandler(deps: PriceAlertsRouteHandlerDeps)
         const insertResult = await db.execute(deps.sql`
           INSERT INTO price_alerts (subscription_id, product_id, target_price, notify_on_any_sale) VALUES (${subscription.id}, ${productId}, ${targetPrice || null}, ${notifyOnAnySale}) RETURNING id
         `);
-        return NextResponse.json({ success: true, action: 'created', alertId: (insertResult.rows[0] as { id: number }).id });
+        return NextResponse.json({
+          success: true,
+          action: 'created',
+          alertId: (insertResult.rows[0] as { id: number }).id,
+        });
       }
     } catch (error) {
       console.error('Price alerts POST error:', error);

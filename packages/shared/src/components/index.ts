@@ -34,7 +34,6 @@ export { default as FilterPersistence } from './FilterPersistence';
 export { default as PerPagePersistence } from './PerPagePersistence';
 export { default as FilterPresetManager } from './FilterPresetManager';
 
-
 // UI components
 export { default as NavigationProgress } from './NavigationProgress';
 export { default as ScrollToTop } from './ScrollToTop';
@@ -95,11 +94,11 @@ export {
   PerPageDropdown,
   ActiveFiltersChips,
   getFilterThemeConfig,
-  getSortTranslation,
-  getPerPageTranslation,
-  getActiveFiltersTranslation,
 } from './filters';
-export type { FilterTheme, FilterThemeConfig, SortTranslationKey, PerPageTranslationKey, ActiveFiltersTranslationKey, SupportedLocale } from './filters';
+export type {
+  FilterTheme,
+  FilterThemeConfig,
+} from './filters';
 
 // Client providers (Firebase auth, etc.)
 export { ClientProviders } from './ClientProviders';
@@ -108,10 +107,7 @@ export { ClientProviders } from './ClientProviders';
 export { FirebaseProvider } from './FirebaseProvider';
 
 // ProductCard utilities (themes and helpers) and base component
-export {
-  ProductCardBase,
-  getAffiliateUrl,
-} from './ProductCard';
+export { ProductCardBase, getAffiliateUrl } from './ProductCard';
 export type {
   ProductCardTheme,
   ThemeConfig as ProductCardThemeConfig,
@@ -127,20 +123,11 @@ export { default as ActressAiReview } from './ActressAiReview';
 export type { ActressAiReviewTheme } from './ActressAiReview';
 
 // ActressCard utilities (themes and helpers) and base component
-export {
-  getActressCardThemeConfig,
-  filterServicesForSite,
-  ActressCardBase,
-} from './ActressCard';
-export type {
-  ActressCardTheme,
-  ActressCardThemeConfig,
-  ActressCardBaseProps,
-  ActressCardSize,
-} from './ActressCard';
+export { getActressCardThemeConfig, filterServicesForSite, ActressCardBase } from './ActressCard';
+export type { ActressCardTheme, ActressCardThemeConfig, ActressCardBaseProps, ActressCardSize } from './ActressCard';
 
 // Cloud sync settings
-export { CloudSyncSettings, cloudSyncTranslations } from './CloudSyncSettings';
+export { CloudSyncSettings } from './CloudSyncSettings';
 export type { CloudSyncSettingsProps } from './CloudSyncSettings';
 
 // FilterSortBar (shared between apps)
@@ -149,19 +136,20 @@ export type { FilterSortBarBaseProps, FilterSortBarTheme, SortOption } from './F
 
 // SearchBar (shared between apps)
 export { UnifiedSearchBar } from './SearchBar';
-export type { SearchBarTheme, SearchBarBaseProps, AiSearchResult, UnifiedSearchBarProps, SearchMode } from './SearchBar';
+export type {
+  SearchBarTheme,
+  SearchBarBaseProps,
+  AiSearchResult,
+  UnifiedSearchBarProps,
+  SearchMode,
+} from './SearchBar';
 
 // OptimizedImage (shared between apps)
 export { OptimizedImageBase } from './OptimizedImage';
 export type { OptimizedImageTheme, OptimizedImageBaseProps } from './OptimizedImage';
 
 // LanguageSwitcher (shared between apps)
-export {
-  LanguageSwitcherBase,
-  locales,
-  localeNames,
-  defaultLocale,
-} from './LanguageSwitcher';
+export { LanguageSwitcherBase, locales, localeNames, defaultLocale } from './LanguageSwitcher';
 export type {
   LanguageSwitcherTheme,
   LanguageSwitcherBaseProps,
@@ -184,9 +172,7 @@ export { SearchFiltersBase, SORT_OPTIONS, PROVIDERS } from './SearchFilters';
 export type { SearchFiltersTheme, SearchFiltersBaseProps, SearchFilterOptions } from './SearchFilters';
 
 // BudgetManager (shared between apps)
-export {
-  BudgetManagerBase,
-} from './BudgetManager';
+export { BudgetManagerBase } from './BudgetManager';
 export type { BudgetManagerTheme, BudgetManagerBaseProps, BudgetStatus } from './BudgetManager';
 
 // Social sharing components
@@ -286,7 +272,13 @@ export type { AdminStatsContentProps } from './AdminStatsContent';
 
 // TopPage menu components
 export { TopPageMenuSection } from './TopPageMenu';
-export type { LinkMenuItemProps, AccordionMenuItemProps, TopPageMenuItemProps, TopPageMenuSectionProps, MenuType } from './TopPageMenu';
+export type {
+  LinkMenuItemProps,
+  AccordionMenuItemProps,
+  TopPageMenuItemProps,
+  TopPageMenuSectionProps,
+  MenuType,
+} from './TopPageMenu';
 
 // Section navigation
 export { SectionNav } from './SectionNav';
@@ -311,16 +303,8 @@ export {
 export type { UserContributionsSectionTranslations } from './UserContributions';
 
 // Public favorite lists
-export {
-  PublicListCard,
-  CreateListModal,
-  PublicListDetail,
-} from './PublicFavoriteLists';
-export type {
-  PublicListCardProps,
-  CreateListModalProps,
-  PublicListDetailProps,
-} from './PublicFavoriteLists';
+export { PublicListCard, CreateListModal, PublicListDetail } from './PublicFavoriteLists';
+export type { PublicListCardProps, CreateListModalProps, PublicListDetailProps } from './PublicFavoriteLists';
 
 // Offline indicator
 export { OfflineIndicator } from './OfflineIndicator';
@@ -338,7 +322,12 @@ export { PerformerListWithSelection } from './PerformerListWithSelection';
 
 // User corrections (suggest edits to product/performer info)
 export { CorrectionForm, type CorrectionFormProps, type CorrectionFormTranslations } from './CorrectionForm';
-export { CorrectionList, type CorrectionListProps, type CorrectionListTranslations, type Correction } from './CorrectionList';
+export {
+  CorrectionList,
+  type CorrectionListProps,
+  type CorrectionListTranslations,
+  type Correction,
+} from './CorrectionList';
 
 // Theme-unified components (shared between apps, auto-detect dark/light)
 export { default as BudgetTrackerBase } from './BudgetTrackerBase';

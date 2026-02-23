@@ -28,9 +28,7 @@ if (!dsn) {
     // Filter out common non-actionable errors
     beforeSend(event) {
       // Ignore errors from browser extensions
-      if (event.exception?.values?.[0]?.stacktrace?.frames?.some(
-        frame => frame.filename?.includes('extension://')
-      )) {
+      if (event.exception?.values?.[0]?.stacktrace?.frames?.some((frame) => frame.filename?.includes('extension://'))) {
         return null;
       }
 

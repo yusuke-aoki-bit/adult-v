@@ -6,11 +6,13 @@ const AdminStatsContent = lazy(() => import('./AdminStatsContent'));
 
 export default function AdminStatsWrapper() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-900 text-white p-8 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-900 p-8 text-white">
+          <div className="text-xl">Loading...</div>
+        </div>
+      }
+    >
       <AdminStatsContent />
     </Suspense>
   );

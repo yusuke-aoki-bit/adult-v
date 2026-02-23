@@ -12,10 +12,7 @@ export interface SalePredictionHandlerDeps {
 }
 
 export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     const { getDb, sql } = deps;
 
     try {
@@ -32,10 +29,13 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
       `);
 
       if (productSourceResult.rows.length === 0) {
-        return NextResponse.json({
-          success: false,
-          error: 'Product not found',
-        }, { status: 404 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Product not found',
+          },
+          { status: 404 },
+        );
       }
 
       const productSourceId = productSourceResult.rows[0].product_source_id as number;
@@ -75,7 +75,7 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
       // 平均割引率を計算
       const discountPercents = saleHistory.map((s: { discount_percent: unknown }) => Number(s.discount_percent));
       const typicalDiscountPercent = Math.round(
-        discountPercents.reduce((a: number, b: number) => a + b, 0) / discountPercents.length
+        discountPercents.reduce((a: number, b: number) => a + b, 0) / discountPercents.length,
       );
 
       // セール日を月別に集計
@@ -92,10 +92,7 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
 
       // 30日以内のセール確率（現在の月のセール頻度に基づく）
       const currentMonthCount = monthCounts[currentMonth] || 0;
-      const probability30Days = Math.min(
-        Math.round((currentMonthCount / totalHistoricalSales) * 100 * 3),
-        95
-      );
+      const probability30Days = Math.min(Math.round((currentMonthCount / totalHistoricalSales) * 100 * 3), 95);
 
       // 90日以内のセール確率（今後3ヶ月のセール頻度に基づく）
       let next3MonthsCount = 0;
@@ -103,15 +100,11 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
         const month = ((currentMonth + i - 1) % 12) + 1;
         next3MonthsCount += monthCounts[month] || 0;
       }
-      const probability90Days = Math.min(
-        Math.round((next3MonthsCount / totalHistoricalSales) * 100),
-        95
-      );
+      const probability90Days = Math.min(Math.round((next3MonthsCount / totalHistoricalSales) * 100), 95);
 
       // 次回セール予想期間
       let nextLikelySalePeriod: string | null = null;
-      const peakMonth = Object.entries(monthCounts)
-        .sort(([, a], [, b]) => b - a)[0];
+      const peakMonth = Object.entries(monthCounts).sort(([, a], [, b]) => b - a)[0];
       if (peakMonth) {
         const monthNum = parseInt(peakMonth[0]);
         const monthNames = {
@@ -149,9 +142,7 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
       const averageSaleDurationDays = Math.round(totalDuration / saleCount);
 
       // 過去のセール日（ユニークな日付）
-      const historicalSaleDates = [...new Set(
-        saleDates.map((d: Date) => d.toISOString().split('T')[0])
-      )].slice(0, 10);
+      const historicalSaleDates = [...new Set(saleDates.map((d: Date) => d.toISOString().split('T')[0]))].slice(0, 10);
 
       return NextResponse.json({
         success: true,

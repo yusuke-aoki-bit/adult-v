@@ -80,7 +80,7 @@ const PROJECT_ID = 'adult-v';
 const REGION = 'asia-northeast1';
 
 export async function GET(request: NextRequest) {
-  if (!await verifyCronRequest(request)) {
+  if (!(await verifyCronRequest(request))) {
     return unauthorizedResponse();
   }
 
@@ -256,7 +256,11 @@ export async function GET(request: NextRequest) {
           name: schedulerName,
           schedule: scheduler.schedule || '',
           timeZone: scheduler.timeZone || 'Asia/Tokyo',
-          state: (scheduler.state === 'ENABLED' ? 'ENABLED' : scheduler.state === 'PAUSED' ? 'PAUSED' : 'UNKNOWN') as SchedulerStatus['state'],
+          state: (scheduler.state === 'ENABLED'
+            ? 'ENABLED'
+            : scheduler.state === 'PAUSED'
+              ? 'PAUSED'
+              : 'UNKNOWN') as SchedulerStatus['state'],
           lastAttemptTime: scheduler.status?.lastAttemptTime,
           lastAttemptStatus,
           nextRunTime: scheduler.scheduleTime,

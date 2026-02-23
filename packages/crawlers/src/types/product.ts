@@ -3,31 +3,31 @@
 export type ProviderId =
   | 'duga'
   | 'sokmil'
-  | 'dti'  // レガシー用（後方互換性）
+  | 'dti' // レガシー用（後方互換性）
   | 'mgs'
   | 'b10f'
   | 'japanska'
   | 'fc2'
-  | 'fanza'             // FANZA (DMM)
+  | 'fanza' // FANZA (DMM)
   // DTI個別サービス
-  | 'caribbeancom'      // カリビアンコム
-  | 'caribbeancompr'    // カリビアンコムプレミアム
-  | '1pondo'            // 一本道
-  | 'heyzo'             // HEYZO
-  | '10musume'          // 天然むすめ
-  | 'pacopacomama'      // パコパコママ
-  | 'muramura'          // ムラムラってくる素人
-  | 'tokyohot';         // Tokyo-Hot
+  | 'caribbeancom' // カリビアンコム
+  | 'caribbeancompr' // カリビアンコムプレミアム
+  | '1pondo' // 一本道
+  | 'heyzo' // HEYZO
+  | '10musume' // 天然むすめ
+  | 'pacopacomama' // パコパコママ
+  | 'muramura' // ムラムラってくる素人
+  | 'tokyohot'; // Tokyo-Hot
 
 // 商品カテゴリ（ジャンル）の定義
 export type ProductCategory =
-  | 'all'            // すべて
-  | 'premium'        // 王道・人気女優
-  | 'mature'         // 熟女・人妻
-  | 'fetish'         // マニアックジャンル
-  | 'vr'             // VR・4K
-  | 'cosplay'        // コスプレ・企画
-  | 'indies';        // 素人・インディーズ
+  | 'all' // すべて
+  | 'premium' // 王道・人気女優
+  | 'mature' // 熟女・人妻
+  | 'fetish' // マニアックジャンル
+  | 'vr' // VR・4K
+  | 'cosplay' // コスプレ・企画
+  | 'indies'; // 素人・インディーズ
 
 // 通貨コード
 export type CurrencyCode = 'JPY' | 'USD';
@@ -84,11 +84,11 @@ export interface CategoryInfo {
 
 // AIレビュー情報
 export interface ActressAiReview {
-  overview: string;           // 演者の総合的な紹介
-  style: string;              // 演技スタイル・特徴
-  appeal: string;             // 魅力ポイント
-  recommendation: string;     // おすすめコメント
-  keywords: string[];         // 検索キーワード
+  overview: string; // 演者の総合的な紹介
+  style: string; // 演技スタイル・特徴
+  appeal: string; // 魅力ポイント
+  recommendation: string; // おすすめコメント
+  keywords: string[]; // 検索キーワード
 }
 
 // 女優情報
@@ -146,11 +146,11 @@ export interface RankingEntry {
 }
 
 // ソートオプション
-export type SortOption = 
-  | 'releaseDateDesc'    // リリース日（新しい順）
-  | 'releaseDateAsc'     // リリース日（古い順）
-  | 'priceDesc'          // 価格（高い順）
-  | 'priceAsc'           // 価格（安い順）
-  | 'ratingDesc'         // 評価（高い順）
-  | 'ratingAsc'          // 評価（低い順）
-  | 'titleAsc';          // タイトル（あいうえお順）
+export type SortOption =
+  | 'releaseDateDesc' // リリース日（新しい順）
+  | 'releaseDateAsc' // リリース日（古い順）
+  | 'priceDesc' // 価格（高い順）
+  | 'priceAsc' // 価格（安い順）
+  | 'ratingDesc' // 評価（高い順）
+  | 'ratingAsc' // 評価（低い順）
+  | 'titleAsc'; // タイトル（あいうえお順）

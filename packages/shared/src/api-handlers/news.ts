@@ -7,7 +7,11 @@ import type { NewsArticleRow } from '../db-queries/news-queries';
 
 export interface NewsHandlerDeps {
   getLatestNews: (limit?: number) => Promise<NewsArticleRow[]>;
-  getNewsByCategory: (category: string | null, page?: number, limit?: number) => Promise<{ articles: NewsArticleRow[]; total: number }>;
+  getNewsByCategory: (
+    category: string | null,
+    page?: number,
+    limit?: number,
+  ) => Promise<{ articles: NewsArticleRow[]; total: number }>;
 }
 
 export function createNewsHandler(deps: NewsHandlerDeps) {

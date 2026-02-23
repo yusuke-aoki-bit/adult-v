@@ -36,12 +36,14 @@ function isWebApp(baseURL: string | undefined): boolean {
 test.describe('FANZA Site Banner Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('footer contains FANZA site banner on web app', async ({ page, baseURL }) => {
@@ -78,7 +80,7 @@ test.describe('FANZA Site Banner Tests', () => {
 
     const fanzaLink = page.locator('footer').locator('a[href*="f.adult-v.com"]').first();
 
-    if (await fanzaLink.count() > 0) {
+    if ((await fanzaLink.count()) > 0) {
       const href = await fanzaLink.getAttribute('href');
       expect(href).toContain('f.adult-v.com');
 
@@ -104,7 +106,7 @@ test.describe('FANZA Site Banner Tests', () => {
 
     const fanzaBanner = page.locator('footer').locator('a[href*="f.adult-v.com"]').first();
 
-    if (await fanzaBanner.count() > 0) {
+    if ((await fanzaBanner.count()) > 0) {
       // Check for visible text or aria-label
       const text = await fanzaBanner.textContent();
       const ariaLabel = await fanzaBanner.getAttribute('aria-label');
@@ -118,12 +120,14 @@ test.describe('FANZA Site Banner Tests', () => {
 test.describe('FANZA New Releases Section Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage shows FANZA new releases section on web app', async ({ page, baseURL }) => {
@@ -140,7 +144,7 @@ test.describe('FANZA New Releases Section Tests', () => {
 
     // Look for FANZA section heading or content
     const fanzaSection = page.locator('text=FANZA新作').or(page.locator('text=FANZA New'));
-    const sectionVisible = await fanzaSection.count() > 0;
+    const sectionVisible = (await fanzaSection.count()) > 0;
 
     // Section may not appear if API fails, so we just check structure exists
     if (sectionVisible) {
@@ -164,7 +168,7 @@ test.describe('FANZA New Releases Section Tests', () => {
     // Find CTA button/link in FANZA section
     const fanzaCta = page.locator('a[href*="f.adult-v.com/products"]');
 
-    if (await fanzaCta.count() > 0) {
+    if ((await fanzaCta.count()) > 0) {
       const href = await fanzaCta.first().getAttribute('href');
       expect(href).toContain('f.adult-v.com');
     }
@@ -174,12 +178,14 @@ test.describe('FANZA New Releases Section Tests', () => {
 test.describe('Products Page FANZA Banner Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('products page shows FANZA card banner on web app', async ({ page, baseURL }) => {
@@ -204,12 +210,14 @@ test.describe('Products Page FANZA Banner Tests', () => {
 test.describe('FANZA Link Compliance Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('all FANZA links go through f.adult-v.com (not direct FANZA)', async ({ page, baseURL }) => {
@@ -267,12 +275,14 @@ test.describe('FANZA Link Compliance Tests', () => {
 test.describe('Cross-Site Navigation Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('header has FANZA badge linking to FANZA site', async ({ page, baseURL }) => {
@@ -308,7 +318,7 @@ test.describe('Cross-Site Navigation Tests', () => {
     // Click on first product to go to detail page
     const productLink = page.locator('a[href*="/products/"]').first();
 
-    if (await productLink.count() > 0) {
+    if ((await productLink.count()) > 0) {
       await productLink.click();
       await page.waitForLoadState('domcontentloaded');
 
@@ -333,7 +343,7 @@ test.describe('Cross-Site Navigation Tests', () => {
     // Click on first actress to go to detail page
     const actressLink = page.locator('a[href*="/actress/"]').first();
 
-    if (await actressLink.count() > 0) {
+    if ((await actressLink.count()) > 0) {
       await actressLink.click();
       await page.waitForLoadState('domcontentloaded');
 
@@ -350,12 +360,14 @@ test.describe('Cross-Site Navigation Tests', () => {
 test.describe('FANZA Features - Fanza App Exclusion Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('fanza app should NOT show FANZA cross-site banners', async ({ page, baseURL }) => {
@@ -397,12 +409,14 @@ test.describe('FANZA Features - Fanza App Exclusion Tests', () => {
 test.describe('FANZA Banner Responsive Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('FANZA banner is visible on mobile viewport', async ({ page, baseURL }) => {
@@ -420,7 +434,7 @@ test.describe('FANZA Banner Responsive Tests', () => {
 
     const fanzaBanner = page.locator('a[href*="f.adult-v.com"]').first();
 
-    if (await fanzaBanner.count() > 0) {
+    if ((await fanzaBanner.count()) > 0) {
       await expect(fanzaBanner).toBeVisible();
     }
   });
@@ -440,7 +454,7 @@ test.describe('FANZA Banner Responsive Tests', () => {
 
     const fanzaBanner = page.locator('a[href*="f.adult-v.com"]').first();
 
-    if (await fanzaBanner.count() > 0) {
+    if ((await fanzaBanner.count()) > 0) {
       await expect(fanzaBanner).toBeVisible();
     }
   });
@@ -460,7 +474,7 @@ test.describe('FANZA Banner Responsive Tests', () => {
     // Check section exists and is not overflowing
     const fanzaSection = page.locator('section').filter({ hasText: /FANZA/ }).first();
 
-    if (await fanzaSection.count() > 0) {
+    if ((await fanzaSection.count()) > 0) {
       const box = await fanzaSection.boundingBox();
       if (box) {
         // Section should not overflow viewport

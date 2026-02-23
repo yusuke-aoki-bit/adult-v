@@ -33,60 +33,78 @@ export function useBulkSelection(options: UseBulkSelectionOptions = {}): UseBulk
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
   const [isSelectionMode, setIsSelectionMode] = useState(false);
 
-  const notifyChange = useCallback((items: Set<string>) => {
-    if (onSelectionChange) {
-      onSelectionChange(Array.from(items));
-    }
-  }, [onSelectionChange]);
+  const notifyChange = useCallback(
+    (items: Set<string>) => {
+      if (onSelectionChange) {
+        onSelectionChange(Array.from(items));
+      }
+    },
+    [onSelectionChange],
+  );
 
-  const isSelected = useCallback((id: string) => {
-    return selectedItems.has(id);
-  }, [selectedItems]);
+  const isSelected = useCallback(
+    (id: string) => {
+      return selectedItems.has(id);
+    },
+    [selectedItems],
+  );
 
-  const toggleItem = useCallback((id: string) => {
-    setSelectedItems(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) {
+  const toggleItem = useCallback(
+    (id: string) => {
+      setSelectedItems((prev) => {
+        const next = new Set(prev);
+        if (next.has(id)) {
+          next.delete(id);
+        } else if (next.size < maxItems) {
+          next.add(id);
+        }
+        notifyChange(next);
+        return next;
+      });
+    },
+    [maxItems, notifyChange],
+  );
+
+  const selectItem = useCallback(
+    (id: string) => {
+      setSelectedItems((prev) => {
+        if (prev.has(id) || prev.size >= maxItems) return prev;
+        const next = new Set(prev);
+        next.add(id);
+        notifyChange(next);
+        return next;
+      });
+    },
+    [maxItems, notifyChange],
+  );
+
+  const deselectItem = useCallback(
+    (id: string) => {
+      setSelectedItems((prev) => {
+        if (!prev.has(id)) return prev;
+        const next = new Set(prev);
         next.delete(id);
-      } else if (next.size < maxItems) {
-        next.add(id);
-      }
-      notifyChange(next);
-      return next;
-    });
-  }, [maxItems, notifyChange]);
+        notifyChange(next);
+        return next;
+      });
+    },
+    [notifyChange],
+  );
 
-  const selectItem = useCallback((id: string) => {
-    setSelectedItems(prev => {
-      if (prev.has(id) || prev.size >= maxItems) return prev;
-      const next = new Set(prev);
-      next.add(id);
-      notifyChange(next);
-      return next;
-    });
-  }, [maxItems, notifyChange]);
-
-  const deselectItem = useCallback((id: string) => {
-    setSelectedItems(prev => {
-      if (!prev.has(id)) return prev;
-      const next = new Set(prev);
-      next.delete(id);
-      notifyChange(next);
-      return next;
-    });
-  }, [notifyChange]);
-
-  const selectAll = useCallback((ids: string[]) => {
-    setSelectedItems(prev => {
-      const next = new Set(prev);
-      for (const id of ids) {
-        if (next.size >= maxItems) break;
-        next.add(id);
-      }
-      notifyChange(next);
-      return next;
-    });
-  }, [maxItems, notifyChange]);
+  const selectAll = useCallback(
+    (ids: string[]) => {
+      setSelectedItems((prev) => {
+        const next = new Set(prev);
+        for (const id of ids) {
+          if (next.size >= maxItems) break;
+          next.add(id);
+        }
+        notifyChange(next);
+        return next;
+      });
+    },
+    [maxItems, notifyChange],
+  );
 
   const deselectAll = useCallback(() => {
     setSelectedItems(new Set());
@@ -94,7 +112,7 @@ export function useBulkSelection(options: UseBulkSelectionOptions = {}): UseBulk
   }, [notifyChange]);
 
   const toggleSelectionMode = useCallback(() => {
-    setIsSelectionMode(prev => {
+    setIsSelectionMode((prev) => {
       if (prev) {
         // 選択モード解除時にクリア
         setSelectedItems(new Set());

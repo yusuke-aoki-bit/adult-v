@@ -164,7 +164,7 @@ async function main() {
 
   // クエリデータをバッチ保存（N+1解消）
   const BATCH_SIZE = 100;
-  const queryValues = queryRows.map(row => ({
+  const queryValues = queryRows.map((row) => ({
     queryType: 'query' as const,
     queryOrUrl: row.keys[0]!,
     clicks: row.clicks,
@@ -194,10 +194,10 @@ async function main() {
 
   // 存在するperformer IDのセットを取得（外部キー制約対応）
   const existingPerformers = await db['select']({ id: performers['id'] }).from(performers);
-  const existingPerformerIds = new Set(existingPerformers.map(p => p.id));
+  const existingPerformerIds = new Set(existingPerformers.map((p) => p.id));
 
   // ページデータをバッチ保存（N+1解消）
-  const pageValues = pageRows.map(row => {
+  const pageValues = pageRows.map((row) => {
     const url = row.keys[0] ?? '';
     let performerId: number | null = null;
 
@@ -247,7 +247,7 @@ async function main() {
 
   // クエリから女優名を抽出してマッチング
   // 順位50以上 & 表示回数5以上の女優を優先
-  const actressQueries = queryRows.filter(row => {
+  const actressQueries = queryRows.filter((row) => {
     const query = row.keys[0] ?? '';
     // 作品タイトルっぽいもの（長すぎる、特殊文字多い）は除外
     if (query.length > 20 || /[【】「」]/.test(query)) return false;
@@ -308,13 +308,13 @@ async function main() {
   const top20 = matchedActresses.slice(0, 20);
   if (top20.length > 0) {
     await db['insert'](footerFeaturedActresses).values(
-      top20.map(actress => ({
+      top20.map((actress) => ({
         performerId: actress['performerId'],
         performerName: actress['performerName'],
         impressions: actress.impressions,
         position: String(actress.position),
         priorityScore: actress.priorityScore,
-      }))
+      })),
     );
   }
 
@@ -329,7 +329,9 @@ async function main() {
   // 上位5名を表示
   console.log('\n🌟 フッター表示女優 (上位5名):');
   for (const actress of matchedActresses.slice(0, 5)) {
-    console.log(`  - ${actress['performerName']}: 表示${actress.impressions}回, 順位${actress.position.toFixed(1)}, スコア${actress.priorityScore}`);
+    console.log(
+      `  - ${actress['performerName']}: 表示${actress.impressions}回, 順位${actress.position.toFixed(1)}, スコア${actress.priorityScore}`,
+    );
   }
 
   await pool.end();

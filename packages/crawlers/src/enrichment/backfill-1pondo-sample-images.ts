@@ -11,7 +11,7 @@ import { sql } from 'drizzle-orm';
 import { productImages } from '../lib/db/schema';
 
 const args = process.argv.slice(2);
-const limitArg = args.find(arg => arg.startsWith('--limit='));
+const limitArg = args.find((arg) => arg.startsWith('--limit='));
 const LIMIT = parseInt(limitArg?.split('=')[1] || '10000');
 
 async function fetch1pondoSampleImages(productId: string): Promise<{

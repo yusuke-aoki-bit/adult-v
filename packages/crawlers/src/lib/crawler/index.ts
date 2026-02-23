@@ -5,21 +5,10 @@
  */
 
 // リトライ
-export {
-  withRetry,
-  fetchWithRetry,
-  isRetryableError,
-  isRetryableStatus,
-  type RetryOptions,
-} from './retry';
+export { withRetry, fetchWithRetry, isRetryableError, isRetryableStatus, type RetryOptions } from './retry';
 
 // タイムアウト
-export {
-  withTimeout,
-  fetchWithTimeout,
-  TimeoutError,
-  DEFAULT_TIMEOUTS,
-} from './timeout';
+export { withTimeout, fetchWithTimeout, TimeoutError, DEFAULT_TIMEOUTS } from './timeout';
 
 // レート制限
 export {
@@ -133,12 +122,7 @@ export {
 } from './parse-helpers';
 
 // ブラウザベースクローラー
-export {
-  BrowserCrawler,
-  puppeteer,
-  type BrowserCrawlerOptions,
-  type PageContext,
-} from './browser-crawler';
+export { BrowserCrawler, puppeteer, type BrowserCrawlerOptions, type PageContext } from './browser-crawler';
 
 /**
  * フル機能のfetch（タイムアウト + リトライ + レート制限対応）
@@ -174,10 +158,7 @@ export interface RobustFetchOptions {
  * });
  * ```
  */
-export async function robustFetch(
-  url: string,
-  options: RobustFetchOptions = {}
-): Promise<Response> {
+export async function robustFetch(url: string, options: RobustFetchOptions = {}): Promise<Response> {
   const { init, timeoutMs = 30000, retry, rateLimiter } = options;
 
   // レート制限
@@ -187,13 +168,10 @@ export async function robustFetch(
 
   try {
     // タイムアウト付きfetchをリトライ（withRetryを使用）
-    return await withRetry(
-      () => fetchWithTimeout(url, init, timeoutMs),
-      {
-        shouldRetry: (error) => isRetryableError(error),
-        ...retry,
-      }
-    );
+    return await withRetry(() => fetchWithTimeout(url, init, timeoutMs), {
+      shouldRetry: (error) => isRetryableError(error),
+      ...retry,
+    });
   } finally {
     if (rateLimiter) {
       rateLimiter.done();

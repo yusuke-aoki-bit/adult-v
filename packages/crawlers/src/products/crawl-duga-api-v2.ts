@@ -164,10 +164,12 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
     if (year && month) {
       // 特定の年月のみ
       const lastDay = new Date(year, month, 0).getDate();
-      dateRanges = [{
-        start: `${year}${month.toString().padStart(2, '0')}01`,
-        end: `${year}${month.toString().padStart(2, '0')}${lastDay}`,
-      }];
+      dateRanges = [
+        {
+          start: `${year}${month.toString().padStart(2, '0')}01`,
+          end: `${year}${month.toString().padStart(2, '0')}${lastDay}`,
+        },
+      ];
     } else if (year) {
       // 特定の年のみ
       dateRanges = generateDateRanges(year, year);
@@ -271,8 +273,8 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
     if (item.sampleVideos !== undefined) result.sampleVideos = item.sampleVideos;
     if (item['affiliateUrl'] !== undefined) result.affiliateUrl = item['affiliateUrl'];
     if (item['price'] !== undefined) result.price = item['price'];
-    if (item.performers) result.performers = item.performers.map(p => p.name);
-    if (item.categories) result.categories = item.categories.map(c => c.name);
+    if (item.performers) result.performers = item.performers.map((p) => p.name);
+    if (item.categories) result.categories = item.categories.map((c) => c.name);
     if (item.saleInfo) {
       result.saleInfo = {
         regularPrice: item.saleInfo.regularPrice,
@@ -346,7 +348,7 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
 
       // 個別レビューを保存
       if (pageData.reviews.length > 0) {
-        const reviews = pageData.reviews.map(r => ({
+        const reviews = pageData.reviews.map((r) => ({
           reviewId: r.reviewId,
           reviewerName: r.reviewerName,
           rating: r.rating,
@@ -361,8 +363,7 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
       }
 
       // レート制限対策
-      await new Promise(resolve => setTimeout(resolve, 500));
-
+      await new Promise((resolve) => setTimeout(resolve, 500));
     } catch (error) {
       console.log(`  ⚠️ レビュー取得失敗: ${error instanceof Error ? error.message : error}`);
     }
@@ -371,12 +372,15 @@ class DugaCrawler extends BaseCrawler<DugaProduct> {
 
 // メイン実行
 const crawler = new DugaCrawler();
-crawler.run().then((result) => {
-  if (!result.success) {
+crawler
+  .run()
+  .then((result) => {
+    if (!result.success) {
+      process.exit(1);
+    }
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Fatal error:', error);
     process.exit(1);
-  }
-  process.exit(0);
-}).catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+  });

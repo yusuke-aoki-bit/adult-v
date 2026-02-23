@@ -40,13 +40,10 @@ export function getActressCardThemeConfig(theme: ActressCardTheme): ActressCardT
 /**
  * Filter services for specific site (e.g., FANZA site shows only FANZA)
  */
-export function filterServicesForSite(
-  services: string[] | undefined,
-  isFanzaSite: boolean
-): string[] {
+export function filterServicesForSite(services: string[] | undefined, isFanzaSite: boolean): string[] {
   if (!services) return [];
   if (isFanzaSite) {
-    return services.filter(s => s.toLowerCase() === 'fanza');
+    return services.filter((s) => s.toLowerCase() === 'fanza');
   }
   return services;
 }

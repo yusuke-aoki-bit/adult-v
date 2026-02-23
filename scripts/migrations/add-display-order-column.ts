@@ -68,7 +68,6 @@ async function main() {
       SELECT COUNT(*) as total FROM product_videos
     `);
     console.log(`\n現在のレコード数: ${countResult.rows[0].total}`);
-
   } catch (error) {
     console.error('❌ エラー:', error);
     process.exit(1);

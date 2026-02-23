@@ -3,12 +3,7 @@
 import { SectionNav, type SectionItem } from './SectionNav';
 import HomeSectionManager from './HomeSectionManager';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
-
-const navTexts = {
-  ja: { profile: 'プロフィール', career: 'キャリア分析', aiReview: 'AIレビュー', topProducts: '人気作品', onSale: 'セール中', filmography: '全作品', costars: '共演者', similar: '類似女優' },
-  en: { profile: 'Profile', career: 'Career', aiReview: 'AI Review', topProducts: 'Top Works', onSale: 'On Sale', filmography: 'Filmography', costars: 'Costars', similar: 'Similar' },
-} as const;
-function getNavText(locale: string) { return navTexts[locale as keyof typeof navTexts] || navTexts.ja; }
+import { getTranslation, actressSectionNavTranslations } from '../lib/translations';
 
 interface ActressSectionNavProps {
   locale: string;
@@ -26,11 +21,9 @@ export default function ActressSectionNav({
   hasOnSaleProducts,
 }: ActressSectionNavProps) {
   const { theme } = useSiteTheme();
-  const nt = getNavText(locale);
+  const nt = getTranslation(actressSectionNavTranslations, locale);
 
-  const sections: SectionItem[] = [
-    { id: 'profile', label: nt.profile },
-  ];
+  const sections: SectionItem[] = [{ id: 'profile', label: nt.profile }];
 
   if (hasCareerAnalysis) {
     sections.push({ id: 'career', label: nt.career });

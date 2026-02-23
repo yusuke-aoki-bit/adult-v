@@ -40,7 +40,6 @@ async function applyMigration() {
     `);
 
     console.log('Created tables:', tables.rows);
-
   } catch (error) {
     console.error('Migration failed:', error);
     throw error;

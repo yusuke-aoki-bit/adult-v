@@ -1,28 +1,28 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
-import { ConditionalLayout } from "@/components/ConditionalLayout";
-import { JsonLD } from "@/components/JsonLD";
-import { generateBaseMetadata, generateWebSiteSchema } from "@/lib/seo";
-import { defaultLocale } from "@/i18n";
-import { CookieConsent } from "@adult-v/shared/components";
-import { SiteProvider } from "@/lib/contexts/SiteContext";
-import { getServerSiteMode } from "@/lib/server/site-mode";
-import { LazyPWAInstaller } from "@/components/LazyPWAInstaller";
-import { ClientProviders } from "@adult-v/shared/components";
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import './globals.css';
+import { ConditionalLayout } from '@/components/ConditionalLayout';
+import { JsonLD } from '@/components/JsonLD';
+import { generateBaseMetadata, generateWebSiteSchema } from '@/lib/seo';
+import { defaultLocale } from '@/i18n';
+import { CookieConsent } from '@adult-v/shared/components';
+import { SiteProvider } from '@/lib/contexts/SiteContext';
+import { getServerSiteMode } from '@/lib/server/site-mode';
+import { LazyPWAInstaller } from '@/components/LazyPWAInstaller';
+import { ClientProviders } from '@adult-v/shared/components';
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-  display: "swap",
+  variable: '--font-geist-sans',
+  subsets: ['latin'],
+  display: 'swap',
   preload: true,
   adjustFontFallback: true, // CLS対策: フォールバックフォントのサイズを調整
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-  display: "swap",
+  variable: '--font-geist-mono',
+  subsets: ['latin'],
+  display: 'swap',
   preload: true,
   adjustFontFallback: true, // CLS対策: フォールバックフォントのサイズを調整
 });
@@ -85,7 +85,7 @@ export default async function RootLayout({
         <JsonLD data={websiteSchema} />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} antialiased flex flex-col min-h-screen overflow-x-hidden`}
+        className={`${geistSans.variable} ${geistMono.variable} ${themeClass} flex min-h-screen flex-col overflow-x-hidden antialiased`}
       >
         {gaId && <CookieConsent gaId={gaId} />}
         <ClientProviders>

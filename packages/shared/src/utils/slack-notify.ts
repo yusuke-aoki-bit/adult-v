@@ -147,7 +147,7 @@ export async function sendSlackNotification(options: NotifyOptions): Promise<boo
 export async function notifyCrawlerError(
   crawlerName: string,
   error: Error | string,
-  context?: Record<string, string | number>
+  context?: Record<string, string | number>,
 ): Promise<boolean> {
   const errorMessage = error instanceof Error ? error.message : error;
   const errorStack = error instanceof Error ? error.stack : undefined;
@@ -157,8 +157,8 @@ export async function notifyCrawlerError(
     message: `クローラー \`${crawlerName}\` でエラーが発生しました`,
     level: 'error',
     fields: {
-      'Error': errorMessage,
-      'Timestamp': new Date().toISOString(),
+      Error: errorMessage,
+      Timestamp: new Date().toISOString(),
       ...context,
     },
     errorDetails: errorStack,
@@ -172,7 +172,7 @@ export async function notifyDataQualityAlert(
   metric: string,
   currentValue: number,
   threshold: number,
-  description?: string
+  description?: string,
 ): Promise<boolean> {
   return sendSlackNotification({
     title: `Data Quality Alert: ${metric}`,
@@ -180,9 +180,9 @@ export async function notifyDataQualityAlert(
     level: 'warning',
     fields: {
       'Current Value': `${currentValue.toFixed(2)}%`,
-      'Threshold': `${threshold}%`,
-      'Difference': `${(threshold - currentValue).toFixed(2)}%`,
-      'Timestamp': new Date().toISOString(),
+      Threshold: `${threshold}%`,
+      Difference: `${(threshold - currentValue).toFixed(2)}%`,
+      Timestamp: new Date().toISOString(),
     },
   });
 }
@@ -192,7 +192,7 @@ export async function notifyDataQualityAlert(
  */
 export async function notifyCrawlerSuccess(
   crawlerName: string,
-  stats: Record<string, string | number>
+  stats: Record<string, string | number>,
 ): Promise<boolean> {
   // 成功通知は環境変数で有効化した場合のみ送信
   if (process.env['SLACK_NOTIFY_SUCCESS'] !== 'true') {

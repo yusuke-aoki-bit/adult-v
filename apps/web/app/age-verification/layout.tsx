@@ -12,10 +12,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function AgeVerificationLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AgeVerificationLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

@@ -31,14 +31,13 @@ function AgeVerificationContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-white mb-4">
-            年齢確認
-          </h1>
-          <p className="text-gray-300 text-sm leading-relaxed">
-            このサイトはアダルトコンテンツを含みます。<br />
+    <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
+      <div className="w-full max-w-md rounded-2xl bg-gray-800 p-8 shadow-xl">
+        <div className="mb-8 text-center">
+          <h1 className="mb-4 text-3xl font-bold text-white">年齢確認</h1>
+          <p className="text-sm leading-relaxed text-gray-300">
+            このサイトはアダルトコンテンツを含みます。
+            <br />
             18歳以上の方のみご利用いただけます。
           </p>
         </div>
@@ -47,7 +46,7 @@ function AgeVerificationContent() {
           <button
             onClick={() => handleVerify(true)}
             disabled={isVerifying}
-            className="w-full bg-rose-600 hover:bg-rose-700 disabled:bg-rose-800 text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-rose-600 px-4 py-3 font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-800"
           >
             {isVerifying ? '確認中...' : '18歳以上です'}
           </button>
@@ -55,16 +54,14 @@ function AgeVerificationContent() {
           <button
             onClick={() => handleVerify(false)}
             disabled={isVerifying}
-            className="w-full bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-gray-200 font-medium py-3 px-4 rounded-lg transition-colors disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-gray-700 px-4 py-3 font-medium text-gray-200 transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:bg-gray-800"
           >
             18歳未満です
           </button>
         </div>
 
         <div className="mt-6 text-center">
-          <p className="text-xs text-gray-500">
-            このサイトを利用することで、利用規約に同意したものとみなされます。
-          </p>
+          <p className="text-xs text-gray-500">このサイトを利用することで、利用規約に同意したものとみなされます。</p>
         </div>
       </div>
     </div>
@@ -73,20 +70,18 @@ function AgeVerificationContent() {
 
 export default function AgeVerification() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-gray-800 rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-4">
-              年齢確認
-            </h1>
-            <p className="text-gray-300 text-sm leading-relaxed">
-              読み込み中...
-            </p>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-gray-800 p-8 shadow-xl">
+            <div className="mb-8 text-center">
+              <h1 className="mb-4 text-3xl font-bold text-white">年齢確認</h1>
+              <p className="text-sm leading-relaxed text-gray-300">読み込み中...</p>
+            </div>
           </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <AgeVerificationContent />
     </Suspense>
   );

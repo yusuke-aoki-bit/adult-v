@@ -81,19 +81,19 @@ export async function isRedisAvailable(): Promise<boolean> {
 /**
  * キャッシュキーを生成
  */
-export function generateCacheKey(
-  prefix: string,
-  params?: Record<string, unknown>
-): string {
+export function generateCacheKey(prefix: string, params?: Record<string, unknown>): string {
   // paramsがnullまたはundefinedの場合は空オブジェクトとして扱う
   const safeParams = params || {};
 
   const sortedParams = Object.keys(safeParams)
     .sort()
-    .reduce((acc, key) => {
-      acc[key] = safeParams[key];
-      return acc;
-    }, {} as Record<string, unknown>);
+    .reduce(
+      (acc, key) => {
+        acc[key] = safeParams[key];
+        return acc;
+      },
+      {} as Record<string, unknown>,
+    );
 
   return `${prefix}:${JSON.stringify(sortedParams)}`;
 }
@@ -197,11 +197,7 @@ export async function getCache<T>(key: string): Promise<T | null> {
  * キャッシュに保存
  * Upstash Redisが利用可能な場合はRedisに、そうでない場合はインメモリに保存
  */
-export async function setCache<T>(
-  key: string,
-  data: T,
-  ttl: number = DEFAULT_TTL
-): Promise<void> {
+export async function setCache<T>(key: string, data: T, ttl: number = DEFAULT_TTL): Promise<void> {
   try {
     const redis = await getRedisClient();
 

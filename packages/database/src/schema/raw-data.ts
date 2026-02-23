@@ -151,7 +151,9 @@ export const productRawDataLinks = pgTable(
   'product_raw_data_links',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     sourceType: text('source_type').notNull(), // 'duga', 'sokmil', 'mgs', 'fc2', 'dti', 'b10f'
     rawDataId: integer('raw_data_id').notNull(), // 対応する生データテーブルのID
     rawDataTable: text('raw_data_table').notNull(), // 'duga_raw_responses', 'raw_html_data' など
@@ -164,7 +166,7 @@ export const productRawDataLinks = pgTable(
     productSourceUnique: uniqueIndex('idx_product_raw_links_unique').on(
       table.productId,
       table.sourceType,
-      table.rawDataId
+      table.rawDataId,
     ),
   }),
 );

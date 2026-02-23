@@ -53,8 +53,14 @@ async function main() {
       ORDER BY column_name
     `);
 
-    console.log('Products AI review columns:', (productsResult.rows as Array<{ column_name: string }>).map(r => r.column_name));
-    console.log('Performers AI review columns:', (performersResult.rows as Array<{ column_name: string }>).map(r => r.column_name));
+    console.log(
+      'Products AI review columns:',
+      (productsResult.rows as Array<{ column_name: string }>).map((r) => r.column_name),
+    );
+    console.log(
+      'Performers AI review columns:',
+      (performersResult.rows as Array<{ column_name: string }>).map((r) => r.column_name),
+    );
 
     console.log('\n=== Migration Completed Successfully ===');
   } catch (error) {

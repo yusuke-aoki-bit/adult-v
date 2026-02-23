@@ -44,7 +44,7 @@ function getDb() {
       const cleanConnectionString = `postgresql://${url.username}:${url.password}@${url.host}${url.pathname}`;
 
       // クローラー用の接続設定（長時間実行に対応）
-      const isCrawler = process.env['CRAWLER_MODE'] === 'true' || process.argv.some(arg => arg.includes('crawl'));
+      const isCrawler = process.env['CRAWLER_MODE'] === 'true' || process.argv.some((arg) => arg.includes('crawl'));
 
       // SSL設定: Cloud SQL Proxy、sslmode=disable、プライベートIPの場合はSSL無効
       const shouldDisableSsl = isCloudSqlProxy || sslDisabled || isPrivateIp;
@@ -52,7 +52,11 @@ function getDb() {
       dbStore.pool = new Pool({
         connectionString: cleanConnectionString,
         // SSL設定: 無効化条件に該当しない本番環境のみSSL有効
-        ssl: shouldDisableSsl ? false : (process.env['NODE_ENV'] === 'production' ? { rejectUnauthorized: false } : false),
+        ssl: shouldDisableSsl
+          ? false
+          : process.env['NODE_ENV'] === 'production'
+            ? { rejectUnauthorized: false }
+            : false,
         max: isCrawler ? 5 : 50, // クローラーは少ない接続数で十分
         min: isCrawler ? 1 : 10, // クローラーは最小限
         idleTimeoutMillis: isCrawler ? 600000 : 60000, // クローラー: 10分、通常: 60秒

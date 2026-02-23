@@ -8,7 +8,7 @@ import { NextRequest } from 'next/server';
 export interface BotDetectionResult {
   isBot: boolean;
   reason?: string;
-  score: number;  // 0-100, higher = more likely bot
+  score: number; // 0-100, higher = more likely bot
 }
 
 /**
@@ -103,7 +103,7 @@ const BOT_USER_AGENTS = [
 const ALLOWED_BOTS = [
   /Googlebot/i,
   /Bingbot/i,
-  /Slurp/i,  // Yahoo
+  /Slurp/i, // Yahoo
   /DuckDuckBot/i,
   /Baiduspider/i,
   /YandexBot/i,
@@ -202,17 +202,11 @@ export function detectBot(request: NextRequest): BotDetectionResult {
 }
 
 // Default allowed hosts (can be extended per-site)
-const DEFAULT_ALLOWED_HOSTS = [
-  'localhost',
-  'adult-v.com',
-  'www.adult-v.com',
-  'f.adult-v.com',
-  'www.f.adult-v.com',
-];
+const DEFAULT_ALLOWED_HOSTS = ['localhost', 'adult-v.com', 'www.adult-v.com', 'f.adult-v.com', 'www.f.adult-v.com'];
 
 // Default allowed patterns
 const DEFAULT_ALLOWED_PATTERNS = [
-  /\.hosted\.app$/,  // Firebase App Hosting
+  /\.hosted\.app$/, // Firebase App Hosting
 ];
 
 // Configurable allowed hosts
@@ -248,11 +242,9 @@ export function validateSecurityHeaders(request: NextRequest): boolean {
     try {
       const url = new URL(origin);
       const isAllowedHost = configuredAllowedHosts.some(
-        host => url.hostname === host || url.hostname.endsWith('.' + host)
+        (host) => url.hostname === host || url.hostname.endsWith('.' + host),
       );
-      const isAllowedPattern = configuredAllowedPatterns.some(
-        pattern => pattern.test(url.hostname)
-      );
+      const isAllowedPattern = configuredAllowedPatterns.some((pattern) => pattern.test(url.hostname));
       if (!isAllowedHost && !isAllowedPattern) {
         return false;
       }

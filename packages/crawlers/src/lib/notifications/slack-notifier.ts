@@ -82,8 +82,8 @@ async function sendSlackMessage(message: SlackMessage): Promise<boolean> {
  * クローラーパイプライン完了通知
  */
 export async function notifyPipelineComplete(summary: CrawlPipelineSummary): Promise<boolean> {
-  const successCount = summary.crawlers.filter(c => c.success).length;
-  const failureCount = summary.crawlers.filter(c => !c.success).length;
+  const successCount = summary.crawlers.filter((c) => c.success).length;
+  const failureCount = summary.crawlers.filter((c) => !c.success).length;
   const totalDuration = Math.round((summary.endTime.getTime() - summary.startTime.getTime()) / 1000);
 
   const isSuccess = failureCount === 0;
@@ -118,8 +118,8 @@ export async function notifyPipelineComplete(summary: CrawlPipelineSummary): Pro
   // 成功したクローラー
   if (successCount > 0) {
     const successList = summary.crawlers
-      .filter(c => c.success)
-      .map(c => {
+      .filter((c) => c.success)
+      .map((c) => {
         const items = c.itemsProcessed ? ` (${c.itemsSucceeded}/${c.itemsProcessed} items)` : '';
         return `✅ ${c.name}: ${formatDuration(Math.round(c.duration / 1000))}${items}`;
       })
@@ -137,8 +137,8 @@ export async function notifyPipelineComplete(summary: CrawlPipelineSummary): Pro
   // 失敗したクローラー
   if (failureCount > 0) {
     const failureList = summary.crawlers
-      .filter(c => !c.success)
-      .map(c => `❌ ${c.name}: ${c.error?.slice(0, 100) || 'Unknown error'}`)
+      .filter((c) => !c.success)
+      .map((c) => `❌ ${c.name}: ${c.error?.slice(0, 100) || 'Unknown error'}`)
       .join('\n');
 
     blocks.push({
@@ -162,7 +162,7 @@ export async function notifyPipelineComplete(summary: CrawlPipelineSummary): Pro
 export async function notifyCrawlerError(
   crawlerName: string,
   error: string,
-  context?: Record<string, unknown>
+  context?: Record<string, unknown>,
 ): Promise<boolean> {
   const contextStr = context
     ? Object.entries(context)
@@ -212,7 +212,7 @@ export async function notifyHighErrorRate(
   errorRate: number,
   threshold: number,
   totalItems: number,
-  failedItems: number
+  failedItems: number,
 ): Promise<boolean> {
   return sendSlackMessage({
     text: `⚠️ High Error Rate: ${crawlerName} (${Math.round(errorRate * 100)}%)`,

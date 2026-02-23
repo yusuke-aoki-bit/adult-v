@@ -27,12 +27,14 @@ test.describe('Basic Navigation & SEO', () => {
   test('should accept age verification and navigate to homepage', async ({ page, context, baseURL }) => {
     // First, set age verification cookie to bypass age gate
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
 
     await page.goto('/');
 
@@ -43,12 +45,14 @@ test.describe('Basic Navigation & SEO', () => {
   test('should have proper meta tags for SEO', async ({ page, context, baseURL }) => {
     // Set age verification cookie to bypass age gate
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
 
     await page.goto('/');
 
@@ -68,12 +72,14 @@ test.describe('Basic Navigation & SEO', () => {
   test('should have hreflang tags for multi-language support', async ({ page, context, baseURL }) => {
     // Set age verification cookie
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
 
     await page.goto('/');
 
@@ -97,12 +103,14 @@ test.describe('Basic Navigation & SEO', () => {
   test('should navigate between language versions', async ({ page, context, baseURL }) => {
     // Set age verification cookie
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
 
     // Test default Japanese - use waitUntil: 'domcontentloaded' for faster navigation
     await page.goto('/', { waitUntil: 'domcontentloaded', timeout: 60000 });
@@ -157,7 +165,8 @@ test.describe('PageSpeed Insights Bot Detection', () => {
   test.skip('should allow Lighthouse without age verification', async ({ page, context }) => {
     // Set Lighthouse user agent
     await context.setExtraHTTPHeaders({
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Chrome-Lighthouse',
+      'User-Agent':
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Chrome-Lighthouse',
     });
 
     await page.goto('/');
@@ -169,7 +178,8 @@ test.describe('PageSpeed Insights Bot Detection', () => {
   test('should allow PageSpeed Insights with x-purpose header', async ({ page, context }) => {
     // Set PageSpeed Insights headers
     await context.setExtraHTTPHeaders({
-      'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/116.0.0.0 Safari/537.36',
+      'User-Agent':
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/116.0.0.0 Safari/537.36',
       'X-Purpose': 'preview',
     });
 

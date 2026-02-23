@@ -74,37 +74,54 @@ export default function ViewedButton({
     setIsViewed(count > 0);
   }, [entries, productId, getViewCountForProduct]);
 
-  const handleClick = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
 
-    if (isViewed) {
-      // 視聴済み解除: この商品の最新のエントリを削除
-      const latestEntry = entries.find((entry) => entry['productId'] === productId);
-      if (latestEntry) {
-        removeEntry(latestEntry.id);
-        setShowToast(t.removedFromDiary);
+      if (isViewed) {
+        // 視聴済み解除: この商品の最新のエントリを削除
+        const latestEntry = entries.find((entry) => entry['productId'] === productId);
+        if (latestEntry) {
+          removeEntry(latestEntry.id);
+          setShowToast(t.removedFromDiary);
+        }
+      } else {
+        // 視聴済みマーク
+        const newEntry: Omit<DiaryEntry, 'id' | 'createdAt'> = {
+          productId,
+          title,
+          imageUrl,
+          aspName,
+          ...(performerName && { performerName }),
+          ...(performerId !== undefined && { performerId }),
+          ...(tags && { tags }),
+          ...(duration !== undefined && { duration }),
+          viewedAt: Date.now(),
+        };
+        addEntry(newEntry);
+        setShowToast(t.addedToDiary);
       }
-    } else {
-      // 視聴済みマーク
-      const newEntry: Omit<DiaryEntry, 'id' | 'createdAt'> = {
-        productId,
-        title,
-        imageUrl,
-        aspName,
-        ...(performerName && { performerName }),
-        ...(performerId !== undefined && { performerId }),
-        ...(tags && { tags }),
-        ...(duration !== undefined && { duration }),
-        viewedAt: Date.now(),
-      };
-      addEntry(newEntry);
-      setShowToast(t.addedToDiary);
-    }
 
-    // トースト表示後に消す
-    setTimeout(() => setShowToast(null), 2000);
-  }, [isViewed, entries, productId, title, imageUrl, aspName, performerName, performerId, tags, duration, addEntry, removeEntry, t]);
+      // トースト表示後に消す
+      setTimeout(() => setShowToast(null), 2000);
+    },
+    [
+      isViewed,
+      entries,
+      productId,
+      title,
+      imageUrl,
+      aspName,
+      performerName,
+      performerId,
+      tags,
+      duration,
+      addEntry,
+      removeEntry,
+      t,
+    ],
+  );
 
   const sizeClasses = {
     xs: 'p-1 text-[10px]',
@@ -118,25 +135,18 @@ export default function ViewedButton({
     md: 'w-4 h-4',
   }[size];
 
-  const viewCountText = typeof t.viewCount === 'function'
-    ? t.viewCount(viewCount)
-    : `${viewCount}回視聴`;
+  const viewCountText = typeof t.viewCount === 'function' ? t.viewCount(viewCount) : `${viewCount}回視聴`;
 
   return (
     <>
       <button
         type="button"
         onClick={handleClick}
-        className={`
-          rounded-full transition-all duration-200
-          ${isViewed
+        className={`rounded-full transition-all duration-200 ${
+          isViewed
             ? 'bg-green-500 text-white hover:bg-green-600'
             : 'bg-gray-700/80 text-gray-300 hover:bg-gray-600 hover:text-white'
-          }
-          ${sizeClasses}
-          ${iconOnly ? '' : 'flex items-center gap-1'}
-          ${className}
-        `}
+        } ${sizeClasses} ${iconOnly ? '' : 'flex items-center gap-1'} ${className} `}
         title={isViewed ? t.unmarkAsViewed : t.markAsViewed}
         aria-label={isViewed ? t.unmarkAsViewed : t.markAsViewed}
         aria-pressed={isViewed}
@@ -144,11 +154,7 @@ export default function ViewedButton({
         {isViewed ? (
           <>
             <Check className={iconSize} />
-            {!iconOnly && (
-              <span className="whitespace-nowrap">
-                {viewCount > 1 ? viewCountText : t.viewed}
-              </span>
-            )}
+            {!iconOnly && <span className="whitespace-nowrap">{viewCount > 1 ? viewCountText : t.viewed}</span>}
           </>
         ) : (
           <>
@@ -160,7 +166,7 @@ export default function ViewedButton({
 
       {/* トースト通知 */}
       {showToast && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 px-4 py-2 bg-gray-800 text-white text-sm rounded-lg shadow-lg animate-fade-in">
+        <div className="animate-fade-in fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-lg bg-gray-800 px-4 py-2 text-sm text-white shadow-lg">
           {showToast}
         </div>
       )}

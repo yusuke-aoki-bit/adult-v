@@ -161,10 +161,7 @@ interface AIContent {
 /**
  * AI機能を使って説明文とタグを生成（CrawlerAIHelper使用）
  */
-async function generateAIContent(
-  item: B10fProduct,
-  enableAI: boolean = true,
-): Promise<AIContent> {
+async function generateAIContent(item: B10fProduct, enableAI: boolean = true): Promise<AIContent> {
   if (!enableAI) {
     return {};
   }
@@ -173,7 +170,7 @@ async function generateAIContent(
 
   // パフォーマー名をパース
   const performerNames = item.performers
-    ? parsePerformerNames(item.performers).filter(name => isValidPerformerForProduct(name, item['title']))
+    ? parsePerformerNames(item.performers).filter((name) => isValidPerformerForProduct(name, item['title']))
     : [];
 
   const aiHelper = getAIHelper();
@@ -189,7 +186,7 @@ async function generateAIContent(
       extractTags: true,
       translate: false, // 翻訳は別関数で実行
       generateDescription: true,
-    }
+    },
   );
 
   // エラーがあれば警告
@@ -208,7 +205,13 @@ async function generateAIContent(
   }
 
   // AIタグ
-  if (result.tags && (result.tags.genres.length > 0 || result.tags.attributes.length > 0 || result.tags.plays.length > 0 || result.tags.situations.length > 0)) {
+  if (
+    result.tags &&
+    (result.tags.genres.length > 0 ||
+      result.tags.attributes.length > 0 ||
+      result.tags.plays.length > 0 ||
+      result.tags.situations.length > 0)
+  ) {
     aiTags = result.tags;
     console.log(`      ✅ AIタグ抽出完了`);
     console.log(`         ジャンル: ${result.tags.genres.join(', ') || 'なし'}`);
@@ -224,11 +227,7 @@ async function generateAIContent(
 /**
  * AI生成データをDBに保存
  */
-async function saveAIContent(
-  db: ReturnType<typeof getDb>,
-  productId: number,
-  aiContent: AIContent,
-): Promise<void> {
+async function saveAIContent(db: ReturnType<typeof getDb>, productId: number, aiContent: AIContent): Promise<void> {
   const { aiDescription, aiTags } = aiContent;
 
   if (!aiDescription && !aiTags) {
@@ -304,8 +303,8 @@ async function translateAndSave(
 
 async function main() {
   const args = process.argv.slice(2);
-  const limitArg = args.find(arg => arg.startsWith('--limit='));
-  const offsetArg = args.find(arg => arg.startsWith('--offset='));
+  const limitArg = args.find((arg) => arg.startsWith('--limit='));
+  const offsetArg = args.find((arg) => arg.startsWith('--offset='));
   const enableAI = !args.includes('--no-ai');
   const forceReprocess = args.includes('--force');
 
@@ -389,9 +388,7 @@ async function main() {
     console.log(`✅ パース完了: ${products.length}件の商品\n`);
 
     // 4. 処理範囲を制限
-    const productsToProcess = limit
-      ? products.slice(offset, offset + limit)
-      : products.slice(offset);
+    const productsToProcess = limit ? products.slice(offset, offset + limit) : products.slice(offset);
 
     console.log(`📦 処理対象: ${productsToProcess.length}件\n`);
     stats.totalFetched = productsToProcess.length;
@@ -662,8 +659,9 @@ async function main() {
         // 12. 出演者情報保存（バリデーション付き）
         if (item.performers && item.performers.trim()) {
           // 共通ユーティリティを使用して演者名をパース・検証
-          const validPerformerNames = parsePerformerNames(item.performers)
-            .filter(name => isValidPerformerForProduct(name, item['title']));
+          const validPerformerNames = parsePerformerNames(item.performers).filter((name) =>
+            isValidPerformerForProduct(name, item['title']),
+          );
 
           if (validPerformerNames.length > 0) {
             console.log(`  👤 出演者保存中 (${validPerformerNames.length}人)...`);
@@ -689,7 +687,6 @@ async function main() {
         }
 
         console.log();
-
       } catch (error: unknown) {
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`  ❌ エラー: ${errorMessage}\n`);
@@ -721,7 +718,6 @@ async function main() {
 
     console.log('\nデータベース状態:');
     console.table(finalCounts.rows);
-
   } catch (error: unknown) {
     console.error('❌ クローラーエラー:', error);
     process.exit(1);

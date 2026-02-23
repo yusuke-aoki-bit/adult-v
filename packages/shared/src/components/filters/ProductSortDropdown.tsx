@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { getFilterThemeConfig, type FilterTheme } from './theme';
-import { getSortTranslation } from './translations';
+import { getTranslation, sortTranslations } from '../../lib/translations';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 
 interface ProductSortDropdownProps {
@@ -18,7 +18,7 @@ export default function ProductSortDropdown({ sortBy, basePath, theme: themeProp
   const searchParams = useSearchParams();
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
-  const t = getSortTranslation(locale);
+  const t = getTranslation(sortTranslations, locale);
   const themeConfig = getFilterThemeConfig(theme);
 
   const handleSortChange = (newSort: string) => {

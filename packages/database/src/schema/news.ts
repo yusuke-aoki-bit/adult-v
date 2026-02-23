@@ -3,16 +3,7 @@
  * 自動生成（新着まとめ・セール速報・AI分析）+ 手動登録（サイト更新・業界ニュース）
  */
 
-import {
-  pgTable,
-  serial,
-  varchar,
-  text,
-  integer,
-  boolean,
-  timestamp,
-  index,
-} from 'drizzle-orm/pg-core';
+import { pgTable, serial, varchar, text, integer, boolean, timestamp, index } from 'drizzle-orm/pg-core';
 import type { InferSelectModel, InferInsertModel } from 'drizzle-orm';
 
 export const newsArticles = pgTable(

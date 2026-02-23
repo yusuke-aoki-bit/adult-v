@@ -12,10 +12,7 @@ export async function generateStaticParams() {
   return Array.from({ length: 10 }, (_, i) => ({ chunk: String(i) }));
 }
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ chunk: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ chunk: string }> }) {
   const { chunk: chunkStr } = await params;
   const chunk = parseInt(chunkStr);
   const offset = chunk * CHUNK_SIZE;
@@ -35,7 +32,7 @@ export async function GET(
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
           AND ps.asp_name = 'DTI'
-        )`
+        )`,
       )
       .orderBy(desc(products.releaseDate))
       .limit(CHUNK_SIZE)

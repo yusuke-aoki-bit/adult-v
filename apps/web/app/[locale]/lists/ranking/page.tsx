@@ -116,8 +116,8 @@ async function getListRankingData(): Promise<ListRankingData> {
     LIMIT 20
   `);
 
-  // 最近のリスト
-  const recentListsResult = await db.execute(sql`
+    // 最近のリスト
+    const recentListsResult = await db.execute(sql`
     WITH list_stats AS (
       SELECT
         pfl.id,
@@ -155,8 +155,8 @@ async function getListRankingData(): Promise<ListRankingData> {
     LIMIT 10
   `);
 
-  // トレンドリスト（最近の閲覧数増加）
-  const trendingListsResult = await db.execute(sql`
+    // トレンドリスト（最近の閲覧数増加）
+    const trendingListsResult = await db.execute(sql`
     WITH list_stats AS (
       SELECT
         pfl.id,
@@ -194,8 +194,8 @@ async function getListRankingData(): Promise<ListRankingData> {
     LIMIT 10
   `);
 
-  // 統計
-  const statsResult = await db.execute(sql`
+    // 統計
+    const statsResult = await db.execute(sql`
     SELECT
       (SELECT COUNT(*) FROM public_favorite_lists WHERE is_public = true)::int as total_lists,
       (SELECT COUNT(*) FROM public_list_items pli
@@ -206,23 +206,23 @@ async function getListRankingData(): Promise<ListRankingData> {
        WHERE pfl.is_public = true)::int as total_likes
   `);
 
-  const mapList = (row: Record<string, unknown>): PublicList => ({
-    id: row.id as number,
-    title: row.title as string,
-    description: row.description as string | null,
-    userId: row.user_id as string,
-    creatorName: row.creator_name as string,
-    itemCount: Number(row.item_count),
-    likeCount: Number(row.like_count),
-    viewCount: Number(row.view_count),
-    createdAt: row.created_at as string,
-    updatedAt: row.updated_at as string,
-    previewImages: (row.preview_images as string[]) || [],
-    tags: (row.tags as string[]) || [],
-    rank: Number(row.rank),
-  });
+    const mapList = (row: Record<string, unknown>): PublicList => ({
+      id: row.id as number,
+      title: row.title as string,
+      description: row.description as string | null,
+      userId: row.user_id as string,
+      creatorName: row.creator_name as string,
+      itemCount: Number(row.item_count),
+      likeCount: Number(row.like_count),
+      viewCount: Number(row.view_count),
+      createdAt: row.created_at as string,
+      updatedAt: row.updated_at as string,
+      previewImages: (row.preview_images as string[]) || [],
+      tags: (row.tags as string[]) || [],
+      rank: Number(row.rank),
+    });
 
-  const stats = statsResult.rows[0] as { total_lists: number; total_items: number; total_likes: number };
+    const stats = statsResult.rows[0] as { total_lists: number; total_items: number; total_likes: number };
 
     return {
       popularLists: (popularListsResult.rows as Array<Record<string, unknown>>).map(mapList),
@@ -283,14 +283,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
-  return generateBaseMetadata(
-    t.title,
-    t.subtitle,
-    undefined,
-    '/lists/ranking',
-    undefined,
-    locale,
-  );
+  return generateBaseMetadata(t.title, t.subtitle, undefined, '/lists/ranking', undefined, locale);
 }
 
 export default async function ListRankingPage({ params }: { params: Promise<{ locale: string }> }) {
@@ -308,10 +301,10 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
   };
 
   function getRankIcon(rank: number) {
-    if (rank === 1) return <Crown className="w-6 h-6 text-yellow-400" />;
-    if (rank === 2) return <Medal className="w-6 h-6 text-gray-300" />;
-    if (rank === 3) return <Medal className="w-6 h-6 text-amber-600" />;
-    return <span className="w-6 h-6 flex items-center justify-center text-gray-500 font-bold text-sm">#{rank}</span>;
+    if (rank === 1) return <Crown className="h-6 w-6 text-yellow-400" />;
+    if (rank === 2) return <Medal className="h-6 w-6 text-gray-300" />;
+    if (rank === 3) return <Medal className="h-6 w-6 text-amber-600" />;
+    return <span className="flex h-6 w-6 items-center justify-center text-sm font-bold text-gray-500">#{rank}</span>;
   }
 
   function getRankBg(rank: number) {
@@ -325,63 +318,61 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
     return (
       <Link
         href={localizedHref(`/lists/${list.id}`, locale)}
-        className={`group theme-card rounded-lg overflow-hidden hover:ring-2 hover:ring-rose-500/50 transition-all border ${showRank ? getRankBg(list.rank) : 'border-gray-700/50'}`}
+        className={`group theme-card overflow-hidden rounded-lg border transition-all hover:ring-2 hover:ring-rose-500/50 ${showRank ? getRankBg(list.rank) : 'border-gray-700/50'}`}
       >
         <div className="flex">
           {/* ランク */}
           {showRank && (
-            <div className="flex-shrink-0 w-16 flex items-center justify-center">
-              {getRankIcon(list.rank)}
-            </div>
+            <div className="flex w-16 flex-shrink-0 items-center justify-center">{getRankIcon(list.rank)}</div>
           )}
 
           {/* プレビュー画像 */}
-          <div className="flex-shrink-0 w-24 aspect-square bg-gray-700 relative overflow-hidden">
+          <div className="relative aspect-square w-24 flex-shrink-0 overflow-hidden bg-gray-700">
             {list.previewImages.length > 0 ? (
-              <div className="grid grid-cols-2 grid-rows-2 w-full h-full gap-0.5">
+              <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5">
                 {list.previewImages.slice(0, 4).map((img, i) => (
-                  <div key={i} className="bg-gray-800 overflow-hidden">
+                  <div key={i} className="overflow-hidden bg-gray-800">
                     <img
                       src={img}
                       alt=""
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
                       loading="lazy"
                     />
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-500">
-                <List className="w-8 h-8" />
+              <div className="flex h-full w-full items-center justify-center text-gray-500">
+                <List className="h-8 w-8" />
               </div>
             )}
           </div>
 
           {/* コンテンツ */}
-          <div className="flex-1 p-4 min-w-0">
-            <h3 className="font-bold theme-text group-hover:text-rose-400 transition-colors line-clamp-1 mb-1">
+          <div className="min-w-0 flex-1 p-4">
+            <h3 className="theme-text mb-1 line-clamp-1 font-bold transition-colors group-hover:text-rose-400">
               {list.title}
             </h3>
-            {list.description && (
-              <p className="text-sm theme-text-muted line-clamp-1 mb-2">{list.description}</p>
-            )}
-            <div className="flex items-center gap-4 text-xs theme-text-muted">
+            {list.description && <p className="theme-text-muted mb-2 line-clamp-1 text-sm">{list.description}</p>}
+            <div className="theme-text-muted flex items-center gap-4 text-xs">
               <span className="flex items-center gap-1">
-                <Film className="w-3 h-3" />
+                <Film className="h-3 w-3" />
                 {list.itemCount} {t.items}
               </span>
               <span className="flex items-center gap-1">
-                <Heart className="w-3 h-3 text-rose-400" />
+                <Heart className="h-3 w-3 text-rose-400" />
                 {list.likeCount}
               </span>
               <span className="flex items-center gap-1">
-                <Eye className="w-3 h-3" />
+                <Eye className="h-3 w-3" />
                 {list.viewCount}
               </span>
             </div>
-            <div className="text-xs theme-text-muted mt-2 flex items-center gap-1">
-              <Users className="w-3 h-3" />
-              <span>{t.by} {list.creatorName}</span>
+            <div className="theme-text-muted mt-2 flex items-center gap-1 text-xs">
+              <Users className="h-3 w-3" />
+              <span>
+                {t.by} {list.creatorName}
+              </span>
             </div>
           </div>
         </div>
@@ -404,57 +395,55 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
           />
 
           {/* PR表記 */}
-          <p className="text-xs theme-text-muted mb-6">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="theme-text-muted mb-6 text-xs">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* ヘッダー */}
-          <div className="text-center mb-8">
-            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-rose-600 to-pink-600 text-white px-4 py-2 rounded-full mb-4">
-              <Star className="w-5 h-5" />
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2 text-white">
+              <Star className="h-5 w-5" />
               <span className="font-bold">LIST RANKINGS</span>
             </div>
-            <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+            <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
             <p className="theme-text-muted">{t.subtitle}</p>
           </div>
 
           {/* 統計カード */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="theme-card rounded-lg p-6 text-center">
-              <List className="w-8 h-8 mx-auto mb-2 text-blue-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.totalLists}</div>
-              <div className="text-sm theme-text-muted">{t.totalLists}</div>
+              <List className="mx-auto mb-2 h-8 w-8 text-blue-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.totalLists}</div>
+              <div className="theme-text-muted text-sm">{t.totalLists}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <Film className="w-8 h-8 mx-auto mb-2 text-purple-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.totalItems}</div>
-              <div className="text-sm theme-text-muted">{t.totalItems}</div>
+              <Film className="mx-auto mb-2 h-8 w-8 text-purple-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.totalItems}</div>
+              <div className="theme-text-muted text-sm">{t.totalItems}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <Heart className="w-8 h-8 mx-auto mb-2 text-rose-400" />
-              <div className="text-3xl font-bold theme-text">{data.stats.totalLikes}</div>
-              <div className="text-sm theme-text-muted">{t.totalLikes}</div>
+              <Heart className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+              <div className="theme-text text-3xl font-bold">{data.stats.totalLikes}</div>
+              <div className="theme-text-muted text-sm">{t.totalLikes}</div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
             {/* 人気リスト TOP 20 */}
             <div className="lg:col-span-2">
-              <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
-                <Crown className="w-5 h-5 text-yellow-400" />
+              <h2 className="theme-text mb-4 flex items-center gap-2 text-xl font-bold">
+                <Crown className="h-5 w-5 text-yellow-400" />
                 {t.popularLists}
               </h2>
               {data.popularLists.length > 0 ? (
                 <div className="space-y-3">
-                  {data.popularLists.map(list => (
+                  {data.popularLists.map((list) => (
                     <ListCard key={list.id} list={list} />
                   ))}
                 </div>
               ) : (
-                <div className="theme-card rounded-lg p-8 text-center theme-text-muted">
-                  {t.noData}
-                </div>
+                <div className="theme-card theme-text-muted rounded-lg p-8 text-center">{t.noData}</div>
               )}
             </div>
 
@@ -462,39 +451,35 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
             <div className="space-y-8">
               {/* 急上昇リスト */}
               <div>
-                <h2 className="text-lg font-bold theme-text mb-4 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-green-400" />
+                <h2 className="theme-text mb-4 flex items-center gap-2 text-lg font-bold">
+                  <TrendingUp className="h-5 w-5 text-green-400" />
                   {t.trendingLists}
                 </h2>
                 {data.trendingLists.length > 0 ? (
                   <div className="space-y-3">
-                    {data.trendingLists.slice(0, 5).map(list => (
+                    {data.trendingLists.slice(0, 5).map((list) => (
                       <ListCard key={list.id} list={list} showRank={false} />
                     ))}
                   </div>
                 ) : (
-                  <div className="theme-card rounded-lg p-4 text-center theme-text-muted text-sm">
-                    {t.noData}
-                  </div>
+                  <div className="theme-card theme-text-muted rounded-lg p-4 text-center text-sm">{t.noData}</div>
                 )}
               </div>
 
               {/* 新着リスト */}
               <div>
-                <h2 className="text-lg font-bold theme-text mb-4 flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-blue-400" />
+                <h2 className="theme-text mb-4 flex items-center gap-2 text-lg font-bold">
+                  <Clock className="h-5 w-5 text-blue-400" />
                   {t.recentLists}
                 </h2>
                 {data.recentLists.length > 0 ? (
                   <div className="space-y-3">
-                    {data.recentLists.slice(0, 5).map(list => (
+                    {data.recentLists.slice(0, 5).map((list) => (
                       <ListCard key={list.id} list={list} showRank={false} />
                     ))}
                   </div>
                 ) : (
-                  <div className="theme-card rounded-lg p-4 text-center theme-text-muted text-sm">
-                    {t.noData}
-                  </div>
+                  <div className="theme-card theme-text-muted rounded-lg p-4 text-center text-sm">{t.noData}</div>
                 )}
               </div>
             </div>
@@ -504,9 +489,9 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
           <div className="mt-8 text-center">
             <Link
               href={localizedHref('/lists', locale)}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-lg transition-colors"
+              className="inline-flex items-center gap-2 rounded-lg bg-gray-800 px-6 py-3 text-white transition-colors hover:bg-gray-700"
             >
-              <List className="w-5 h-5" />
+              <List className="h-5 w-5" />
               {t.backToLists}
             </Link>
           </div>

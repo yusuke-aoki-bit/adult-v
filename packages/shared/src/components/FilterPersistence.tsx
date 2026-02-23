@@ -79,11 +79,19 @@ export default function FilterPersistence() {
         if (!href) return;
 
         // トップページのフィルタークリア
-        if (href === '/' || (href.startsWith('/?q=') && !href.includes('include') && !href.includes('exclude') && !href.includes('sort'))) {
+        if (
+          href === '/' ||
+          (href.startsWith('/?q=') && !href.includes('include') && !href.includes('exclude') && !href.includes('sort'))
+        ) {
           clearFilterSettings('home');
         }
         // 女優詳細ページのフィルタークリア
-        else if (href.startsWith('/actress/') && !href.includes('include') && !href.includes('exclude') && !href.includes('?')) {
+        else if (
+          href.startsWith('/actress/') &&
+          !href.includes('include') &&
+          !href.includes('exclude') &&
+          !href.includes('?')
+        ) {
           clearFilterSettings('actress');
         }
       }

@@ -11,7 +11,12 @@
 
 import { getDb } from '../lib/db';
 import { sql } from 'drizzle-orm';
-import { getMeilisearchClient, PRODUCTS_INDEX, initializeProductsIndex, type MeilisearchProduct } from '../lib/meilisearch';
+import {
+  getMeilisearchClient,
+  PRODUCTS_INDEX,
+  initializeProductsIndex,
+  type MeilisearchProduct,
+} from '../lib/meilisearch';
 
 interface ProductRow {
   id: number;
@@ -94,7 +99,7 @@ async function indexProductsToMeilisearch() {
   }
 
   // 商品IDのリストを取得
-  const productIds = products.map(p => p.id);
+  const productIds = products.map((p) => p.id);
 
   // 関連データを一括取得
   console.log('👥 Fetching performers...');
@@ -158,19 +163,19 @@ async function indexProductsToMeilisearch() {
 
   // Meilisearch用のドキュメントを作成
   console.log('🔨 Building Meilisearch documents...');
-  const documents: MeilisearchProduct[] = products.map(product => {
+  const documents: MeilisearchProduct[] = products.map((product) => {
     const productPerformers = performersMap.get(product.id) || [];
     const productTags = tagsMap.get(product.id) || [];
     const productSources = sourcesMap.get(product.id) || [];
 
     // すべてのoriginal_product_idを収集
-    const originalProductIds = productSources.map(s => s.original_product_id);
+    const originalProductIds = productSources.map((s) => s.original_product_id);
 
     // ユニークなプロバイダーリスト
-    const providers = Array.from(new Set(productSources.map(s => s.asp_name)));
+    const providers = Array.from(new Set(productSources.map((s) => s.asp_name)));
 
     // 最低価格を取得
-    const prices = productSources.map(s => s.price).filter((p): p is number => p !== null);
+    const prices = productSources.map((s) => s.price).filter((p): p is number => p !== null);
     const minPrice = prices.length > 0 ? Math.min(...prices) : undefined;
 
     return {
@@ -184,10 +189,10 @@ async function indexProductsToMeilisearch() {
       description: product.description || undefined,
       releaseDate: product.release_date || undefined,
       thumbnailUrl: product.default_thumbnail_url || undefined,
-      performers: productPerformers.map(p => p.performer_name),
-      performerIds: productPerformers.map(p => p.performer_id),
-      tags: productTags.map(t => t.tag_name),
-      tagIds: productTags.map(t => t.tag_id),
+      performers: productPerformers.map((p) => p.performer_name),
+      performerIds: productPerformers.map((p) => p.performer_id),
+      tags: productTags.map((t) => t.tag_name),
+      tagIds: productTags.map((t) => t.tag_id),
       providers,
       price: minPrice,
       rating: product.rating || undefined,
@@ -220,7 +225,7 @@ async function indexProductsToMeilisearch() {
 
 indexProductsToMeilisearch()
   .then(() => process.exit(0))
-  .catch(error => {
+  .catch((error) => {
     console.error('❌ Error:', error);
     process.exit(1);
   });

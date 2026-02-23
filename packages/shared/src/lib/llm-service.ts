@@ -33,7 +33,7 @@ async function callGemini(
     temperature?: number;
     maxOutputTokens?: number;
     systemInstruction?: string;
-  } = {}
+  } = {},
 ): Promise<string | null> {
   if (!GEMINI_API_KEY) {
     console.warn('[LLM Service] GEMINI_API_KEY が未設定');
@@ -44,9 +44,11 @@ async function callGemini(
 
   try {
     const requestBody: Record<string, unknown> = {
-      contents: [{
-        parts: [{ text: prompt }]
-      }],
+      contents: [
+        {
+          parts: [{ text: prompt }],
+        },
+      ],
       generationConfig: {
         temperature,
         topK: 40,
@@ -57,7 +59,7 @@ async function callGemini(
 
     if (systemInstruction) {
       requestBody['systemInstruction'] = {
-        parts: [{ text: systemInstruction }]
+        parts: [{ text: systemInstruction }],
       };
     }
 
@@ -72,7 +74,7 @@ async function callGemini(
       return null;
     }
 
-    const data = await response.json() as GeminiResponse;
+    const data = (await response.json()) as GeminiResponse;
 
     if (data.error) {
       console.error(`[LLM Service] ${data.error.message}`);
@@ -111,10 +113,10 @@ function parseJsonResponse<T>(text: string | null): T | null {
 
 export interface SearchQueryAnalysis {
   // 抽出されたエンティティ
-  performers: string[];      // 女優名
-  genres: string[];          // ジャンル
-  makers: string[];          // メーカー
-  keywords: string[];        // その他キーワード
+  performers: string[]; // 女優名
+  genres: string[]; // ジャンル
+  makers: string[]; // メーカー
+  keywords: string[]; // その他キーワード
 
   // クエリの意図
   intent: 'search_product' | 'search_actress' | 'recommendation' | 'comparison' | 'unknown';
@@ -131,7 +133,7 @@ export interface SearchQueryAnalysis {
     excludeGenres?: string[];
     hasReview?: boolean;
     onSale?: boolean;
-    minRating?: number;       // 最低評価（例: 4.0）
+    minRating?: number; // 最低評価（例: 4.0）
     priceRange?: { min?: number; max?: number }; // 価格帯
     releaseDateRange?: { from?: string; to?: string }; // 発売日範囲（YYYY-MM-DD）
     sortBy?: 'releaseDateDesc' | 'ratingDesc' | 'priceAsc' | 'reviewCountDesc'; // ソート
@@ -146,7 +148,7 @@ export async function analyzeSearchQuery(
   context?: {
     availableGenres?: string[];
     popularPerformers?: string[];
-  }
+  },
 ): Promise<SearchQueryAnalysis | null> {
   const systemInstruction = `あなたはアダルトビデオ検索サイトの検索アシスタントです。
 ユーザーの自然言語クエリを分析し、意図を理解して適切な検索条件に変換します。
@@ -207,12 +209,12 @@ ${context?.popularPerformers?.slice(0, 20).join('、') || ''}`;
 // =============================================================================
 
 export interface GeneratedProductDescription {
-  shortDescription: string;   // 50-100文字
-  longDescription: string;    // 200-400文字
-  seoDescription: string;     // SEO用メタディスクリプション（120-160文字）
-  catchphrase: string;        // キャッチコピー（20-40文字）
-  highlights: string[];       // 見どころ（3-5個）
-  targetAudience: string;     // ターゲット層の説明
+  shortDescription: string; // 50-100文字
+  longDescription: string; // 200-400文字
+  seoDescription: string; // SEO用メタディスクリプション（120-160文字）
+  catchphrase: string; // キャッチコピー（20-40文字）
+  highlights: string[]; // 見どころ（3-5個）
+  targetAudience: string; // ターゲット層の説明
 }
 
 /**
@@ -239,7 +241,9 @@ export async function generateProductDescription(params: {
     duration ? `収録時間: ${duration}分` : null,
     releaseDate ? `発売日: ${releaseDate}` : null,
     originalDescription ? `元の説明: ${originalDescription.substring(0, 500)}` : null,
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   const prompt = `【商品情報】
 ${productInfo}
@@ -274,10 +278,10 @@ ${productInfo}
 // =============================================================================
 
 export interface RecommendationExplanation {
-  reason: string;             // レコメンド理由（50-100文字）
-  similarity: string;         // 類似点の説明（30-50文字）
-  difference: string;         // この作品ならではの違い（30-50文字）
-  matchScore: number;         // マッチ度（1-100）
+  reason: string; // レコメンド理由（50-100文字）
+  similarity: string; // 類似点の説明（30-50文字）
+  difference: string; // この作品ならではの違い（30-50文字）
+  matchScore: number; // マッチ度（1-100）
 }
 
 /**
@@ -330,12 +334,12 @@ export async function generateRecommendationExplanation(params: {
 // =============================================================================
 
 export interface GeneratedActressProfile {
-  introduction: string;        // 紹介文（100-200文字）
-  characteristics: string[];   // 特徴（3-5個）
-  popularGenres: string[];     // 得意ジャンル
-  careerSummary: string;       // キャリア要約（50-100文字）
-  recommendedFor: string;      // おすすめしたい人（30-50文字）
-  seoDescription: string;      // SEO用（120-160文字）
+  introduction: string; // 紹介文（100-200文字）
+  characteristics: string[]; // 特徴（3-5個）
+  popularGenres: string[]; // 得意ジャンル
+  careerSummary: string; // キャリア要約（50-100文字）
+  recommendedFor: string; // おすすめしたい人（30-50文字）
+  seoDescription: string; // SEO用（120-160文字）
 }
 
 /**
@@ -362,7 +366,9 @@ export async function generateActressProfile(params: {
     topMakers?.length ? `主な出演メーカー: ${topMakers.join('、')}` : null,
     recentWorks?.length ? `最近の作品: ${recentWorks.slice(0, 3).join('、')}` : null,
     averageRating ? `平均評価: ${averageRating.toFixed(1)}点` : null,
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   const prompt = `【女優情報】
 ${actressInfo}
@@ -397,7 +403,7 @@ ${actressInfo}
 // =============================================================================
 
 export interface ChatResponse {
-  message: string;            // ユーザーへの返答
+  message: string; // ユーザーへの返答
   intent: 'search' | 'recommend' | 'info' | 'greeting' | 'unknown';
   searchParams?: {
     query?: string;
@@ -406,7 +412,7 @@ export interface ChatResponse {
     onSale?: boolean;
     hasReview?: boolean;
   };
-  followUpQuestions?: string[];  // フォローアップ質問の提案
+  followUpQuestions?: string[]; // フォローアップ質問の提案
 }
 
 /**
@@ -425,9 +431,11 @@ export async function generateChatResponse(params: {
 }): Promise<ChatResponse | null> {
   const { userMessage, conversationHistory, context } = params;
 
-  const historyText = conversationHistory?.slice(-5).map(
-    h => `${h.role === 'user' ? 'ユーザー' : 'アシスタント'}: ${h.content}`
-  ).join('\n') || '';
+  const historyText =
+    conversationHistory
+      ?.slice(-5)
+      .map((h) => `${h.role === 'user' ? 'ユーザー' : 'アシスタント'}: ${h.content}`)
+      .join('\n') || '';
 
   const systemInstruction = `あなたはアダルトビデオ検索サイトのAIアシスタントです。
 ユーザーの作品探しをサポートします。
@@ -480,17 +488,17 @@ ${userMessage}
 
 export interface ViewingHistoryAnalysis {
   userPreferences: {
-    favoriteGenres: string[];      // 好みのジャンル（頻度順）
-    favoriteActresses: string[];   // よく見る女優
-    preferredDuration: 'short' | 'medium' | 'long' | 'unknown';  // 好みの尺
-    viewingPattern: string;        // 視聴パターンの説明
+    favoriteGenres: string[]; // 好みのジャンル（頻度順）
+    favoriteActresses: string[]; // よく見る女優
+    preferredDuration: 'short' | 'medium' | 'long' | 'unknown'; // 好みの尺
+    viewingPattern: string; // 視聴パターンの説明
   };
   recommendations: {
-    genres: string[];              // おすすめジャンル
-    searchKeywords: string[];      // おすすめ検索キーワード
-    reason: string;                // おすすめ理由
+    genres: string[]; // おすすめジャンル
+    searchKeywords: string[]; // おすすめ検索キーワード
+    reason: string; // おすすめ理由
   };
-  personalizedMessage: string;     // パーソナライズされたメッセージ
+  personalizedMessage: string; // パーソナライズされたメッセージ
 }
 
 /**
@@ -511,13 +519,16 @@ export async function analyzeViewingHistory(params: {
     return null;
   }
 
-  const historyText = recentProducts.slice(0, 15).map((p, i) => {
-    const parts = [`${i + 1}. ${p.title}`];
-    if (p.genres?.length) parts.push(`ジャンル: ${p.genres.join('、')}`);
-    if (p.performers?.length) parts.push(`出演: ${p.performers.join('、')}`);
-    if (p.duration) parts.push(`${p.duration}分`);
-    return parts.join(' / ');
-  }).join('\n');
+  const historyText = recentProducts
+    .slice(0, 15)
+    .map((p, i) => {
+      const parts = [`${i + 1}. ${p.title}`];
+      if (p.genres?.length) parts.push(`ジャンル: ${p.genres.join('、')}`);
+      if (p.performers?.length) parts.push(`出演: ${p.performers.join('、')}`);
+      if (p.duration) parts.push(`${p.duration}分`);
+      return parts.join(' / ');
+    })
+    .join('\n');
 
   const prompt = `【ユーザーの閲覧履歴（新しい順）】
 ${historyText}
@@ -556,9 +567,9 @@ ${availableGenres?.length ? `【利用可能なジャンル】\n${availableGenre
 }
 
 export interface PersonalizedRecommendation {
-  matchReason: string;           // マッチ理由（50-80文字）
-  highlights: string[];          // この作品のハイライト（2-3個）
-  matchScore: number;            // マッチ度（1-100）
+  matchReason: string; // マッチ理由（50-80文字）
+  highlights: string[]; // この作品のハイライト（2-3個）
+  matchScore: number; // マッチ度（1-100）
   recommendationType: 'similar' | 'explore' | 'trending' | 'hidden_gem';
 }
 
@@ -615,28 +626,28 @@ export async function generatePersonalizedRecommendation(params: {
 
 export interface UserPreferenceProfile {
   // 基本プロファイル
-  profileType: 'casual' | 'explorer' | 'collector' | 'specialist';  // ユーザータイプ
-  profileTitle: string;                   // プロファイルタイトル（例：「巨乳好きの探求者」）
-  profileDescription: string;             // プロファイル説明（50-80文字）
+  profileType: 'casual' | 'explorer' | 'collector' | 'specialist'; // ユーザータイプ
+  profileTitle: string; // プロファイルタイトル（例：「巨乳好きの探求者」）
+  profileDescription: string; // プロファイル説明（50-80文字）
 
   // 好みタグ
-  primaryTags: string[];                  // 主要な好みタグ（3-5個）
-  secondaryTags: string[];                // 副次的な好みタグ（2-3個）
-  avoidTags: string[];                    // 避けている傾向のタグ（0-2個）
+  primaryTags: string[]; // 主要な好みタグ（3-5個）
+  secondaryTags: string[]; // 副次的な好みタグ（2-3個）
+  avoidTags: string[]; // 避けている傾向のタグ（0-2個）
 
   // 傾向分析
   preferences: {
-    actressPreference: 'specific' | 'variety' | 'mixed';  // 女優の好み傾向
-    genreDepth: 'shallow' | 'medium' | 'deep';            // ジャンルの深さ
-    newVsClassic: 'new' | 'classic' | 'balanced';         // 新作 vs 旧作
-    contentStyle: string;                                  // コンテンツスタイル（20-30文字）
+    actressPreference: 'specific' | 'variety' | 'mixed'; // 女優の好み傾向
+    genreDepth: 'shallow' | 'medium' | 'deep'; // ジャンルの深さ
+    newVsClassic: 'new' | 'classic' | 'balanced'; // 新作 vs 旧作
+    contentStyle: string; // コンテンツスタイル（20-30文字）
   };
 
   // おすすめアクション
-  suggestedActions: string[];             // おすすめの検索・行動（2-3個）
+  suggestedActions: string[]; // おすすめの検索・行動（2-3個）
 
   // スコア
-  confidenceScore: number;                // プロファイル信頼度（1-100）
+  confidenceScore: number; // プロファイル信頼度（1-100）
 }
 
 /**
@@ -665,13 +676,16 @@ export async function generateUserPreferenceProfile(params: {
   }
 
   // 視聴履歴をテキスト化
-  const historyText = recentProducts.slice(0, 20).map((p, i) => {
-    const parts = [`${i + 1}. ${p.title}`];
-    if (p.genres?.length) parts.push(`[${p.genres.slice(0, 3).join(', ')}]`);
-    if (p.performers?.length) parts.push(`出演: ${p.performers.slice(0, 2).join(', ')}`);
-    if (p.releaseDate) parts.push(`(${p.releaseDate.substring(0, 4)})`);
-    return parts.join(' ');
-  }).join('\n');
+  const historyText = recentProducts
+    .slice(0, 20)
+    .map((p, i) => {
+      const parts = [`${i + 1}. ${p.title}`];
+      if (p.genres?.length) parts.push(`[${p.genres.slice(0, 3).join(', ')}]`);
+      if (p.performers?.length) parts.push(`出演: ${p.performers.slice(0, 2).join(', ')}`);
+      if (p.releaseDate) parts.push(`(${p.releaseDate.substring(0, 4)})`);
+      return parts.join(' ');
+    })
+    .join('\n');
 
   // 統計情報
   const statsText = viewingStats
@@ -724,19 +738,19 @@ ${availableGenres?.length ? `【利用可能なジャンル】\n${availableGenre
 
 export interface ImageAnalysisResult {
   // 画像から抽出された特徴
-  description: string;           // 画像の説明
+  description: string; // 画像の説明
   detectedFeatures: {
-    performers?: string[];       // 検出された人物の特徴
-    setting?: string;            // シチュエーション・場所
-    clothing?: string[];         // 衣装・コスチューム
-    mood?: string;               // 雰囲気
-    actions?: string[];          // 行為・アクション
+    performers?: string[]; // 検出された人物の特徴
+    setting?: string; // シチュエーション・場所
+    clothing?: string[]; // 衣装・コスチューム
+    mood?: string; // 雰囲気
+    actions?: string[]; // 行為・アクション
   };
   // 検索用キーワード
-  searchKeywords: string[];      // 検索に使用するキーワード
-  suggestedGenres: string[];     // 推奨ジャンル
+  searchKeywords: string[]; // 検索に使用するキーワード
+  suggestedGenres: string[]; // 推奨ジャンル
   // マッチング用の特徴ベクトル（テキストベース）
-  featureDescription: string;    // 特徴を要約したテキスト（類似検索用）
+  featureDescription: string; // 特徴を要約したテキスト（類似検索用）
 }
 
 /**
@@ -750,7 +764,7 @@ async function callGeminiVision(
     temperature?: number;
     maxOutputTokens?: number;
     systemInstruction?: string;
-  } = {}
+  } = {},
 ): Promise<string | null> {
   if (!GEMINI_API_KEY) {
     console.warn('[LLM Service] GEMINI_API_KEY が未設定');
@@ -761,17 +775,19 @@ async function callGeminiVision(
 
   try {
     const requestBody: Record<string, unknown> = {
-      contents: [{
-        parts: [
-          {
-            inline_data: {
-              mime_type: mimeType,
-              data: imageBase64,
-            }
-          },
-          { text: prompt }
-        ]
-      }],
+      contents: [
+        {
+          parts: [
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: imageBase64,
+              },
+            },
+            { text: prompt },
+          ],
+        },
+      ],
       generationConfig: {
         temperature,
         topK: 40,
@@ -782,7 +798,7 @@ async function callGeminiVision(
 
     if (systemInstruction) {
       requestBody['systemInstruction'] = {
-        parts: [{ text: systemInstruction }]
+        parts: [{ text: systemInstruction }],
       };
     }
 
@@ -797,7 +813,7 @@ async function callGeminiVision(
       return null;
     }
 
-    const data = await response.json() as GeminiResponse;
+    const data = (await response.json()) as GeminiResponse;
 
     if (data.error) {
       console.error(`[LLM Service] ${data.error.message}`);
@@ -902,9 +918,9 @@ export async function calculateImageTextSimilarity(params: {
 }): Promise<Array<{ id: number; score: number; reason: string }> | null> {
   const { imageBase64, mimeType, products } = params;
 
-  const productsText = products.map((p, i) =>
-    `${i + 1}. ID:${p.id} - ${p.title}${p.genres?.length ? ` [${p.genres.join(', ')}]` : ''}`
-  ).join('\n');
+  const productsText = products
+    .map((p, i) => `${i + 1}. ID:${p.id} - ${p.title}${p.genres?.length ? ` [${p.genres.join(', ')}]` : ''}`)
+    .join('\n');
 
   const prompt = `この画像と以下の作品リストを比較し、類似度をスコアリングしてください。
 
@@ -1119,8 +1135,8 @@ ${description ? `説明: ${description.slice(0, 300)}` : ''}
  */
 export interface ContentModerationResult {
   // 審査結果
-  decision: 'approve' | 'reject' | 'review';  // 承認、拒否、人間によるレビュー必要
-  confidence: number;                          // 信頼度（0-100）
+  decision: 'approve' | 'reject' | 'review'; // 承認、拒否、人間によるレビュー必要
+  confidence: number; // 信頼度（0-100）
 
   // 問題点の詳細
   issues: Array<{
@@ -1137,8 +1153,8 @@ export interface ContentModerationResult {
 
   // スコア詳細
   scores: {
-    relevance: number;      // 関連性（0-100）
-    quality: number;        // 品質（0-100）
+    relevance: number; // 関連性（0-100）
+    quality: number; // 品質（0-100）
     appropriateness: number; // 適切さ（0-100）
   };
 }
@@ -1518,7 +1534,10 @@ export async function classifyPerformerByProducts(params: {
   const prompt = `【女優名】${performerName}
 
 【出演作品タイトル（新しい順、最大20作品）】
-${productTitles.slice(0, 20).map((t, i) => `${i + 1}. ${t}`).join('\n')}
+${productTitles
+  .slice(0, 20)
+  .map((t, i) => `${i + 1}. ${t}`)
+  .join('\n')}
 
 【既存ジャンルタグ】
 ${existingGenres.join('、') || 'なし'}

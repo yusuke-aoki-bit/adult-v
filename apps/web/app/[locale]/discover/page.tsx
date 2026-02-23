@@ -5,8 +5,20 @@ import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
-  Heart, X, ExternalLink, RefreshCw, Sparkles, Clock, User,
-  Undo2, Settings2, Calendar, Play, List, Eye, Filter
+  Heart,
+  X,
+  ExternalLink,
+  RefreshCw,
+  Sparkles,
+  Clock,
+  User,
+  Undo2,
+  Settings2,
+  Calendar,
+  Play,
+  List,
+  Eye,
+  Filter,
 } from 'lucide-react';
 import { useFavorites } from '@adult-v/shared/hooks';
 import { localizedHref } from '@adult-v/shared/i18n';
@@ -193,109 +205,118 @@ export default function DiscoverPage() {
   const [pendingFilters, setPendingFilters] = useState<DiscoverFilters>({});
 
   // Stats
-  const likedCount = history.filter(h => h.action === 'like').length;
-  const passedCount = history.filter(h => h.action === 'pass').length;
+  const likedCount = history.filter((h) => h.action === 'like').length;
+  const passedCount = history.filter((h) => h.action === 'pass').length;
 
-  const fetchProducts = useCallback(async (newExcludeIds: number[] = excludeIds, currentFilters: DiscoverFilters = filters) => {
-    setIsLoading(true);
-    try {
-      const searchParams = new URLSearchParams();
-      if (newExcludeIds.length > 0) {
-        searchParams.set('excludeIds', newExcludeIds.join(','));
-      }
-      searchParams.set('locale', locale);
-      searchParams.set('limit', '12');
+  const fetchProducts = useCallback(
+    async (newExcludeIds: number[] = excludeIds, currentFilters: DiscoverFilters = filters) => {
+      setIsLoading(true);
+      try {
+        const searchParams = new URLSearchParams();
+        if (newExcludeIds.length > 0) {
+          searchParams.set('excludeIds', newExcludeIds.join(','));
+        }
+        searchParams.set('locale', locale);
+        searchParams.set('limit', '12');
 
-      // Apply filters
-      if (currentFilters.minDuration) {
-        searchParams.set('minDuration', String(currentFilters.minDuration));
-      }
-      if (currentFilters.maxDuration) {
-        searchParams.set('maxDuration', String(currentFilters.maxDuration));
-      }
-      if (currentFilters.hasPerformer) {
-        searchParams.set('hasPerformer', 'true');
-      }
-      if (currentFilters.releasedAfter) {
-        searchParams.set('releasedAfter', currentFilters.releasedAfter);
-      }
+        // Apply filters
+        if (currentFilters.minDuration) {
+          searchParams.set('minDuration', String(currentFilters.minDuration));
+        }
+        if (currentFilters.maxDuration) {
+          searchParams.set('maxDuration', String(currentFilters.maxDuration));
+        }
+        if (currentFilters.hasPerformer) {
+          searchParams.set('hasPerformer', 'true');
+        }
+        if (currentFilters.releasedAfter) {
+          searchParams.set('releasedAfter', currentFilters.releasedAfter);
+        }
 
-      const res = await fetch(`/api/discover?${searchParams.toString()}`);
-      const data = await res.json();
-      setProducts(data.products || []);
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      setProducts([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [excludeIds, locale, filters]);
+        const res = await fetch(`/api/discover?${searchParams.toString()}`);
+        const data = await res.json();
+        setProducts(data.products || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [excludeIds, locale, filters],
+  );
 
   useEffect(() => {
     fetchProducts([], filters);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleLike = useCallback((product: DiscoverProduct) => {
-    if (actionFeedback[product.id]) return;
+  const handleLike = useCallback(
+    (product: DiscoverProduct) => {
+      if (actionFeedback[product.id]) return;
 
-    // Add to favorites
-    if (!isFavorite('product', product.id)) {
-      addFavorite({
-        id: product.id,
-        type: 'product',
-        title: product.title,
-        thumbnail: product.imageUrl,
-      });
-    }
+      // Add to favorites
+      if (!isFavorite('product', product.id)) {
+        addFavorite({
+          id: product.id,
+          type: 'product',
+          title: product.title,
+          thumbnail: product.imageUrl,
+        });
+      }
 
-    // Add to history
-    setHistory(prev => [...prev, { product, action: 'like', timestamp: Date.now() }]);
+      // Add to history
+      setHistory((prev) => [...prev, { product, action: 'like', timestamp: Date.now() }]);
 
-    // Show feedback animation
-    setActionFeedback(prev => ({ ...prev, [product.id]: 'like' }));
+      // Show feedback animation
+      setActionFeedback((prev) => ({ ...prev, [product.id]: 'like' }));
 
-    // Remove from display after animation
-    setTimeout(() => {
-      setProducts(prev => prev.filter(p => p.id !== product.id));
-      setExcludeIds(prev => [...prev, product.id]);
-      setActionFeedback(prev => {
-        const updated = { ...prev };
-        delete updated[product.id];
-        return updated;
-      });
-    }, 300);
-  }, [isFavorite, addFavorite, actionFeedback]);
+      // Remove from display after animation
+      setTimeout(() => {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setExcludeIds((prev) => [...prev, product.id]);
+        setActionFeedback((prev) => {
+          const updated = { ...prev };
+          delete updated[product.id];
+          return updated;
+        });
+      }, 300);
+    },
+    [isFavorite, addFavorite, actionFeedback],
+  );
 
-  const handlePass = useCallback((product: DiscoverProduct) => {
-    if (actionFeedback[product.id]) return;
+  const handlePass = useCallback(
+    (product: DiscoverProduct) => {
+      if (actionFeedback[product.id]) return;
 
-    // Add to history
-    setHistory(prev => [...prev, { product, action: 'pass', timestamp: Date.now() }]);
+      // Add to history
+      setHistory((prev) => [...prev, { product, action: 'pass', timestamp: Date.now() }]);
 
-    // Show feedback animation
-    setActionFeedback(prev => ({ ...prev, [product.id]: 'pass' }));
+      // Show feedback animation
+      setActionFeedback((prev) => ({ ...prev, [product.id]: 'pass' }));
 
-    // Remove from display after animation
-    setTimeout(() => {
-      setProducts(prev => prev.filter(p => p.id !== product.id));
-      setExcludeIds(prev => [...prev, product.id]);
-      setActionFeedback(prev => {
-        const updated = { ...prev };
-        delete updated[product.id];
-        return updated;
-      });
-    }, 300);
-  }, [actionFeedback]);
+      // Remove from display after animation
+      setTimeout(() => {
+        setProducts((prev) => prev.filter((p) => p.id !== product.id));
+        setExcludeIds((prev) => [...prev, product.id]);
+        setActionFeedback((prev) => {
+          const updated = { ...prev };
+          delete updated[product.id];
+          return updated;
+        });
+      }, 300);
+    },
+    [actionFeedback],
+  );
 
   const handleUndo = useCallback(() => {
     if (history.length === 0) return;
 
     const lastItem = history[history.length - 1];
     if (!lastItem) return;
-    setHistory(prev => prev.slice(0, -1));
-    setExcludeIds(prev => prev.filter(id => id !== lastItem.product.id));
-    setProducts(prev => [lastItem.product, ...prev]);
+    setHistory((prev) => prev.slice(0, -1));
+    setExcludeIds((prev) => prev.filter((id) => id !== lastItem.product.id));
+    setProducts((prev) => [lastItem.product, ...prev]);
   }, [history]);
 
   const handleReset = useCallback(() => {
@@ -305,7 +326,7 @@ export default function DiscoverPage() {
   }, [fetchProducts, filters]);
 
   const handleLoadMore = useCallback(() => {
-    const currentIds = products.map(p => p.id);
+    const currentIds = products.map((p) => p.id);
     const newExcludeIds = [...new Set([...excludeIds, ...currentIds])];
     setExcludeIds(newExcludeIds);
     fetchProducts(newExcludeIds, filters);
@@ -349,68 +370,66 @@ export default function DiscoverPage() {
       <div id="discover" className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-6">
           {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="text-xs text-gray-400 mb-4 text-center">
-            <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+          <p className="mb-4 text-center text-xs text-gray-400">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
             当ページには広告・アフィリエイトリンクが含まれています
           </p>
 
           {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center justify-center gap-2">
-              <Sparkles className="w-6 h-6 text-yellow-400" />
+          <div className="mb-6 text-center">
+            <h1 className="flex items-center justify-center gap-2 text-2xl font-bold text-white sm:text-3xl">
+              <Sparkles className="h-6 w-6 text-yellow-400" />
               {t.title}
             </h1>
-            <p className="text-gray-400 mt-1 text-sm max-w-md mx-auto">{t.subtitle}</p>
+            <p className="mx-auto mt-1 max-w-md text-sm text-gray-400">{t.subtitle}</p>
 
             {/* Stats Bar */}
-            <div className="flex items-center justify-center gap-3 mt-4 text-sm">
+            <div className="mt-4 flex items-center justify-center gap-3 text-sm">
               <div className="flex items-center gap-1.5 text-rose-400">
-                <Heart className="w-4 h-4 fill-rose-400" />
+                <Heart className="h-4 w-4 fill-rose-400" />
                 <span className="font-medium">{likedCount}</span>
                 <span className="text-gray-500">{t.likedCount}</span>
               </div>
               <span className="text-gray-600">|</span>
               <div className="flex items-center gap-1.5 text-gray-400">
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
                 <span className="font-medium">{passedCount}</span>
                 <span className="text-gray-500">{t.passedCount}</span>
               </div>
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center justify-center gap-2 mt-4 flex-wrap">
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
               <button
                 onClick={handleUndo}
                 disabled={history.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-300 rounded-lg text-sm transition-colors"
+                className="flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <Undo2 className="w-4 h-4" />
+                <Undo2 className="h-4 w-4" />
                 {t.undo}
               </button>
               <button
                 onClick={() => setShowFilters(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 ${Object.keys(filters).length > 0 ? 'bg-rose-900/50 text-rose-300' : 'bg-gray-800 text-gray-300'} hover:bg-gray-700 rounded-lg text-sm transition-colors`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 ${Object.keys(filters).length > 0 ? 'bg-rose-900/50 text-rose-300' : 'bg-gray-800 text-gray-300'} rounded-lg text-sm transition-colors hover:bg-gray-700`}
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="h-4 w-4" />
                 {t.filters}
-                {Object.keys(filters).length > 0 && (
-                  <span className="w-2 h-2 rounded-full bg-rose-400" />
-                )}
+                {Object.keys(filters).length > 0 && <span className="h-2 w-2 rounded-full bg-rose-400" />}
               </button>
               <button
                 onClick={() => setShowHistory(true)}
                 disabled={history.length === 0}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 disabled:opacity-40 disabled:cursor-not-allowed text-gray-300 rounded-lg text-sm transition-colors"
+                className="flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
               >
-                <List className="w-4 h-4" />
+                <List className="h-4 w-4" />
                 {t.history}
               </button>
               {(likedCount > 0 || passedCount > 0) && (
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors"
+                  className="flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700"
                 >
-                  <RefreshCw className="w-4 h-4" />
+                  <RefreshCw className="h-4 w-4" />
                   {t.reset}
                 </button>
               )}
@@ -419,40 +438,40 @@ export default function DiscoverPage() {
 
           {/* Main Content - Grid */}
           {isLoading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
               {[...Array(12)].map((_, i) => (
-                <div key={i} className="bg-gray-800 rounded-xl overflow-hidden animate-pulse">
+                <div key={i} className="animate-pulse overflow-hidden rounded-xl bg-gray-800">
                   <div className="aspect-[3/4] bg-gray-700" />
                   <div className="p-3">
-                    <div className="h-4 bg-gray-700 rounded mb-2" />
-                    <div className="h-3 bg-gray-700 rounded w-2/3" />
+                    <div className="mb-2 h-4 rounded bg-gray-700" />
+                    <div className="h-3 w-2/3 rounded bg-gray-700" />
                   </div>
                 </div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="bg-gray-800 rounded-2xl p-8 text-center max-w-md mx-auto">
-              <Sparkles className="w-12 h-12 text-gray-600 mx-auto" />
-              <p className="text-gray-400 mt-4">{t.noMore}</p>
+            <div className="mx-auto max-w-md rounded-2xl bg-gray-800 p-8 text-center">
+              <Sparkles className="mx-auto h-12 w-12 text-gray-600" />
+              <p className="mt-4 text-gray-400">{t.noMore}</p>
               <button
                 onClick={handleReset}
-                className="mt-4 px-6 py-2 bg-rose-600 text-white rounded-lg hover:bg-rose-500 transition-colors"
+                className="mt-4 rounded-lg bg-rose-600 px-6 py-2 text-white transition-colors hover:bg-rose-500"
               >
                 {t.tryAgain}
               </button>
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className={`bg-gray-800 rounded-xl overflow-hidden shadow-lg transition-all duration-300 ${
+                    className={`overflow-hidden rounded-xl bg-gray-800 shadow-lg transition-all duration-300 ${
                       actionFeedback[product.id] === 'like'
-                        ? 'scale-95 opacity-0 translate-x-8 rotate-3'
+                        ? 'translate-x-8 scale-95 rotate-3 opacity-0'
                         : actionFeedback[product.id] === 'pass'
-                        ? 'scale-95 opacity-0 -translate-x-8 -rotate-3'
-                        : 'hover:scale-[1.02]'
+                          ? '-translate-x-8 scale-95 -rotate-3 opacity-0'
+                          : 'hover:scale-[1.02]'
                     }`}
                   >
                     {/* Image */}
@@ -470,16 +489,16 @@ export default function DiscoverPage() {
                         {actionFeedback[product.id] && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                             {actionFeedback[product.id] === 'like' ? (
-                              <Heart className="w-12 h-12 text-rose-500 fill-rose-500" />
+                              <Heart className="h-12 w-12 fill-rose-500 text-rose-500" />
                             ) : (
-                              <X className="w-12 h-12 text-gray-400" />
+                              <X className="h-12 w-12 text-gray-400" />
                             )}
                           </div>
                         )}
 
                         {/* Price Badge */}
                         {product.price && (
-                          <div className="absolute top-2 right-2 px-2 py-0.5 bg-black/70 rounded text-emerald-400 text-xs font-medium">
+                          <div className="absolute top-2 right-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-emerald-400">
                             ¥{product.price.toLocaleString()}
                           </div>
                         )}
@@ -488,32 +507,33 @@ export default function DiscoverPage() {
 
                     {/* Info */}
                     <div className="p-3">
-                      <h3 className="text-sm font-medium text-white line-clamp-2 mb-2 min-h-[2.5rem]">
+                      <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] text-sm font-medium text-white">
                         {product.title}
                       </h3>
 
                       {/* Meta */}
-                      <div className="flex flex-wrap gap-1 text-xs text-gray-400 mb-2">
+                      <div className="mb-2 flex flex-wrap gap-1 text-xs text-gray-400">
                         {product.performers.length > 0 && (
-                          <span className="flex items-center gap-0.5 bg-gray-700/50 px-1.5 py-0.5 rounded truncate max-w-full">
-                            <User className="w-3 h-3 shrink-0" />
+                          <span className="flex max-w-full items-center gap-0.5 truncate rounded bg-gray-700/50 px-1.5 py-0.5">
+                            <User className="h-3 w-3 shrink-0" />
                             <span className="truncate">{product.performers[0]}</span>
                             {product.performers.length > 1 && <span>+{product.performers.length - 1}</span>}
                           </span>
                         )}
                         {product.duration && (
-                          <span className="flex items-center gap-0.5 bg-gray-700/50 px-1.5 py-0.5 rounded">
-                            <Play className="w-3 h-3" />
-                            {product.duration}{t.duration}
+                          <span className="flex items-center gap-0.5 rounded bg-gray-700/50 px-1.5 py-0.5">
+                            <Play className="h-3 w-3" />
+                            {product.duration}
+                            {t.duration}
                           </span>
                         )}
                       </div>
 
                       {/* Genres */}
                       {product.genres && product.genres.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-3">
+                        <div className="mb-3 flex flex-wrap gap-1">
                           {product.genres.slice(0, 2).map((genre) => (
-                            <span key={genre} className="text-xs bg-rose-900/30 text-rose-300 px-1.5 py-0.5 rounded">
+                            <span key={genre} className="rounded bg-rose-900/30 px-1.5 py-0.5 text-xs text-rose-300">
                               {genre}
                             </span>
                           ))}
@@ -528,26 +548,26 @@ export default function DiscoverPage() {
                         <button
                           onClick={() => handlePass(product)}
                           disabled={!!actionFeedback[product.id]}
-                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 text-gray-300 rounded-lg text-sm transition-colors"
+                          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-gray-700 py-2 text-sm text-gray-300 transition-colors hover:bg-gray-600 disabled:opacity-50"
                         >
-                          <X className="w-4 h-4" />
+                          <X className="h-4 w-4" />
                         </button>
                         <button
                           onClick={() => handleLike(product)}
                           disabled={!!actionFeedback[product.id]}
-                          className="flex-1 flex items-center justify-center gap-1 py-2 bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white rounded-lg text-sm transition-colors"
+                          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-rose-600 py-2 text-sm text-white transition-colors hover:bg-rose-500 disabled:opacity-50"
                         >
-                          <Heart className="w-4 h-4" />
+                          <Heart className="h-4 w-4" />
                         </button>
                       </div>
 
                       {/* Secondary Actions */}
-                      <div className="flex gap-1 mt-2">
+                      <div className="mt-2 flex gap-1">
                         <Link
                           href={localizedHref(`/products/${product.id}`, locale)}
-                          className="flex-1 flex items-center justify-center gap-1 py-1.5 border border-gray-600 text-gray-400 hover:bg-gray-700 rounded text-xs transition-colors"
+                          className="flex flex-1 items-center justify-center gap-1 rounded border border-gray-600 py-1.5 text-xs text-gray-400 transition-colors hover:bg-gray-700"
                         >
-                          <Eye className="w-3 h-3" />
+                          <Eye className="h-3 w-3" />
                           {t.viewDetails}
                         </Link>
                         {product.affiliateUrl && (
@@ -555,9 +575,9 @@ export default function DiscoverPage() {
                             href={product.affiliateUrl}
                             target="_blank"
                             rel="noopener noreferrer sponsored"
-                            className="flex-1 flex items-center justify-center gap-1 py-1.5 border border-emerald-600 text-emerald-400 hover:bg-emerald-900/30 rounded text-xs transition-colors"
+                            className="flex flex-1 items-center justify-center gap-1 rounded border border-emerald-600 py-1.5 text-xs text-emerald-400 transition-colors hover:bg-emerald-900/30"
                           >
-                            <ExternalLink className="w-3 h-3" />
+                            <ExternalLink className="h-3 w-3" />
                             {t.buyNow}
                           </a>
                         )}
@@ -568,12 +588,12 @@ export default function DiscoverPage() {
               </div>
 
               {/* Load More Button */}
-              <div className="flex justify-center mt-8 gap-4">
+              <div className="mt-8 flex justify-center gap-4">
                 <button
                   onClick={handleLoadMore}
-                  className="flex items-center gap-2 px-6 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-colors font-medium"
+                  className="flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-3 font-medium text-white transition-colors hover:bg-rose-500"
                 >
-                  <RefreshCw className="w-5 h-5" />
+                  <RefreshCw className="h-5 w-5" />
                   {t.shuffleMore}
                 </button>
               </div>
@@ -584,46 +604,45 @@ export default function DiscoverPage() {
 
       {/* Filter Modal */}
       {showFilters && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <Settings2 className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center">
+          <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-gray-800 p-6 sm:rounded-2xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+                <Settings2 className="h-5 w-5" />
                 {t.filters}
               </h3>
-              <button
-                onClick={() => setShowFilters(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
+              <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-white">
+                <X className="h-6 w-6" />
               </button>
             </div>
 
             {/* Duration Filter */}
             <div className="mb-6">
-              <label className="text-sm font-medium text-gray-300 mb-2 flex items-center gap-1.5">
-                <Clock className="w-4 h-4" />
+              <label className="mb-2 flex items-center gap-1.5 text-sm font-medium text-gray-300">
+                <Clock className="h-4 w-4" />
                 {t.filterDuration}
               </label>
               <div className="grid grid-cols-2 gap-2">
                 {durationOptions.map((option) => (
                   <button
                     key={option.value}
-                    onClick={() => setPendingFilters(prev => {
-                      const newFilters = { ...prev };
-                      if (option.min !== undefined) {
-                        newFilters.minDuration = option.min;
-                      } else {
-                        delete newFilters.minDuration;
-                      }
-                      if (option.max !== undefined) {
-                        newFilters.maxDuration = option.max;
-                      } else {
-                        delete newFilters.maxDuration;
-                      }
-                      return newFilters;
-                    })}
-                    className={`py-2 px-3 rounded-lg text-sm transition-colors ${
+                    onClick={() =>
+                      setPendingFilters((prev) => {
+                        const newFilters = { ...prev };
+                        if (option.min !== undefined) {
+                          newFilters.minDuration = option.min;
+                        } else {
+                          delete newFilters.minDuration;
+                        }
+                        if (option.max !== undefined) {
+                          newFilters.maxDuration = option.max;
+                        } else {
+                          delete newFilters.maxDuration;
+                        }
+                        return newFilters;
+                      })
+                    }
+                    className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                       getDurationValue() === option.value
                         ? 'bg-rose-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
@@ -637,23 +656,25 @@ export default function DiscoverPage() {
 
             {/* Performer Filter */}
             <div className="mb-6">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={pendingFilters.hasPerformer || false}
-                  onChange={(e) => setPendingFilters(prev => {
-                    const newFilters = { ...prev };
-                    if (e.target.checked) {
-                      newFilters.hasPerformer = true;
-                    } else {
-                      delete newFilters.hasPerformer;
-                    }
-                    return newFilters;
-                  })}
-                  className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-rose-600 focus:ring-rose-600"
+                  onChange={(e) =>
+                    setPendingFilters((prev) => {
+                      const newFilters = { ...prev };
+                      if (e.target.checked) {
+                        newFilters.hasPerformer = true;
+                      } else {
+                        delete newFilters.hasPerformer;
+                      }
+                      return newFilters;
+                    })
+                  }
+                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-rose-600 focus:ring-rose-600"
                 />
-                <span className="text-sm text-gray-300 flex items-center gap-1.5">
-                  <User className="w-4 h-4" />
+                <span className="flex items-center gap-1.5 text-sm text-gray-300">
+                  <User className="h-4 w-4" />
                   {t.filterPerformer}
                 </span>
               </label>
@@ -661,14 +682,14 @@ export default function DiscoverPage() {
 
             {/* Recent Filter */}
             <div className="mb-6">
-              <label className="flex items-center gap-2 cursor-pointer">
+              <label className="flex cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={!!pendingFilters.releasedAfter}
                   onChange={(e) => {
                     const oneYearAgo = new Date();
                     oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-                    setPendingFilters(prev => {
+                    setPendingFilters((prev) => {
                       const newFilters = { ...prev };
                       if (e.target.checked) {
                         const dateStr = oneYearAgo.toISOString().split('T')[0];
@@ -681,10 +702,10 @@ export default function DiscoverPage() {
                       return newFilters;
                     });
                   }}
-                  className="w-4 h-4 rounded border-gray-600 bg-gray-700 text-rose-600 focus:ring-rose-600"
+                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-rose-600 focus:ring-rose-600"
                 />
-                <span className="text-sm text-gray-300 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" />
+                <span className="flex items-center gap-1.5 text-sm text-gray-300">
+                  <Calendar className="h-4 w-4" />
                   {t.filterRecent}
                 </span>
               </label>
@@ -694,13 +715,13 @@ export default function DiscoverPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleClearFilters}
-                className="flex-1 py-3 bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-xl transition-colors"
+                className="flex-1 rounded-xl bg-gray-700 py-3 text-gray-300 transition-colors hover:bg-gray-600"
               >
                 {t.clearFilters}
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 py-3 bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-colors font-medium"
+                className="flex-1 rounded-xl bg-rose-600 py-3 font-medium text-white transition-colors hover:bg-rose-500"
               >
                 {t.applyFilters}
               </button>
@@ -711,93 +732,98 @@ export default function DiscoverPage() {
 
       {/* History Modal */}
       {showHistory && (
-        <div className="fixed inset-0 bg-black/70 flex items-end sm:items-center justify-center z-50">
-          <div className="bg-gray-800 w-full max-w-md rounded-t-2xl sm:rounded-2xl p-6 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <List className="w-5 h-5" />
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center">
+          <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-gray-800 p-6 sm:rounded-2xl">
+            <div className="mb-6 flex items-center justify-between">
+              <h3 className="flex items-center gap-2 text-lg font-bold text-white">
+                <List className="h-5 w-5" />
                 {t.history}
               </h3>
-              <button
-                onClick={() => setShowHistory(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
+              <button onClick={() => setShowHistory(false)} className="text-gray-400 hover:text-white">
+                <X className="h-6 w-6" />
               </button>
             </div>
 
             {history.length === 0 ? (
-              <p className="text-gray-400 text-center py-8">{t.noHistory}</p>
+              <p className="py-8 text-center text-gray-400">{t.noHistory}</p>
             ) : (
               <div className="space-y-4">
                 {/* Liked Products */}
-                {history.filter(h => h.action === 'like').length > 0 && (
+                {history.filter((h) => h.action === 'like').length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium text-rose-400 mb-2 flex items-center gap-1">
-                      <Heart className="w-4 h-4 fill-rose-400" />
-                      {t.likedProducts} ({history.filter(h => h.action === 'like').length})
+                    <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-rose-400">
+                      <Heart className="h-4 w-4 fill-rose-400" />
+                      {t.likedProducts} ({history.filter((h) => h.action === 'like').length})
                     </h4>
                     <div className="space-y-2">
-                      {history.filter(h => h.action === 'like').slice(-10).reverse().map((item) => (
-                        <Link
-                          key={`${item.product.id}-${item.timestamp}`}
-                          href={localizedHref(`/products/${item.product.id}`, locale)}
-                          className="flex items-center gap-3 p-2 bg-gray-700/50 rounded-lg hover:bg-gray-700 transition-colors"
-                        >
-                          <div className="relative w-12 h-16 rounded overflow-hidden shrink-0">
-                            <Image
-                              src={item.product.imageUrl}
-                              alt={item.product.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white truncate">{item.product.title}</p>
-                            {item.product.performers.length > 0 && (
-                              <p className="text-xs text-gray-400 truncate">
-                                {item.product.performers.slice(0, 2).join(', ')}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
-                      ))}
+                      {history
+                        .filter((h) => h.action === 'like')
+                        .slice(-10)
+                        .reverse()
+                        .map((item) => (
+                          <Link
+                            key={`${item.product.id}-${item.timestamp}`}
+                            href={localizedHref(`/products/${item.product.id}`, locale)}
+                            className="flex items-center gap-3 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
+                          >
+                            <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
+                              <Image
+                                src={item.product.imageUrl}
+                                alt={item.product.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm text-white">{item.product.title}</p>
+                              {item.product.performers.length > 0 && (
+                                <p className="truncate text-xs text-gray-400">
+                                  {item.product.performers.slice(0, 2).join(', ')}
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
                     </div>
                   </div>
                 )}
 
                 {/* Passed Products */}
-                {history.filter(h => h.action === 'pass').length > 0 && (
+                {history.filter((h) => h.action === 'pass').length > 0 && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-400 mb-2 flex items-center gap-1">
-                      <X className="w-4 h-4" />
-                      {t.passedProducts} ({history.filter(h => h.action === 'pass').length})
+                    <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-gray-400">
+                      <X className="h-4 w-4" />
+                      {t.passedProducts} ({history.filter((h) => h.action === 'pass').length})
                     </h4>
                     <div className="space-y-2">
-                      {history.filter(h => h.action === 'pass').slice(-10).reverse().map((item) => (
-                        <Link
-                          key={`${item.product.id}-${item.timestamp}`}
-                          href={localizedHref(`/products/${item.product.id}`, locale)}
-                          className="flex items-center gap-3 p-2 bg-gray-700/30 rounded-lg hover:bg-gray-700 transition-colors opacity-60"
-                        >
-                          <div className="relative w-12 h-16 rounded overflow-hidden shrink-0">
-                            <Image
-                              src={item.product.imageUrl}
-                              alt={item.product.title}
-                              fill
-                              className="object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm text-white truncate">{item.product.title}</p>
-                            {item.product.performers.length > 0 && (
-                              <p className="text-xs text-gray-400 truncate">
-                                {item.product.performers.slice(0, 2).join(', ')}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
-                      ))}
+                      {history
+                        .filter((h) => h.action === 'pass')
+                        .slice(-10)
+                        .reverse()
+                        .map((item) => (
+                          <Link
+                            key={`${item.product.id}-${item.timestamp}`}
+                            href={localizedHref(`/products/${item.product.id}`, locale)}
+                            className="flex items-center gap-3 rounded-lg bg-gray-700/30 p-2 opacity-60 transition-colors hover:bg-gray-700"
+                          >
+                            <div className="relative h-16 w-12 shrink-0 overflow-hidden rounded">
+                              <Image
+                                src={item.product.imageUrl}
+                                alt={item.product.title}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-sm text-white">{item.product.title}</p>
+                              {item.product.performers.length > 0 && (
+                                <p className="truncate text-xs text-gray-400">
+                                  {item.product.performers.slice(0, 2).join(', ')}
+                                </p>
+                              )}
+                            </div>
+                          </Link>
+                        ))}
                     </div>
                   </div>
                 )}

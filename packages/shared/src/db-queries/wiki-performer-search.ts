@@ -12,9 +12,9 @@ import { sql, ilike, eq, or } from 'drizzle-orm';
  */
 function escapeLikePattern(input: string): string {
   return input
-    .replace(/\\/g, '\\\\')  // バックスラッシュをエスケープ
-    .replace(/%/g, '\\%')    // %をエスケープ
-    .replace(/_/g, '\\_');   // _をエスケープ
+    .replace(/\\/g, '\\\\') // バックスラッシュをエスケープ
+    .replace(/%/g, '\\%') // %をエスケープ
+    .replace(/_/g, '\\_'); // _をエスケープ
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,25 +65,16 @@ export interface WikiPerformerSearchResult {
 }
 
 export interface WikiPerformerSearchQueries {
-  searchPerformerByMakerAndTitle: (
-    maker: string,
-    title: string
-  ) => Promise<WikiPerformerSearchResult[]>;
+  searchPerformerByMakerAndTitle: (maker: string, title: string) => Promise<WikiPerformerSearchResult[]>;
   searchPerformerByName: (name: string) => Promise<WikiPerformerSearchResult[]>;
-  detectPerformerFromTitle: (
-    productTitle: string
-  ) => Promise<WikiPerformerSearchResult | null>;
-  searchPerformerByProductCode: (
-    productCode: string
-  ) => Promise<WikiPerformerSearchResult[]>;
+  detectPerformerFromTitle: (productTitle: string) => Promise<WikiPerformerSearchResult | null>;
+  searchPerformerByProductCode: (productCode: string) => Promise<WikiPerformerSearchResult[]>;
 }
 
 /**
  * Wiki出演者検索クエリを生成
  */
-export function createWikiPerformerSearchQueries(
-  deps: WikiPerformerSearchDeps
-): WikiPerformerSearchQueries {
+export function createWikiPerformerSearchQueries(deps: WikiPerformerSearchDeps): WikiPerformerSearchQueries {
   const { db, wikiPerformerIndex } = deps;
 
   /**
@@ -91,18 +82,13 @@ export function createWikiPerformerSearchQueries(
    * @param maker メーカー名（tokyo247, g-area, s-cute等）
    * @param title 作品タイトル（「まゆみ」「MAYUMI」等）
    */
-  async function searchPerformerByMakerAndTitle(
-    maker: string,
-    title: string
-  ): Promise<WikiPerformerSearchResult[]> {
+  async function searchPerformerByMakerAndTitle(maker: string, title: string): Promise<WikiPerformerSearchResult[]> {
     const normalizedMaker = maker.toLowerCase().replace(/[-_\s]/g, '');
 
     // タイトルから出演者名を抽出する処理
     // 例: "G-AREA まゆみ" → "まゆみ"
     // 例: "Tokyo247 MAYUMI" → "MAYUMI"
-    const nameMatch = title.match(
-      /(?:G[-]?AREA|Tokyo247|S-Cute)\s+([^\s【】（）\(\)]+)/i
-    );
+    const nameMatch = title.match(/(?:G[-]?AREA|Tokyo247|S-Cute)\s+([^\s【】（）\(\)]+)/i);
     const extractedName = nameMatch?.[1] ?? title;
 
     const results = await db
@@ -118,8 +104,8 @@ export function createWikiPerformerSearchQueries(
           )`,
           // 名前の変換候補にマッチ
           sql`lower(${wikiPerformerIndex.maker}) = ${normalizedMaker} AND
-            ${wikiPerformerIndex.performerNameVariants}::text ILIKE ${'%' + extractedName + '%'}`
-        )
+            ${wikiPerformerIndex.performerNameVariants}::text ILIKE ${'%' + extractedName + '%'}`,
+        ),
       )
       .limit(10);
 
@@ -138,9 +124,7 @@ export function createWikiPerformerSearchQueries(
    * 出演者名から検索（あいまい検索）
    * @param name 出演者名（ひらがな、カタカナ、ローマ字対応）
    */
-  async function searchPerformerByName(
-    name: string
-  ): Promise<WikiPerformerSearchResult[]> {
+  async function searchPerformerByName(name: string): Promise<WikiPerformerSearchResult[]> {
     const escapedName = escapeLikePattern(name);
     const results = await db
       .select()
@@ -149,8 +133,8 @@ export function createWikiPerformerSearchQueries(
         or(
           ilike(wikiPerformerIndex.performerName, `%${escapedName}%`),
           ilike(wikiPerformerIndex.performerNameRomaji, `%${escapedName}%`),
-          sql`${wikiPerformerIndex.performerNameVariants}::text ILIKE ${'%' + escapedName + '%'}`
-        )
+          sql`${wikiPerformerIndex.performerNameVariants}::text ILIKE ${'%' + escapedName + '%'}`,
+        ),
       )
       .limit(20);
 
@@ -170,9 +154,7 @@ export function createWikiPerformerSearchQueries(
    * メーカー名と出演者名をタイトルから抽出して検索
    * @param productTitle 商品タイトル全体
    */
-  async function detectPerformerFromTitle(
-    productTitle: string
-  ): Promise<WikiPerformerSearchResult | null> {
+  async function detectPerformerFromTitle(productTitle: string): Promise<WikiPerformerSearchResult | null> {
     // メーカー名パターン
     const makerPatterns: { pattern: RegExp; maker: string }[] = [
       { pattern: /G[-]?AREA/i, maker: 'g-area' },
@@ -203,9 +185,7 @@ export function createWikiPerformerSearchQueries(
    * 商品コードから出演者を検索
    * @param productCode 商品コード（例: "GAREA-123"）
    */
-  async function searchPerformerByProductCode(
-    productCode: string
-  ): Promise<WikiPerformerSearchResult[]> {
+  async function searchPerformerByProductCode(productCode: string): Promise<WikiPerformerSearchResult[]> {
     const results = await db
       .select()
       .from(wikiPerformerIndex)

@@ -26,10 +26,10 @@ export default function SeriesProgressTracker({
     if (isLoading) return;
 
     // 視聴済みの作品IDを取得
-    const viewedIds = new Set(viewedItems.map(item => item.id));
+    const viewedIds = new Set(viewedItems.map((item) => item.id));
 
     // シリーズ内の視聴済み作品数をカウント
-    const count = productIds.filter(id => viewedIds.has(id)).length;
+    const count = productIds.filter((id) => viewedIds.has(id)).length;
     setWatchedCount(count);
   }, [viewedItems, productIds, isLoading]);
 
@@ -38,19 +38,19 @@ export default function SeriesProgressTracker({
   if (isLoading) {
     return (
       <div className="animate-pulse">
-        <div className="h-6 bg-gray-700 rounded w-16"></div>
+        <div className="h-6 w-16 rounded bg-gray-700"></div>
       </div>
     );
   }
 
   return (
     <div>
-      <p className="text-2xl font-bold theme-text">
+      <p className="theme-text text-2xl font-bold">
         {watchedCount}/{totalProducts}
-        <span className="text-sm ml-1">({progress}%)</span>
+        <span className="ml-1 text-sm">({progress}%)</span>
       </p>
       {/* プログレスバー */}
-      <div className="mt-2 h-2 bg-gray-700 rounded-full overflow-hidden">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-700">
         <div
           className="h-full bg-linear-to-r from-purple-500 to-pink-500 transition-all duration-500"
           style={{ width: `${progress}%` }}

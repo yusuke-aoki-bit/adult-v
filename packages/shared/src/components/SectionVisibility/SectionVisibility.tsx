@@ -21,13 +21,7 @@ export interface SectionVisibilityProps {
  * useHomeSectionsの設定に基づいてセクションの表示/非表示を制御
  * Server Componentから使用可能なClient Componentラッパー
  */
-export function SectionVisibility({
-  sectionId,
-  pageId,
-  locale,
-  children,
-  fallback = null,
-}: SectionVisibilityProps) {
+export function SectionVisibility({ sectionId, pageId, locale, children, fallback = null }: SectionVisibilityProps) {
   const { isSectionVisible, isLoaded } = useHomeSections({ locale, pageId });
 
   // ロード中は表示（SSR時のハイドレーション対策）

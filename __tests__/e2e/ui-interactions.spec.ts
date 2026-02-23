@@ -11,12 +11,14 @@ test.setTimeout(120000);
 test.describe('UI Interactions', () => {
   test.beforeEach(async ({ context }) => {
     // Age verification cookie設定
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('Homepage loads with product cards', async ({ page }) => {
@@ -80,14 +82,18 @@ test.describe('UI Interactions', () => {
       await page.waitForTimeout(1500);
 
       // お気に入りボタンを探す（複数のセレクター候補）
-      const favoriteButton = page.locator([
-        'button[aria-label*="お気に入り"]',
-        'button[aria-label*="favorite"]',
-        'button[aria-label*="Favorite"]',
-        '[data-testid="favorite-button"]',
-        'button:has(svg[data-icon="heart"])',
-        'button:has(.fa-heart)',
-      ].join(', ')).first();
+      const favoriteButton = page
+        .locator(
+          [
+            'button[aria-label*="お気に入り"]',
+            'button[aria-label*="favorite"]',
+            'button[aria-label*="Favorite"]',
+            '[data-testid="favorite-button"]',
+            'button:has(svg[data-icon="heart"])',
+            'button:has(.fa-heart)',
+          ].join(', '),
+        )
+        .first();
 
       if (await favoriteButton.isVisible({ timeout: 3000 }).catch(() => false)) {
         // 初期状態を確認
@@ -120,14 +126,18 @@ test.describe('UI Interactions', () => {
     await page.waitForTimeout(1500);
 
     // 検索入力を探す
-    const searchInput = page.locator([
-      'input[type="search"]',
-      'input[placeholder*="検索"]',
-      'input[placeholder*="search"]',
-      'input[name="q"]',
-      'input[name="search"]',
-      '[data-testid="search-input"]',
-    ].join(', ')).first();
+    const searchInput = page
+      .locator(
+        [
+          'input[type="search"]',
+          'input[placeholder*="検索"]',
+          'input[placeholder*="search"]',
+          'input[name="q"]',
+          'input[name="search"]',
+          '[data-testid="search-input"]',
+        ].join(', '),
+      )
+      .first();
 
     if (await searchInput.isVisible({ timeout: 5000 }).catch(() => false)) {
       console.log('Search input found');
@@ -153,14 +163,18 @@ test.describe('UI Interactions', () => {
     await page.waitForTimeout(1500);
 
     // 言語切り替えリンクを探す
-    const langLink = page.locator([
-      'a[href*="hl=en"]',
-      'a[href="/en"]',
-      'a[href*="/en/"]',
-      '[data-testid="language-switch"]',
-      'button:has-text("EN")',
-      'button:has-text("English")',
-    ].join(', ')).first();
+    const langLink = page
+      .locator(
+        [
+          'a[href*="hl=en"]',
+          'a[href="/en"]',
+          'a[href*="/en/"]',
+          '[data-testid="language-switch"]',
+          'button:has-text("EN")',
+          'button:has-text("English")',
+        ].join(', '),
+      )
+      .first();
 
     if (await langLink.isVisible({ timeout: 5000 }).catch(() => false)) {
       console.log('Language switcher found');
@@ -258,13 +272,17 @@ test.describe('UI Interactions', () => {
         console.log('Sample video section found');
 
         // 再生ボタンを探す
-        const playButton = page.locator([
-          'button:has-text("サンプル動画を再生")',
-          'button:has-text("再生")',
-          'button[aria-label*="play"]',
-          '[data-testid="play-button"]',
-          'button:has(svg[data-lucide="play"])',
-        ].join(', ')).first();
+        const playButton = page
+          .locator(
+            [
+              'button:has-text("サンプル動画を再生")',
+              'button:has-text("再生")',
+              'button[aria-label*="play"]',
+              '[data-testid="play-button"]',
+              'button:has(svg[data-lucide="play"])',
+            ].join(', '),
+          )
+          .first();
 
         if (await playButton.isVisible({ timeout: 3000 }).catch(() => false)) {
           console.log('Play button found');
@@ -339,12 +357,14 @@ test.describe('Mobile Responsiveness', () => {
   test.use({ viewport: { width: 375, height: 667 } }); // iPhone SE
 
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('Homepage is responsive on mobile', async ({ page }) => {
@@ -355,13 +375,17 @@ test.describe('Mobile Responsiveness', () => {
     await expect(page.locator('main, [role="main"], body').first()).toBeVisible();
 
     // ハンバーガーメニューがあるか確認
-    const menuButton = page.locator([
-      'button[aria-label*="menu"]',
-      'button[aria-label*="Menu"]',
-      '[data-testid="mobile-menu"]',
-      'button:has(.hamburger)',
-      'button:has(svg[data-icon="bars"])',
-    ].join(', ')).first();
+    const menuButton = page
+      .locator(
+        [
+          'button[aria-label*="menu"]',
+          'button[aria-label*="Menu"]',
+          '[data-testid="mobile-menu"]',
+          'button:has(.hamburger)',
+          'button:has(svg[data-icon="bars"])',
+        ].join(', '),
+      )
+      .first();
 
     if (await menuButton.isVisible({ timeout: 3000 }).catch(() => false)) {
       console.log('Mobile menu button found');

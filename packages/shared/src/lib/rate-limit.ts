@@ -10,7 +10,11 @@ interface RateLimitEntry {
 }
 
 // Upstash Redis client (lazy initialization)
-let redisClient: { incr: (key: string) => Promise<number>; expire: (key: string, seconds: number) => Promise<number>; ttl: (key: string) => Promise<number> } | null = null;
+let redisClient: {
+  incr: (key: string) => Promise<number>;
+  expire: (key: string, seconds: number) => Promise<number>;
+  ttl: (key: string) => Promise<number>;
+} | null = null;
 let redisInitialized = false;
 
 async function getRedisClient() {
@@ -48,8 +52,8 @@ if (typeof setInterval !== 'undefined') {
 }
 
 export interface RateLimitConfig {
-  windowMs: number;  // Time window in milliseconds
-  maxRequests: number;  // Max requests per window
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Max requests per window
 }
 
 export interface RateLimitResult {
@@ -64,7 +68,7 @@ export interface RateLimitResult {
 async function checkRateLimitRedis(
   identifier: string,
   config: RateLimitConfig,
-  redis: NonNullable<typeof redisClient>
+  redis: NonNullable<typeof redisClient>,
 ): Promise<RateLimitResult> {
   const windowSec = Math.ceil(config.windowMs / 1000);
   const key = `ratelimit:${identifier}`;
@@ -93,10 +97,7 @@ async function checkRateLimitRedis(
 /**
  * Check rate limit using in-memory store (single instance)
  */
-function checkRateLimitMemory(
-  identifier: string,
-  config: RateLimitConfig
-): RateLimitResult {
+function checkRateLimitMemory(identifier: string, config: RateLimitConfig): RateLimitResult {
   const now = Date.now();
   const entry = rateLimitStore.get(identifier);
 
@@ -129,10 +130,7 @@ function checkRateLimitMemory(
  * Check rate limit for a given identifier
  * Uses Redis when available, falls back to in-memory
  */
-export async function checkRateLimit(
-  identifier: string,
-  config: RateLimitConfig
-): Promise<RateLimitResult> {
+export async function checkRateLimit(identifier: string, config: RateLimitConfig): Promise<RateLimitResult> {
   try {
     const redis = await getRedisClient();
     if (redis) {
@@ -171,17 +169,17 @@ export function getClientIP(request: Request): string {
 export const RATE_LIMITS = {
   // Strict: For sensitive operations like age verification
   strict: {
-    windowMs: 60000,  // 1 minute
-    maxRequests: 5,   // 5 requests per minute
+    windowMs: 60000, // 1 minute
+    maxRequests: 5, // 5 requests per minute
   },
   // Standard: For general API endpoints
   standard: {
-    windowMs: 60000,  // 1 minute
-    maxRequests: 60,  // 60 requests per minute
+    windowMs: 60000, // 1 minute
+    maxRequests: 60, // 60 requests per minute
   },
   // Relaxed: For read-heavy endpoints
   relaxed: {
-    windowMs: 60000,  // 1 minute
+    windowMs: 60000, // 1 minute
     maxRequests: 120, // 120 requests per minute
   },
 } as const;

@@ -129,7 +129,7 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
       // 5000件ごとに少し長めの休憩
       if (allItems.length % 5000 === 0 && allItems.length > 0) {
         this.log('info', 'レートリミット対策: 3秒待機...');
-        await new Promise(resolve => setTimeout(resolve, 3000));
+        await new Promise((resolve) => setTimeout(resolve, 3000));
       }
     }
 
@@ -201,19 +201,21 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
     if (year && month) {
       // 特定の年月のみ
       const lastDay = new Date(year, month, 0).getDate();
-      dateRanges = [{
-        start: `${year}-${month.toString().padStart(2, '0')}-01T00:00:00`,
-        end: `${year}-${month.toString().padStart(2, '0')}-${lastDay}T23:59:59`,
-      }];
+      dateRanges = [
+        {
+          start: `${year}-${month.toString().padStart(2, '0')}-01T00:00:00`,
+          end: `${year}-${month.toString().padStart(2, '0')}-${lastDay}T23:59:59`,
+        },
+      ];
     } else if (year) {
       // 特定の年のみ（ISO8601形式に変換）
-      dateRanges = generateDateRanges(year, year).map(r => ({
+      dateRanges = generateDateRanges(year, year).map((r) => ({
         start: `${r.start.slice(0, 4)}-${r.start.slice(4, 6)}-${r.start.slice(6, 8)}T00:00:00`,
         end: `${r.end.slice(0, 4)}-${r.end.slice(4, 6)}-${r.end.slice(6, 8)}T23:59:59`,
       }));
     } else {
       // 2000年から現在まで全期間
-      dateRanges = generateDateRanges(2000, currentYear).map(r => ({
+      dateRanges = generateDateRanges(2000, currentYear).map((r) => ({
         start: `${r.start.slice(0, 4)}-${r.start.slice(4, 6)}-${r.start.slice(6, 8)}T00:00:00`,
         end: `${r.end.slice(0, 4)}-${r.end.slice(4, 6)}-${r.end.slice(6, 8)}T23:59:59`,
       }));
@@ -298,7 +300,7 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
       this.log('info', `  期間合計: ${periodItems.length}件 (全体累計: ${allItems.length.toLocaleString()}件)`);
 
       // レート制限対策: 期間ごとに待機
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
     }
 
     // limitを超えた分をカット
@@ -316,7 +318,7 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
     // packageImageUrl (pe_xxx.jpg) はフルサイズ、thumbnailUrl (pef_xxx_100x142.jpg) は小さい
     const thumbnailUrl = item.packageImageUrl || item['thumbnailUrl'];
     const sampleVideos = item['sampleVideoUrl'] ? [item['sampleVideoUrl']] : undefined;
-    const performers = item.actors?.map(a => a.name);
+    const performers = item.actors?.map((a) => a.name);
 
     return {
       normalizedProductId: `sokmil-${item.itemId}`,
@@ -332,10 +334,7 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
       ...(item['affiliateUrl'] && { affiliateUrl: item['affiliateUrl'] }),
       ...(item['price'] !== undefined && { price: item['price'] }),
       ...(performers && performers.length > 0 && { performers }),
-      categories: [
-        ...(item.genres?.map(g => g.name) || []),
-        ...(item.maker ? [item.maker['name']] : []),
-      ],
+      categories: [...(item.genres?.map((g) => g.name) || []), ...(item.maker ? [item.maker['name']] : [])],
     };
   }
 
@@ -367,12 +366,15 @@ class SokmilCrawler extends BaseCrawler<SokmilProduct> {
 
 // メイン実行
 const crawler = new SokmilCrawler();
-crawler.run().then((result) => {
-  if (!result.success) {
+crawler
+  .run()
+  .then((result) => {
+    if (!result.success) {
+      process.exit(1);
+    }
+    process.exit(0);
+  })
+  .catch((error) => {
+    console.error('Fatal error:', error);
     process.exit(1);
-  }
-  process.exit(0);
-}).catch((error) => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+  });

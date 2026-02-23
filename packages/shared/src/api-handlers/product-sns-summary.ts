@@ -14,10 +14,7 @@ export interface SNSSummaryHandlerDeps {
 }
 
 export function createSNSSummaryHandler(deps: SNSSummaryHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
 

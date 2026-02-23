@@ -51,7 +51,10 @@ export async function fetchAVWikiData(actressName: string): Promise<ActressWikiD
       if (header.includes('別名') || header.includes('旧芸名') || header.includes('他の名前')) {
         const aliasText = $row.find('td').text().trim();
         // カンマ、スラッシュ、改行で分割
-        const names = aliasText.split(/[,/\n]/).map(n => n.trim()).filter(n => n.length > 0);
+        const names = aliasText
+          .split(/[,/\n]/)
+          .map((n) => n.trim())
+          .filter((n) => n.length > 0);
         aliases.push(...names);
       }
     });
@@ -131,18 +134,23 @@ export async function fetchSeesaaWikiData(actressName: string): Promise<ActressW
 
     // 別名情報
     const aliases: string[] = [];
-    $('#main_body').find('p, li').each((_, elem) => {
-      const text = $(elem).text();
+    $('#main_body')
+      .find('p, li')
+      .each((_, elem) => {
+        const text = $(elem).text();
 
-      // 「別名:」「旧名:」などの形式
-      if (text.includes('別名') || text.includes('旧名') || text.includes('他名義')) {
-        const match = text.match(/(?:別名|旧名|他名義)[：:]\s*(.+)/);
-        if (match?.[1]) {
-          const names = match[1].split(/[,、/]/).map(n => n.trim()).filter(n => n.length > 0);
-          aliases.push(...names);
+        // 「別名:」「旧名:」などの形式
+        if (text.includes('別名') || text.includes('旧名') || text.includes('他名義')) {
+          const match = text.match(/(?:別名|旧名|他名義)[：:]\s*(.+)/);
+          if (match?.[1]) {
+            const names = match[1]
+              .split(/[,、/]/)
+              .map((n) => n.trim())
+              .filter((n) => n.length > 0);
+            aliases.push(...names);
+          }
         }
-      }
-    });
+      });
 
     // 作品リスト（品番）
     const products: string[] = [];

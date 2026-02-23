@@ -27,14 +27,7 @@ export default function robots(): MetadataRoute.Robots {
       // Specific rules for well-behaved bots (Google)
       {
         userAgent: ['Googlebot', 'Googlebot-Image'],
-        allow: [
-          '/',
-          '/*.js',
-          '/*.css',
-          '/*.png',
-          '/*.jpg',
-          '/*.webp',
-        ],
+        allow: ['/', '/*.js', '/*.css', '/*.png', '/*.jpg', '/*.webp'],
         disallow: [
           '/api/',
           '/admin/',
@@ -50,56 +43,28 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: ['Bingbot', 'Slurp', 'DuckDuckBot'],
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/private/',
-          '/age-verification',
-          '/categories/*',
-          '/*?*include=*&*exclude=',
-        ],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification', '/categories/*', '/*?*include=*&*exclude='],
         crawlDelay: 1,
       },
       // Baidu (中国) - 簡体字中国語コンテンツの検索対応
       {
         userAgent: 'Baiduspider',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/private/',
-          '/age-verification',
-          '/categories/*',
-          '/*?*include=*&*exclude=',
-        ],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification', '/categories/*', '/*?*include=*&*exclude='],
         crawlDelay: 0.5,
       },
       // Naver (韓国) - 韓国語コンテンツの検索対応
       {
         userAgent: 'Naverbot',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/private/',
-          '/age-verification',
-          '/categories/*',
-          '/*?*include=*&*exclude=',
-        ],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification', '/categories/*', '/*?*include=*&*exclude='],
         crawlDelay: 1,
       },
       // Yandex (ロシア) - ロシア語圏の検索対応
       {
         userAgent: 'YandexBot',
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/private/',
-          '/age-verification',
-          '/categories/*',
-          '/*?*include=*&*exclude=',
-        ],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification', '/categories/*', '/*?*include=*&*exclude='],
         crawlDelay: 1,
       },
       // Block aggressive SEO bots
@@ -111,12 +76,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'Anthropic-AI', 'Claude-Web'],
         allow: '/',
-        disallow: [
-          '/api/',
-          '/admin/',
-          '/private/',
-          '/age-verification',
-        ],
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
         crawlDelay: 2,
       },
       // Block other aggressive AI scrapers

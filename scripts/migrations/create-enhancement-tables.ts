@@ -151,12 +151,15 @@ async function createTables() {
     `);
 
     for (const row of tables.rows) {
-      const columns = await client.query(`
+      const columns = await client.query(
+        `
         SELECT column_name, data_type
         FROM information_schema.columns
         WHERE table_name = $1
         ORDER BY ordinal_position
-      `, [row.table_name]);
+      `,
+        [row.table_name],
+      );
 
       console.log(`\n${row.table_name}:`);
       for (const col of columns.rows) {
@@ -165,7 +168,6 @@ async function createTables() {
     }
 
     console.log('\n✓ All enhancement tables created successfully');
-
   } catch (error) {
     console.error('Error creating tables:', error);
     throw error;

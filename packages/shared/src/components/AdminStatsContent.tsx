@@ -233,18 +233,18 @@ const getThemeClasses = (darkMode: boolean) => ({
 
 // ASP colors for chart
 const ASP_COLORS: Record<string, string> = {
-  'DUGA': '#f59e0b',      // amber
-  'Sokmil': '#10b981',    // emerald
-  'MGS': '#ef4444',       // red
-  'FC2': '#3b82f6',       // blue
-  'B10F': '#8b5cf6',      // violet
-  'FANZA': '#ec4899',     // pink
-  'DTI: Heyzo': '#06b6d4',// cyan
+  DUGA: '#f59e0b', // amber
+  Sokmil: '#10b981', // emerald
+  MGS: '#ef4444', // red
+  FC2: '#3b82f6', // blue
+  B10F: '#8b5cf6', // violet
+  FANZA: '#ec4899', // pink
+  'DTI: Heyzo': '#06b6d4', // cyan
   'DTI: 1Pondo': '#14b8a6', // teal
   'DTI: Caribbean': '#84cc16', // lime
   'DTI: Caribbeancompr': '#22c55e', // green
-  'Japanska': '#f97316',  // orange
-  'Tokyohot': '#a855f7',  // purple
+  Japanska: '#f97316', // orange
+  Tokyohot: '#a855f7', // purple
 };
 
 function getAspColor(aspName: string): string {
@@ -292,7 +292,7 @@ function CollectionRateChart({ data, darkMode }: { data: CollectionRate[]; darkM
   });
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-6">
+    <div className="flex flex-col items-center gap-6 md:flex-row">
       {/* ドーナツチャート */}
       <div className="relative">
         <svg width="200" height="200" viewBox="0 0 200 200">
@@ -301,7 +301,7 @@ function CollectionRateChart({ data, darkMode }: { data: CollectionRate[]; darkM
               key={slice.asp}
               d={slice.path}
               fill={slice.color}
-              className="transition-opacity hover:opacity-80 cursor-pointer"
+              className="cursor-pointer transition-opacity hover:opacity-80"
             >
               <title>{`${slice.asp}: ${slice.collected.toLocaleString()} (${slice.percentage.toFixed(1)}%)`}</title>
             </path>
@@ -309,10 +309,22 @@ function CollectionRateChart({ data, darkMode }: { data: CollectionRate[]; darkM
           {/* 中央の白い円（ドーナツ効果） */}
           <circle cx={centerX} cy={centerY} r="50" fill={darkMode ? '#1f2937' : '#ffffff'} />
           {/* 中央のテキスト */}
-          <text x={centerX} y={centerY - 8} textAnchor="middle" className={`text-2xl font-bold ${theme.text}`} fill="currentColor">
+          <text
+            x={centerX}
+            y={centerY - 8}
+            textAnchor="middle"
+            className={`text-2xl font-bold ${theme.text}`}
+            fill="currentColor"
+          >
             {(total / 1000).toFixed(0)}K
           </text>
-          <text x={centerX} y={centerY + 12} textAnchor="middle" className={`text-xs ${theme.textMuted}`} fill="currentColor">
+          <text
+            x={centerX}
+            y={centerY + 12}
+            textAnchor="middle"
+            className={`text-xs ${theme.textMuted}`}
+            fill="currentColor"
+          >
             Total
           </text>
         </svg>
@@ -322,12 +334,9 @@ function CollectionRateChart({ data, darkMode }: { data: CollectionRate[]; darkM
       <div className="grid grid-cols-2 gap-2">
         {topData.map((item) => (
           <div key={item.asp_name} className="flex items-center gap-2">
-            <div
-              className="w-3 h-3 rounded-sm shrink-0"
-              style={{ backgroundColor: getAspColor(item.asp_name) }}
-            />
+            <div className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: getAspColor(item.asp_name) }} />
             <div className="min-w-0">
-              <div className={`text-xs font-medium truncate ${theme.text}`}>{item.asp_name}</div>
+              <div className={`truncate text-xs font-medium ${theme.text}`}>{item.asp_name}</div>
               <div className={`text-xs ${theme.textMuted}`}>
                 {(item.collected / 1000).toFixed(1)}K
                 {item.rate && <span className="ml-1">({parseFloat(item.rate).toFixed(0)}%)</span>}
@@ -360,16 +369,18 @@ function AIContentChart({ data, darkMode }: { data: AIContentStat[]; darkMode: b
         const pct = total > 0 ? (m.value / total) * 100 : 0;
         return (
           <div key={m.label}>
-            <div className="flex justify-between text-sm mb-1">
+            <div className="mb-1 flex justify-between text-sm">
               <span className={theme.textMuted}>{m.label}</span>
-              <span className={theme.text}>{m.value.toLocaleString()} ({pct.toFixed(1)}%)</span>
+              <span className={theme.text}>
+                {m.value.toLocaleString()} ({pct.toFixed(1)}%)
+              </span>
             </div>
-            <div className={`h-4 ${theme.progressBg} rounded-full overflow-hidden`}>
+            <div className={`h-4 ${theme.progressBg} overflow-hidden rounded-full`}>
               <div
-                className="h-full rounded-full transition-all relative group"
+                className="group relative h-full rounded-full transition-all"
                 style={{ width: `${pct}%`, backgroundColor: m.color }}
               >
-                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-white/20 opacity-0 transition-opacity group-hover:opacity-100" />
               </div>
             </div>
           </div>
@@ -396,7 +407,7 @@ function TranslationChart({ data, darkMode }: { data: TranslationStat[]; darkMod
         const total = parseInt(table.total);
         return (
           <div key={table.table_name} className={`${theme.cardInner} rounded-lg p-3`}>
-            <div className={`text-sm font-medium mb-2 ${theme.text}`}>{table.table_name}</div>
+            <div className={`mb-2 text-sm font-medium ${theme.text}`}>{table.table_name}</div>
             <div className="flex gap-1">
               {languages.map((lang) => {
                 const value = parseInt(table[lang.code as keyof TranslationStat] as string) || 0;
@@ -404,20 +415,18 @@ function TranslationChart({ data, darkMode }: { data: TranslationStat[]; darkMod
                 return (
                   <div
                     key={lang.code}
-                    className="flex-1 relative group"
+                    className="group relative flex-1"
                     title={`${lang.label}: ${value.toLocaleString()} (${pct.toFixed(1)}%)`}
                   >
-                    <div className={`h-6 ${theme.progressBg} rounded overflow-hidden`}>
+                    <div className={`h-6 ${theme.progressBg} overflow-hidden rounded`}>
                       <div
                         className="h-full transition-all"
                         style={{ width: `${pct}%`, backgroundColor: lang.color }}
                       />
                     </div>
-                    <div className={`text-xs text-center mt-1 ${theme.textMuted}`}>
-                      {lang.code.toUpperCase()}
-                    </div>
+                    <div className={`mt-1 text-center text-xs ${theme.textMuted}`}>{lang.code.toUpperCase()}</div>
                     {/* ホバー時のツールチップ */}
-                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                    <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded bg-black/80 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100">
                       {lang.label}: {pct.toFixed(1)}%
                     </div>
                   </div>
@@ -458,17 +467,21 @@ function TableSizeChart({ data, darkMode }: { data: TableRowCount[]; darkMode: b
         const pct = (count / maxCount) * 100;
         return (
           <div key={table.table_name} className="flex items-center gap-2">
-            <div className={`w-36 text-xs ${theme.textMuted} truncate shrink-0`} title={table.table_name}>
+            <div className={`w-36 text-xs ${theme.textMuted} shrink-0 truncate`} title={table.table_name}>
               {table.table_name}
             </div>
-            <div className={`flex-1 h-5 ${theme.progressBg} rounded overflow-hidden relative group`}>
+            <div className={`h-5 flex-1 ${theme.progressBg} group relative overflow-hidden rounded`}>
               <div
                 className="h-full rounded transition-all"
                 style={{ width: `${pct}%`, backgroundColor: getTableColor(table.table_name) }}
               />
               <div className="absolute inset-y-0 right-2 flex items-center">
-                <span className={`text-xs font-mono ${theme.text}`}>
-                  {count >= 1000000 ? `${(count / 1000000).toFixed(1)}M` : count >= 1000 ? `${(count / 1000).toFixed(0)}K` : count}
+                <span className={`font-mono text-xs ${theme.text}`}>
+                  {count >= 1000000
+                    ? `${(count / 1000000).toFixed(1)}M`
+                    : count >= 1000
+                      ? `${(count / 1000).toFixed(0)}K`
+                      : count}
                 </span>
               </div>
             </div>
@@ -518,13 +531,10 @@ function DailyCollectionChart({ data, darkMode }: { data: DailyCollection[]; dar
   return (
     <div className="space-y-4">
       {/* 凡例 */}
-      <div className="flex flex-wrap gap-3 mb-4">
+      <div className="mb-4 flex flex-wrap gap-3">
         {asps.map((asp) => (
           <div key={asp} className="flex items-center gap-1.5 text-xs">
-            <div
-              className="w-3 h-3 rounded-sm"
-              style={{ backgroundColor: getAspColor(asp) }}
-            />
+            <div className="h-3 w-3 rounded-sm" style={{ backgroundColor: getAspColor(asp) }} />
             <span className={theme.textMuted}>{asp}</span>
           </div>
         ))}
@@ -536,10 +546,8 @@ function DailyCollectionChart({ data, darkMode }: { data: DailyCollection[]; dar
           const shortDate = date.slice(5); // MM-DD形式
           return (
             <div key={date} className="flex items-center gap-2">
-              <div className={`w-16 text-xs ${theme.textMuted} text-right shrink-0`}>
-                {shortDate}
-              </div>
-              <div className={`flex-1 h-6 ${theme.progressBg} rounded overflow-hidden flex`}>
+              <div className={`w-16 text-xs ${theme.textMuted} shrink-0 text-right`}>{shortDate}</div>
+              <div className={`h-6 flex-1 ${theme.progressBg} flex overflow-hidden rounded`}>
                 {asps.map((asp) => {
                   const count = aspData.get(asp) || 0;
                   const width = (count / scale) * 100;
@@ -547,7 +555,7 @@ function DailyCollectionChart({ data, darkMode }: { data: DailyCollection[]; dar
                   return (
                     <div
                       key={asp}
-                      className="h-full transition-all relative group"
+                      className="group relative h-full transition-all"
                       style={{
                         width: `${width}%`,
                         backgroundColor: getAspColor(asp),
@@ -555,38 +563,27 @@ function DailyCollectionChart({ data, darkMode }: { data: DailyCollection[]; dar
                       title={`${asp}: ${count.toLocaleString()}`}
                     >
                       {/* ホバー時にツールチップ表示 */}
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 px-2 py-1 bg-black/80 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                      <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 -translate-x-1/2 rounded bg-black/80 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 transition-opacity group-hover:opacity-100">
                         {asp}: {count.toLocaleString()}
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <div className={`w-16 text-xs ${theme.textMuted} text-right shrink-0`}>
-                {total.toLocaleString()}
-              </div>
+              <div className={`w-16 text-xs ${theme.textMuted} shrink-0 text-right`}>{total.toLocaleString()}</div>
             </div>
           );
         })}
       </div>
 
       {/* サマリー */}
-      <div className={`mt-4 pt-4 border-t ${theme.border}`}>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+      <div className={`mt-4 border-t pt-4 ${theme.border}`}>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4 lg:grid-cols-6">
           {asps.slice(0, 12).map((asp) => {
-            const totalForAsp = dateTotals.reduce(
-              (sum, { aspData }) => sum + (aspData.get(asp) || 0),
-              0
-            );
+            const totalForAsp = dateTotals.reduce((sum, { aspData }) => sum + (aspData.get(asp) || 0), 0);
             return (
-              <div
-                key={asp}
-                className={`${theme.cardInner} rounded p-2 text-center`}
-              >
-                <div
-                  className="text-xs font-medium truncate"
-                  style={{ color: getAspColor(asp) }}
-                >
+              <div key={asp} className={`${theme.cardInner} rounded p-2 text-center`}>
+                <div className="truncate text-xs font-medium" style={{ color: getAspColor(asp) }}>
                   {asp}
                 </div>
                 <div className="text-sm font-bold">{totalForAsp.toLocaleString()}</div>
@@ -600,7 +597,15 @@ function DailyCollectionChart({ data, darkMode }: { data: DailyCollection[]; dar
   );
 }
 
-function ProgressBar({ value, max = 100, darkMode = false }: { value: number | null; max?: number; darkMode?: boolean }) {
+function ProgressBar({
+  value,
+  max = 100,
+  darkMode = false,
+}: {
+  value: number | null;
+  max?: number;
+  darkMode?: boolean;
+}) {
   const pct = value ?? 0;
   const width = Math.min((pct / max) * 100, 100);
   const theme = getThemeClasses(darkMode);
@@ -613,7 +618,7 @@ function ProgressBar({ value, max = 100, darkMode = false }: { value: number | n
 
   return (
     <div className="flex items-center gap-2">
-      <div className={`w-24 h-2 ${theme.progressBg} rounded-full overflow-hidden`}>
+      <div className={`h-2 w-24 ${theme.progressBg} overflow-hidden rounded-full`}>
         <div className={`h-full ${bgColor} transition-all`} style={{ width: `${width}%` }} />
       </div>
       <span className={`text-xs ${theme.textMuted} w-12`}>{pct?.toFixed(1) ?? '0'}%</span>
@@ -677,34 +682,46 @@ export default function AdminStatsContent({
 
   function getJobStatusIcon(status: JobStatus['status']): string {
     switch (status) {
-      case 'running': return '🔄';
-      case 'succeeded': return '✅';
-      case 'failed': return '❌';
-      default: return '❓';
+      case 'running':
+        return '🔄';
+      case 'succeeded':
+        return '✅';
+      case 'failed':
+        return '❌';
+      default:
+        return '❓';
     }
   }
 
   function getJobStatusClass(status: JobStatus['status']): string {
     switch (status) {
-      case 'running': return theme.statusRunning;
-      case 'succeeded': return theme.statusSucceeded;
-      case 'failed': return theme.statusFailed;
-      default: return theme.textMuted;
+      case 'running':
+        return theme.statusRunning;
+      case 'succeeded':
+        return theme.statusSucceeded;
+      case 'failed':
+        return theme.statusFailed;
+      default:
+        return theme.textMuted;
     }
   }
 
   function getJobBgClass(status: JobStatus['status']): string {
     switch (status) {
-      case 'running': return theme.jobRunning;
-      case 'succeeded': return theme.jobSucceeded;
-      case 'failed': return theme.jobFailed;
-      default: return theme.jobUnknown;
+      case 'running':
+        return theme.jobRunning;
+      case 'succeeded':
+        return theme.jobSucceeded;
+      case 'failed':
+        return theme.jobFailed;
+      default:
+        return theme.jobUnknown;
     }
   }
 
   if (loading) {
     return (
-      <div className={`min-h-screen ${theme.bg} ${theme.text} p-8 flex items-center justify-center`}>
+      <div className={`min-h-screen ${theme.bg} ${theme.text} flex items-center justify-center p-8`}>
         <div className="text-xl">Loading...</div>
       </div>
     );
@@ -714,35 +731,45 @@ export default function AdminStatsContent({
     return (
       <div className={`min-h-screen ${theme.bg} ${theme.text} p-8`}>
         <div className={theme.statusFailed}>Error: {error}</div>
-        <button onClick={fetchStats} className={`mt-4 px-4 py-2 ${theme.btnPrimary} text-white rounded`}>
+        <button onClick={fetchStats} className={`mt-4 px-4 py-2 ${theme.btnPrimary} rounded text-white`}>
           Retry
         </button>
       </div>
     );
   }
 
-  const { aspSummary, videoStats, performerStats, totalStats, topPerformers, noImagePerformers, collectionRates, latestReleases, dailyCollection, rawDataCounts, dailyGrowth, generatedAt } = data;
+  const {
+    aspSummary,
+    videoStats,
+    performerStats,
+    totalStats,
+    topPerformers,
+    noImagePerformers,
+    collectionRates,
+    latestReleases,
+    dailyCollection,
+    rawDataCounts,
+    dailyGrowth,
+    generatedAt,
+  } = data;
 
   return (
     <div className={`min-h-screen ${theme.bg} ${theme.text} p-8`}>
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold">Data Collection Stats</h1>
           <div className="flex items-center gap-4">
             <span className={`text-sm ${theme.textMuted}`}>
               Generated: {new Date(generatedAt).toLocaleString('ja-JP')}
             </span>
-            <button
-              onClick={fetchStats}
-              className={`px-4 py-2 ${theme.btnPrimary} text-white rounded text-sm`}
-            >
+            <button onClick={fetchStats} className={`px-4 py-2 ${theme.btnPrimary} rounded text-sm text-white`}>
               Refresh
             </button>
           </div>
         </div>
 
         {/* Total Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+        <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-5">
           <div className={`${theme.card} rounded-lg p-4`}>
             <div className="text-2xl font-bold text-blue-400">{formatNumber(totalStats.total_products)}</div>
             <div className={`text-sm ${theme.textMuted}`}>Total Products</div>
@@ -767,21 +794,25 @@ export default function AdminStatsContent({
 
         {/* Daily Growth Stats */}
         {dailyGrowth && dailyGrowth.length > 0 && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <h2 className="text-xl font-semibold mb-4">Daily Growth (Today vs Yesterday)</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <h2 className="mb-4 text-xl font-semibold">Daily Growth (Today vs Yesterday)</h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
               {dailyGrowth.map((item) => {
                 const today = parseInt(item.today) || 0;
                 const yesterday = parseInt(item.yesterday) || 0;
                 const isActiveSales = item.table_name === 'product_sales_active';
                 return (
                   <div key={item.table_name} className={`${theme.cardInner} rounded-lg p-4`}>
-                    <div className="text-sm font-medium mb-2">
-                      {item.table_name === 'products' ? 'Products' :
-                       item.table_name === 'product_sources' ? 'Sources' :
-                       item.table_name === 'performers' ? 'Performers' :
-                       item.table_name === 'product_sales_active' ? 'Active Sales' :
-                       item.table_name}
+                    <div className="mb-2 text-sm font-medium">
+                      {item.table_name === 'products'
+                        ? 'Products'
+                        : item.table_name === 'product_sources'
+                          ? 'Sources'
+                          : item.table_name === 'performers'
+                            ? 'Performers'
+                            : item.table_name === 'product_sales_active'
+                              ? 'Active Sales'
+                              : item.table_name}
                     </div>
                     {isActiveSales ? (
                       <div className="text-2xl font-bold text-orange-400">{formatNumber(today)}</div>
@@ -792,9 +823,7 @@ export default function AdminStatsContent({
                       </div>
                     )}
                     {!isActiveSales && (
-                      <div className={`text-sm ${theme.textMuted}`}>
-                        Yesterday: +{formatNumber(yesterday)}
-                      </div>
+                      <div className={`text-sm ${theme.textMuted}`}>Yesterday: +{formatNumber(yesterday)}</div>
                     )}
                   </div>
                 );
@@ -805,35 +834,35 @@ export default function AdminStatsContent({
 
         {/* Daily Collection Chart - 過去14日間のASP別収集推移 */}
         {dailyCollection && dailyCollection.length > 0 && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <h2 className="text-xl font-semibold mb-4">Daily Collection Trend (Last 14 Days)</h2>
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <h2 className="mb-4 text-xl font-semibold">Daily Collection Trend (Last 14 Days)</h2>
             <DailyCollectionChart data={dailyCollection} darkMode={darkMode} />
           </div>
         )}
 
         {/* Cloud Run Jobs Status */}
         {jobsData && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <div className="flex justify-between items-center mb-4">
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Crawler Jobs Status</h2>
               <div className="flex items-center gap-4 text-sm">
                 <span className={theme.statusRunning}>🔄 Running: {jobsData.summary.running}</span>
                 <span className={theme.statusSucceeded}>✅ Succeeded: {jobsData.summary.succeeded}</span>
                 <span className={theme.statusFailed}>❌ Failed: {jobsData.summary.failed}</span>
                 <div className={`flex items-center gap-2 border-l ${theme.border} pl-4`}>
-                  <label className="flex items-center gap-1 cursor-pointer">
+                  <label className="flex cursor-pointer items-center gap-1">
                     <input
                       type="checkbox"
                       checked={autoRefresh}
                       onChange={(e) => setAutoRefresh(e.target.checked)}
-                      className="w-4 h-4"
+                      className="h-4 w-4"
                     />
                     <span className="text-xs">Auto</span>
                   </label>
                   <select
                     value={refreshInterval}
                     onChange={(e) => setRefreshInterval(Number(e.target.value))}
-                    className={`${theme.btnSecondary} text-xs rounded px-2 py-1`}
+                    className={`${theme.btnSecondary} rounded px-2 py-1 text-xs`}
                     disabled={!autoRefresh}
                   >
                     <option value={10}>10s</option>
@@ -841,21 +870,18 @@ export default function AdminStatsContent({
                     <option value={60}>60s</option>
                   </select>
                 </div>
-                <button
-                  onClick={fetchJobs}
-                  className={`px-3 py-1 ${theme.btnSecondary} rounded text-xs`}
-                >
+                <button onClick={fetchJobs} className={`px-3 py-1 ${theme.btnSecondary} rounded text-xs`}>
                   Refresh
                 </button>
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
               {jobsData.jobs.map((job) => {
                 const isExpanded = expandedJob === job.name;
                 return (
                   <div
                     key={job.name}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all ${getJobBgClass(job.status)} ${isExpanded ? 'ring-2 ring-blue-500' : ''}`}
+                    className={`cursor-pointer rounded-lg border p-3 transition-all ${getJobBgClass(job.status)} ${isExpanded ? 'ring-2 ring-blue-500' : ''}`}
                     onClick={() => setExpandedJob(isExpanded ? null : job.name)}
                   >
                     <div className="flex items-center justify-between">
@@ -874,7 +900,7 @@ export default function AdminStatsContent({
                             href={job.consoleUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs ${theme.textMuted} hover:text-blue-400 px-1`}
+                            className={`text-xs ${theme.textMuted} px-1 hover:text-blue-400`}
                           >
                             Console
                           </a>
@@ -884,7 +910,7 @@ export default function AdminStatsContent({
                             href={job.logsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`text-xs ${theme.textMuted} hover:text-blue-400 px-1`}
+                            className={`text-xs ${theme.textMuted} px-1 hover:text-blue-400`}
                           >
                             Logs
                           </a>
@@ -894,17 +920,34 @@ export default function AdminStatsContent({
                     <div className={`mt-2 text-xs ${theme.textSecondary} flex items-center gap-3`}>
                       {job.duration && <span title="Duration">{job.duration}</span>}
                       {job.completedAt && job.status !== 'running' && (
-                        <span title="Completed">{new Date(job.completedAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span title="Completed">
+                          {new Date(job.completedAt).toLocaleString('ja-JP', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
                       )}
                       {job.status === 'running' && job.startedAt && (
-                        <span title="Started">{new Date(job.startedAt).toLocaleString('ja-JP', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                        <span title="Started">
+                          {new Date(job.startedAt).toLocaleString('ja-JP', {
+                            month: 'numeric',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
                       )}
                     </div>
                     {isExpanded && (
-                      <div className={`mt-3 pt-3 border-t ${theme.border} text-xs space-y-2`}>
+                      <div className={`mt-3 border-t pt-3 ${theme.border} space-y-2 text-xs`}>
                         <div className="grid grid-cols-2 gap-2">
                           <div className={theme.textSecondary}>Execution ID:</div>
-                          <div className={`${theme.textMuted} font-mono truncate`} title={job.executionName || undefined}>
+                          <div
+                            className={`${theme.textMuted} truncate font-mono`}
+                            title={job.executionName || undefined}
+                          >
                             {job.executionName || '-'}
                           </div>
                           <div className={theme.textSecondary}>Duration:</div>
@@ -915,7 +958,11 @@ export default function AdminStatsContent({
                           </div>
                           <div className={theme.textSecondary}>Completed:</div>
                           <div className={theme.textMuted}>
-                            {job.completedAt ? new Date(job.completedAt).toLocaleString('ja-JP') : (job.status === 'running' ? '(in progress)' : '-')}
+                            {job.completedAt
+                              ? new Date(job.completedAt).toLocaleString('ja-JP')
+                              : job.status === 'running'
+                                ? '(in progress)'
+                                : '-'}
                           </div>
                         </div>
                       </div>
@@ -925,17 +972,15 @@ export default function AdminStatsContent({
               })}
             </div>
             {jobsData.error && (
-              <div className="mt-3 text-xs text-yellow-500">
-                Note: Could not fetch live status from Cloud Run
-              </div>
+              <div className="mt-3 text-xs text-yellow-500">Note: Could not fetch live status from Cloud Run</div>
             )}
           </div>
         )}
 
         {/* Scheduler Status */}
         {showSchedulers && jobsData?.schedulers && jobsData.schedulers.length > 0 && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <div className="flex justify-between items-center mb-4">
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <div className="mb-4 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Scheduler Status</h2>
               <div className="flex items-center gap-4 text-sm">
                 <span className={theme.statusSucceeded}>Enabled: {jobsData.schedulerSummary?.enabled || 0}</span>
@@ -947,11 +992,11 @@ export default function AdminStatsContent({
               <table className="w-full text-sm">
                 <thead>
                   <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
-                    <th className="pb-3 pr-4">Name</th>
-                    <th className="pb-3 pr-4">Schedule</th>
-                    <th className="pb-3 pr-4">State</th>
-                    <th className="pb-3 pr-4">Last Run</th>
-                    <th className="pb-3 pr-4">Status</th>
+                    <th className="pr-4 pb-3">Name</th>
+                    <th className="pr-4 pb-3">Schedule</th>
+                    <th className="pr-4 pb-3">State</th>
+                    <th className="pr-4 pb-3">Last Run</th>
+                    <th className="pr-4 pb-3">Status</th>
                     <th className="pb-3">Next Run</th>
                   </tr>
                 </thead>
@@ -961,18 +1006,27 @@ export default function AdminStatsContent({
                       <td className="py-2 pr-4 font-medium">{s.name}</td>
                       <td className={`py-2 pr-4 ${theme.textMuted} font-mono text-xs`}>{s.schedule}</td>
                       <td className="py-2 pr-4">
-                        <span className={`px-2 py-0.5 rounded text-xs ${
-                          s.state === 'ENABLED' ? 'bg-green-900/50 text-green-400' :
-                          s.state === 'PAUSED' ? 'bg-yellow-900/50 text-yellow-400' :
-                          `${theme.cardInner} ${theme.textMuted}`
-                        }`}>
+                        <span
+                          className={`rounded px-2 py-0.5 text-xs ${
+                            s.state === 'ENABLED'
+                              ? 'bg-green-900/50 text-green-400'
+                              : s.state === 'PAUSED'
+                                ? 'bg-yellow-900/50 text-yellow-400'
+                                : `${theme.cardInner} ${theme.textMuted}`
+                          }`}
+                        >
                           {s.state}
                         </span>
                       </td>
                       <td className={`py-2 pr-4 ${theme.textSecondary} text-xs`}>
-                        {s.lastAttemptTime ? new Date(s.lastAttemptTime).toLocaleString('ja-JP', {
-                          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        }) : '-'}
+                        {s.lastAttemptTime
+                          ? new Date(s.lastAttemptTime).toLocaleString('ja-JP', {
+                              month: 'numeric',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
                       </td>
                       <td className="py-2 pr-4">
                         {s.lastAttemptStatus === 'SUCCEEDED' && <span className={theme.statusSucceeded}>✅</span>}
@@ -980,9 +1034,14 @@ export default function AdminStatsContent({
                         {s.lastAttemptStatus === 'UNKNOWN' && <span className={theme.textMuted}>-</span>}
                       </td>
                       <td className={`py-2 ${theme.textSecondary} text-xs`}>
-                        {s.nextRunTime ? new Date(s.nextRunTime).toLocaleString('ja-JP', {
-                          month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
-                        }) : '-'}
+                        {s.nextRunTime
+                          ? new Date(s.nextRunTime).toLocaleString('ja-JP', {
+                              month: 'numeric',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })
+                          : '-'}
                       </td>
                     </tr>
                   ))}
@@ -994,19 +1053,25 @@ export default function AdminStatsContent({
 
         {/* SEO Indexing Status */}
         {showSeoIndexing && data['seoIndexingSummary'] && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <h2 className="text-xl font-semibold mb-4">SEO Indexing Status</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-4">
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <h2 className="mb-4 text-xl font-semibold">SEO Indexing Status</h2>
+            <div className="mb-4 grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-7">
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-blue-400">{formatNumber(data['seoIndexingSummary'].total_indexed)}</div>
+                <div className="text-2xl font-bold text-blue-400">
+                  {formatNumber(data['seoIndexingSummary'].total_indexed)}
+                </div>
                 <div className={`text-xs ${theme.textMuted}`}>Total Indexed</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-green-400">{formatNumber(data['seoIndexingSummary'].requested)}</div>
+                <div className="text-2xl font-bold text-green-400">
+                  {formatNumber(data['seoIndexingSummary'].requested)}
+                </div>
                 <div className={`text-xs ${theme.textMuted}`}>Requested</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-yellow-400">{formatNumber(data['seoIndexingSummary'].pending)}</div>
+                <div className="text-2xl font-bold text-yellow-400">
+                  {formatNumber(data['seoIndexingSummary'].pending)}
+                </div>
                 <div className={`text-xs ${theme.textMuted}`}>Pending</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
@@ -1014,18 +1079,25 @@ export default function AdminStatsContent({
                 <div className={`text-xs ${theme.textMuted}`}>Errors</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className="text-2xl font-bold text-orange-400">{formatNumber(data['seoIndexingSummary'].ownership_required)}</div>
+                <div className="text-2xl font-bold text-orange-400">
+                  {formatNumber(data['seoIndexingSummary'].ownership_required)}
+                </div>
                 <div className={`text-xs ${theme.textMuted}`}>Ownership Required</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className={`text-2xl font-bold ${theme.textMuted}`}>{formatNumber(data['seoIndexingSummary'].not_requested)}</div>
+                <div className={`text-2xl font-bold ${theme.textMuted}`}>
+                  {formatNumber(data['seoIndexingSummary'].not_requested)}
+                </div>
                 <div className={`text-xs ${theme.textMuted}`}>Not Requested</div>
               </div>
               <div className={`${theme.cardInner} rounded p-3`}>
-                <div className={`text-sm font-mono ${theme.text}`}>
+                <div className={`font-mono text-sm ${theme.text}`}>
                   {data['seoIndexingSummary'].last_requested_at
                     ? new Date(data['seoIndexingSummary'].last_requested_at).toLocaleString('ja-JP', {
-                        month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
                       })
                     : '-'}
                 </div>
@@ -1049,9 +1121,11 @@ export default function AdminStatsContent({
         )}
 
         {/* Collection Rate Section */}
-        <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-          <h2 className="text-xl font-semibold mb-4">Collection Rate (vs Estimated Total)</h2>
-          <p className={`text-xs ${theme.textSecondary} mb-4`}>推定値は各ASPのAPI/サイトから動的に取得（1時間キャッシュ）</p>
+        <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+          <h2 className="mb-4 text-xl font-semibold">Collection Rate (vs Estimated Total)</h2>
+          <p className={`text-xs ${theme.textSecondary} mb-4`}>
+            推定値は各ASPのAPI/サイトから動的に取得（1時間キャッシュ）
+          </p>
 
           {/* ドーナツチャート */}
           <div className="mb-6">
@@ -1062,17 +1136,17 @@ export default function AdminStatsContent({
             <table className="w-full text-sm">
               <thead>
                 <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
-                  <th className="pb-3 pr-4">Provider</th>
-                  <th className="pb-3 pr-4 text-right">Collected</th>
-                  <th className="pb-3 pr-4 text-right">Estimated</th>
-                  <th className="pb-3 pr-4">Rate</th>
-                  <th className="pb-3 pr-4">Source</th>
+                  <th className="pr-4 pb-3">Provider</th>
+                  <th className="pr-4 pb-3 text-right">Collected</th>
+                  <th className="pr-4 pb-3 text-right">Estimated</th>
+                  <th className="pr-4 pb-3">Rate</th>
+                  <th className="pr-4 pb-3">Source</th>
                   <th className="pb-3">Latest Release</th>
                 </tr>
               </thead>
               <tbody>
                 {collectionRates.map((rate) => {
-                  const latest = latestReleases.find(l => l.asp_name === rate.asp_name);
+                  const latest = latestReleases.find((l) => l.asp_name === rate.asp_name);
                   const rateNum = rate.rate ? parseFloat(rate.rate) : 0;
                   const hasError = rate.estimated === null || rate.source?.includes('エラー');
                   return (
@@ -1080,19 +1154,20 @@ export default function AdminStatsContent({
                       <td className="py-3 pr-4 font-medium">{rate.asp_name}</td>
                       <td className="py-3 pr-4 text-right font-mono">{formatNumber(rate.collected)}</td>
                       <td className={`py-3 pr-4 text-right font-mono ${hasError ? 'text-red-400' : theme.textMuted}`}>
-                        {rate.estimated ? formatNumber(rate.estimated) : (hasError ? 'エラー' : '-')}
+                        {rate.estimated ? formatNumber(rate.estimated) : hasError ? 'エラー' : '-'}
                       </td>
                       <td className="py-3 pr-4">
                         {rate.rate && !hasError && <ProgressBar value={rateNum} darkMode={darkMode} />}
-                        {hasError && <span className="text-red-400 text-xs">取得失敗</span>}
+                        {hasError && <span className="text-xs text-red-400">取得失敗</span>}
                       </td>
-                      <td className={`py-3 pr-4 text-xs ${theme.textSecondary} max-w-48 truncate`} title={rate.source || undefined}>
+                      <td
+                        className={`py-3 pr-4 text-xs ${theme.textSecondary} max-w-48 truncate`}
+                        title={rate.source || undefined}
+                      >
                         {rate.source || '-'}
                       </td>
                       <td className={`py-3 text-sm ${theme.textMuted}`}>
-                        {latest?.latest_release
-                          ? new Date(latest.latest_release).toLocaleDateString('ja-JP')
-                          : '-'}
+                        {latest?.latest_release ? new Date(latest.latest_release).toLocaleDateString('ja-JP') : '-'}
                       </td>
                     </tr>
                   );
@@ -1103,17 +1178,17 @@ export default function AdminStatsContent({
         </div>
 
         {/* ASP Summary Table */}
-        <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-          <h2 className="text-xl font-semibold mb-4">ASP Collection Summary</h2>
+        <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+          <h2 className="mb-4 text-xl font-semibold">ASP Collection Summary</h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
-                  <th className="pb-3 pr-4">ASP</th>
-                  <th className="pb-3 pr-4 text-right">Products</th>
-                  <th className="pb-3 pr-4">Image</th>
-                  <th className="pb-3 pr-4">Video</th>
-                  <th className="pb-3 pr-4">Performer</th>
+                  <th className="pr-4 pb-3">ASP</th>
+                  <th className="pr-4 pb-3 text-right">Products</th>
+                  <th className="pr-4 pb-3">Image</th>
+                  <th className="pr-4 pb-3">Video</th>
+                  <th className="pr-4 pb-3">Performer</th>
                   <th className="pb-3">Status</th>
                 </tr>
               </thead>
@@ -1126,9 +1201,15 @@ export default function AdminStatsContent({
                     <tr key={asp.asp_name} className={`border-b ${theme.borderLight} ${theme.hoverBg}`}>
                       <td className="py-3 pr-4 font-medium">{asp.asp_name}</td>
                       <td className="py-3 pr-4 text-right font-mono">{formatNumber(asp.total_products)}</td>
-                      <td className="py-3 pr-4"><ProgressBar value={imagePct} darkMode={darkMode} /></td>
-                      <td className="py-3 pr-4"><ProgressBar value={videoPct} darkMode={darkMode} /></td>
-                      <td className="py-3 pr-4"><ProgressBar value={performerPct} darkMode={darkMode} /></td>
+                      <td className="py-3 pr-4">
+                        <ProgressBar value={imagePct} darkMode={darkMode} />
+                      </td>
+                      <td className="py-3 pr-4">
+                        <ProgressBar value={videoPct} darkMode={darkMode} />
+                      </td>
+                      <td className="py-3 pr-4">
+                        <ProgressBar value={performerPct} darkMode={darkMode} />
+                      </td>
                       <td className="py-3">
                         <span className="text-lg">
                           {getStatusIcon(imagePct)}
@@ -1145,9 +1226,9 @@ export default function AdminStatsContent({
         </div>
 
         {/* Video Stats & Performer Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className={`${theme.card} rounded-lg p-6`}>
-            <h2 className="text-xl font-semibold mb-4">Sample Videos by ASP</h2>
+            <h2 className="mb-4 text-xl font-semibold">Sample Videos by ASP</h2>
             <table className="w-full text-sm">
               <thead>
                 <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
@@ -1173,7 +1254,7 @@ export default function AdminStatsContent({
           </div>
 
           <div className={`${theme.card} rounded-lg p-6`}>
-            <h2 className="text-xl font-semibold mb-4">Performer Statistics</h2>
+            <h2 className="mb-4 text-xl font-semibold">Performer Statistics</h2>
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className={theme.textMuted}>Total Performers</span>
@@ -1183,7 +1264,8 @@ export default function AdminStatsContent({
                 <span className={theme.textMuted}>With Image</span>
                 <span className="font-mono">
                   {formatNumber(performerStats.with_image)} (
-                  {((parseInt(performerStats.with_image) / parseInt(performerStats.total_performers)) * 100).toFixed(1)}%)
+                  {((parseInt(performerStats.with_image) / parseInt(performerStats.total_performers)) * 100).toFixed(1)}
+                  %)
                 </span>
               </div>
               <div className="flex justify-between">
@@ -1207,9 +1289,9 @@ export default function AdminStatsContent({
         </div>
 
         {/* Top Performers & No Image */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className={`${theme.card} rounded-lg p-6`}>
-            <h2 className="text-xl font-semibold mb-4">Top 10 Performers</h2>
+            <h2 className="mb-4 text-xl font-semibold">Top 10 Performers</h2>
             <table className="w-full text-sm">
               <thead>
                 <tr className={`text-left ${theme.textMuted} border-b ${theme.border}`}>
@@ -1233,7 +1315,7 @@ export default function AdminStatsContent({
           </div>
 
           <div className={`${theme.card} rounded-lg p-6`}>
-            <h2 className="text-xl font-semibold mb-4">Missing Image (High Priority)</h2>
+            <h2 className="mb-4 text-xl font-semibold">Missing Image (High Priority)</h2>
             <p className={`text-xs ${theme.textMuted} mb-3`}>Performers without images but with many products</p>
             <table className="w-full text-sm">
               <thead>
@@ -1255,9 +1337,9 @@ export default function AdminStatsContent({
         </div>
 
         {/* Daily Collection & Raw Data */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
           <div className={`${theme.card} rounded-lg p-6`}>
-            <h2 className="text-xl font-semibold mb-4">Recent Collection Activity (14 days)</h2>
+            <h2 className="mb-4 text-xl font-semibold">Recent Collection Activity (14 days)</h2>
             <div className="max-h-80 overflow-y-auto">
               <table className="w-full text-sm">
                 <thead className={`sticky top-0 ${darkMode ? 'bg-gray-800' : 'bg-white'}`}>
@@ -1281,17 +1363,17 @@ export default function AdminStatsContent({
           </div>
 
           <div className={`${theme.card} rounded-lg p-6`}>
-            <h2 className="text-xl font-semibold mb-4">Raw Data Storage</h2>
+            <h2 className="mb-4 text-xl font-semibold">Raw Data Storage</h2>
             <div className="space-y-3">
               {rawDataCounts.map((r) => (
-                <div key={r.table_name} className="flex justify-between items-center">
+                <div key={r.table_name} className="flex items-center justify-between">
                   <span className={theme.textMuted}>{r.table_name}</span>
                   <span className="font-mono">{formatNumber(r.count)}</span>
                 </div>
               ))}
             </div>
-            <div className={`mt-6 pt-4 border-t ${theme.border}`}>
-              <div className="flex justify-between items-center">
+            <div className={`mt-6 border-t pt-4 ${theme.border}`}>
+              <div className="flex items-center justify-between">
                 <span className={theme.textMuted}>Total Raw Records</span>
                 <span className="font-mono font-bold text-blue-400">
                   {formatNumber(rawDataCounts.reduce((sum, r) => sum + parseInt(r.count), 0))}
@@ -1303,13 +1385,13 @@ export default function AdminStatsContent({
 
         {/* Table Row Counts */}
         {data.tableRowCounts && data.tableRowCounts.length > 0 && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <h2 className="text-xl font-semibold mb-4">Database Table Sizes</h2>
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <h2 className="mb-4 text-xl font-semibold">Database Table Sizes</h2>
 
             {/* 棒グラフ */}
             <TableSizeChart data={data.tableRowCounts} darkMode={darkMode} />
 
-            <div className={`mt-4 pt-4 border-t ${theme.border} flex justify-between`}>
+            <div className={`mt-4 border-t pt-4 ${theme.border} flex justify-between`}>
               <span className={theme.textMuted}>Total Records</span>
               <span className="font-mono font-bold text-green-400">
                 {formatNumber(data.tableRowCounts.reduce((sum, t) => sum + parseInt(t.count), 0))}
@@ -1319,17 +1401,17 @@ export default function AdminStatsContent({
         )}
 
         {/* AI Content Statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="mb-8 grid grid-cols-1 gap-8 md:grid-cols-2">
           {data.aiContentStats && data.aiContentStats.length > 0 && (
             <div className={`${theme.card} rounded-lg p-6`}>
-              <h2 className="text-xl font-semibold mb-4">AI Content Progress</h2>
+              <h2 className="mb-4 text-xl font-semibold">AI Content Progress</h2>
               <AIContentChart data={data.aiContentStats} darkMode={darkMode} />
             </div>
           )}
 
           {data.performerAiStats && data.performerAiStats.length > 0 && (
             <div className={`${theme.card} rounded-lg p-6`}>
-              <h2 className="text-xl font-semibold mb-4">AI Content (Performers)</h2>
+              <h2 className="mb-4 text-xl font-semibold">AI Content (Performers)</h2>
               <div className="space-y-3">
                 {data.performerAiStats.map((s) => (
                   <div key="performer-ai" className="space-y-2">
@@ -1366,8 +1448,8 @@ export default function AdminStatsContent({
 
         {/* Translation Statistics */}
         {data.translationStats && data.translationStats.length > 0 && (
-          <div className={`${theme.card} rounded-lg p-6 mb-8`}>
-            <h2 className="text-xl font-semibold mb-4">Translation Coverage</h2>
+          <div className={`${theme.card} mb-8 rounded-lg p-6`}>
+            <h2 className="mb-4 text-xl font-semibold">Translation Coverage</h2>
             <TranslationChart data={data.translationStats} darkMode={darkMode} />
           </div>
         )}

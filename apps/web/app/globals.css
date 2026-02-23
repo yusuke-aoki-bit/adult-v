@@ -6,6 +6,6 @@
    - 全ての共通スタイルは shared.css で一元管理
    =========================================== */
 
-@import "tailwindcss";
-@source "../../../packages/shared/src/components";
-@import "../../../packages/shared/src/styles/shared.css";
+@import 'tailwindcss';
+@source '../../../packages/shared/src/components';
+@import '../../../packages/shared/src/styles/shared.css';

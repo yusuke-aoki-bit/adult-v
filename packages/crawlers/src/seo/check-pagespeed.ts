@@ -57,15 +57,9 @@ const THRESHOLDS = {
 };
 
 // チェック対象URL
-const URLS_TO_CHECK = [
-  'https://www.adult-v.com/ja',
-  'https://www.adult-v.com/ja/products',
-];
+const URLS_TO_CHECK = ['https://www.adult-v.com/ja', 'https://www.adult-v.com/ja/products'];
 
-async function runPageSpeedCheck(
-  url: string,
-  strategy: 'mobile' | 'desktop' = 'mobile'
-): Promise<CheckResult> {
+async function runPageSpeedCheck(url: string, strategy: 'mobile' | 'desktop' = 'mobile'): Promise<CheckResult> {
   const apiUrl = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
   apiUrl.searchParams.set('url', url);
   apiUrl.searchParams.set('strategy', strategy);
@@ -177,7 +171,7 @@ async function main() {
       }
 
       // APIレート制限対策（1秒待機）
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // デスクトップチェック
       const desktopResult = await runPageSpeedCheck(url, 'desktop');
@@ -189,7 +183,7 @@ async function main() {
       }
 
       // 次のURLまで待機
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise((resolve) => setTimeout(resolve, 2000));
     } catch (error) {
       console.error(`[ERROR] Failed to check ${url}:`, error);
       hasFailures = true;
@@ -199,8 +193,8 @@ async function main() {
   // サマリー
   console.log('\n=== Summary ===');
   console.log(`Total checks: ${results.length}`);
-  console.log(`Passed: ${results.filter(r => r.passed).length}`);
-  console.log(`Failed: ${results.filter(r => !r.passed).length}`);
+  console.log(`Passed: ${results.filter((r) => r.passed).length}`);
+  console.log(`Failed: ${results.filter((r) => !r.passed).length}`);
 
   if (hasFailures) {
     console.log('\n⚠️ Some checks did not meet thresholds. Review the results above.');

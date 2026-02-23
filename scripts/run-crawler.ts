@@ -95,14 +95,16 @@ async function main() {
       case 'mgs-url':
         {
           // MGS単一URL指定のクローラー（互換性のため残す）
-          const urlArg = args.find(arg => arg.startsWith('https://'));
+          const urlArg = args.find((arg) => arg.startsWith('https://'));
           if (urlArg) {
             const command = `npx tsx scripts/crawlers/crawl-mgs.ts ${urlArg}`;
             console.log(`Executing: ${command}`);
             execSync(command, { stdio: 'inherit', env: process.env });
           } else {
             console.log('MGS-URL crawler requires product URL as argument');
-            console.log('Example: npx tsx scripts/run-crawler.ts mgs-url https://www.mgstage.com/product/product_detail/STARS-865/');
+            console.log(
+              'Example: npx tsx scripts/run-crawler.ts mgs-url https://www.mgstage.com/product/product_detail/STARS-865/',
+            );
           }
         }
         break;
@@ -435,7 +437,7 @@ async function main() {
       case 'performer-info':
         {
           // 統合女優情報クローラー（Wikipedia + av-wiki.net）
-          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limitArg = args.find((a) => a.startsWith('--limit='));
           const limit = limitArg ? limitArg.split('=')[1] : '500';
           const command = `npx tsx scripts/crawlers/crawl-performer-info.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -481,7 +483,7 @@ async function main() {
       case 'backfill-mgs-sample-images':
         {
           // MGSサンプル画像バックフィル（サムネイル→フルサイズ）
-          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limitArg = args.find((a) => a.startsWith('--limit='));
           const limit = limitArg ? limitArg.split('=')[1] : '500';
           const command = `npx tsx scripts/backfill/backfill-mgs-sample-images.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -492,7 +494,7 @@ async function main() {
       case 'mgs-continuous':
         {
           // MGS繰り返し実行（全ページスキャンまで）
-          const batchSize = args.find(a => a.startsWith('--batch='))?.split('=')[1] || '500';
+          const batchSize = args.find((a) => a.startsWith('--batch='))?.split('=')[1] || '500';
           const command = `npx tsx scripts/run-mgs-continuous.ts --batch=${batchSize}`;
           console.log(`Executing: ${command}`);
           execSync(command, { stdio: 'inherit', env: process.env });
@@ -502,7 +504,7 @@ async function main() {
       case 'fanza-continuous':
         {
           // FANZA繰り返し実行（全ページスキャンまで）
-          const batchSize = args.find(a => a.startsWith('--batch='))?.split('=')[1] || '100';
+          const batchSize = args.find((a) => a.startsWith('--batch='))?.split('=')[1] || '100';
           const command = `npx tsx scripts/run-fanza-continuous.ts --batch=${batchSize}`;
           console.log(`Executing: ${command}`);
           execSync(command, { stdio: 'inherit', env: process.env });
@@ -512,7 +514,7 @@ async function main() {
       case 'update-performer-tags':
         {
           // 演者タグ更新
-          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limitArg = args.find((a) => a.startsWith('--limit='));
           const limit = limitArg ? limitArg.split('=')[1] : '200';
           const command = `npx tsx scripts/update-performer-tags.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -523,7 +525,7 @@ async function main() {
       case 'link-performers':
         {
           // 演者紐づけ
-          const limitArg = args.find(a => a.startsWith('--limit='));
+          const limitArg = args.find((a) => a.startsWith('--limit='));
           const limit = limitArg ? limitArg.split('=')[1] : '10000';
           const command = `npx tsx scripts/link-performers.ts --limit=${limit}`;
           console.log(`Executing: ${command}`);
@@ -585,7 +587,9 @@ async function main() {
         console.error(`Unknown crawler type: ${crawlerType}`);
         console.log('\nAvailable types:');
         console.log('  Product crawlers: mgs, sokmil, duga, duga-api, fc2, fc2-video, b10f, japanska');
-        console.log('  DTI crawlers: caribbeancom, heyzo, caribbeancompr, 1pondo, 10musume, pacopacomama, hitozumagiri');
+        console.log(
+          '  DTI crawlers: caribbeancom, heyzo, caribbeancompr, 1pondo, 10musume, pacopacomama, hitozumagiri',
+        );
         console.log('  DTI group: dti-all, dti-high, dti-medium, dti-low, h4610, h0930, 3d-eros, pikkur');
         console.log('  Wiki crawlers: avwiki-tokyo, wikipedia-ja, seesaawiki-performers');
         console.log('  Actor crawlers: sokmil-actors, minnano-av, gravurefit, performer-info');

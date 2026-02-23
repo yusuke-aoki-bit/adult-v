@@ -2,29 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useOnlineStatus } from '../hooks/useOnlineStatus';
-
-const translations = {
-  ja: {
-    offline: 'オフラインです',
-    reconnecting: '再接続中...',
-    backOnline: 'オンラインに復帰しました',
-  },
-  en: {
-    offline: "You're offline",
-    reconnecting: 'Reconnecting...',
-    backOnline: 'Back online',
-  },
-  zh: {
-    offline: '您已离线',
-    reconnecting: '重新连接中...',
-    backOnline: '已恢复在线',
-  },
-  ko: {
-    offline: '오프라인 상태입니다',
-    reconnecting: '재연결 중...',
-    backOnline: '온라인으로 복귀했습니다',
-  },
-} as const;
+import { getTranslation, offlineIndicatorTranslations } from '../lib/translations';
 
 // SVGアイコン（バンドルサイズ削減）
 const WifiOffIcon = () => (
@@ -53,7 +31,7 @@ interface OfflineIndicatorProps {
 }
 
 export function OfflineIndicator({ locale = 'ja' }: OfflineIndicatorProps) {
-  const t = translations[locale as keyof typeof translations] || translations.ja;
+  const t = getTranslation(offlineIndicatorTranslations, locale);
   const { isOnline, offlineDuration } = useOnlineStatus();
   const [mounted, setMounted] = useState(false);
 
@@ -86,15 +64,13 @@ export function OfflineIndicator({ locale = 'ja' }: OfflineIndicatorProps) {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 z-9999 bg-amber-600 text-white py-2 px-4 text-center text-sm font-medium flex items-center justify-center gap-2 animate-slide-down"
+      className="animate-slide-down fixed top-0 right-0 left-0 z-9999 flex items-center justify-center gap-2 bg-amber-600 px-4 py-2 text-center text-sm font-medium text-white"
       role="alert"
       aria-live="assertive"
     >
       <WifiOffIcon />
       <span>{t.offline}</span>
-      {durationText && (
-        <span className="text-amber-200">({durationText})</span>
-      )}
+      {durationText && <span className="text-amber-200">({durationText})</span>}
     </div>
   );
 }

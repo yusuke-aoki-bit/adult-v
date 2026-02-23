@@ -12,17 +12,26 @@ interface SearchSuggestionsWrapperProps {
 export default function SearchSuggestionsWrapper({ query, locale }: SearchSuggestionsWrapperProps) {
   const router = useRouter();
 
-  const handleTermClick = useCallback((term: string) => {
-    router.push(`/${locale}/products?q=${encodeURIComponent(term)}`);
-  }, [router, locale]);
+  const handleTermClick = useCallback(
+    (term: string) => {
+      router.push(`/${locale}/products?q=${encodeURIComponent(term)}`);
+    },
+    [router, locale],
+  );
 
-  const handleGenreClick = useCallback((genre: string) => {
-    router.push(`/${locale}/products?include=${encodeURIComponent(genre)}`);
-  }, [router, locale]);
+  const handleGenreClick = useCallback(
+    (genre: string) => {
+      router.push(`/${locale}/products?include=${encodeURIComponent(genre)}`);
+    },
+    [router, locale],
+  );
 
-  const handlePerformerClick = useCallback((performer: string) => {
-    router.push(`/${locale}/?q=${encodeURIComponent(performer)}`);
-  }, [router, locale]);
+  const handlePerformerClick = useCallback(
+    (performer: string) => {
+      router.push(`/${locale}/?q=${encodeURIComponent(performer)}`);
+    },
+    [router, locale],
+  );
 
   if (!query) return null;
 

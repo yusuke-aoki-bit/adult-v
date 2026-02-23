@@ -155,7 +155,7 @@ export function generateAspNormalizationCase(): string {
  * @returns SQL条件文字列
  */
 export function generateAspMatchCondition(aspNames: string[]): string {
-  const quoted = aspNames.map(name => `'${name}'`).join(', ');
+  const quoted = aspNames.map((name) => `'${name}'`).join(', ');
   return `(${generateAspNormalizationCase()}) IN (${quoted})`;
 }
 
@@ -170,9 +170,7 @@ export function generateAspMatchCondition(aspNames: string[]): string {
  */
 export function buildDtiUrlCaseParts(urlColumnRef: string): string {
   return Object.entries(DTI_URL_PATTERNS)
-    .map(([pattern, normalized]) =>
-      `WHEN ${urlColumnRef} LIKE '%${pattern}%' THEN '${normalized}'`
-    )
+    .map(([pattern, normalized]) => `WHEN ${urlColumnRef} LIKE '%${pattern}%' THEN '${normalized}'`)
     .join('\n                  ');
 }
 
@@ -204,10 +202,7 @@ export function buildUpperToLowerCaseParts(aspColumnRef: string): string {
  * @param urlColumnRef - URLカラム参照（例: 'p.default_thumbnail_url'）
  * @returns 完全なCASE式文字列
  */
-export function buildAspNormalizationSql(
-  aspColumnRef: string,
-  urlColumnRef: string
-): string {
+export function buildAspNormalizationSql(aspColumnRef: string, urlColumnRef: string): string {
   const dtiUrlCases = buildDtiUrlCaseParts(urlColumnRef);
   const jaCases = buildJaToEnCaseParts(aspColumnRef);
   const upperCases = buildUpperToLowerCaseParts(aspColumnRef);
@@ -231,12 +226,8 @@ export function buildAspNormalizationSql(
  * @param aspNames - マッチさせたい正規化済みASP名リスト
  * @returns IN句付きCASE式文字列
  */
-export function buildAspMatchSql(
-  aspColumnRef: string,
-  urlColumnRef: string,
-  aspNames: string[]
-): string {
-  const quoted = aspNames.map(name => `'${name}'`).join(', ');
+export function buildAspMatchSql(aspColumnRef: string, urlColumnRef: string, aspNames: string[]): string {
+  const quoted = aspNames.map((name) => `'${name}'`).join(', ');
   return `(${buildAspNormalizationSql(aspColumnRef, urlColumnRef)}) IN (${quoted})`;
 }
 

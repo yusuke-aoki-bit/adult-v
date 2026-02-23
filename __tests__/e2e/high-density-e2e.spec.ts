@@ -20,12 +20,14 @@ test.setTimeout(180000);
 // ========================================
 
 async function setupAge(context: BrowserContext): Promise<void> {
-  await context.addCookies([{
-    name: 'age-verified',
-    value: 'true',
-    domain: 'localhost',
-    path: '/',
-  }]);
+  await context.addCookies([
+    {
+      name: 'age-verified',
+      value: 'true',
+      domain: 'localhost',
+      path: '/',
+    },
+  ]);
 }
 
 interface ApiTiming {
@@ -38,7 +40,7 @@ interface ApiTiming {
 async function timedGet(
   request: any,
   url: string,
-  opts: { timeout?: number } = {}
+  opts: { timeout?: number } = {},
 ): Promise<{ response: any; timing: ApiTiming }> {
   const start = Date.now();
   const response = await request.get(url, { timeout: opts.timeout || 30000 });
@@ -65,7 +67,7 @@ test.describe('1. コアAPI完全検証', () => {
     if (apiTimings.length === 0) return;
     console.log('\n=== API Performance Summary ===');
     const sorted = [...apiTimings].sort((a, b) => b.durationMs - a.durationMs);
-    sorted.forEach(t => {
+    sorted.forEach((t) => {
       const icon = t.ok ? '✓' : '✗';
       console.log(`  ${icon} ${t.endpoint} → ${t.status} (${t.durationMs}ms)`);
     });
@@ -132,10 +134,7 @@ test.describe('1. コアAPI完全検証', () => {
   });
 
   test('GET /api/products — 価格フィルター（修正済みバグの回帰テスト）', async ({ request }) => {
-    const { response, timing } = await timedGet(
-      request,
-      '/api/products?limit=12&offset=0&minPrice=1000&maxPrice=3000'
-    );
+    const { response, timing } = await timedGet(request, '/api/products?limit=12&offset=0&minPrice=1000&maxPrice=3000');
     apiTimings.push(timing);
 
     if (response.ok()) {
@@ -400,10 +399,8 @@ test.describe('4. 全ページSSR検証', () => {
 
       await page.waitForLoadState('networkidle').catch(() => {});
 
-      const hydrationErrors = errors.filter(e =>
-        e.includes('Hydration') ||
-        e.includes('Text content does not match') ||
-        e.includes('did not match')
+      const hydrationErrors = errors.filter(
+        (e) => e.includes('Hydration') || e.includes('Text content does not match') || e.includes('did not match'),
       );
       expect(hydrationErrors, `Hydrationエラー: ${path}`).toHaveLength(0);
     });
@@ -456,7 +453,7 @@ test.describe('5. 動的ページ検証', () => {
 
     // 構造化データ (JSON-LD) 確認
     const jsonLdEl = page.locator('script[type="application/ld+json"]').first();
-    if (await jsonLdEl.count() > 0) {
+    if ((await jsonLdEl.count()) > 0) {
       const jsonLd = await jsonLdEl.textContent();
       if (jsonLd) {
         const parsed = JSON.parse(jsonLd);
@@ -464,8 +461,8 @@ test.describe('5. 動的ページ検証', () => {
       }
     }
 
-    const critErrors = errors.filter(e =>
-      e.includes('Hydration') || e.includes('TypeError') || e.includes('ReferenceError')
+    const critErrors = errors.filter(
+      (e) => e.includes('Hydration') || e.includes('TypeError') || e.includes('ReferenceError'),
     );
     expect(critErrors).toHaveLength(0);
   });
@@ -491,8 +488,8 @@ test.describe('5. 動的ページ検証', () => {
     const title = await page.title();
     expect(title.length).toBeGreaterThan(0);
 
-    const critErrors = errors.filter(e =>
-      e.includes('Hydration') || e.includes('TypeError') || e.includes('ReferenceError')
+    const critErrors = errors.filter(
+      (e) => e.includes('Hydration') || e.includes('TypeError') || e.includes('ReferenceError'),
     );
     expect(critErrors).toHaveLength(0);
   });
@@ -542,7 +539,9 @@ test.describe('7. UI操作検証', () => {
 
     const initialCards = await page.locator('a[href*="/products/"]').count();
 
-    const loadMore = page.locator('button:has-text("もっと見る"), button:has-text("さらに表示"), button:has-text("Load more")').first();
+    const loadMore = page
+      .locator('button:has-text("もっと見る"), button:has-text("さらに表示"), button:has-text("Load more")')
+      .first();
     if (await loadMore.isVisible({ timeout: 3000 }).catch(() => false)) {
       await loadMore.click();
       await page.waitForTimeout(3000);
@@ -565,7 +564,10 @@ test.describe('7. UI操作検証', () => {
       await page.waitForTimeout(1000);
 
       const suggestions = page.locator('[class*="suggestion"], [class*="autocomplete"], [role="listbox"]');
-      const hasSuggestions = await suggestions.first().isVisible({ timeout: 3000 }).catch(() => false);
+      const hasSuggestions = await suggestions
+        .first()
+        .isVisible({ timeout: 3000 })
+        .catch(() => false);
       console.log(`  Autocomplete suggestions visible: ${hasSuggestions}`);
 
       await searchInput.press('Enter');
@@ -573,7 +575,7 @@ test.describe('7. UI操作検証', () => {
       await page.waitForTimeout(2000);
     }
 
-    const critErrors = errors.filter(e => e.includes('TypeError') || e.includes('ReferenceError'));
+    const critErrors = errors.filter((e) => e.includes('TypeError') || e.includes('ReferenceError'));
     expect(critErrors).toHaveLength(0);
   });
 
@@ -589,7 +591,7 @@ test.describe('7. UI操作検証', () => {
     const viewportWidth = await page.evaluate(() => window.innerWidth);
     expect(bodyWidth).toBeLessThanOrEqual(viewportWidth + 20);
 
-    const critErrors = errors.filter(e => e.includes('TypeError') || e.includes('ReferenceError'));
+    const critErrors = errors.filter((e) => e.includes('TypeError') || e.includes('ReferenceError'));
     expect(critErrors).toHaveLength(0);
   });
 
@@ -663,12 +665,10 @@ test.describe('8. エラーハンドリング・境界値', () => {
 
   test('同時リクエスト耐性', async ({ request }) => {
     // dev環境の制限を考慮して5件に
-    const requests = Array.from({ length: 5 }, (_, i) =>
-      request.get(`/api/products?limit=12&offset=${i * 12}`)
-    );
+    const requests = Array.from({ length: 5 }, (_, i) => request.get(`/api/products?limit=12&offset=${i * 12}`));
     const responses = await Promise.all(requests);
 
-    const successCount = responses.filter(r => r.ok()).length;
+    const successCount = responses.filter((r) => r.ok()).length;
     // 5件中3件以上成功
     expect(successCount).toBeGreaterThanOrEqual(3);
   });
@@ -762,7 +762,7 @@ test.describe('10. パフォーマンス計測', () => {
     }
 
     console.log('\n  === API Response Times ===');
-    results.forEach(r => console.log(`  ${r.endpoint} → ${r.ms}ms`));
+    results.forEach((r) => console.log(`  ${r.endpoint} → ${r.ms}ms`));
 
     const avg = Math.round(results.reduce((s, r) => s + r.ms, 0) / results.length);
     console.log(`  Average: ${avg}ms`);

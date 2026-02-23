@@ -40,18 +40,15 @@ export default function ReleaseCalendar({
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [showYearPicker, setShowYearPicker] = useState(false);
 
-  const weekdays = WEEKDAYS_MAP[locale] || WEEKDAYS_MAP['en'];
+  const weekdays = WEEKDAYS_MAP[locale] ?? WEEKDAYS_MAP['en']!;
 
   // 年の選択肢を生成（新しい順）
-  const years = Array.from(
-    { length: maxYear - minYear + 1 },
-    (_, i) => maxYear - i
-  );
+  const years = Array.from({ length: maxYear - minYear + 1 }, (_, i) => maxYear - i);
 
   // 日付ごとのデータマップを作成
   const dateMap = useMemo(() => {
     const map = new Map<string, DailyRelease>();
-    data.forEach(d => map.set(d.date, d));
+    data.forEach((d) => map.set(d.date, d));
     return map;
   }, [data]);
 
@@ -145,18 +142,16 @@ export default function ReleaseCalendar({
   return (
     <div className="w-full">
       {/* ヘッダー */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <button
           onClick={handlePrevMonth}
           disabled={!canGoPrev()}
-          className={`p-2 rounded-lg transition-colors ${
-            canGoPrev()
-              ? 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              : 'opacity-30 cursor-not-allowed'
+          className={`rounded-lg p-2 transition-colors ${
+            canGoPrev() ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-30'
           }`}
           aria-label="前月"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -164,29 +159,27 @@ export default function ReleaseCalendar({
         <div className="relative">
           <button
             onClick={() => setShowYearPicker(!showYearPicker)}
-            className="text-lg font-bold hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors flex items-center gap-1"
+            className="flex items-center gap-1 text-lg font-bold transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
           >
             {year}年{month}月
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
 
           {/* 年月選択ドロップダウン */}
           {showYearPicker && (
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-20 p-3 min-w-[280px]">
+            <div className="absolute top-full left-1/2 z-20 mt-2 min-w-[280px] -translate-x-1/2 rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800">
               {/* 年選択 */}
               <div className="mb-3">
-                <p className="text-xs text-gray-500 mb-2">年を選択</p>
-                <div className="grid grid-cols-4 gap-1 max-h-32 overflow-y-auto">
+                <p className="mb-2 text-xs text-gray-500">年を選択</p>
+                <div className="grid max-h-32 grid-cols-4 gap-1 overflow-y-auto">
                   {years.map((y) => (
                     <button
                       key={y}
                       onClick={() => handleYearChange(y)}
-                      className={`px-2 py-1 text-sm rounded transition-colors ${
-                        y === year
-                          ? 'bg-indigo-500 text-white'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      className={`rounded px-2 py-1 text-sm transition-colors ${
+                        y === year ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
                       {y}
@@ -197,16 +190,14 @@ export default function ReleaseCalendar({
 
               {/* 月選択 */}
               <div>
-                <p className="text-xs text-gray-500 mb-2">月を選択</p>
+                <p className="mb-2 text-xs text-gray-500">月を選択</p>
                 <div className="grid grid-cols-4 gap-1">
                   {months.map((m) => (
                     <button
                       key={m}
                       onClick={() => handleMonthSelect(m)}
-                      className={`px-2 py-1 text-sm rounded transition-colors ${
-                        m === month
-                          ? 'bg-indigo-500 text-white'
-                          : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                      className={`rounded px-2 py-1 text-sm transition-colors ${
+                        m === month ? 'bg-indigo-500 text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                       }`}
                     >
                       {m}月
@@ -229,25 +220,23 @@ export default function ReleaseCalendar({
         <button
           onClick={handleNextMonth}
           disabled={!canGoNext()}
-          className={`p-2 rounded-lg transition-colors ${
-            canGoNext()
-              ? 'hover:bg-gray-100 dark:hover:bg-gray-700'
-              : 'opacity-30 cursor-not-allowed'
+          className={`rounded-lg p-2 transition-colors ${
+            canGoNext() ? 'hover:bg-gray-100 dark:hover:bg-gray-700' : 'cursor-not-allowed opacity-30'
           }`}
           aria-label="次月"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
           </svg>
         </button>
       </div>
 
       {/* 曜日ヘッダー */}
-      <div className="grid grid-cols-7 gap-1 mb-1">
+      <div className="mb-1 grid grid-cols-7 gap-1">
         {weekdays.map((day, index) => (
           <div
             key={day}
-            className={`text-center text-xs font-medium py-2 ${
+            className={`py-2 text-center text-xs font-medium ${
               index === 0 ? 'text-red-500' : index === 6 ? 'text-blue-500' : 'text-gray-600 dark:text-gray-400'
             }`}
           >
@@ -267,27 +256,21 @@ export default function ReleaseCalendar({
           const dateData = dateMap.get(dateStr);
           const releaseCount = dateData?.releaseCount || 0;
           const isSelected = selectedDate === dateStr;
-          const dayOfWeek = (index) % 7;
+          const dayOfWeek = index % 7;
 
           return (
             <button
               key={dateStr}
               onClick={() => setSelectedDate(isSelected ? null : dateStr)}
-              className={`
-                aspect-square p-1 rounded-lg text-sm relative transition-all
-                ${getIntensityClass(releaseCount)}
-                ${isSelected ? 'ring-2 ring-indigo-500' : ''}
-                hover:ring-2 hover:ring-indigo-300
-              `}
+              className={`relative aspect-square rounded-lg p-1 text-sm transition-all ${getIntensityClass(releaseCount)} ${isSelected ? 'ring-2 ring-indigo-500' : ''} hover:ring-2 hover:ring-indigo-300`}
             >
-              <span className={`
-                absolute top-1 left-2 text-xs
-                ${dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : ''}
-              `}>
+              <span
+                className={`absolute top-1 left-2 text-xs ${dayOfWeek === 0 ? 'text-red-500' : dayOfWeek === 6 ? 'text-blue-500' : ''} `}
+              >
                 {day}
               </span>
               {releaseCount > 0 && (
-                <span className="absolute bottom-1 right-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                <span className="absolute right-1 bottom-1 text-xs font-bold text-indigo-600 dark:text-indigo-400">
                   {releaseCount}
                 </span>
               )}
@@ -298,25 +281,23 @@ export default function ReleaseCalendar({
 
       {/* 選択日の詳細 */}
       {selectedDateData && (
-        <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-          <h4 className="font-bold mb-2">
+        <div className="mt-4 rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800">
+          <h4 className="mb-2 font-bold">
             {selectedDate} ({selectedDateData.releaseCount}作品)
           </h4>
-          <ul className="space-y-1 max-h-48 overflow-y-auto">
-            {selectedDateData.products.map(product => (
+          <ul className="max-h-48 space-y-1 overflow-y-auto">
+            {selectedDateData.products.map((product) => (
               <li key={product['id']} className="text-sm">
                 <Link
                   href={`${productLinkPrefix}/${product.normalizedProductId || product['id']}`}
-                  className="text-indigo-600 dark:text-indigo-400 hover:underline line-clamp-1"
+                  className="line-clamp-1 text-indigo-600 hover:underline dark:text-indigo-400"
                 >
                   {product['title']}
                 </Link>
               </li>
             ))}
             {selectedDateData.releaseCount > 10 && (
-              <li className="text-xs text-gray-500">
-                他 {selectedDateData.releaseCount - 10} 作品...
-              </li>
+              <li className="text-xs text-gray-500">他 {selectedDateData.releaseCount - 10} 作品...</li>
             )}
           </ul>
         </div>
@@ -326,11 +307,11 @@ export default function ReleaseCalendar({
       <div className="mt-4 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
         <span>少</span>
         <div className="flex gap-1">
-          <div className="w-4 h-4 rounded bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700" />
-          <div className="w-4 h-4 rounded bg-indigo-100 dark:bg-indigo-900/30" />
-          <div className="w-4 h-4 rounded bg-indigo-200 dark:bg-indigo-800/40" />
-          <div className="w-4 h-4 rounded bg-indigo-300 dark:bg-indigo-700/50" />
-          <div className="w-4 h-4 rounded bg-indigo-400 dark:bg-indigo-600/60" />
+          <div className="h-4 w-4 rounded border border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800" />
+          <div className="h-4 w-4 rounded bg-indigo-100 dark:bg-indigo-900/30" />
+          <div className="h-4 w-4 rounded bg-indigo-200 dark:bg-indigo-800/40" />
+          <div className="h-4 w-4 rounded bg-indigo-300 dark:bg-indigo-700/50" />
+          <div className="h-4 w-4 rounded bg-indigo-400 dark:bg-indigo-600/60" />
         </div>
         <span>多</span>
       </div>

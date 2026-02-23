@@ -31,7 +31,12 @@ export async function getRandomProducts(params: {
 
   // Exclude IDs
   if (excludeIds.length > 0) {
-    idConditions.push(sql`p.id NOT IN (${sql.join(excludeIds.map(id => sql`${id}`), sql`, `)})`);
+    idConditions.push(
+      sql`p.id NOT IN (${sql.join(
+        excludeIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})`,
+    );
   }
 
   // Non-FANZA products only - use JOIN instead of EXISTS for better performance
@@ -55,7 +60,10 @@ export async function getRandomProducts(params: {
     idConditions.push(sql`EXISTS (
       SELECT 1 FROM product_performers pp2
       WHERE pp2.product_id = p.id
-      AND pp2.performer_id IN (${sql.join(filters.performerIds.map(id => sql`${id}`), sql`, `)})
+      AND pp2.performer_id IN (${sql.join(
+        filters.performerIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
     )`);
   }
 
@@ -70,13 +78,14 @@ export async function getRandomProducts(params: {
       SELECT 1 FROM product_tags pt
       JOIN tags t ON pt.tag_id = t.id
       WHERE pt.product_id = p.id
-      AND t.name IN (${sql.join(filters.genres.map(g => sql`${g}`), sql`, `)})
+      AND t.name IN (${sql.join(
+        filters.genres.map((g) => sql`${g}`),
+        sql`, `,
+      )})
     )`);
   }
 
-  const idWhereClause = idConditions.length > 0
-    ? sql`WHERE ${sql.join(idConditions, sql` AND `)}`
-    : sql``;
+  const idWhereClause = idConditions.length > 0 ? sql`WHERE ${sql.join(idConditions, sql` AND `)}` : sql``;
 
   // Fetch extra IDs to account for products without sample images
   const fetchMultiplier = 3;
@@ -93,13 +102,17 @@ export async function getRandomProducts(params: {
     return [];
   }
 
-  const candidateIds = idsResult.rows.map(r => (r as { id: number }).id);
+  const candidateIds = idsResult.rows.map((r) => (r as { id: number }).id);
 
   // Phase 2: Fetch full details for selected IDs
-  const titleColumn = locale === 'en' ? sql`COALESCE(p.title_en, p.title)`
-    : locale === 'zh' ? sql`COALESCE(p.title_zh, p.title)`
-    : locale === 'ko' ? sql`COALESCE(p.title_ko, p.title)`
-    : sql`p.title`;
+  const titleColumn =
+    locale === 'en'
+      ? sql`COALESCE(p.title_en, p.title)`
+      : locale === 'zh'
+        ? sql`COALESCE(p.title_zh, p.title)`
+        : locale === 'ko'
+          ? sql`COALESCE(p.title_ko, p.title)`
+          : sql`p.title`;
 
   const result = await db.execute(sql`
     SELECT
@@ -135,7 +148,10 @@ export async function getRandomProducts(params: {
       ORDER BY price NULLS LAST
       LIMIT 1
     ) ps ON true
-    WHERE p.id IN (${sql.join(candidateIds.map(id => sql`${id}`), sql`, `)})
+    WHERE p.id IN (${sql.join(
+      candidateIds.map((id) => sql`${id}`),
+      sql`, `,
+    )})
       AND EXISTS (
         SELECT 1 FROM product_images pi
         WHERE pi.product_id = p.id AND pi.image_type = 'sample'

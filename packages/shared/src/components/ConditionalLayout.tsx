@@ -16,8 +16,7 @@ export function ConditionalLayout({ children, Header, Footer }: ConditionalLayou
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
 
-  const isAgeVerificationPage = pathname === '/age-verification' ||
-                                 pathname?.includes('/age-verification');
+  const isAgeVerificationPage = pathname === '/age-verification' || pathname?.includes('/age-verification');
 
   if (isAgeVerificationPage) {
     return <>{children}</>;
@@ -35,6 +34,3 @@ export function ConditionalLayout({ children, Header, Footer }: ConditionalLayou
     </>
   );
 }
-
-
-

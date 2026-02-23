@@ -38,11 +38,7 @@ export function SiteProvider({ children, mode }: SiteProviderProps) {
     isMainSite: mode === 'adult-v',
   };
 
-  return (
-    <SiteContext.Provider value={value}>
-      {children}
-    </SiteContext.Provider>
-  );
+  return <SiteContext.Provider value={value}>{children}</SiteContext.Provider>;
 }
 
 export function useSite(): SiteContextValue {

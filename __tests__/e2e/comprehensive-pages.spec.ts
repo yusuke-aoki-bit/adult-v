@@ -23,12 +23,14 @@ test.describe('Homepage Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     // Set age verification cookie
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage loads with correct structure', async ({ page }) => {
@@ -79,15 +81,16 @@ test.describe('Homepage Tests', () => {
     await page.waitForTimeout(2000);
 
     // Allow some minor errors but fail on critical ones
-    const criticalErrors = errors.filter(e =>
-      !e.includes('ResizeObserver') &&
-      !e.includes('Non-Error promise rejection') &&
-      !e.includes('installations/request-failed') && // Firebase installation errors in test env
-      !e.includes('PERMISSION_DENIED') &&
-      !e.includes('Database initialization failed') && // CI環境ではDBがない
-      !e.includes('DATABASE_URL') && // CI環境ではDBがない
-      !e.includes('Hydration failed') && // ABテストバリアントによる初期化時の差分（許容）
-      !e.includes('server rendered HTML') // Hydration関連エラー（許容）
+    const criticalErrors = errors.filter(
+      (e) =>
+        !e.includes('ResizeObserver') &&
+        !e.includes('Non-Error promise rejection') &&
+        !e.includes('installations/request-failed') && // Firebase installation errors in test env
+        !e.includes('PERMISSION_DENIED') &&
+        !e.includes('Database initialization failed') && // CI環境ではDBがない
+        !e.includes('DATABASE_URL') && // CI環境ではDBがない
+        !e.includes('Hydration failed') && // ABテストバリアントによる初期化時の差分（許容）
+        !e.includes('server rendered HTML'), // Hydration関連エラー（許容）
     );
     expect(criticalErrors).toHaveLength(0);
   });
@@ -96,12 +99,14 @@ test.describe('Homepage Tests', () => {
 test.describe('Products Page Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('products page loads', async ({ page }) => {
@@ -138,12 +143,14 @@ test.describe('Products Page Tests', () => {
 test.describe('Actresses Page Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('actresses list page loads', async ({ page }) => {
@@ -159,12 +166,14 @@ test.describe('Actresses Page Tests', () => {
 test.describe('Categories Page Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('categories page loads', async ({ page }) => {
@@ -176,12 +185,14 @@ test.describe('Categories Page Tests', () => {
 test.describe('Series Page Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('series list page loads', async ({ page }) => {
@@ -222,12 +233,14 @@ test.describe('API Endpoint Tests', () => {
 test.describe('SEO and Meta Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage has required meta tags', async ({ page }) => {
@@ -269,12 +282,14 @@ test.describe('SEO and Meta Tests', () => {
 test.describe('Multi-language Support Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('Japanese (default) page loads', async ({ page }) => {
@@ -309,12 +324,14 @@ test.describe('Multi-language Support Tests', () => {
 test.describe('Error Handling Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('404 page handles gracefully', async ({ page }) => {
@@ -337,12 +354,14 @@ test.describe('Performance Tests', () => {
 
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('homepage loads within reasonable time', async ({ page }) => {
@@ -367,12 +386,14 @@ test.describe('Performance Tests', () => {
 test.describe('Pagination Filter Preservation Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('pagination links should not add unexpected filter parameters', async ({ page }) => {
@@ -468,7 +489,7 @@ test.describe('Pagination Filter Preservation Tests', () => {
 
     // Find per-page selector
     const perPageSelector = page.locator('select[aria-label="表示件数"]');
-    const selectorExists = await perPageSelector.count() > 0;
+    const selectorExists = (await perPageSelector.count()) > 0;
 
     if (selectorExists) {
       // Change per-page value
@@ -488,12 +509,14 @@ test.describe('Pagination Filter Preservation Tests', () => {
 test.describe('CSP and Security Tests', () => {
   test.beforeEach(async ({ context, baseURL }) => {
     const domain = getDomain(baseURL);
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain,
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain,
+        path: '/',
+      },
+    ]);
   });
 
   test('page loads without CSP violations in console', async ({ page }) => {
@@ -510,9 +533,7 @@ test.describe('CSP and Security Tests', () => {
     await page.waitForTimeout(2000);
 
     // Filter out worker-src violations (will be fixed after deployment of worker-src CSP directive)
-    const criticalCspViolations = cspViolations.filter(v =>
-      !v.includes("worker-src' was not explicitly set")
-    );
+    const criticalCspViolations = cspViolations.filter((v) => !v.includes("worker-src' was not explicitly set"));
     expect(criticalCspViolations).toHaveLength(0);
   });
 
@@ -530,9 +551,7 @@ test.describe('CSP and Security Tests', () => {
     await page.waitForTimeout(2000);
 
     // Filter out worker-src violations (will be fixed after deployment of worker-src CSP directive)
-    const criticalCspViolations = cspViolations.filter(v =>
-      !v.includes("worker-src' was not explicitly set")
-    );
+    const criticalCspViolations = cspViolations.filter((v) => !v.includes("worker-src' was not explicitly set"));
     expect(criticalCspViolations).toHaveLength(0);
   });
 });

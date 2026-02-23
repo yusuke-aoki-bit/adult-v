@@ -45,8 +45,24 @@ const mockTagRows = [
 ];
 
 const mockSourceRows = [
-  { productId: 1, aspName: 'FANZA', originalProductId: 'ssis00001', affiliateUrl: 'https://fanza.com/1', price: 1980, currency: 'JPY', productType: 'haishin' },
-  { productId: 2, aspName: 'MGS', originalProductId: '259luxu-001', affiliateUrl: 'https://mgs.com/2', price: 2980, currency: 'JPY', productType: 'haishin' },
+  {
+    productId: 1,
+    aspName: 'FANZA',
+    originalProductId: 'ssis00001',
+    affiliateUrl: 'https://fanza.com/1',
+    price: 1980,
+    currency: 'JPY',
+    productType: 'haishin',
+  },
+  {
+    productId: 2,
+    aspName: 'MGS',
+    originalProductId: '259luxu-001',
+    affiliateUrl: 'https://mgs.com/2',
+    price: 2980,
+    currency: 'JPY',
+    productType: 'haishin',
+  },
 ];
 
 const mockImageRows = [
@@ -122,8 +138,8 @@ describe('Core Queries Integration', () => {
 
   describe('Filter Logic', () => {
     it('should filter products by provider', () => {
-      const filtered = mockSourceRows.filter(s => s.aspName === 'FANZA');
-      const productIds = filtered.map(s => s.productId);
+      const filtered = mockSourceRows.filter((s) => s.aspName === 'FANZA');
+      const productIds = filtered.map((s) => s.productId);
 
       expect(productIds).toContain(1);
       expect(productIds).not.toContain(2);
@@ -133,9 +149,7 @@ describe('Core Queries Integration', () => {
       const minPrice = 1000;
       const maxPrice = 2000;
 
-      const filtered = mockSourceRows.filter(
-        s => s.price >= minPrice && s.price <= maxPrice
-      );
+      const filtered = mockSourceRows.filter((s) => s.price >= minPrice && s.price <= maxPrice);
 
       expect(filtered).toHaveLength(1);
       expect(filtered[0]!.productId).toBe(1);
@@ -144,9 +158,7 @@ describe('Core Queries Integration', () => {
     it('should filter active sales', () => {
       const now = new Date('2024-06-15');
 
-      const activeSales = mockSaleRows.filter(
-        s => s.endAt && s.endAt > now
-      );
+      const activeSales = mockSaleRows.filter((s) => s.endAt && s.endAt > now);
 
       expect(activeSales).toHaveLength(1);
     });
@@ -154,16 +166,16 @@ describe('Core Queries Integration', () => {
 
   describe('Sort Logic', () => {
     it('should sort by release date descending', () => {
-      const sorted = [...mockProductRows].sort((a, b) =>
-        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      const sorted = [...mockProductRows].sort(
+        (a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime(),
       );
 
       expect(sorted[0]!.id).toBe(1); // 2024-01-15 is later
     });
 
     it('should sort by release date ascending', () => {
-      const sorted = [...mockProductRows].sort((a, b) =>
-        new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime()
+      const sorted = [...mockProductRows].sort(
+        (a, b) => new Date(a.releaseDate).getTime() - new Date(b.releaseDate).getTime(),
       );
 
       expect(sorted[0]!.id).toBe(2); // 2024-01-10 is earlier
@@ -171,10 +183,10 @@ describe('Core Queries Integration', () => {
 
     it('should sort by price (via source)', () => {
       const productPrices = new Map<number, number>();
-      mockSourceRows.forEach(s => productPrices.set(s.productId, s.price));
+      mockSourceRows.forEach((s) => productPrices.set(s.productId, s.price));
 
-      const sorted = [...mockProductRows].sort((a, b) =>
-        (productPrices.get(a.id) || 0) - (productPrices.get(b.id) || 0)
+      const sorted = [...mockProductRows].sort(
+        (a, b) => (productPrices.get(a.id) || 0) - (productPrices.get(b.id) || 0),
       );
 
       expect(sorted[0]!.id).toBe(1); // 1980 < 2980
@@ -276,14 +288,14 @@ describe('Core Queries Integration', () => {
       const valid = allPerformers.filter(isValidPerformer);
 
       expect(valid).toHaveLength(3);
-      expect(valid.map(p => p.name)).toEqual(validNames);
+      expect(valid.map((p) => p.name)).toEqual(validNames);
     });
   });
 
   describe('ASP/Provider Normalization', () => {
     it('should normalize ASP names to lowercase', () => {
       const aspNames = ['FANZA', 'MGS', 'DUGA', 'Fanza動画'];
-      const normalized = aspNames.map(name => name.toLowerCase().replace(/動画$/, ''));
+      const normalized = aspNames.map((name) => name.toLowerCase().replace(/動画$/, ''));
 
       expect(normalized).toEqual(['fanza', 'mgs', 'duga', 'fanza']);
     });

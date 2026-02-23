@@ -84,10 +84,13 @@ async function autoTagProducts() {
 
     if (!existingTag) {
       // 新規タグを作成
-      const [newTag] = await db.insert(tags).values({
-        name: rule.tagName,
-        category: rule.category,
-      }).returning();
+      const [newTag] = await db
+        .insert(tags)
+        .values({
+          name: rule.tagName,
+          category: rule.category,
+        })
+        .returning();
 
       existingTag = newTag;
       console.log(`  ✓ Created new tag: ${rule.tagName} (${rule.category})`);
@@ -126,7 +129,9 @@ async function autoTagProducts() {
     processedCount++;
 
     if (processedCount % 1000 === 0) {
-      console.log(`Progress: ${processedCount} / ${productsToTag.rows.length} (${Math.round(100 * processedCount / productsToTag.rows.length)}%)`);
+      console.log(
+        `Progress: ${processedCount} / ${productsToTag.rows.length} (${Math.round((100 * processedCount) / productsToTag.rows.length)}%)`,
+      );
     }
 
     const productId = row.id;
@@ -139,7 +144,7 @@ async function autoTagProducts() {
       .from(productTags)
       .where(eq(productTags.productId, productId));
 
-    const existingTagIds = new Set(existingTags.map(t => t.tagId));
+    const existingTagIds = new Set(existingTags.map((t) => t.tagId));
 
     // マッチするタグを検出
     const matchedTags: number[] = [];
@@ -149,9 +154,7 @@ async function autoTagProducts() {
       if (!tagId || existingTagIds.has(tagId)) continue;
 
       // キーワードマッチング
-      const matched = rule.keywords.some(keyword =>
-        title.toLowerCase().includes(keyword.toLowerCase())
-      );
+      const matched = rule.keywords.some((keyword) => title.toLowerCase().includes(keyword.toLowerCase()));
 
       if (matched) {
         matchedTags.push(tagId);
@@ -169,10 +172,13 @@ async function autoTagProducts() {
       });
 
       if (!decadeTag) {
-        const [newTag] = await db.insert(tags).values({
-          name: decadeTagName,
-          category: 'era',
-        }).returning();
+        const [newTag] = await db
+          .insert(tags)
+          .values({
+            name: decadeTagName,
+            category: 'era',
+          })
+          .returning();
         decadeTag = newTag;
       }
 

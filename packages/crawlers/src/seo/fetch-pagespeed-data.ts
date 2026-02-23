@@ -118,7 +118,7 @@ async function getSecret(secretName: string): Promise<string> {
 async function runPageSpeedCheck(
   url: string,
   strategy: 'mobile' | 'desktop',
-  apiKey?: string
+  apiKey?: string,
 ): Promise<{
   url: string;
   strategy: 'mobile' | 'desktop';
@@ -327,7 +327,7 @@ async function main() {
         `  ${statusIcon} Performance: ${result.scores.performance}, ` +
           `A11y: ${result.scores.accessibility}, ` +
           `SEO: ${result.scores.seo}, ` +
-          `LCP: ${(result.metrics.lcp / 1000).toFixed(2)}s`
+          `LCP: ${(result.metrics.lcp / 1000).toFixed(2)}s`,
       );
 
       // DBに保存
@@ -367,8 +367,7 @@ async function main() {
   console.log(`  不合格: ${results.filter((r) => !r.passed).length}`);
 
   // 平均スコア
-  const avgPerformance =
-    results.reduce((sum, r) => sum + r.scores.performance, 0) / results.length;
+  const avgPerformance = results.reduce((sum, r) => sum + r.scores.performance, 0) / results.length;
   const avgLcp = results.reduce((sum, r) => sum + r.metrics.lcp, 0) / results.length;
 
   console.log(`  平均 Performance: ${avgPerformance.toFixed(0)}`);

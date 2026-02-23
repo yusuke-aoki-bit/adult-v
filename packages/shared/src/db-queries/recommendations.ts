@@ -215,7 +215,6 @@ export interface RecommendationsDeps {
   productSources?: any;
 }
 
-
 /**
  * レコメンデーションクエリファクトリー
  */
@@ -228,17 +227,13 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
   async function getRelatedProducts(
     productId: string,
     limit: number = 6,
-    aspName?: string
+    aspName?: string,
   ): Promise<RelatedProductResult[]> {
     const db = getDb();
     const productIdNum = typeof productId === 'string' ? parseInt(productId) : productId;
 
     // Check if product exists
-    const currentProduct = await db
-      .select()
-      .from(products)
-      .where(eq(products['id'], productIdNum))
-      .limit(1);
+    const currentProduct = await db.select().from(products).where(eq(products['id'], productIdNum)).limit(1);
 
     if (currentProduct.length === 0) {
       return [];
@@ -260,9 +255,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     const tagIds = (tagData as { tagId: number }[]).map((pt) => pt.tagId);
 
     // ASPフィルター条件
-    const aspFilterCondition = aspName && productSources
-      ? sql`EXISTS (SELECT 1 FROM ${productSources} ps WHERE ps.product_id = ${products['id']} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
-      : sql`1=1`;
+    const aspFilterCondition =
+      aspName && productSources
+        ? sql`EXISTS (SELECT 1 FROM ${productSources} ps WHERE ps.product_id = ${products['id']} AND LOWER(ps.asp_name) = ${aspName.toLowerCase()})`
+        : sql`1=1`;
 
     // Strategy 1: Same performers (highest priority)
     type RelatedProduct = {
@@ -292,10 +288,16 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           and(
             inArray(productPerformers.performerId, performerIds),
             ne(products['id'], productIdNum),
-            aspFilterCondition
-          )
+            aspFilterCondition,
+          ),
         )
-        .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+        .groupBy(
+          products['id'],
+          products['title'],
+          products.normalizedProductId,
+          products['releaseDate'],
+          products['defaultThumbnailUrl'],
+        )
         .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
         .limit(limit);
 
@@ -325,10 +327,16 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
             inArray(productTags.tagId, tagIds),
             ne(products['id'], productIdNum),
             existingIds.length > 0 ? sql`${products['id']} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
-            aspFilterCondition
-          )
+            aspFilterCondition,
+          ),
         )
-        .groupBy(products['id'], products['title'], products.normalizedProductId, products['releaseDate'], products['defaultThumbnailUrl'])
+        .groupBy(
+          products['id'],
+          products['title'],
+          products.normalizedProductId,
+          products['releaseDate'],
+          products['defaultThumbnailUrl'],
+        )
         .orderBy(desc(sql`match_score`), desc(products['releaseDate']))
         .limit(limit - relatedProducts.length);
 
@@ -336,7 +344,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         ...sameTagProducts.map((p: RelatedProduct) => ({
           ...p,
           matchType: 'tag' as const,
-        }))
+        })),
       );
     }
 
@@ -357,8 +365,8 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           and(
             ne(products['id'], productIdNum),
             existingIds.length > 0 ? sql`${products['id']} NOT IN (${sql.join(existingIds, sql`, `)})` : sql`1=1`,
-            aspFilterCondition
-          )
+            aspFilterCondition,
+          ),
         )
         .orderBy(desc(products['releaseDate']))
         .limit(limit - relatedProducts.length);
@@ -368,7 +376,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           ...p,
           matchScore: 0,
           matchType: 'recent' as const,
-        }))
+        })),
       );
     }
 
@@ -539,7 +547,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     `);
 
     return {
-      trendingActresses: (finalTrendingActresses.rows as PerformerRow[]).map(r => ({
+      trendingActresses: (finalTrendingActresses.rows as PerformerRow[]).map((r) => ({
         id: Number(r.id),
         name: r.name,
         thumbnailUrl: r.thumbnailUrl,
@@ -549,7 +557,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         viewsLastWeek: Number(r.viewsLastWeek),
         growthRate: Number(r.growthRate),
       })),
-      hotNewReleases: (hotNewReleases.rows as HotReleaseRow[]).map(r => ({
+      hotNewReleases: (hotNewReleases.rows as HotReleaseRow[]).map((r) => ({
         id: Number(r.id),
         title: r.title || '',
         imageUrl: r.imageUrl,
@@ -557,7 +565,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         rating: r.rating ? Number(r.rating) : null,
         viewCount: Number(r.viewCount),
       })),
-      rediscoveredClassics: (rediscoveredClassics.rows as ClassicRow[]).map(r => ({
+      rediscoveredClassics: (rediscoveredClassics.rows as ClassicRow[]).map((r) => ({
         id: Number(r.id),
         title: r.title || '',
         imageUrl: r.imageUrl,
@@ -691,7 +699,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       LIMIT 5
     `);
 
-    const alsoViewed = (alsoViewedResult.rows as ViewPatternRow[]).map(r => ({
+    const alsoViewed = (alsoViewedResult.rows as ViewPatternRow[]).map((r) => ({
       id: Number(r.id),
       title: r.title || '',
       imageUrl: r.imageUrl,
@@ -699,13 +707,16 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       viewCount: Number(r.viewCount),
     }));
 
-    const popularTimes = (popularTimesResult.rows as HourRow[]).map(r => ({
+    const popularTimes = (popularTimesResult.rows as HourRow[]).map((r) => ({
       hour: Number(r.hour),
       viewCount: Number(r.view_count),
     }));
 
-    const viewerStats = (viewerProfileResult.rows[0] as ViewerStatsRow | undefined) || { avgProductsViewed: 0, repeatViewRate: 0 };
-    const topGenres = (topGenresResult.rows as GenreRow[]).map(r => ({
+    const viewerStats = (viewerProfileResult.rows[0] as ViewerStatsRow | undefined) || {
+      avgProductsViewed: 0,
+      repeatViewRate: 0,
+    };
+    const topGenres = (topGenresResult.rows as GenreRow[]).map((r) => ({
       tagName: r.tagName,
       count: Number(r.count),
     }));
@@ -726,7 +737,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
    */
   async function getRecommendedActressesFromFavorites(
     favoritePerformerIds: number[],
-    limit: number = 8
+    limit: number = 8,
   ): Promise<RecommendedActress[]> {
     if (favoritePerformerIds.length === 0) {
       return [];
@@ -751,7 +762,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           FROM product_performers pp
           INNER JOIN product_tags pt ON pp.product_id = pt.product_id
           INNER JOIN tags t ON pt.tag_id = t.id
-          WHERE pp.performer_id IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+          WHERE pp.performer_id IN (${sql.join(
+            favoritePerformerIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
         ),
         favorite_tag_count AS (
           SELECT COUNT(*) as total FROM favorite_tags
@@ -759,7 +773,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         favorite_products AS (
           SELECT DISTINCT product_id
           FROM product_performers
-          WHERE performer_id IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+          WHERE performer_id IN (${sql.join(
+            favoritePerformerIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
         ),
         co_performers AS (
           SELECT
@@ -767,7 +784,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
             COUNT(DISTINCT pp.product_id) as shared_product_count
           FROM product_performers pp
           INNER JOIN favorite_products fp ON pp.product_id = fp.product_id
-          WHERE pp.performer_id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+          WHERE pp.performer_id NOT IN (${sql.join(
+            favoritePerformerIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
           GROUP BY pp.performer_id
         ),
         candidate_tags AS (
@@ -784,7 +804,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
             COUNT(DISTINCT ct.tag_id) FILTER (WHERE ct.tag_id IN (SELECT tag_id FROM favorite_tags)) as matching_tags,
             (SELECT total FROM favorite_tag_count) as total_tags
           FROM candidate_tags ct
-          WHERE ct.performer_id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+          WHERE ct.performer_id NOT IN (${sql.join(
+            favoritePerformerIds.map((id) => sql`${id}`),
+            sql`, `,
+          )})
           GROUP BY ct.performer_id
         )
         SELECT
@@ -806,7 +829,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         LEFT JOIN performer_thumbnails pt ON p.id = pt.performer_id
         LEFT JOIN co_performers cp ON p.id = cp.performer_id
         LEFT JOIN genre_match gm ON p.id = gm.performer_id
-        WHERE p.id NOT IN (${sql.join(favoritePerformerIds.map(id => sql`${id}`), sql`, `)})
+        WHERE p.id NOT IN (${sql.join(
+          favoritePerformerIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
           AND (cp.shared_product_count > 0 OR gm.matching_tags > 5)
         ORDER BY
           "matchScore" DESC,
@@ -815,7 +841,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         LIMIT ${limit}
       `);
 
-      return (recommendedPerformers.rows as PerformerRow[]).map(p => {
+      return (recommendedPerformers.rows as PerformerRow[]).map((p) => {
         const matchReasons: string[] = [];
         const sharedCoStars = Number(p.sharedCoStars);
         const genreMatchPercent = Number(p.genreMatchPercent);
@@ -853,10 +879,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
   /**
    * 関連演者を取得
    */
-  async function getRelatedPerformers(
-    performerId: number,
-    limit: number = 6
-  ): Promise<RelatedPerformer[]> {
+  async function getRelatedPerformers(performerId: number, limit: number = 6): Promise<RelatedPerformer[]> {
     try {
       const db = getDb();
 
@@ -910,7 +933,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
    */
   async function getRelatedPerformersWithGenreMatch(
     performerId: number,
-    limit: number = 6
+    limit: number = 6,
   ): Promise<RelatedPerformerWithGenre[]> {
     try {
       const db = getDb();
@@ -1014,18 +1037,24 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
     let performerIds: number[] = [];
     if (performers.length > 0) {
       const performerResults = await db.execute(sql`
-        SELECT id FROM performers WHERE name IN (${sql.join(performers.map(p => sql`${p}`), sql`, `)})
+        SELECT id FROM performers WHERE name IN (${sql.join(
+          performers.map((p) => sql`${p}`),
+          sql`, `,
+        )})
       `);
-      performerIds = (performerResults.rows as IdRow[]).map(r => r.id);
+      performerIds = (performerResults.rows as IdRow[]).map((r) => r.id);
     }
 
     // Build tag IDs from names
     let tagIds: number[] = [];
     if (tags.length > 0) {
       const tagResults = await db.execute(sql`
-        SELECT id FROM tags WHERE name IN (${sql.join(tags.map(t => sql`${t}`), sql`, `)})
+        SELECT id FROM tags WHERE name IN (${sql.join(
+          tags.map((t) => sql`${t}`),
+          sql`, `,
+        )})
       `);
-      tagIds = (tagResults.rows as IdRow[]).map(r => r.id);
+      tagIds = (tagResults.rows as IdRow[]).map((r) => r.id);
     }
 
     let relatedProducts: Array<ProductRow & { matchType: string; performers: string[]; tags: string[] }> = [];
@@ -1042,14 +1071,17 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           COUNT(DISTINCT pp.performer_id) as match_score
         FROM products p
         INNER JOIN product_performers pp ON p.id = pp.product_id
-        WHERE pp.performer_id IN (${sql.join(performerIds.map(id => sql`${id}`), sql`, `)})
+        WHERE pp.performer_id IN (${sql.join(
+          performerIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
           ${excludeClause}
         GROUP BY p.id, p.title, p.normalized_product_id, p.default_thumbnail_url
         ORDER BY match_score DESC, p.release_date DESC
         LIMIT ${limit}
       `);
 
-      relatedProducts = (samePerformerProducts.rows as ProductRow[]).map(p => ({
+      relatedProducts = (samePerformerProducts.rows as ProductRow[]).map((p) => ({
         ...p,
         matchType: 'performer',
         performers: [] as string[],
@@ -1059,11 +1091,15 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
 
     // Strategy 2: Same tags (if we need more)
     if (relatedProducts.length < limit && tagIds.length > 0) {
-      const existingIds = relatedProducts.map(p => p.id);
+      const existingIds = relatedProducts.map((p) => p.id);
       const excludeClause = excludeId ? sql`AND p.id != ${excludeId}` : sql``;
-      const existingClause = existingIds.length > 0
-        ? sql`AND p.id NOT IN (${sql.join(existingIds.map(id => sql`${id}`), sql`, `)})`
-        : sql``;
+      const existingClause =
+        existingIds.length > 0
+          ? sql`AND p.id NOT IN (${sql.join(
+              existingIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})`
+          : sql``;
 
       const sameTagProducts = await db.execute(sql`
         SELECT
@@ -1074,7 +1110,10 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           COUNT(DISTINCT pt.tag_id) as match_score
         FROM products p
         INNER JOIN product_tags pt ON p.id = pt.product_id
-        WHERE pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
+        WHERE pt.tag_id IN (${sql.join(
+          tagIds.map((id) => sql`${id}`),
+          sql`, `,
+        )})
           ${excludeClause}
           ${existingClause}
         GROUP BY p.id, p.title, p.normalized_product_id, p.default_thumbnail_url
@@ -1083,12 +1122,12 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
       `);
 
       relatedProducts.push(
-        ...(sameTagProducts.rows as ProductRow[]).map(p => ({
+        ...(sameTagProducts.rows as ProductRow[]).map((p) => ({
           ...p,
           matchType: 'tag',
           performers: [] as string[],
           tags: [] as string[],
-        }))
+        })),
       );
     }
 
@@ -1099,10 +1138,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
    * 類似女優を取得（共演なしでもジャンルが似ている女優を推奨）
    * 共演者とは異なり、直接の共演はないが同じジャンルの作品に多く出演している女優を提案
    */
-  async function getSimilarActresses(
-    performerId: number,
-    limit: number = 6
-  ): Promise<SimilarActress[]> {
+  async function getSimilarActresses(performerId: number, limit: number = 6): Promise<SimilarActress[]> {
     try {
       const db = getDb();
 
@@ -1200,7 +1236,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         topMatchingGenres: string[] | null;
       }
 
-      return (similarActresses.rows as SimilarActressRow[]).map(row => ({
+      return (similarActresses.rows as SimilarActressRow[]).map((row) => ({
         id: row['id'],
         name: row['name'],
         thumbnailUrl: row['thumbnailUrl'],
@@ -1208,7 +1244,8 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         productCount: typeof row.productCount === 'string' ? parseInt(row.productCount) : row.productCount,
         matchingTags: typeof row.matchingTags === 'string' ? parseInt(row.matchingTags) : row.matchingTags,
         totalTags: typeof row.totalTags === 'string' ? parseInt(row.totalTags) : row.totalTags,
-        genreMatchPercent: typeof row.genreMatchPercent === 'string' ? parseFloat(row.genreMatchPercent) : row.genreMatchPercent,
+        genreMatchPercent:
+          typeof row.genreMatchPercent === 'string' ? parseFloat(row.genreMatchPercent) : row.genreMatchPercent,
         topMatchingGenres: row.topMatchingGenres ? row.topMatchingGenres.slice(0, 5) : [],
       }));
     } catch (error) {
@@ -1224,7 +1261,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
   async function getPerformerTopProducts(
     performerId: number,
     limit: number = 5,
-    aspName?: string
+    aspName?: string,
   ): Promise<TopRatedProduct[]> {
     try {
       const db = getDb();
@@ -1280,7 +1317,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         saleEndAt: string | null;
       }
 
-      return (topProducts.rows as TopProductRow[]).map(row => ({
+      return (topProducts.rows as TopProductRow[]).map((row) => ({
         id: row['id'],
         title: row['title'] || '',
         normalizedProductId: row.normalizedProductId,
@@ -1305,15 +1342,13 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
   async function getPerformerOnSaleProducts(
     performerId: number,
     limit: number = 6,
-    aspName?: string
+    aspName?: string,
   ): Promise<PerformerOnSaleProduct[]> {
     try {
       const db = getDb();
 
       // ASPフィルター条件
-      const aspFilter = aspName
-        ? sql`AND LOWER(ps.asp_name) = ${aspName.toLowerCase()}`
-        : sql``;
+      const aspFilter = aspName ? sql`AND LOWER(ps.asp_name) = ${aspName.toLowerCase()}` : sql``;
 
       // product_salesテーブルを使用
       const onSaleProducts = await db.execute(sql`
@@ -1351,7 +1386,7 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         discountPercent: number | string;
       }
 
-      return (onSaleProducts.rows as OnSaleProductRow[]).map(row => ({
+      return (onSaleProducts.rows as OnSaleProductRow[]).map((row) => ({
         id: row['id'],
         title: row['title'] || '',
         normalizedProductId: row.normalizedProductId,

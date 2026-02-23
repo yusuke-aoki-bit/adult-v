@@ -11,62 +11,60 @@ export default async function Image({ params }: { params: Promise<{ seriesId: st
   const { seriesId } = await params;
 
   return new ImageResponse(
-    (
+    <div
+      style={{
+        background: 'linear-gradient(to bottom right, #fdf2f8, #fce7f3)',
+        width: '100%',
+        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '40px',
+      }}
+    >
       <div
         style={{
-          background: 'linear-gradient(to bottom right, #fdf2f8, #fce7f3)',
-          width: '100%',
-          height: '100%',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '40px',
+          width: '100%',
         }}
       >
         <div
           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: '100%',
+            fontSize: 72,
+            fontWeight: 'bold',
+            color: '#be185d',
+            marginBottom: '20px',
+            textAlign: 'center',
           }}
         >
-          <div
-            style={{
-              fontSize: 72,
-              fontWeight: 'bold',
-              color: '#be185d',
-              marginBottom: '20px',
-              textAlign: 'center',
-            }}
-          >
-            シリーズ情報
-          </div>
-          <div
-            style={{
-              fontSize: 32,
-              color: '#9d174d',
-              textAlign: 'center',
-            }}
-          >
-            ID: {seriesId}
-          </div>
-          <div
-            style={{
-              fontSize: 24,
-              color: '#db2777',
-              marginTop: '20px',
-              textAlign: 'center',
-            }}
-          >
-            FANZA Reviews
-          </div>
+          シリーズ情報
+        </div>
+        <div
+          style={{
+            fontSize: 32,
+            color: '#9d174d',
+            textAlign: 'center',
+          }}
+        >
+          ID: {seriesId}
+        </div>
+        <div
+          style={{
+            fontSize: 24,
+            color: '#db2777',
+            marginTop: '20px',
+            textAlign: 'center',
+          }}
+        >
+          FANZA Reviews
         </div>
       </div>
-    ),
+    </div>,
     {
       ...size,
-    }
+    },
   );
 }

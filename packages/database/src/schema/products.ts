@@ -83,7 +83,9 @@ export const productSources = pgTable(
   'product_sources',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     aspName: varchar('asp_name', { length: 50 }).notNull(), // 'DMM', 'MGS', 'DUGA' など
     originalProductId: varchar('original_product_id', { length: 100 }).notNull(),
     affiliateUrl: text('affiliate_url').notNull(),
@@ -112,7 +114,9 @@ export const productPrices = pgTable(
   'product_prices',
   {
     id: serial('id').primaryKey(),
-    productSourceId: integer('product_source_id').notNull().references(() => productSources.id, { onDelete: 'cascade' }),
+    productSourceId: integer('product_source_id')
+      .notNull()
+      .references(() => productSources.id, { onDelete: 'cascade' }),
     priceType: varchar('price_type', { length: 30 }).notNull(), // 'download', 'streaming', 'hd', '4k', 'sd', 'rental', 'subscription'
     price: integer('price').notNull(), // 価格（円）
     currency: varchar('currency', { length: 3 }).default('JPY'),
@@ -136,7 +140,9 @@ export const productSales = pgTable(
   'product_sales',
   {
     id: serial('id').primaryKey(),
-    productSourceId: integer('product_source_id').notNull().references(() => productSources.id, { onDelete: 'cascade' }),
+    productSourceId: integer('product_source_id')
+      .notNull()
+      .references(() => productSources.id, { onDelete: 'cascade' }),
     regularPrice: integer('regular_price').notNull(), // 通常価格
     salePrice: integer('sale_price').notNull(), // セール価格
     discountPercent: integer('discount_percent'), // 割引率
@@ -165,7 +171,9 @@ export const productImages = pgTable(
   'product_images',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     imageUrl: text('image_url').notNull(),
     imageType: varchar('image_type', { length: 50 }).notNull(), // 'thumbnail', 'cover', 'sample', 'screenshot' など
     displayOrder: integer('display_order').default(0), // 表示順序
@@ -190,7 +198,9 @@ export const productVideos = pgTable(
   'product_videos',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     videoUrl: text('video_url').notNull(),
     videoType: varchar('video_type', { length: 50 }).notNull(), // 'streaming', 'download', 'preview', 'trailer', 'sample' など
     quality: varchar('quality', { length: 50 }), // '1080p', '720p', '480p', '4K' など
@@ -219,7 +229,9 @@ export const productTranslations = pgTable(
   'product_translations',
   {
     id: serial('id').primaryKey(),
-    productId: integer('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+    productId: integer('product_id')
+      .notNull()
+      .references(() => products.id, { onDelete: 'cascade' }),
     language: varchar('language', { length: 10 }).notNull(), // 'en', 'zh', 'zh-TW', 'ko'
     title: text('title'),
     description: text('description'),
@@ -227,10 +239,7 @@ export const productTranslations = pgTable(
     updatedAt: timestamp('updated_at').defaultNow().notNull(),
   },
   (table) => ({
-    productLanguageUnique: uniqueIndex('idx_product_translations_unique').on(
-      table.productId,
-      table.language,
-    ),
+    productLanguageUnique: uniqueIndex('idx_product_translations_unique').on(table.productId, table.language),
     productIdx: index('idx_product_translations_product_id').on(table.productId),
     languageIdx: index('idx_product_translations_language').on(table.language),
   }),

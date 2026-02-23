@@ -8,10 +8,7 @@ export interface AlsoViewedHandlerDeps {
 }
 
 export function createAlsoViewedHandler(deps: AlsoViewedHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
       const productId = parseInt(id, 10);

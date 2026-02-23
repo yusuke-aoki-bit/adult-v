@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 /**
  * 共通のNext.js設定
@@ -165,19 +165,13 @@ export const apiHeaders = [
 ];
 
 // 共通の静的アセットヘッダー
-export const staticHeaders = [
-  { key: 'Cache-Control', value: 'public, max-age=31536000, immutable' },
-];
+export const staticHeaders = [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }];
 
 // 共通の画像キャッシュヘッダー（1週間キャッシュ、1ヶ月stale-while-revalidate）
-export const imageHeaders = [
-  { key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' },
-];
+export const imageHeaders = [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }];
 
 // ページキャッシュヘッダー（1分キャッシュ、5分stale-while-revalidate）
-export const pageHeaders = [
-  { key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' },
-];
+export const pageHeaders = [{ key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }];
 
 /**
  * 共通のヘッダー設定を生成
@@ -229,7 +223,11 @@ export function createLegacyRedirects() {
     { source: '/uncategorized', destination: '/products?uncategorized=true', permanent: true },
     { source: '/reviews', destination: '/?hasReview=true', permanent: true },
     { source: '/actress', destination: '/', permanent: true },
-    { source: '/actress/:performerId/genre/:tagId', destination: '/actress/:performerId?include=:tagId', permanent: true },
+    {
+      source: '/actress/:performerId/genre/:tagId',
+      destination: '/actress/:performerId?include=:tagId',
+      permanent: true,
+    },
     { source: '/search', destination: '/products', permanent: true },
     { source: '/products/search', destination: '/products', permanent: true },
   ];

@@ -11,7 +11,8 @@ import { sql } from 'drizzle-orm';
 import * as iconv from 'iconv-lite';
 
 const BASE_URL = 'https://seesaawiki.jp/av_neme';
-const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 const DELAY_MS = 2000;
 
 interface PerformerEntry {
@@ -25,7 +26,7 @@ async function fetchPage(url: string): Promise<string> {
   const response = await fetch(url, {
     headers: {
       'User-Agent': USER_AGENT,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
       'Accept-Language': 'ja,en-US;q=0.7,en;q=0.3',
     },
   });
@@ -76,7 +77,12 @@ async function parsePerformerPage(url: string): Promise<PerformerEntry | null> {
     const $ = cheerio.load(html);
 
     // ページタイトルから名前を取得
-    const pageTitle = $('h2').first().text().trim().replace(/\s*編集する?\s*/g, '').trim();
+    const pageTitle = $('h2')
+      .first()
+      .text()
+      .trim()
+      .replace(/\s*編集する?\s*/g, '')
+      .trim();
 
     if (!pageTitle || pageTitle.length < 2 || pageTitle.length > 30) {
       return null;
@@ -89,7 +95,7 @@ async function parsePerformerPage(url: string): Promise<PerformerEntry | null> {
 
     // トップページや特殊ページを除外
     const excludeWords = ['トップページ', 'メニュー', 'リンク', '一覧', 'ページ', '検索', '編集'];
-    if (excludeWords.some(word => pageTitle.includes(word))) {
+    if (excludeWords.some((word) => pageTitle.includes(word))) {
       return null;
     }
 
@@ -124,11 +130,7 @@ async function parsePerformerPage(url: string): Promise<PerformerEntry | null> {
     }
 
     // 別名を抽出（「別名：」「旧名義：」等）
-    const aliasPatterns = [
-      /別名[：:]\s*([^\n、]+)/,
-      /旧名義[：:]\s*([^\n、]+)/,
-      /別名義[：:]\s*([^\n、]+)/,
-    ];
+    const aliasPatterns = [/別名[：:]\s*([^\n、]+)/, /旧名義[：:]\s*([^\n、]+)/, /別名義[：:]\s*([^\n、]+)/];
 
     for (const pattern of aliasPatterns) {
       const match = bodyText.match(pattern);
@@ -168,11 +170,7 @@ async function getPageListByIndex(indexChar: string): Promise<string[]> {
       const href = $(el).attr('href');
       const text = $(el).text().trim();
 
-      if (href &&
-          !href.includes('/edit') &&
-          !href.includes('/hist') &&
-          text.length >= 2 &&
-          text.length <= 20) {
+      if (href && !href.includes('/edit') && !href.includes('/hist') && text.length >= 2 && text.length <= 20) {
         const fullUrl = href.startsWith('http') ? href : `https://seesaawiki.jp${href}`;
         if (!pageUrls.includes(fullUrl)) {
           pageUrls.push(fullUrl);
@@ -190,7 +188,7 @@ async function getPageListByIndex(indexChar: string): Promise<string[]> {
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1] ?? '100', 10) : 100;
 
   console.log('=== seesaawiki.jp/av_neme クローラー ===\n');
@@ -199,16 +197,52 @@ async function main() {
 
   // 50音インデックスを使用してページを取得
   const hiragana = [
-    'あ', 'い', 'う', 'え', 'お',
-    'か', 'き', 'く', 'け', 'こ',
-    'さ', 'し', 'す', 'せ', 'そ',
-    'た', 'ち', 'つ', 'て', 'と',
-    'な', 'に', 'ぬ', 'ね', 'の',
-    'は', 'ひ', 'ふ', 'へ', 'ほ',
-    'ま', 'み', 'む', 'め', 'も',
-    'や', 'ゆ', 'よ',
-    'ら', 'り', 'る', 'れ', 'ろ',
-    'わ', 'を', 'ん',
+    'あ',
+    'い',
+    'う',
+    'え',
+    'お',
+    'か',
+    'き',
+    'く',
+    'け',
+    'こ',
+    'さ',
+    'し',
+    'す',
+    'せ',
+    'そ',
+    'た',
+    'ち',
+    'つ',
+    'て',
+    'と',
+    'な',
+    'に',
+    'ぬ',
+    'ね',
+    'の',
+    'は',
+    'ひ',
+    'ふ',
+    'へ',
+    'ほ',
+    'ま',
+    'み',
+    'む',
+    'め',
+    'も',
+    'や',
+    'ゆ',
+    'よ',
+    'ら',
+    'り',
+    'る',
+    'れ',
+    'ろ',
+    'わ',
+    'を',
+    'ん',
   ];
 
   const allUrls: string[] = [];
@@ -220,7 +254,7 @@ async function main() {
     console.log(`  ${char}: ${urls.length} pages`);
     allUrls.push(...urls);
 
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   console.log(`\nTotal pages found: ${allUrls.length}`);
@@ -235,13 +269,13 @@ async function main() {
     .from(wikiPerformerIndex)
     .where(sql`${wikiPerformerIndex.source} = 'seesaawiki'`);
 
-  const crawledSet = new Set(existingUrls.map(r => r.sourceUrl));
+  const crawledSet = new Set(existingUrls.map((r) => r.sourceUrl));
 
-  const urlsToCrawl = uniqueUrls
-    .filter(url => !crawledSet.has(url))
-    .slice(0, limit);
+  const urlsToCrawl = uniqueUrls.filter((url) => !crawledSet.has(url)).slice(0, limit);
 
-  console.log(`URLs to crawl: ${urlsToCrawl.length} (skipping ${uniqueUrls.length - urlsToCrawl.length} already crawled)`);
+  console.log(
+    `URLs to crawl: ${urlsToCrawl.length} (skipping ${uniqueUrls.length - urlsToCrawl.length} already crawled)`,
+  );
 
   if (urlsToCrawl.length === 0) {
     console.log('No new pages to crawl.');
@@ -265,7 +299,7 @@ async function main() {
         console.log(`  Skipped (not a performer page)`);
       }
 
-      await new Promise(r => setTimeout(r, DELAY_MS));
+      await new Promise((r) => setTimeout(r, DELAY_MS));
     } catch (error) {
       console.error(`  Error: ${error}`);
       errors++;

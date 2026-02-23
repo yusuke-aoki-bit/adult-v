@@ -7,12 +7,11 @@ import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { ProductCardBase } from '../ProductCard';
+import { getTranslation, personalizedRecommendationsTranslations } from '../../lib/translations';
 
-const recTexts = {
-  ja: { viewMore: 'もう少し作品を閲覧するとおすすめが表示されます', fetchError: 'おすすめの取得に失敗しました', retry: '再試行', noResults: 'おすすめを取得できませんでした', preferences: 'あなたの傾向', title: 'あなたへのおすすめ' },
-  en: { viewMore: 'View more products to get personalized recommendations', fetchError: 'Failed to load recommendations', retry: 'Retry', noResults: 'No recommendations found', preferences: 'Your Preferences', title: 'Recommended for You' },
-} as const;
-function getRecText(locale: string) { return recTexts[locale as keyof typeof recTexts] || recTexts.ja; }
+function getRecText(locale: string) {
+  return getTranslation(personalizedRecommendationsTranslations, locale);
+}
 
 interface RecommendedProduct {
   id: number;
@@ -81,7 +80,9 @@ export function PersonalizedRecommendations({
 
   // Cleanup abort controller on unmount
   useEffect(() => {
-    return () => { abortControllerRef.current?.abort(); };
+    return () => {
+      abortControllerRef.current?.abort();
+    };
   }, []);
 
   const fetchRecommendations = useCallback(async () => {
@@ -101,7 +102,7 @@ export function PersonalizedRecommendations({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          history: recentlyViewed.map(item => ({
+          history: recentlyViewed.map((item) => ({
             id: item['id'],
             title: item['title'],
           })),
@@ -133,11 +134,14 @@ export function PersonalizedRecommendations({
   }, [recentlyViewed, apiEndpoint, limit, locale]);
 
   // 展開時にフェッチをトリガー
-  const handleToggle = useCallback((isOpen: boolean) => {
-    if (isOpen && !hasExpanded) {
-      setHasExpanded(true);
-    }
-  }, [hasExpanded]);
+  const handleToggle = useCallback(
+    (isOpen: boolean) => {
+      if (isOpen && !hasExpanded) {
+        setHasExpanded(true);
+      }
+    },
+    [hasExpanded],
+  );
 
   useEffect(() => {
     if (!historyLoading && recentlyViewed.length > 0 && hasExpanded) {
@@ -161,13 +165,11 @@ export function PersonalizedRecommendations({
     if (error) {
       return (
         <div className={`flex flex-col items-center justify-center py-6 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          <p className="text-sm mb-3">{error}</p>
+          <p className="mb-3 text-sm">{error}</p>
           <button
             onClick={fetchRecommendations}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-              isDark
-                ? 'bg-pink-600 hover:bg-pink-500 text-white'
-                : 'bg-pink-500 hover:bg-pink-600 text-white'
+            className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              isDark ? 'bg-pink-600 text-white hover:bg-pink-500' : 'bg-pink-500 text-white hover:bg-pink-600'
             }`}
           >
             {rt.retry}
@@ -178,26 +180,20 @@ export function PersonalizedRecommendations({
 
     // 結果がない
     if (recommendations.length === 0) {
-      return (
-        <p className={`text-sm py-4 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-          {message || rt.noResults}
-        </p>
-      );
+      return <p className={`py-4 text-sm ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>{message || rt.noResults}</p>;
     }
 
     return (
       <div className="space-y-4">
         {/* 分析結果（オプション） */}
         {showAnalysis && analysis && (
-          <div className={`p-3 rounded-lg text-sm ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
-            <p className={`font-medium mb-2 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>
-              {rt.preferences}
-            </p>
+          <div className={`rounded-lg p-3 text-sm ${isDark ? 'bg-gray-900/50' : 'bg-white'}`}>
+            <p className={`mb-2 font-medium ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>{rt.preferences}</p>
             <div className="flex flex-wrap gap-2">
               {analysis.userPreferences.favoriteGenres.slice(0, 5).map((genre, i) => (
                 <span
                   key={i}
-                  className={`px-2 py-0.5 rounded text-xs ${
+                  className={`rounded px-2 py-0.5 text-xs ${
                     isDark ? 'bg-pink-900/50 text-pink-300' : 'bg-pink-100 text-pink-700'
                   }`}
                 >
@@ -214,7 +210,7 @@ export function PersonalizedRecommendations({
             {userProfile.topPerformers.slice(0, 3).map((p) => (
               <span
                 key={`p-${p.id}`}
-                className={`px-2 py-1 rounded-full text-xs ${
+                className={`rounded-full px-2 py-1 text-xs ${
                   isDark ? 'bg-blue-900/50 text-blue-300' : 'bg-blue-100 text-blue-700'
                 }`}
               >
@@ -224,7 +220,7 @@ export function PersonalizedRecommendations({
             {userProfile.topGenres.slice(0, 3).map((g) => (
               <span
                 key={`g-${g.id}`}
-                className={`px-2 py-1 rounded-full text-xs ${
+                className={`rounded-full px-2 py-1 text-xs ${
                   isDark ? 'bg-green-900/50 text-green-300' : 'bg-green-100 text-green-700'
                 }`}
               >
@@ -235,7 +231,7 @@ export function PersonalizedRecommendations({
         )}
 
         {/* おすすめ作品グリッド - ProductCardBase使用 */}
-        <div className="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2">
+        <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
           {recommendations.map((product) => (
             <ProductCardBase
               key={product['id']}
@@ -263,7 +259,7 @@ export function PersonalizedRecommendations({
 
   return (
     <AccordionSection
-      icon={<Target className="w-5 h-5" />}
+      icon={<Target className="h-5 w-5" />}
       title={rt.title}
       {...(hasExpanded && recommendations.length > 0 && { itemCount: recommendations.length })}
       defaultOpen={defaultOpen}

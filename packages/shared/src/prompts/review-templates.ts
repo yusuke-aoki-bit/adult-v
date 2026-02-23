@@ -121,17 +121,14 @@ export function buildReviewPrompt(
     style: 'expert',
     focus: 'acting',
     length: 'long',
-  }
+  },
 ): { systemPrompt: string; userPrompt: string } {
   const { language, style, focus, length } = options;
 
   // システムプロンプト構築
   const stylePrompts = SYSTEM_PROMPTS[style] || SYSTEM_PROMPTS.expert;
   const focusPrompts = FOCUS_PROMPTS[focus];
-  const systemPrompt = [
-    stylePrompts[language] || stylePrompts.ja,
-    focusPrompts?.ja || '',
-  ].join('\n\n');
+  const systemPrompt = [stylePrompts[language] || stylePrompts.ja, focusPrompts?.ja || ''].join('\n\n');
 
   // ユーザープロンプト構築
   const productDetails = [
@@ -161,7 +158,7 @@ ${LENGTH_INSTRUCTIONS[length]?.ja || LENGTH_INSTRUCTIONS.medium.ja}
  */
 export function buildScorePrompt(
   product: ProductInfo,
-  language: 'ja' | 'en' = 'ja'
+  language: 'ja' | 'en' = 'ja',
 ): { systemPrompt: string; userPrompt: string } {
   const systemPrompt =
     language === 'ja'
@@ -200,7 +197,7 @@ ${product.genres?.join(', ') || ''}
  */
 export function buildCatchcopyPrompt(
   product: ProductInfo,
-  language: 'ja' | 'en' = 'ja'
+  language: 'ja' | 'en' = 'ja',
 ): { systemPrompt: string; userPrompt: string } {
   const systemPrompt =
     language === 'ja'

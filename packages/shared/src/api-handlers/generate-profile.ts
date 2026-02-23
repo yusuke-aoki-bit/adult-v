@@ -15,10 +15,7 @@ export interface GenerateProfileHandlerDeps {
 }
 
 export function createGenerateProfileHandler(deps: GenerateProfileHandlerDeps) {
-  return async function GET(
-    _request: NextRequest,
-    { params }: { params: Promise<{ id: string }> },
-  ) {
+  return async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
     try {
       const { id } = await params;
       const performerId = Number(id);
@@ -65,7 +62,10 @@ export function createGenerateProfileHandler(deps: GenerateProfileHandlerDeps) {
           .limit(10);
         if (genreStats.length > 0) {
           const tagIds = genreStats.map((g: any) => g.tagId);
-          const tagData = await db.select({ id: deps.tags.id, name: deps.tags.name }).from(deps.tags).where(deps.inArray(deps.tags.id, tagIds));
+          const tagData = await db
+            .select({ id: deps.tags.id, name: deps.tags.name })
+            .from(deps.tags)
+            .where(deps.inArray(deps.tags.id, tagIds));
           const tagMap = new Map(tagData.map((t: any) => [t.id, t.name]));
           topGenres = genreStats.map((g: any) => tagMap.get(g.tagId) || '').filter(Boolean);
         }
@@ -86,9 +86,11 @@ export function createGenerateProfileHandler(deps: GenerateProfileHandlerDeps) {
       let recentWorks: string[] = [];
       if (productIds.length > 0) {
         const recentProducts = await db
-          .select({ title: deps.products.title }).from(deps.products)
+          .select({ title: deps.products.title })
+          .from(deps.products)
           .where(deps.inArray(deps.products.id, productIds))
-          .orderBy(deps.desc(deps.products.releaseDate)).limit(5);
+          .orderBy(deps.desc(deps.products.releaseDate))
+          .limit(5);
         recentWorks = recentProducts.map((p: any) => p.title);
       }
 

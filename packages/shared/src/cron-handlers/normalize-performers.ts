@@ -9,10 +9,7 @@ import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
 import { normalizePerformerName, parsePerformerNames } from '../lib/performer-validation';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface Stats {
   totalProcessed: number;
@@ -112,7 +109,7 @@ async function searchMinnaNoAV(productCode: string): Promise<string[]> {
 
     if (!movieUrl) return [];
 
-    await new Promise(r => setTimeout(r, 1000));
+    await new Promise((r) => setTimeout(r, 1000));
 
     const detailResponse = await fetchWithTimeout(movieUrl, {
       headers: {
@@ -130,13 +127,15 @@ async function searchMinnaNoAV(productCode: string): Promise<string[]> {
 
     $detail('a[href*="actress"]').each((_, el) => {
       const name = $detail(el).text().trim();
-      if (name &&
-          name.length > 1 &&
-          name.length < 30 &&
-          /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name) &&
-          !name.includes('女優') &&
-          !name.includes('一覧') &&
-          !name.includes('ランキング')) {
+      if (
+        name &&
+        name.length > 1 &&
+        name.length < 30 &&
+        /^[\u3040-\u309F\u30A0-\u30FF\u4E00-\u9FAF\sA-Za-z]+$/.test(name) &&
+        !name.includes('女優') &&
+        !name.includes('一覧') &&
+        !name.includes('ランキング')
+      ) {
         performers.push(name);
       }
     });
@@ -175,11 +174,16 @@ async function searchAVWiki(productCode: string): Promise<string[]> {
       }
     });
 
-    $('td:contains("出演者"), td:contains("女優")').next().each((_, el) => {
-      const text = $(el).text().trim();
-      const names = text.split(/[,、/]/).map(n => n.trim()).filter(n => n.length > 1 && n.length < 30);
-      performers.push(...names);
-    });
+    $('td:contains("出演者"), td:contains("女優")')
+      .next()
+      .each((_, el) => {
+        const text = $(el).text().trim();
+        const names = text
+          .split(/[,、/]/)
+          .map((n) => n.trim())
+          .filter((n) => n.length > 1 && n.length < 30);
+        performers.push(...names);
+      });
 
     return [...new Set(performers)];
   } catch {
@@ -210,7 +214,7 @@ interface NormalizePerformersHandlerDeps {
  */
 async function fetchFromLookupTable(
   db: ReturnType<NormalizePerformersHandlerDeps['getDb']>,
-  productCode: string
+  productCode: string,
 ): Promise<{ performers: string[]; source: string } | null> {
   try {
     const normalized = productCode.toUpperCase().replace(/[-_\s]/g, '');
@@ -256,7 +260,7 @@ async function saveToLookupTable(
   db: ReturnType<NormalizePerformersHandlerDeps['getDb']>,
   productCode: string,
   performers: string[],
-  source: string
+  source: string,
 ): Promise<void> {
   try {
     const normalized = productCode.toUpperCase().replace(/[-_\s]/g, '');
@@ -326,7 +330,7 @@ async function fetchPerformersFromWiki(
       return { performers, source: 'minnano-av' };
     }
 
-    await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+    await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
 
     performers = await searchAVWiki(variant);
     if (performers.length > 0) {
@@ -336,13 +340,11 @@ async function fetchPerformersFromWiki(
       return { performers, source: 'av-wiki' };
     }
 
-    await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+    await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
   }
 
   return null;
 }
-
-
 
 export function createNormalizePerformersHandler(deps: NormalizePerformersHandlerDeps) {
   return async function GET(request: NextRequest) {
@@ -414,7 +416,9 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
 
       for (const product of products) {
         if (Date.now() - startTime > TIME_LIMIT) {
-          console.log(`[normalize-performers] Time limit reached, processed ${stats.totalProcessed}/${products.length}`);
+          console.log(
+            `[normalize-performers] Time limit reached, processed ${stats.totalProcessed}/${products.length}`,
+          );
           break;
         }
         stats.totalProcessed++;
@@ -427,7 +431,9 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           continue;
         }
 
-        console.log(`[normalize-performers] Processing: ${product.normalized_product_id} variants=${variants.join(',')}`);
+        console.log(
+          `[normalize-performers] Processing: ${product.normalized_product_id} variants=${variants.join(',')}`,
+        );
 
         let result: { performers: string[]; source: string } | null = null;
         for (const variant of variants) {
@@ -440,7 +446,9 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           continue;
         }
 
-        console.log(`[normalize-performers] Hit (${result['source']}): ${product.normalized_product_id} -> ${result.performers.join(', ')}`);
+        console.log(
+          `[normalize-performers] Hit (${result['source']}): ${product.normalized_product_id} -> ${result.performers.join(', ')}`,
+        );
         stats.wikiHits++;
 
         // 演者名を収集（バッチ処理用）
@@ -457,14 +465,14 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           }
         }
 
-        await new Promise(r => setTimeout(r, RATE_LIMIT_MS));
+        await new Promise((r) => setTimeout(r, RATE_LIMIT_MS));
       }
 
       // バッチ: 演者UPSERT + 紐付けINSERT
       if (allPerformerNames.size > 0) {
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
 
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerName } of pendingLinks) {
@@ -490,7 +498,6 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('[normalize-performers] Error:', error);
       return NextResponse.json(
@@ -499,7 +506,7 @@ export function createNormalizePerformersHandler(deps: NormalizePerformersHandle
           error: error instanceof Error ? error.message : 'Unknown error',
           stats,
         },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

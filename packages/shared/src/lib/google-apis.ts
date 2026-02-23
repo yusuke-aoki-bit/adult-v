@@ -140,7 +140,7 @@ async function getAccessToken(): Promise<string | null> {
     const data = await response.json();
     cachedAccessToken = {
       token: data.access_token,
-      expiresAt: Date.now() + (data.expires_in * 1000),
+      expiresAt: Date.now() + data.expires_in * 1000,
     };
 
     return data.access_token;
@@ -182,7 +182,7 @@ export async function customSearch(
     start?: number; // 開始位置
     siteSearch?: string; // 特定サイトに限定
     language?: string; // 言語 (lang_ja等)
-  }
+  },
 ): Promise<CustomSearchResponse | null> {
   if (!GOOGLE_API_KEY || !GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
     console.warn('[Google Custom Search] API Key または Search Engine ID が未設定');
@@ -200,9 +200,7 @@ export async function customSearch(
   });
 
   try {
-    const response = await fetch(
-      `https://www.googleapis.com/customsearch/v1?${params}`
-    );
+    const response = await fetch(`https://www.googleapis.com/customsearch/v1?${params}`);
 
     if (!response.ok) {
       const error = await response.json();
@@ -222,9 +220,7 @@ export async function customSearch(
  * @param productCode 商品コード (例: "SIRO-5000", "259LUXU-1010")
  * @returns 抽出された女優名のリスト
  */
-export async function searchPerformerByProductCode(
-  productCode: string
-): Promise<string[]> {
+export async function searchPerformerByProductCode(productCode: string): Promise<string[]> {
   if (!GOOGLE_API_KEY || !GOOGLE_CUSTOM_SEARCH_ENGINE_ID) {
     console.warn('[Google Custom Search] API Key または Search Engine ID が未設定');
     return [];
@@ -286,7 +282,9 @@ function extractPerformersFromSearchResults(items: CustomSearchResult[]): string
 
     // パターン3: タイトル内の人名パターン「○○ 作品名」
     // Wikipediaやプロフィールページのタイトル形式
-    const titleNameMatch = item['title'].match(/^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*[-–—|]|^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*\(/);
+    const titleNameMatch = item['title'].match(
+      /^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*[-–—|]|^([ぁ-んァ-ヶー一-龯]+(?:\s[ぁ-んァ-ヶー一-龯]+)?)\s*\(/,
+    );
     if (titleNameMatch) {
       const name = (titleNameMatch[1] || titleNameMatch[2])?.trim();
       const cleaned = cleanPerformerName(name);
@@ -297,7 +295,9 @@ function extractPerformersFromSearchResults(items: CustomSearchResult[]): string
     }
 
     // パターン4: スニペット内の「○○の」で始まるパターン（プロフィール紹介）
-    const profileMatch = text.match(/([ぁ-んァ-ヶー一-龯]{2,}(?:\s[ぁ-んァ-ヶー一-龯]{2,})?)[のは](?:AV女優|女優|グラビア|セクシー女優)/);
+    const profileMatch = text.match(
+      /([ぁ-んァ-ヶー一-龯]{2,}(?:\s[ぁ-んァ-ヶー一-龯]{2,})?)[のは](?:AV女優|女優|グラビア|セクシー女優)/,
+    );
     if (profileMatch?.[1]) {
       const cleaned = cleanPerformerName(profileMatch[1].trim());
       if (cleaned && !seenNames.has(cleaned)) {
@@ -345,9 +345,26 @@ function cleanPerformerName(name: string | undefined): string | null {
 
   // 無効な名前のチェック
   const invalidNames = [
-    '素人', '企画', '他', '---', '...', '名無し', '匿名', '不明',
-    '出演者', '女優', '男優', 'AV女優', '複数', '多数',
-    '熟女', '人妻', 'ギャル', '巨乳', '美女', 'OL',
+    '素人',
+    '企画',
+    '他',
+    '---',
+    '...',
+    '名無し',
+    '匿名',
+    '不明',
+    '出演者',
+    '女優',
+    '男優',
+    'AV女優',
+    '複数',
+    '多数',
+    '熟女',
+    '人妻',
+    'ギャル',
+    '巨乳',
+    '美女',
+    'OL',
   ];
   if (invalidNames.includes(cleaned)) return null;
 
@@ -375,11 +392,7 @@ export async function searchActressReading(actressName: string): Promise<string 
   }
 
   // 検索クエリのバリエーションを試す
-  const queries = [
-    `${actressName} AV女優 読み方`,
-    `${actressName} 女優 よみがな`,
-    `${actressName} グラビア 読み`,
-  ];
+  const queries = [`${actressName} AV女優 読み方`, `${actressName} 女優 よみがな`, `${actressName} グラビア 読み`];
 
   for (const query of queries) {
     // Wikipedia日本語版で検索
@@ -471,9 +484,7 @@ function escapeRegExp(string: string): string {
  * カタカナをひらがなに変換
  */
 function katakanaToHiragana(str: string): string {
-  return str.replace(/[\u30A1-\u30F6]/g, (match) =>
-    String.fromCharCode(match.charCodeAt(0) - 0x60)
-  );
+  return str.replace(/[\u30A1-\u30F6]/g, (match) => String.fromCharCode(match.charCodeAt(0) - 0x60));
 }
 
 // =============================================================================
@@ -504,21 +515,18 @@ export async function analyzeEntities(text: string): Promise<EntityAnalysis[]> {
   }
 
   try {
-    const response = await fetch(
-      `https://language.googleapis.com/v1/documents:analyzeEntities?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          document: {
-            type: 'PLAIN_TEXT',
-            content: text,
-            language: 'ja',
-          },
-          encodingType: 'UTF8',
-        }),
-      }
-    );
+    const response = await fetch(`https://language.googleapis.com/v1/documents:analyzeEntities?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        document: {
+          type: 'PLAIN_TEXT',
+          content: text,
+          language: 'ja',
+        },
+        encodingType: 'UTF8',
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -564,7 +572,7 @@ export async function analyzeSentiment(text: string): Promise<SentimentAnalysis 
           },
           encodingType: 'UTF8',
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -589,9 +597,7 @@ export async function analyzeSentiment(text: string): Promise<SentimentAnalysis 
  */
 export async function extractPerformerNames(title: string): Promise<string[]> {
   const entities = await analyzeEntities(title);
-  return entities
-    .filter((e) => e.type === 'PERSON' && e.salience > 0.1)
-    .map((e) => e.name);
+  return entities.filter((e) => e.type === 'PERSON' && e.salience > 0.1).map((e) => e.name);
 }
 
 /**
@@ -606,20 +612,17 @@ export async function classifyText(text: string): Promise<Array<{ name: string; 
   }
 
   try {
-    const response = await fetch(
-      `https://language.googleapis.com/v1/documents:classifyText?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          document: {
-            type: 'PLAIN_TEXT',
-            content: text,
-            language: 'ja',
-          },
-        }),
-      }
-    );
+    const response = await fetch(`https://language.googleapis.com/v1/documents:classifyText?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        document: {
+          type: 'PLAIN_TEXT',
+          content: text,
+          language: 'ja',
+        },
+      }),
+    });
 
     if (!response.ok) {
       return [];
@@ -644,7 +647,7 @@ export async function classifyText(text: string): Promise<Array<{ name: string; 
  */
 export async function extractProductTags(
   title: string,
-  description?: string
+  description?: string,
 ): Promise<{
   genres: string[];
   attributes: string[];
@@ -664,52 +667,52 @@ export async function extractProductTags(
 
   // ジャンルキーワード
   const genreKeywords: Record<string, string[]> = {
-    '素人': ['素人', 'シロウト', 'amateur'],
-    '熟女': ['熟女', '人妻', '三十路', '四十路', '五十路', 'マダム'],
-    'ギャル': ['ギャル', 'GAL', 'ヤンキー'],
-    'OL': ['OL', 'オフィス', '会社員', '受付嬢'],
-    '女子大生': ['女子大生', 'JD', '大学生'],
-    'ナース': ['ナース', '看護師', '看護婦'],
-    'メイド': ['メイド', 'maid'],
-    'コスプレ': ['コスプレ', 'コス', 'cosplay'],
-    'アイドル': ['アイドル', 'idol', 'グラビア'],
+    素人: ['素人', 'シロウト', 'amateur'],
+    熟女: ['熟女', '人妻', '三十路', '四十路', '五十路', 'マダム'],
+    ギャル: ['ギャル', 'GAL', 'ヤンキー'],
+    OL: ['OL', 'オフィス', '会社員', '受付嬢'],
+    女子大生: ['女子大生', 'JD', '大学生'],
+    ナース: ['ナース', '看護師', '看護婦'],
+    メイド: ['メイド', 'maid'],
+    コスプレ: ['コスプレ', 'コス', 'cosplay'],
+    アイドル: ['アイドル', 'idol', 'グラビア'],
   };
 
   // 属性キーワード
   const attributeKeywords: Record<string, string[]> = {
-    '巨乳': ['巨乳', '爆乳', 'Gカップ', 'Hカップ', 'Iカップ', 'Jカップ', 'Kカップ'],
-    '美乳': ['美乳', '美しい胸'],
-    '貧乳': ['貧乳', '微乳', 'ちっぱい', 'Aカップ'],
-    'スレンダー': ['スレンダー', 'スリム', '細身'],
-    'ぽっちゃり': ['ぽっちゃり', 'むっちり', 'ぽちゃ'],
-    '色白': ['色白', '美白'],
-    '美脚': ['美脚', '脚線美'],
-    'パイパン': ['パイパン', '無毛'],
+    巨乳: ['巨乳', '爆乳', 'Gカップ', 'Hカップ', 'Iカップ', 'Jカップ', 'Kカップ'],
+    美乳: ['美乳', '美しい胸'],
+    貧乳: ['貧乳', '微乳', 'ちっぱい', 'Aカップ'],
+    スレンダー: ['スレンダー', 'スリム', '細身'],
+    ぽっちゃり: ['ぽっちゃり', 'むっちり', 'ぽちゃ'],
+    色白: ['色白', '美白'],
+    美脚: ['美脚', '脚線美'],
+    パイパン: ['パイパン', '無毛'],
   };
 
   // プレイキーワード
   const playKeywords: Record<string, string[]> = {
-    '中出し': ['中出し', '生中', 'なかだし', 'creampie'],
-    '顔射': ['顔射', 'ぶっかけ'],
-    'フェラ': ['フェラ', 'フェラチオ', 'blowjob'],
-    'パイズリ': ['パイズリ', 'titfuck'],
-    '手コキ': ['手コキ', 'handjob'],
-    '潮吹き': ['潮吹き', '噴射'],
+    中出し: ['中出し', '生中', 'なかだし', 'creampie'],
+    顔射: ['顔射', 'ぶっかけ'],
+    フェラ: ['フェラ', 'フェラチオ', 'blowjob'],
+    パイズリ: ['パイズリ', 'titfuck'],
+    手コキ: ['手コキ', 'handjob'],
+    潮吹き: ['潮吹き', '噴射'],
     '3P': ['3P', '乱交', '複数プレイ'],
-    'SM': ['SM', '調教', '緊縛', 'ボンデージ'],
-    'アナル': ['アナル', 'anal', '肛門'],
-    'レズ': ['レズ', 'レズビアン', 'lesbian'],
+    SM: ['SM', '調教', '緊縛', 'ボンデージ'],
+    アナル: ['アナル', 'anal', '肛門'],
+    レズ: ['レズ', 'レズビアン', 'lesbian'],
   };
 
   // シチュエーションキーワード
   const situationKeywords: Record<string, string[]> = {
-    'ナンパ': ['ナンパ', 'ハメ撮り', '素人ナンパ'],
-    '温泉': ['温泉', '旅館', '混浴'],
-    'マッサージ': ['マッサージ', 'エステ', 'オイル'],
-    '痴漢': ['痴漢', '電車', '満員電車'],
-    '不倫': ['不倫', '浮気', 'NTR'],
-    '盗撮': ['盗撮', '隠し撮り', '隠撮'],
-    '露出': ['露出', '野外', '屋外'],
+    ナンパ: ['ナンパ', 'ハメ撮り', '素人ナンパ'],
+    温泉: ['温泉', '旅館', '混浴'],
+    マッサージ: ['マッサージ', 'エステ', 'オイル'],
+    痴漢: ['痴漢', '電車', '満員電車'],
+    不倫: ['不倫', '浮気', 'NTR'],
+    盗撮: ['盗撮', '隠し撮り', '隠撮'],
+    露出: ['露出', '野外', '屋外'],
   };
 
   // テキストからキーワードマッチング
@@ -781,21 +784,18 @@ export async function detectFaces(imageUrl: string): Promise<FaceAnnotation[]> {
   }
 
   try {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { source: { imageUri: imageUrl } },
-              features: [{ type: 'FACE_DETECTION', maxResults: 10 }],
-            },
-          ],
-        }),
-      }
-    );
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { source: { imageUri: imageUrl } },
+            features: [{ type: 'FACE_DETECTION', maxResults: 10 }],
+          },
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const error = await response['text']();
@@ -817,12 +817,8 @@ export async function detectFaces(imageUrl: string): Promise<FaceAnnotation[]> {
       boundingBox: {
         x: f.boundingPoly?.vertices?.[0]?.x || 0,
         y: f.boundingPoly?.vertices?.[0]?.y || 0,
-        width:
-          (f.boundingPoly?.vertices?.[2]?.x || 0) -
-          (f.boundingPoly?.vertices?.[0]?.x || 0),
-        height:
-          (f.boundingPoly?.vertices?.[2]?.y || 0) -
-          (f.boundingPoly?.vertices?.[0]?.y || 0),
+        width: (f.boundingPoly?.vertices?.[2]?.x || 0) - (f.boundingPoly?.vertices?.[0]?.x || 0),
+        height: (f.boundingPoly?.vertices?.[2]?.y || 0) - (f.boundingPoly?.vertices?.[0]?.y || 0),
       },
     }));
   } catch (error) {
@@ -843,21 +839,18 @@ export async function labelImage(imageUrl: string): Promise<LabelAnnotation[]> {
   }
 
   try {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { source: { imageUri: imageUrl } },
-              features: [{ type: 'LABEL_DETECTION', maxResults: 20 }],
-            },
-          ],
-        }),
-      }
-    );
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { source: { imageUri: imageUrl } },
+            features: [{ type: 'LABEL_DETECTION', maxResults: 20 }],
+          },
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const error = await response['text']();
@@ -896,21 +889,18 @@ export async function detectSafeSearch(imageUrl: string): Promise<SafeSearchAnno
   }
 
   try {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { source: { imageUri: imageUrl } },
-              features: [{ type: 'SAFE_SEARCH_DETECTION' }],
-            },
-          ],
-        }),
-      }
-    );
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { source: { imageUri: imageUrl } },
+            features: [{ type: 'SAFE_SEARCH_DETECTION' }],
+          },
+        ],
+      }),
+    });
 
     if (!response.ok) {
       return null;
@@ -958,25 +948,22 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysisResul
   }
 
   try {
-    const response = await fetch(
-      `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          requests: [
-            {
-              image: { source: { imageUri: imageUrl } },
-              features: [
-                { type: 'FACE_DETECTION', maxResults: 10 },
-                { type: 'LABEL_DETECTION', maxResults: 20 },
-                { type: 'SAFE_SEARCH_DETECTION' },
-              ],
-            },
-          ],
-        }),
-      }
-    );
+    const response = await fetch(`https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        requests: [
+          {
+            image: { source: { imageUri: imageUrl } },
+            features: [
+              { type: 'FACE_DETECTION', maxResults: 10 },
+              { type: 'LABEL_DETECTION', maxResults: 20 },
+              { type: 'SAFE_SEARCH_DETECTION' },
+            ],
+          },
+        ],
+      }),
+    });
 
     if (!response.ok) {
       const error = await response['text']();
@@ -1023,13 +1010,15 @@ export async function analyzeImage(imageUrl: string): Promise<ImageAnalysisResul
 
     // Safe Search結果
     const ss = result?.safeSearchAnnotation;
-    const safeSearch: SafeSearchAnnotation | undefined = ss ? {
-      adult: ss.adult || 'UNKNOWN',
-      spoof: ss.spoof || 'UNKNOWN',
-      medical: ss.medical || 'UNKNOWN',
-      violence: ss.violence || 'UNKNOWN',
-      racy: ss.racy || 'UNKNOWN',
-    } : undefined;
+    const safeSearch: SafeSearchAnnotation | undefined = ss
+      ? {
+          adult: ss.adult || 'UNKNOWN',
+          spoof: ss.spoof || 'UNKNOWN',
+          medical: ss.medical || 'UNKNOWN',
+          violence: ss.violence || 'UNKNOWN',
+          racy: ss.racy || 'UNKNOWN',
+        }
+      : undefined;
 
     // 画像の有効性判定
     let isValid = true;
@@ -1105,7 +1094,7 @@ export interface ProductTranslation {
 export async function translateText(
   text: string,
   targetLanguage: string,
-  sourceLanguage?: string
+  sourceLanguage?: string,
 ): Promise<TranslationResult | null> {
   if (!GOOGLE_API_KEY) {
     console.warn('[Translation API] API Key が未設定');
@@ -1113,19 +1102,16 @@ export async function translateText(
   }
 
   try {
-    const response = await fetch(
-      `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_API_KEY}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          q: text,
-          target: targetLanguage,
-          ...(sourceLanguage && { source: sourceLanguage }),
-          format: 'text',
-        }),
-      }
-    );
+    const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        q: text,
+        target: targetLanguage,
+        ...(sourceLanguage && { source: sourceLanguage }),
+        format: 'text',
+      }),
+    });
 
     if (!response.ok) {
       return null;
@@ -1156,7 +1142,7 @@ export async function translateText(
 export async function translateBatch(
   texts: string[],
   targetLanguage: string,
-  sourceLanguage?: string
+  sourceLanguage?: string,
 ): Promise<TranslationResult[] | null> {
   if (!GOOGLE_API_KEY) {
     console.warn('[Translation API] API Key が未設定');
@@ -1166,7 +1152,7 @@ export async function translateBatch(
   if (texts.length === 0) return [];
 
   // 空文字列やnullをフィルタリング
-  const validTexts = texts.filter(t => t && t.trim().length > 0);
+  const validTexts = texts.filter((t) => t && t.trim().length > 0);
   if (validTexts.length === 0) return [];
 
   // Google APIの制限: 最大128テキスト/リクエスト
@@ -1177,19 +1163,16 @@ export async function translateBatch(
     for (let i = 0; i < validTexts.length; i += BATCH_SIZE) {
       const batch = validTexts.slice(i, i + BATCH_SIZE);
 
-      const response = await fetch(
-        `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_API_KEY}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            q: batch,
-            target: targetLanguage,
-            ...(sourceLanguage && { source: sourceLanguage }),
-            format: 'text',
-          }),
-        }
-      );
+      const response = await fetch(`https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_API_KEY}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          q: batch,
+          target: targetLanguage,
+          ...(sourceLanguage && { source: sourceLanguage }),
+          format: 'text',
+        }),
+      });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -1209,7 +1192,7 @@ export async function translateBatch(
 
       // レート制限対策: バッチ間で少し待機
       if (i + BATCH_SIZE < validTexts.length) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
     }
 
@@ -1226,10 +1209,7 @@ export async function translateBatch(
  * @param profile プロフィール文（日本語、オプション）
  * @returns 翻訳結果 { en, zh, ko }
  */
-export async function translatePerformer(
-  name: string,
-  profile?: string
-): Promise<PerformerTranslation | null> {
+export async function translatePerformer(name: string, profile?: string): Promise<PerformerTranslation | null> {
   if (!GOOGLE_API_KEY) {
     console.warn('[Translation API] API Key が未設定');
     return null;
@@ -1266,7 +1246,7 @@ export async function translatePerformer(
  * @returns 翻訳結果の配列
  */
 export async function translatePerformersBatch(
-  performers: Array<{ name: string; profile?: string }>
+  performers: Array<{ name: string; profile?: string }>,
 ): Promise<Array<PerformerTranslation | null>> {
   if (!GOOGLE_API_KEY || performers.length === 0) {
     return performers.map(() => null);
@@ -1318,7 +1298,7 @@ export async function translatePerformersBatch(
     }
   }
 
-  return results.map(r => (r && Object.keys(r).length > 0 ? r : null));
+  return results.map((r) => (r && Object.keys(r).length > 0 ? r : null));
 }
 
 /**
@@ -1327,10 +1307,7 @@ export async function translatePerformersBatch(
  * @param description 説明
  * @returns 翻訳結果 { en, zh, ko }
  */
-export async function translateProduct(
-  title: string,
-  description?: string
-): Promise<ProductTranslation | null> {
+export async function translateProduct(title: string, description?: string): Promise<ProductTranslation | null> {
   if (!GOOGLE_API_KEY) {
     console.warn('[Translation API] API Key が未設定');
     return null;
@@ -1367,7 +1344,7 @@ export async function translateProduct(
  * @returns 翻訳結果の配列
  */
 export async function translateProductsBatch(
-  products: Array<{ title: string; description?: string }>
+  products: Array<{ title: string; description?: string }>,
 ): Promise<Array<ProductTranslation | null>> {
   if (!GOOGLE_API_KEY || products.length === 0) {
     return products.map(() => null);
@@ -1419,7 +1396,7 @@ export async function translateProductsBatch(
     }
   }
 
-  return results.map(r => (r && Object.keys(r).length > 0 ? r : null));
+  return results.map((r) => (r && Object.keys(r).length > 0 ? r : null));
 }
 
 // =============================================================================
@@ -1442,7 +1419,7 @@ export interface IndexingResult {
  */
 export async function requestIndexing(
   url: string,
-  type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED'
+  type: 'URL_UPDATED' | 'URL_DELETED' = 'URL_UPDATED',
 ): Promise<IndexingResult> {
   const accessToken = await getAccessToken();
   if (!accessToken) {
@@ -1451,20 +1428,17 @@ export async function requestIndexing(
   }
 
   try {
-    const response = await fetch(
-      'https://indexing.googleapis.com/v3/urlNotifications:publish',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          url,
-          type,
-        }),
-      }
-    );
+    const response = await fetch('https://indexing.googleapis.com/v3/urlNotifications:publish', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        url,
+        type,
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -1475,11 +1449,12 @@ export async function requestIndexing(
 
       // URL所有権確認エラーの検出
       const requiresOwnershipVerification =
-        errorCode === 403 &&
-        errorMessage.includes('Failed to verify the URL ownership');
+        errorCode === 403 && errorMessage.includes('Failed to verify the URL ownership');
 
       if (requiresOwnershipVerification) {
-        console.warn('[Indexing API] URL所有権確認が必要です。Google Search Consoleでサービスアカウントを所有者として追加してください。');
+        console.warn(
+          '[Indexing API] URL所有権確認が必要です。Google Search Consoleでサービスアカウントを所有者として追加してください。',
+        );
       }
 
       return {
@@ -1528,7 +1503,7 @@ export async function getAnalyticsReport(
   dimensions: string[],
   metrics: string[],
   startDate: string,
-  endDate: string
+  endDate: string,
 ): Promise<AnalyticsReport | null> {
   const accessToken = await getAccessToken();
   if (!accessToken) {
@@ -1537,22 +1512,19 @@ export async function getAnalyticsReport(
   }
 
   try {
-    const response = await fetch(
-      `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          dateRanges: [{ startDate, endDate }],
-          dimensions: dimensions.map((name) => ({ name })),
-          metrics: metrics.map((name) => ({ name })),
-          limit: 100,
-        }),
-      }
-    );
+    const response = await fetch(`https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        dateRanges: [{ startDate, endDate }],
+        dimensions: dimensions.map((name) => ({ name })),
+        metrics: metrics.map((name) => ({ name })),
+        limit: 100,
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
@@ -1593,10 +1565,7 @@ export interface YouTubeVideo {
  * @param maxResults 最大結果数
  * @returns 動画リスト
  */
-export async function searchYouTubeVideos(
-  query: string,
-  maxResults: number = 10
-): Promise<YouTubeVideo[]> {
+export async function searchYouTubeVideos(query: string, maxResults: number = 10): Promise<YouTubeVideo[]> {
   if (!GOOGLE_API_KEY) {
     console.warn('[YouTube API] API Key が未設定');
     return [];
@@ -1612,9 +1581,7 @@ export async function searchYouTubeVideos(
       relevanceLanguage: 'ja',
     });
 
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?${params}`
-    );
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/search?${params}`);
 
     if (!response.ok) {
       return [];
@@ -1640,9 +1607,7 @@ export async function searchYouTubeVideos(
  * @param videoId 動画ID
  * @returns 動画詳細
  */
-export async function getYouTubeVideoDetails(
-  videoId: string
-): Promise<YouTubeVideo | null> {
+export async function getYouTubeVideoDetails(videoId: string): Promise<YouTubeVideo | null> {
   if (!GOOGLE_API_KEY) {
     console.warn('[YouTube API] API Key が未設定');
     return null;
@@ -1655,9 +1620,7 @@ export async function getYouTubeVideoDetails(
       part: 'snippet,statistics',
     });
 
-    const response = await fetch(
-      `https://www.googleapis.com/youtube/v3/videos?${params}`
-    );
+    const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?${params}`);
 
     if (!response.ok) {
       return null;
@@ -1689,11 +1652,11 @@ export async function getYouTubeVideoDetails(
 const GEMINI_API_KEY = process.env['GEMINI_API_KEY'] || GOOGLE_API_KEY;
 
 export interface GeneratedDescription {
-  shortDescription: string;  // 短い紹介文（50-100文字）
-  longDescription: string;   // 詳細説明文（200-400文字）
-  catchphrase: string;       // キャッチコピー（20-40文字）
-  highlights: string[];      // 見どころポイント（3-5個）
-  reviewSummary?: string;    // レビュー要約（あれば）
+  shortDescription: string; // 短い紹介文（50-100文字）
+  longDescription: string; // 詳細説明文（200-400文字）
+  catchphrase: string; // キャッチコピー（20-40文字）
+  highlights: string[]; // 見どころポイント（3-5個）
+  reviewSummary?: string; // レビュー要約（あれば）
 }
 
 /**
@@ -1730,12 +1693,15 @@ export async function generateProductDescription(params: {
     genres?.length ? `ジャンル: ${genres.join('、')}` : null,
     maker ? `メーカー: ${maker}` : null,
     releaseDate ? `発売日: ${releaseDate}` : null,
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   const reviewInfo = reviews?.length
-    ? `\n\nユーザーレビュー:\n${reviews.slice(0, 5).map((r, i) =>
-        `${i + 1}. ${r.rating ? `★${r.rating} ` : ''}${r.comment.substring(0, 200)}`
-      ).join('\n')}`
+    ? `\n\nユーザーレビュー:\n${reviews
+        .slice(0, 5)
+        .map((r, i) => `${i + 1}. ${r.rating ? `★${r.rating} ` : ''}${r.comment.substring(0, 200)}`)
+        .join('\n')}`
     : '';
 
   const prompt = `
@@ -1770,9 +1736,11 @@ ${reviewInfo}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
           generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -1786,7 +1754,7 @@ ${reviewInfo}
             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
           ],
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -1832,11 +1800,13 @@ ${reviewInfo}
  * @param reviews レビューのリスト
  * @returns 分析結果
  */
-export async function analyzeReviews(reviews: Array<{
-  rating?: number;
-  comment: string;
-}>): Promise<{
-  averageSentiment: number;  // -1.0 to 1.0
+export async function analyzeReviews(
+  reviews: Array<{
+    rating?: number;
+    comment: string;
+  }>,
+): Promise<{
+  averageSentiment: number; // -1.0 to 1.0
   summary: string;
   positivePoints: string[];
   negativePoints: string[];
@@ -1845,9 +1815,10 @@ export async function analyzeReviews(reviews: Array<{
     return null;
   }
 
-  const reviewTexts = reviews.slice(0, 10).map((r, i) =>
-    `${i + 1}. ${r.rating ? `★${r.rating} ` : ''}${r.comment.substring(0, 300)}`
-  ).join('\n');
+  const reviewTexts = reviews
+    .slice(0, 10)
+    .map((r, i) => `${i + 1}. ${r.rating ? `★${r.rating} ` : ''}${r.comment.substring(0, 300)}`)
+    .join('\n');
 
   const prompt = `
 以下のアダルトビデオ商品のユーザーレビューを分析してください。
@@ -1875,9 +1846,11 @@ JSON形式のみで回答してください。
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
           generationConfig: {
             temperature: 0.5,
             maxOutputTokens: 512,
@@ -1889,7 +1862,7 @@ JSON形式のみで回答してください。
             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
           ],
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -1926,9 +1899,9 @@ export async function batchGenerateDescriptions(
     genres?: string[];
   }>,
   options?: {
-    concurrency?: number;  // 同時処理数（デフォルト: 3）
-    delayMs?: number;      // リクエスト間隔（デフォルト: 500ms）
-  }
+    concurrency?: number; // 同時処理数（デフォルト: 3）
+    delayMs?: number; // リクエスト間隔（デフォルト: 500ms）
+  },
 ): Promise<Map<string | number, GeneratedDescription>> {
   const { concurrency = 3, delayMs = 500 } = options || {};
   const results = new Map<string | number, GeneratedDescription>();
@@ -1963,7 +1936,7 @@ export async function batchGenerateDescriptions(
 
     // レート制限対策
     if (i + concurrency < products.length) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
@@ -1975,12 +1948,12 @@ export async function batchGenerateDescriptions(
 // =============================================================================
 
 export interface GeneratedProductReview {
-  summary: string;           // レビュー総評（100-200文字）
-  highlights: string[];      // 高評価ポイント（3-5個）
-  concerns: string[];        // 注意点・改善点（0-3個）
-  recommendedFor: string;    // おすすめ視聴者層（50-100文字）
-  overallSentiment: 'positive' | 'mixed' | 'negative';  // 全体的な評価傾向
-  averageRating?: number;    // 推定評価（1-5）
+  summary: string; // レビュー総評（100-200文字）
+  highlights: string[]; // 高評価ポイント（3-5個）
+  concerns: string[]; // 注意点・改善点（0-3個）
+  recommendedFor: string; // おすすめ視聴者層（50-100文字）
+  overallSentiment: 'positive' | 'mixed' | 'negative'; // 全体的な評価傾向
+  averageRating?: number; // 推定評価（1-5）
 }
 
 /**
@@ -2020,12 +1993,17 @@ export async function generateProductReview(params: {
     description ? `説明: ${description.substring(0, 300)}` : null,
     performers?.length ? `出演者: ${performers.join('、')}` : null,
     genres?.length ? `ジャンル: ${genres.slice(0, 10).join('、')}` : null,
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
-  const reviewTexts = reviews.slice(0, 15).map((r, i) => {
-    const ratingStr = r.rating ? `★${r.rating}${r.maxRating ? `/${r.maxRating}` : '/5'}` : '';
-    return `${i + 1}. ${ratingStr} ${r.content.substring(0, 250)}`;
-  }).join('\n');
+  const reviewTexts = reviews
+    .slice(0, 15)
+    .map((r, i) => {
+      const ratingStr = r.rating ? `★${r.rating}${r.maxRating ? `/${r.maxRating}` : '/5'}` : '';
+      return `${i + 1}. ${ratingStr} ${r.content.substring(0, 250)}`;
+    })
+    .join('\n');
 
   const prompt = `
 あなたはアダルトビデオ情報サイトのレビューアナリストです。
@@ -2063,9 +2041,11 @@ ${reviewTexts}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
           generationConfig: {
             temperature: 0.5,
             topK: 40,
@@ -2079,7 +2059,7 @@ ${reviewTexts}
             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
           ],
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -2140,9 +2120,9 @@ export async function batchGenerateProductReviews(
     }>;
   }>,
   options?: {
-    concurrency?: number;  // 同時処理数（デフォルト: 3）
-    delayMs?: number;      // リクエスト間隔（デフォルト: 500ms）
-  }
+    concurrency?: number; // 同時処理数（デフォルト: 3）
+    delayMs?: number; // リクエスト間隔（デフォルト: 500ms）
+  },
 ): Promise<Map<string | number, GeneratedProductReview>> {
   const { concurrency = 3, delayMs = 500 } = options || {};
   const results = new Map<string | number, GeneratedProductReview>();
@@ -2183,7 +2163,7 @@ export async function batchGenerateProductReviews(
 
     // レート制限対策
     if (i + concurrency < products.length) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
@@ -2195,11 +2175,11 @@ export async function batchGenerateProductReviews(
 // =============================================================================
 
 export interface GeneratedPerformerReview {
-  overview: string;           // 演者の総合的な紹介（100-200文字）
-  style: string;              // 演技スタイル・特徴（50-100文字）
-  appeal: string;             // 魅力ポイント（50-100文字）
-  recommendation: string;     // おすすめコメント（50-100文字）
-  keywords: string[];         // 検索キーワード（3-5個）
+  overview: string; // 演者の総合的な紹介（100-200文字）
+  style: string; // 演技スタイル・特徴（50-100文字）
+  appeal: string; // 魅力ポイント（50-100文字）
+  recommendation: string; // おすすめコメント（50-100文字）
+  keywords: string[]; // 検索キーワード（3-5個）
 }
 
 /**
@@ -2211,46 +2191,44 @@ export interface GeneratedPerformerReview {
  */
 export async function generatePerformerReview(params: {
   performerName: string;
-  aliases?: string[];          // 別名・旧芸名
-  productTitles?: string[];    // 出演作品タイトル
+  aliases?: string[]; // 別名・旧芸名
+  productTitles?: string[]; // 出演作品タイトル
   productDescriptions?: string[]; // 出演作品の説明
-  genres?: string[];           // 関連ジャンル
-  productCount?: number;       // 出演作品数
-  existingReview?: string;     // 既存のレビュー（更新時）
+  genres?: string[]; // 関連ジャンル
+  productCount?: number; // 出演作品数
+  existingReview?: string; // 既存のレビュー（更新時）
 }): Promise<GeneratedPerformerReview | null> {
   if (!GEMINI_API_KEY) {
     console.warn('[Gemini API] API Key が未設定');
     return null;
   }
 
-  const {
-    performerName,
-    aliases,
-    productTitles,
-    productDescriptions,
-    genres,
-    productCount,
-    existingReview,
-  } = params;
+  const { performerName, aliases, productTitles, productDescriptions, genres, productCount, existingReview } = params;
 
   // プロンプト構築（作品数は言及しない）
   const performerInfo = [
     `名前: ${performerName}`,
     aliases?.length ? `別名: ${aliases.join('、')}` : null,
     genres?.length ? `関連ジャンル: ${genres.slice(0, 10).join('、')}` : null,
-  ].filter(Boolean).join('\n');
+  ]
+    .filter(Boolean)
+    .join('\n');
 
   const worksInfo = productTitles?.length
-    ? `\n\n代表作品:\n${productTitles.slice(0, 10).map((t, i) => `${i + 1}. ${t}`).join('\n')}`
+    ? `\n\n代表作品:\n${productTitles
+        .slice(0, 10)
+        .map((t, i) => `${i + 1}. ${t}`)
+        .join('\n')}`
     : '';
 
   const descriptionsInfo = productDescriptions?.length
-    ? `\n\n作品の特徴:\n${productDescriptions.slice(0, 5).map((d) => `- ${d.substring(0, 150)}`).join('\n')}`
+    ? `\n\n作品の特徴:\n${productDescriptions
+        .slice(0, 5)
+        .map((d) => `- ${d.substring(0, 150)}`)
+        .join('\n')}`
     : '';
 
-  const existingInfo = existingReview
-    ? `\n\n参考（既存レビュー）:\n${existingReview.substring(0, 500)}`
-    : '';
+  const existingInfo = existingReview ? `\n\n参考（既存レビュー）:\n${existingReview.substring(0, 500)}` : '';
 
   const prompt = `
 あなたはアダルトビデオ情報サイトの演者レビューライターです。
@@ -2290,9 +2268,11 @@ ${existingInfo}
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          contents: [{
-            parts: [{ text: prompt }]
-          }],
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
           generationConfig: {
             temperature: 0.7,
             topK: 40,
@@ -2306,7 +2286,7 @@ ${existingInfo}
             { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
           ],
         }),
-      }
+      },
     );
 
     if (!response.ok) {
@@ -2364,9 +2344,9 @@ export async function batchGeneratePerformerReviews(
     existingReview?: string;
   }>,
   options?: {
-    concurrency?: number;  // 同時処理数（デフォルト: 2）
-    delayMs?: number;      // リクエスト間隔（デフォルト: 1000ms）
-  }
+    concurrency?: number; // 同時処理数（デフォルト: 2）
+    delayMs?: number; // リクエスト間隔（デフォルト: 1000ms）
+  },
 ): Promise<Map<string | number, GeneratedPerformerReview>> {
   const { concurrency = 2, delayMs = 1000 } = options || {};
   const results = new Map<string | number, GeneratedPerformerReview>();
@@ -2407,7 +2387,7 @@ export async function batchGeneratePerformerReviews(
 
     // レート制限対策（演者レビューはより長いので長めの間隔）
     if (i + concurrency < performers.length) {
-      await new Promise(resolve => setTimeout(resolve, delayMs));
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
     }
   }
 
@@ -2524,7 +2504,7 @@ export async function uploadToGcs(
   objectPath: string,
   data: string | Buffer,
   contentType: string = 'text/html',
-  compress: boolean = true
+  compress: boolean = true,
 ): Promise<GcsUploadResult | null> {
   const token = await getStorageAccessToken();
   if (!token) {
@@ -2552,7 +2532,7 @@ export async function uploadToGcs(
     const response = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
         'Content-Type': finalContentType,
         'Content-Length': uploadData.length.toString(),
         ...(compress ? { 'Content-Encoding': 'gzip' } : {}),
@@ -2605,7 +2585,7 @@ export async function downloadFromGcs(gcsUrl: string): Promise<string | null> {
 
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
 
@@ -2635,11 +2615,7 @@ export async function downloadFromGcs(gcsUrl: string): Promise<string | null> {
  * @param productId 商品ID
  * @param html HTMLコンテンツ
  */
-export async function saveHtmlToGcs(
-  source: string,
-  productId: string,
-  html: string
-): Promise<string | null> {
+export async function saveHtmlToGcs(source: string, productId: string, html: string): Promise<string | null> {
   const objectPath = `html/${source}/${productId}.html`;
   const result = await uploadToGcs(objectPath, html, 'text/html', true);
   return result?.gcsUrl || null;
@@ -2651,11 +2627,7 @@ export async function saveHtmlToGcs(
  * @param productId 商品ID
  * @param data JSONデータ
  */
-export async function saveJsonToGcs(
-  source: string,
-  productId: string,
-  data: object
-): Promise<string | null> {
+export async function saveJsonToGcs(source: string, productId: string, data: object): Promise<string | null> {
   const objectPath = `json/${source}/${productId}.json`;
   const jsonStr = JSON.stringify(data, null, 2);
   const result = await uploadToGcs(objectPath, jsonStr, 'application/json', true);
@@ -2668,11 +2640,7 @@ export async function saveJsonToGcs(
  * @param filename ファイル名
  * @param csvContent CSVコンテンツ
  */
-export async function saveCsvToGcs(
-  source: string,
-  filename: string,
-  csvContent: string
-): Promise<string | null> {
+export async function saveCsvToGcs(source: string, filename: string, csvContent: string): Promise<string | null> {
   const objectPath = `csv/${source}/${filename}`;
   const result = await uploadToGcs(objectPath, csvContent, 'text/csv', true);
   return result?.gcsUrl || null;

@@ -203,9 +203,8 @@ export function StickyCtaBase({
   const styles = getThemeStyles(theme, Boolean(isOnSale));
 
   // セール時はbuyAtSale（割引率付き）、通常時はbuyAtを使用
-  const ctaText = isOnSale && labels.buyAtSale && discount
-    ? labels.buyAtSale.replace('{discount}', String(discount))
-    : labels.buyAt;
+  const ctaText =
+    isOnSale && labels.buyAtSale && discount ? labels.buyAtSale.replace('{discount}', String(discount)) : labels.buyAt;
 
   if (!affiliateUrl || !displayPrice) return null;
 
@@ -213,9 +212,11 @@ export function StickyCtaBase({
     <>
       {/* モバイル版：画面下部固定バー */}
       <div
-        className={`fixed bottom-0 left-0 right-0 md:hidden z-50 ${
+        className={`fixed right-0 bottom-0 left-0 z-50 md:hidden ${
           prefersReducedMotion
-            ? (isMobileVisible ? '' : 'hidden')
+            ? isMobileVisible
+              ? ''
+              : 'hidden'
             : `transition-transform duration-300 ${isMobileVisible ? 'translate-y-0' : 'translate-y-full'}`
         }`}
       >
@@ -227,9 +228,9 @@ export function StickyCtaBase({
             aria-atomic="true"
             className={`text-center font-bold ${
               isCritical
-                ? `py-3 text-lg bg-linear-to-r from-red-600 via-orange-500 to-red-600 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                ? `bg-linear-to-r from-red-600 via-orange-500 to-red-600 py-3 text-lg text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
                 : isUrgent
-                  ? `py-1.5 text-sm bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                  ? `bg-red-500 py-1.5 text-sm text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
                   : `py-1.5 text-sm ${styles.urgentBadge}`
             }`}
           >
@@ -237,30 +238,26 @@ export function StickyCtaBase({
           </div>
         )}
 
-        <div className={`backdrop-blur-md border-t px-4 py-3 safe-area-pb shadow-lg ${styles.mobileContainer}`}>
+        <div className={`safe-area-pb border-t px-4 py-3 shadow-lg backdrop-blur-md ${styles.mobileContainer}`}>
           <div className="flex items-center justify-between gap-3">
             {/* 価格表示 */}
             <div className="flex flex-col">
               {isOnSale ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xl font-bold ${styles.priceText}`}>
-                      {formatPrice(salePrice)}
-                    </span>
+                    <span className={`text-xl font-bold ${styles.priceText}`}>{formatPrice(salePrice)}</span>
                     {discount && (
-                      <span className={`text-xs font-bold text-white bg-red-500 px-1.5 py-0.5 rounded ${prefersReducedMotion ? '' : 'animate-bounce'}`}>
+                      <span
+                        className={`rounded bg-red-500 px-1.5 py-0.5 text-xs font-bold text-white ${prefersReducedMotion ? '' : 'animate-bounce'}`}
+                      >
                         -{discount}%
                       </span>
                     )}
                   </div>
-                  <span className={`text-xs line-through ${styles.originalPriceText}`}>
-                    {formatPrice(price)}
-                  </span>
+                  <span className={`text-xs line-through ${styles.originalPriceText}`}>{formatPrice(price)}</span>
                 </>
               ) : (
-                <span className={`text-xl font-bold ${styles.priceText}`}>
-                  {formatPrice(displayPrice)}
-                </span>
+                <span className={`text-xl font-bold ${styles.priceText}`}>{formatPrice(displayPrice)}</span>
               )}
             </div>
 
@@ -270,11 +267,21 @@ export function StickyCtaBase({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${ctaText} - ${providerLabel}`}
-              className={`flex-1 max-w-xs py-3.5 px-6 text-white font-bold text-center rounded-lg shadow-lg transition-all active:scale-95 flex items-center justify-center gap-2 ${styles.buttonGradient}`}
+              className={`flex max-w-xs flex-1 items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-center font-bold text-white shadow-lg transition-all active:scale-95 ${styles.buttonGradient}`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               {ctaText}
             </a>
@@ -284,24 +291,26 @@ export function StickyCtaBase({
 
       {/* デスクトップ版：右側フローティングボタン */}
       <div
-        className={`fixed bottom-8 right-8 hidden md:block z-50 ${
+        className={`fixed right-8 bottom-8 z-50 hidden md:block ${
           prefersReducedMotion
-            ? (isVisible ? '' : 'hidden')
-            : `transition-all duration-300 ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'}`
+            ? isVisible
+              ? ''
+              : 'hidden'
+            : `transition-all duration-300 ${isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'}`
         }`}
       >
-        <div className={`rounded-2xl shadow-2xl overflow-hidden ${styles.desktopRing}`}>
+        <div className={`overflow-hidden rounded-2xl shadow-2xl ${styles.desktopRing}`}>
           {/* 緊急バッジ - 1時間以内は超大型表示 */}
           {urgencyText && (
             <div
               role="status"
               aria-live="polite"
               aria-atomic="true"
-              className={`text-center px-4 font-bold ${
+              className={`px-4 text-center font-bold ${
                 isCritical
-                  ? `py-3 text-base bg-linear-to-r from-red-600 via-orange-500 to-red-600 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                  ? `bg-linear-to-r from-red-600 via-orange-500 to-red-600 py-3 text-base text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
                   : isUrgent
-                    ? `py-1.5 text-sm bg-red-500 text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
+                    ? `bg-red-500 py-1.5 text-sm text-white ${prefersReducedMotion ? '' : 'animate-pulse'}`
                     : `py-1.5 text-sm ${styles.urgentBadge}`
               }`}
             >
@@ -309,29 +318,23 @@ export function StickyCtaBase({
             </div>
           )}
 
-          <div className={`backdrop-blur-md p-4 ${styles.desktopContainer}`}>
+          <div className={`p-4 backdrop-blur-md ${styles.desktopContainer}`}>
             {/* 価格表示 */}
-            <div className="flex flex-col items-center mb-3">
+            <div className="mb-3 flex flex-col items-center">
               {isOnSale ? (
                 <>
                   <div className="flex items-center gap-2">
-                    <span className={`text-2xl font-bold ${styles.priceText}`}>
-                      {formatPrice(salePrice)}
-                    </span>
+                    <span className={`text-2xl font-bold ${styles.priceText}`}>{formatPrice(salePrice)}</span>
                     {discount && (
-                      <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">
+                      <span className="rounded-full bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
                         -{discount}%
                       </span>
                     )}
                   </div>
-                  <span className={`text-sm line-through ${styles.originalPriceText}`}>
-                    {formatPrice(price)}
-                  </span>
+                  <span className={`text-sm line-through ${styles.originalPriceText}`}>{formatPrice(price)}</span>
                 </>
               ) : (
-                <span className={`text-2xl font-bold ${styles.priceText}`}>
-                  {formatPrice(displayPrice)}
-                </span>
+                <span className={`text-2xl font-bold ${styles.priceText}`}>{formatPrice(displayPrice)}</span>
               )}
             </div>
 
@@ -341,32 +344,48 @@ export function StickyCtaBase({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${ctaText} - ${providerLabel}`}
-              className={`w-full py-3 px-8 text-white font-bold text-center rounded-xl shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2 ${styles.buttonGradient}`}
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 text-center font-bold text-white shadow-lg transition-all hover:scale-105 ${styles.buttonGradient}`}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
               {ctaText}
             </a>
 
             {/* プロバイダーラベル */}
-            <p className={`text-center text-xs mt-2 ${styles.providerText}`}>
-              {providerLabel}
-            </p>
+            <p className={`mt-2 text-center text-xs ${styles.providerText}`}>{providerLabel}</p>
 
             {/* 信頼バッジ（A/Bテスト用） */}
             {showTrustBadge && (
-              <div className={`flex items-center justify-center gap-2 mt-2 text-[10px] ${styles.providerText}`}>
+              <div className={`mt-2 flex items-center justify-center gap-2 text-[10px] ${styles.providerText}`}>
                 <span className="flex items-center gap-1">
-                  <svg className="w-3 h-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg className="h-3 w-3 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   安全決済
                 </span>
                 <span className="flex items-center gap-1">
-                  <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  <svg className="h-3 w-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
                   </svg>
                   公式
                 </span>

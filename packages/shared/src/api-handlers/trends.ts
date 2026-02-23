@@ -67,7 +67,13 @@ export function createTrendsHandler(deps: TrendsHandlerDeps, options: TrendsHand
         const currentCount = Number(row.count);
         const previousCount = previousTagMap.get(row.name) || 0;
         const change = previousCount > 0 ? Math.round(((currentCount - previousCount) / previousCount) * 100) : 100;
-        return { id: Number(row.id), name: row.name, count: currentCount, change, trend: change > 10 ? 'up' : change < -10 ? 'down' : 'stable' };
+        return {
+          id: Number(row.id),
+          name: row.name,
+          count: currentCount,
+          change,
+          trend: change > 10 ? 'up' : change < -10 ? 'down' : 'stable',
+        };
       });
 
       const currentPerformersQuery = await db.execute(deps.sql`
@@ -92,7 +98,13 @@ export function createTrendsHandler(deps: TrendsHandlerDeps, options: TrendsHand
         const currentCount = Number(row.count);
         const previousCount = previousPerformerMap.get(row.name) || 0;
         const change = previousCount > 0 ? Math.round(((currentCount - previousCount) / previousCount) * 100) : 100;
-        return { id: Number(row.id), name: row.name, count: currentCount, change, trend: change > 10 ? 'up' : change < -10 ? 'down' : 'stable' };
+        return {
+          id: Number(row.id),
+          name: row.name,
+          count: currentCount,
+          change,
+          trend: change > 10 ? 'up' : change < -10 ? 'down' : 'stable',
+        };
       });
 
       const insights: string[] = [];
@@ -100,12 +112,32 @@ export function createTrendsHandler(deps: TrendsHandlerDeps, options: TrendsHand
         ja: {
           rising: (names: string[]) => `「${names.join('」「')}」が人気上昇中`,
           performers: (names: string[]) => `${names.join('、')}の新作が増加`,
-          topGenre: (name: string, count: number, p: string) => `今${p === 'month' ? '月' : '週'}最も人気のジャンルは「${name}」(${count}作品)`,
+          topGenre: (name: string, count: number, p: string) =>
+            `今${p === 'month' ? '月' : '週'}最も人気のジャンルは「${name}」(${count}作品)`,
         },
         en: {
           rising: (names: string[]) => `"${names.join('", "')}" are trending up`,
           performers: (names: string[]) => `${names.join(', ')} releasing more content`,
-          topGenre: (name: string, count: number, p: string) => `Most popular genre this ${p}: "${name}" (${count} releases)`,
+          topGenre: (name: string, count: number, p: string) =>
+            `Most popular genre this ${p}: "${name}" (${count} releases)`,
+        },
+        zh: {
+          rising: (names: string[]) => `「${names.join('」「')}」人气上升中`,
+          performers: (names: string[]) => `${names.join('、')}的新作增加`,
+          topGenre: (name: string, count: number, p: string) =>
+            `本${p === 'month' ? '月' : '周'}最热门的类型是「${name}」(${count}部作品)`,
+        },
+        'zh-TW': {
+          rising: (names: string[]) => `「${names.join('」「')}」人氣上升中`,
+          performers: (names: string[]) => `${names.join('、')}的新作增加`,
+          topGenre: (name: string, count: number, p: string) =>
+            `本${p === 'month' ? '月' : '週'}最熱門的類型是「${name}」(${count}部作品)`,
+        },
+        ko: {
+          rising: (names: string[]) => `"${names.join('", "')}" 인기 상승 중`,
+          performers: (names: string[]) => `${names.join(', ')}의 신작 증가`,
+          topGenre: (name: string, count: number, p: string) =>
+            `이번 ${p === 'month' ? '달' : '주'} 가장 인기 있는 장르: "${name}" (${count}작품)`,
         },
       };
       const fmt = insightFormats[locale] || insightFormats.ja;
@@ -117,14 +149,27 @@ export function createTrendsHandler(deps: TrendsHandlerDeps, options: TrendsHand
       const topTag = tagTrends[0];
       if (topTag) insights.push(fmt.topGenre(topTag.name, topTag.count, period));
 
-      const response = { success: true, period, tags: tagTrends.slice(0, 10), performers: performerTrends.slice(0, 10), insights };
+      const response = {
+        success: true,
+        period,
+        tags: tagTrends.slice(0, 10),
+        performers: performerTrends.slice(0, 10),
+        insights,
+      };
       await deps.setCache(cacheKey, response, CACHE_TTL);
 
       return NextResponse.json(response);
     } catch (error) {
       console.error('[Trends API] Error:', error);
       const { searchParams } = new URL(request.url);
-      return NextResponse.json({ success: false, fallback: true, period: searchParams.get('period') || 'week', tags: [], performers: [], insights: [] });
+      return NextResponse.json({
+        success: false,
+        fallback: true,
+        period: searchParams.get('period') || 'week',
+        tags: [],
+        performers: [],
+        insights: [],
+      });
     }
   };
 }

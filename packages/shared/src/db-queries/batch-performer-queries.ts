@@ -33,14 +33,7 @@ export interface BatchPerformerQueryDeps {
  * 女優バッチ取得クエリファクトリー
  */
 export function createBatchPerformerQueries(deps: BatchPerformerQueryDeps) {
-  const {
-    getDb,
-    products,
-    productPerformers,
-    productSources,
-    performerAliases,
-    getDtiServiceFromUrl,
-  } = deps;
+  const { getDb, products, productPerformers, productSources, performerAliases, getDtiServiceFromUrl } = deps;
 
   /**
    * バッチで複数女優のサムネイル画像を取得（最新作品のサムネイルを使用）
@@ -60,7 +53,10 @@ export function createBatchPerformerQueries(deps: BatchPerformerQueryDeps) {
       FROM product_performers pp
       INNER JOIN products p ON pp.product_id = p.id
       INNER JOIN product_sources ps ON pp.product_id = ps.product_id
-      WHERE pp.performer_id IN (${sql.join(performerIds.map(id => sql`${id}`), sql`, `)})
+      WHERE pp.performer_id IN (${sql.join(
+        performerIds.map((id) => sql`${id}`),
+        sql`, `,
+      )})
         AND p.default_thumbnail_url IS NOT NULL
         AND p.default_thumbnail_url != ''
       ORDER BY

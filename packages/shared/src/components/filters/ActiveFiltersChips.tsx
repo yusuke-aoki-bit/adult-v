@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter, useParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import { getFilterThemeConfig, type FilterTheme } from './theme';
-import { getActiveFiltersTranslation } from './translations';
+import { getTranslation, activeFiltersTranslations } from '../../lib/translations';
 
 interface Filter {
   key: string;
@@ -40,7 +40,7 @@ export default function ActiveFiltersChips({
   const router = useRouter();
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
-  const t = getActiveFiltersTranslation(locale);
+  const t = getTranslation(activeFiltersTranslations, locale);
   const themeConfig = getFilterThemeConfig(theme);
 
   const activeFilters: Filter[] = [];
@@ -71,7 +71,7 @@ export default function ActiveFiltersChips({
   if (!isFanzaSite) {
     const includeAsp = searchParams.get('includeAsp');
     if (includeAsp) {
-      includeAsp.split(',').forEach(asp => {
+      includeAsp.split(',').forEach((asp) => {
         // Skip hidden ASPs
         if (hiddenAsps.includes(asp)) return;
         const providerId = aspToProviderId[asp];
@@ -89,7 +89,7 @@ export default function ActiveFiltersChips({
   // Tag filters
   const includeTags = searchParams.get('include');
   if (includeTags) {
-    includeTags.split(',').forEach(tag => {
+    includeTags.split(',').forEach((tag) => {
       activeFilters.push({
         key: `tag-${tag}`,
         label: tag,
@@ -106,7 +106,7 @@ export default function ActiveFiltersChips({
 
     if (filter.type === 'asp' && filter.value) {
       const values = newParams.get('includeAsp')?.split(',') || [];
-      const filtered = values.filter(v => v !== filter.value);
+      const filtered = values.filter((v) => v !== filter.value);
       if (filtered.length > 0) {
         newParams.set('includeAsp', filtered.join(','));
       } else {
@@ -114,7 +114,7 @@ export default function ActiveFiltersChips({
       }
     } else if (filter.type === 'tag' && filter.value) {
       const values = newParams.get('include')?.split(',') || [];
-      const filtered = values.filter(v => v !== filter.value);
+      const filtered = values.filter((v) => v !== filter.value);
       if (filtered.length > 0) {
         newParams.set('include', filtered.join(','));
       } else {
@@ -141,7 +141,7 @@ export default function ActiveFiltersChips({
   return (
     <div className={themeConfig.activeFilters.containerClass}>
       <span className={themeConfig.activeFilters.labelClass}>{t.activeFilters}:</span>
-      {activeFilters.map(filter => (
+      {activeFilters.map((filter) => (
         <button
           key={filter.key}
           onClick={() => removeFilter(filter)}
@@ -149,14 +149,11 @@ export default function ActiveFiltersChips({
           aria-label={`${filter.label}を削除`}
         >
           <span>{filter.label}</span>
-          <X className="w-3 h-3 opacity-70 group-hover:opacity-100" />
+          <X className="h-3 w-3 opacity-70 group-hover:opacity-100" />
         </button>
       ))}
       {activeFilters.length > 1 && (
-        <button
-          onClick={clearAllFilters}
-          className={themeConfig.activeFilters.clearAllClass}
-        >
+        <button onClick={clearAllFilters} className={themeConfig.activeFilters.clearAllClass}>
           {t.clearAll}
         </button>
       )}

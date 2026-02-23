@@ -10,13 +10,21 @@ const metadataTexts = {
     title: 'Discover Mode',
     description: 'Discover random products and find your favorites',
   },
+  zh: {
+    title: '发现模式',
+    description: '随机发现作品，找到你的最爱',
+  },
+  'zh-TW': {
+    title: '探索模式',
+    description: '隨機探索作品，找到你的最愛',
+  },
+  ko: {
+    title: '발견 모드',
+    description: '랜덤 작품을 발견하고 즐겨찾기를 찾아보세요',
+  },
 } as const;
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
+export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   const t = metadataTexts[locale as keyof typeof metadataTexts] ?? metadataTexts.en;
 
@@ -37,10 +45,6 @@ export async function generateMetadata({
   };
 }
 
-export default function DiscoverLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DiscoverLayout({ children }: { children: React.ReactNode }) {
   return children;
 }

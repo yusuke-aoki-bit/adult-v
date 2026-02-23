@@ -80,7 +80,7 @@ export function saveFilterPreset(name: string, filters: FilterValues): FilterPre
  */
 export function deleteFilterPreset(presetId: string): void {
   const presets = getFilterPresets();
-  const updated = presets.filter(p => p.id !== presetId);
+  const updated = presets.filter((p) => p.id !== presetId);
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -94,9 +94,7 @@ export function deleteFilterPreset(presetId: string): void {
  */
 export function renameFilterPreset(presetId: string, newName: string): void {
   const presets = getFilterPresets();
-  const updated = presets.map(p =>
-    p.id === presetId ? { ...p, name: newName.trim() } : p
-  );
+  const updated = presets.map((p) => (p.id === presetId ? { ...p, name: newName.trim() } : p));
 
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));

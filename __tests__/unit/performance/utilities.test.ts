@@ -8,16 +8,8 @@ import {
   generateProductIdVariations,
   formatProductCodeForDisplay,
 } from '@adult-v/shared/lib/product-id-utils';
-import {
-  normalizeAspName,
-  isDtiSubService,
-} from '@adult-v/shared/lib/asp-utils';
-import {
-  isNotNullish,
-  compact,
-  extractIds,
-  toBatchSourceRows,
-} from '@adult-v/shared/lib/type-guards';
+import { normalizeAspName, isDtiSubService } from '@adult-v/shared/lib/asp-utils';
+import { isNotNullish, compact, extractIds, toBatchSourceRows } from '@adult-v/shared/lib/type-guards';
 import { generateCacheKey } from '@adult-v/shared/lib/cache';
 
 // パフォーマンス計測ヘルパー
@@ -59,7 +51,7 @@ describe('Performance Tests', () => {
 
     it('normalizeProductIdForSearch should process 1000 items under 5ms', () => {
       const avgTime = measureTime(() => {
-        testIds.forEach(id => normalizeProductIdForSearch(id));
+        testIds.forEach((id) => normalizeProductIdForSearch(id));
       }, 100);
 
       console.log(`normalizeProductIdForSearch: ${avgTime.toFixed(3)}ms per 100 items`);
@@ -68,7 +60,7 @@ describe('Performance Tests', () => {
 
     it('generateProductIdVariations should process 100 items under 50ms', () => {
       const avgTime = measureTime(() => {
-        testIds.forEach(id => generateProductIdVariations(id));
+        testIds.forEach((id) => generateProductIdVariations(id));
       }, 10);
 
       console.log(`generateProductIdVariations: ${avgTime.toFixed(3)}ms per 100 items`);
@@ -77,7 +69,7 @@ describe('Performance Tests', () => {
 
     it('formatProductCodeForDisplay should process 1000 items under 10ms', () => {
       const avgTime = measureTime(() => {
-        testIds.forEach(id => formatProductCodeForDisplay(id));
+        testIds.forEach((id) => formatProductCodeForDisplay(id));
       }, 100);
 
       console.log(`formatProductCodeForDisplay: ${avgTime.toFixed(3)}ms per 100 items`);
@@ -91,7 +83,7 @@ describe('Performance Tests', () => {
     it('normalizeAspName should process 1000 items under 2ms', () => {
       const avgTime = measureTime(() => {
         for (let i = 0; i < 100; i++) {
-          aspNames.forEach(name => normalizeAspName(name));
+          aspNames.forEach((name) => normalizeAspName(name));
         }
       }, 10);
 
@@ -109,7 +101,7 @@ describe('Performance Tests', () => {
 
       const avgTime = measureTime(() => {
         for (let i = 0; i < 100; i++) {
-          testUrls.forEach(url => isDtiSubService(url));
+          testUrls.forEach((url) => isDtiSubService(url));
         }
       }, 10);
 
@@ -131,9 +123,7 @@ describe('Performance Tests', () => {
     });
 
     it('compact should process 1000 items under 2ms', () => {
-      const mixedArray = Array.from({ length: 1000 }, (_, i) =>
-        i % 3 === 0 ? null : i % 5 === 0 ? undefined : i
-      );
+      const mixedArray = Array.from({ length: 1000 }, (_, i) => (i % 3 === 0 ? null : i % 5 === 0 ? undefined : i));
 
       const avgTime = measureTime(() => {
         compact(mixedArray);
@@ -190,7 +180,7 @@ describe('Performance Tests', () => {
       const ids = generateTestProductIds(10000);
 
       const start = performance.now();
-      ids.forEach(id => normalizeProductIdForSearch(id));
+      ids.forEach((id) => normalizeProductIdForSearch(id));
       const elapsed = performance.now() - start;
 
       console.log(`Bulk normalization (10000 items): ${elapsed.toFixed(2)}ms`);

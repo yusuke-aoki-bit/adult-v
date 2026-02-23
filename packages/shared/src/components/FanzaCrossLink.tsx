@@ -33,9 +33,7 @@ export default function FanzaCrossLink({
   }
 
   // apps/fanza経由のURL（直接FANZAではなく自社サイト経由）
-  const url = productId
-    ? `${FANZA_SITE_URL}/products/${productId}?hl=${locale}`
-    : null;
+  const url = productId ? `${FANZA_SITE_URL}/products/${productId}?hl=${locale}` : null;
 
   // URLがない場合は表示しない
   if (!url) {
@@ -47,14 +45,9 @@ export default function FanzaCrossLink({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg ${className}`}
+      className={`inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-pink-500 to-rose-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:from-pink-600 hover:to-rose-600 hover:shadow-lg ${className}`}
     >
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
@@ -102,14 +95,9 @@ export function FanzaSiteLink({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 px-2 py-1 bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white text-xs font-medium rounded transition-all ${className}`}
+        className={`inline-flex items-center gap-1 rounded bg-linear-to-r from-pink-500 to-rose-500 px-2 py-1 text-xs font-medium text-white transition-all hover:from-pink-600 hover:to-rose-600 ${className}`}
       >
-        <svg
-          className="w-3 h-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
-        >
+        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -127,14 +115,9 @@ export function FanzaSiteLink({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-2 px-4 py-2 bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg ${className}`}
+      className={`inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-pink-500 to-rose-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:from-pink-600 hover:to-rose-600 hover:shadow-lg ${className}`}
     >
-      <svg
-        className="w-5 h-5"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"

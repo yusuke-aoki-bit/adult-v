@@ -21,7 +21,7 @@ async function getProductCount(): Promise<number> {
 
 async function main() {
   const args = process.argv.slice(2);
-  const batchArg = args.find(a => a.startsWith('--batch='));
+  const batchArg = args.find((a) => a.startsWith('--batch='));
   const batchSize = batchArg ? parseInt(batchArg.split('=')[1], 10) : 500;
   const maxBatches = 100; // 安全のため最大バッチ数を制限
 
@@ -70,7 +70,7 @@ async function main() {
 
     // 短い待機（レート制限）
     console.log('5秒待機...');
-    await new Promise(r => setTimeout(r, 5000));
+    await new Promise((r) => setTimeout(r, 5000));
   }
 
   console.log('\n=== 最終結果 ===');

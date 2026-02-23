@@ -44,9 +44,7 @@ export async function batchUpsertPerformers(
 
   for (const batch of chunk(performers, CHUNK_SIZE)) {
     // VALUES句を構築
-    const valuesClauses = batch.map(
-      (p) => sql`(${p.name}, ${p.nameKana ?? null}, ${p.profileImageUrl ?? null})`
-    );
+    const valuesClauses = batch.map((p) => sql`(${p.name}, ${p.nameKana ?? null}, ${p.profileImageUrl ?? null})`);
 
     // sql.join で結合
     const valuesJoined = sql.join(valuesClauses, sql`, `);
@@ -72,16 +70,16 @@ export async function batchUpsertPerformers(
  * performers テーブルから名前で一括検索
  * @returns Map<name, id>
  */
-export async function batchLookupPerformersByName(
-  db: DbExecutor,
-  names: string[],
-): Promise<Map<string, number>> {
+export async function batchLookupPerformersByName(db: DbExecutor, names: string[]): Promise<Map<string, number>> {
   if (names.length === 0) return new Map();
 
   const map = new Map<string, number>();
 
   for (const batch of chunk(names, CHUNK_SIZE)) {
-    const nameValues = sql.join(batch.map(n => sql`${n}`), sql`, `);
+    const nameValues = sql.join(
+      batch.map((n) => sql`${n}`),
+      sql`, `,
+    );
     const result = await db.execute(sql`
       SELECT id, name FROM performers WHERE name IN (${nameValues})
     `);
@@ -108,10 +106,7 @@ export interface ProductPerformerLink {
  * ON CONFLICT DO NOTHING で重複を安全にスキップ
  * @returns 挿入された件数
  */
-export async function batchInsertProductPerformers(
-  db: DbExecutor,
-  links: ProductPerformerLink[],
-): Promise<number> {
+export async function batchInsertProductPerformers(db: DbExecutor, links: ProductPerformerLink[]): Promise<number> {
   if (links.length === 0) return 0;
 
   // 重複除去
@@ -125,9 +120,7 @@ export async function batchInsertProductPerformers(
   let insertedCount = 0;
 
   for (const batch of chunk(uniqueLinks, CHUNK_SIZE)) {
-    const valuesClauses = batch.map(
-      (l) => sql`(${l.productId}, ${l.performerId})`
-    );
+    const valuesClauses = batch.map((l) => sql`(${l.productId}, ${l.performerId})`);
     const valuesJoined = sql.join(valuesClauses, sql`, `);
 
     const result = await db.execute(sql`
@@ -157,10 +150,7 @@ export interface PerformerTagLink {
  * ON CONFLICT DO NOTHING で重複を安全にスキップ
  * @returns 挿入された件数
  */
-export async function batchInsertPerformerTags(
-  db: DbExecutor,
-  links: PerformerTagLink[],
-): Promise<number> {
+export async function batchInsertPerformerTags(db: DbExecutor, links: PerformerTagLink[]): Promise<number> {
   if (links.length === 0) return 0;
 
   // 重複除去 (performerId:tagId)
@@ -174,9 +164,7 @@ export async function batchInsertPerformerTags(
   let insertedCount = 0;
 
   for (const batch of chunk(uniqueLinks, CHUNK_SIZE)) {
-    const valuesClauses = batch.map(
-      (l) => sql`(${l.performerId}, ${l.tagId}, ${l.source})`
-    );
+    const valuesClauses = batch.map((l) => sql`(${l.performerId}, ${l.tagId}, ${l.source})`);
     const valuesJoined = sql.join(valuesClauses, sql`, `);
 
     const result = await db.execute(sql`
@@ -205,9 +193,7 @@ export async function batchGetOrCreateTags(
   const map = new Map<string, number>();
 
   for (const batch of chunk(tagNames, CHUNK_SIZE)) {
-    const valuesClauses = batch.map(
-      (name) => sql`(${name}, ${category})`
-    );
+    const valuesClauses = batch.map((name) => sql`(${name}, ${category})`);
     const valuesJoined = sql.join(valuesClauses, sql`, `);
 
     const result = await db.execute(sql`
@@ -257,13 +243,14 @@ export async function batchUpdateColumn(
 
   for (const batch of chunk(updates, CHUNK_SIZE)) {
     // CASE WHEN 式を構築
-    const caseClauses = batch.map(
-      (u) => sql`WHEN ${sql.raw(idColumn)} = ${u.id} THEN ${u.value}`
-    );
+    const caseClauses = batch.map((u) => sql`WHEN ${sql.raw(idColumn)} = ${u.id} THEN ${u.value}`);
     const caseJoined = sql.join(caseClauses, sql` `);
 
     // WHERE IN のIDリスト
-    const ids = sql.join(batch.map(u => sql`${u.id}`), sql`, `);
+    const ids = sql.join(
+      batch.map((u) => sql`${u.id}`),
+      sql`, `,
+    );
 
     const result = await db.execute(sql`
       UPDATE ${sql.raw(tableName)}
@@ -280,18 +267,16 @@ export async function batchUpdateColumn(
 /**
  * 汎用バッチDELETE（WHERE id IN で一括削除）
  */
-export async function batchDelete(
-  db: DbExecutor,
-  tableName: string,
-  idColumn: string,
-  ids: number[],
-): Promise<number> {
+export async function batchDelete(db: DbExecutor, tableName: string, idColumn: string, ids: number[]): Promise<number> {
   if (ids.length === 0) return 0;
 
   let totalDeleted = 0;
 
   for (const batch of chunk(ids, CHUNK_SIZE)) {
-    const idValues = sql.join(batch.map(id => sql`${id}`), sql`, `);
+    const idValues = sql.join(
+      batch.map((id) => sql`${id}`),
+      sql`, `,
+    );
 
     const result = await db.execute(sql`
       DELETE FROM ${sql.raw(tableName)}
@@ -329,16 +314,17 @@ export async function batchUpdateMultipleColumns(
 
     // 各カラムの CASE WHEN 式を構築
     const setClauses = columns.map((col) => {
-      const caseClauses = batch.map(
-        (u) => sql`WHEN ${sql.raw(idColumn)} = ${u.id} THEN ${u.values[col] ?? null}`
-      );
+      const caseClauses = batch.map((u) => sql`WHEN ${sql.raw(idColumn)} = ${u.id} THEN ${u.values[col] ?? null}`);
       const caseJoined = sql.join(caseClauses, sql` `);
       return sql`${sql.raw(col)} = CASE ${caseJoined} END`;
     });
     const setJoined = sql.join(setClauses, sql`, `);
 
     // WHERE IN のIDリスト
-    const ids = sql.join(batch.map(u => sql`${u.id}`), sql`, `);
+    const ids = sql.join(
+      batch.map((u) => sql`${u.id}`),
+      sql`, `,
+    );
 
     const result = await db.execute(sql`
       UPDATE ${sql.raw(tableName)}

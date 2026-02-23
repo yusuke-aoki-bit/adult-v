@@ -8,10 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
-import {
-  batchUpsertPerformers,
-  batchInsertProductPerformers,
-} from '../utils/batch-db';
+import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 
 interface CrawlStats {
   totalFetched: number;
@@ -35,7 +32,7 @@ interface SiteConfig {
 }
 
 const SITE_CONFIGS: Record<string, SiteConfig> = {
-  'caribbeancom': {
+  caribbeancom: {
     siteName: 'カリビアンコム',
     aspName: 'CARIBBEANCOM',
     siteId: '2478',
@@ -45,7 +42,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     defaultStart: '112924_001',
     reverseMode: true,
   },
-  'caribbeancompr': {
+  caribbeancompr: {
     siteName: 'カリビアンコムプレミアム',
     aspName: 'CARIBBEANCOMPR',
     siteId: '2477',
@@ -66,7 +63,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     reverseMode: true,
     jsonApiUrl: 'https://www.1pondo.tv/dyn/phpauto/movie_details/movie_id/{id}.json',
   },
-  'heyzo': {
+  heyzo: {
     siteName: 'HEYZO',
     aspName: 'HEYZO',
     siteId: '2665',
@@ -86,7 +83,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     defaultStart: '112924_001',
     reverseMode: true,
   },
-  'pacopacomama': {
+  pacopacomama: {
     siteName: 'パコパコママ',
     aspName: 'PACOPACOMAMA',
     siteId: '2472',
@@ -96,7 +93,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     defaultStart: '112924_001',
     reverseMode: true,
   },
-  'x1x': {
+  x1x: {
     siteName: 'X1X',
     aspName: 'X1X',
     siteId: '',
@@ -106,7 +103,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     defaultStart: '117275',
     reverseMode: false,
   },
-  'enkou55': {
+  enkou55: {
     siteName: 'ENKOU55',
     aspName: 'ENKOU55',
     siteId: '',
@@ -116,7 +113,7 @@ const SITE_CONFIGS: Record<string, SiteConfig> = {
     defaultStart: '118198',
     reverseMode: false,
   },
-  'urekko': {
+  urekko: {
     siteName: 'UREKKO',
     aspName: 'UREKKO',
     siteId: '',
@@ -233,7 +230,11 @@ async function fetch1pondoJson(productId: string): Promise<{
   }
 }
 
-async function parseHtmlContent(html: string, config: SiteConfig, productId: string): Promise<{
+async function parseHtmlContent(
+  html: string,
+  config: SiteConfig,
+  productId: string,
+): Promise<{
   title?: string;
   description?: string;
   performers?: string[];
@@ -267,7 +268,7 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   }
 
   const invalidPatterns = [/^一本道$/, /^カリビアンコム$/, /^カリビアンコムプレミアム$/, /^HEYZO$/];
-  if (!title || title.length < 3 || invalidPatterns.some(p => p.test(title!))) {
+  if (!title || title.length < 3 || invalidPatterns.some((p) => p.test(title!))) {
     return null;
   }
 
@@ -281,7 +282,9 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   }
   // フォールバック: actress/performerリンクから抽出（X1X/ENKOU55/UREKKO等）
   if (performers.length === 0) {
-    const actressMatches = html.matchAll(/<a[^>]*href="[^"]*(?:\/actress\/|\/search\/actress\/)[^"]*"[^>]*>([^<]+)<\/a>/gi);
+    const actressMatches = html.matchAll(
+      /<a[^>]*href="[^"]*(?:\/actress\/|\/search\/actress\/)[^"]*"[^>]*>([^<]+)<\/a>/gi,
+    );
     for (const m of actressMatches) {
       const name = m[1]?.trim();
       if (name && !performers.includes(name) && name.length > 1 && name.length < 30) {
@@ -291,9 +294,10 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   }
 
   const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
-  const releaseDate = dateMatch?.[1] && dateMatch[2] && dateMatch[3]
-    ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
-    : undefined;
+  const releaseDate =
+    dateMatch?.[1] && dateMatch[2] && dateMatch[3]
+      ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
+      : undefined;
 
   const imgMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i);
   let thumbnailUrl = imgMatch?.[1];
@@ -301,7 +305,7 @@ async function parseHtmlContent(html: string, config: SiteConfig, productId: str
   if (!thumbnailUrl && ['X1X', 'ENKOU55', 'UREKKO'].includes(config.aspName)) {
     const padded = productId.padStart(6, '0');
     const host = config.baseUrl.replace(/^https?:\/\/(?:www\.)?/, 'http://static.');
-    thumbnailUrl = `${host}/images/title/${padded.slice(0,2)}/${padded.slice(2,4)}/${padded.slice(4,6)}/player.jpg`;
+    thumbnailUrl = `${host}/images/title/${padded.slice(0, 2)}/${padded.slice(2, 4)}/${padded.slice(4, 6)}/player.jpg`;
   }
 
   let price: number | undefined;
@@ -373,11 +377,14 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
       const config = SITE_CONFIGS[siteKey];
       if (!config) {
-        return NextResponse.json({
-          success: false,
-          error: `Unknown site: ${siteKey}`,
-          availableSites: Object.keys(SITE_CONFIGS),
-        }, { status: 400 });
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Unknown site: ${siteKey}`,
+            availableSites: Object.keys(SITE_CONFIGS),
+          },
+          { status: 400 },
+        );
       }
 
       // auto-resume: startパラメータ省略時、DBから最後のIDを取得
@@ -417,9 +424,9 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
       async function flushPerformerBatch() {
         if (allPerformerNames.size === 0) return;
-        const performerData = [...allPerformerNames].map(name => ({ name }));
+        const performerData = [...allPerformerNames].map((name) => ({ name }));
         const upsertedPerformers = await batchUpsertPerformers(db, performerData);
-        const nameToId = new Map(upsertedPerformers.map(p => [p.name, p.id]));
+        const nameToId = new Map(upsertedPerformers.map((p) => [p.name, p.id]));
         const links: { productId: number; performerId: number }[] = [];
         for (const { productId, performerNames } of pendingPerformerLinks) {
           for (const name of performerNames) {
@@ -454,7 +461,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
             const nextId = generateNextId(currentId, config.idFormat, config.reverseMode);
             if (!nextId) break;
             currentId = nextId;
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
             continue;
           }
 
@@ -477,7 +484,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
             const nextId = generateNextId(currentId, config.idFormat, config.reverseMode);
             if (!nextId) break;
             currentId = nextId;
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise((r) => setTimeout(r, 500));
             continue;
           }
 
@@ -501,7 +508,8 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
 
           const row = productResult.rows[0] as { id: number; is_new: boolean };
           const productId = row.id;
-          if (row.is_new) stats.newProducts++; else stats.updatedProducts++;
+          if (row.is_new) stats.newProducts++;
+          else stats.updatedProducts++;
 
           await db.execute(sql`
             INSERT INTO product_sources (product_id, asp_name, original_product_id, affiliate_url, price, product_type, data_source, last_updated)
@@ -534,7 +542,6 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
               stats.videosAdded++;
             }
           }
-
         } catch (error) {
           stats.errors++;
           console.error(`[crawl-dti] Error processing ${currentId}:`, error);
@@ -544,7 +551,7 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
         if (!nextId) break;
         currentId = nextId;
 
-        await new Promise(r => setTimeout(r, 1000));
+        await new Promise((r) => setTimeout(r, 1000));
       }
 
       // 最終フラッシュ（ループ途中で抜けた場合の残りデータ）
@@ -559,12 +566,11 @@ export function createCrawlDtiHandler(deps: CrawlDtiHandlerDeps) {
         stats,
         duration: `${duration}s`,
       });
-
     } catch (error) {
       console.error('[crawl-dti] Error:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error', stats },
-        { status: 500 }
+        { status: 500 },
       );
     }
   };

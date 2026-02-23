@@ -37,11 +37,7 @@ export interface UseCorrectionsReturn {
   deleteCorrection: (correctionId: number) => Promise<void>;
 }
 
-export function useCorrections({
-  targetType,
-  targetId,
-  userId,
-}: UseCorrectionsOptions): UseCorrectionsReturn {
+export function useCorrections({ targetType, targetId, userId }: UseCorrectionsOptions): UseCorrectionsReturn {
   const [corrections, setCorrections] = useState<Correction[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,12 +67,7 @@ export function useCorrections({
   }, [targetType, targetId]);
 
   const submitCorrection = useCallback(
-    async (data: {
-      fieldName: string;
-      currentValue: string | null;
-      suggestedValue: string;
-      reason: string | null;
-    }) => {
+    async (data: { fieldName: string; currentValue: string | null; suggestedValue: string; reason: string | null }) => {
       if (!userId) {
         throw new Error('User not logged in');
       }
@@ -102,7 +93,7 @@ export function useCorrections({
       // Add the new correction to the list
       setCorrections((prev) => [result.correction, ...prev]);
     },
-    [userId, targetType, targetId]
+    [userId, targetType, targetId],
   );
 
   const deleteCorrection = useCallback(
@@ -123,7 +114,7 @@ export function useCorrections({
       // Remove from local state
       setCorrections((prev) => prev.filter((c) => c.id !== correctionId));
     },
-    [userId]
+    [userId],
   );
 
   return {

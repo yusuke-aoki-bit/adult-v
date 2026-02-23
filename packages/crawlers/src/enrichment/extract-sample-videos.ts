@@ -165,7 +165,7 @@ async function main() {
     const existingFanzaResult = await db.execute(sql`
       SELECT DISTINCT product_id FROM product_videos WHERE asp_name = 'FANZA'
     `);
-    const existingFanzaIds = new Set((existingFanzaResult.rows as { product_id: number }[]).map(r => r.product_id));
+    const existingFanzaIds = new Set((existingFanzaResult.rows as { product_id: number }[]).map((r) => r.product_id));
     console.log(`既存の動画データ: ${existingFanzaIds.size}件`);
 
     // raw_html_dataから未処理のデータを取得
@@ -219,7 +219,7 @@ async function main() {
     const existingMgsResult = await db.execute(sql`
       SELECT DISTINCT product_id FROM product_videos WHERE asp_name = 'MGS'
     `);
-    const existingMgsIds = new Set((existingMgsResult.rows as { product_id: number }[]).map(r => r.product_id));
+    const existingMgsIds = new Set((existingMgsResult.rows as { product_id: number }[]).map((r) => r.product_id));
     console.log(`既存の動画データ: ${existingMgsIds.size}件`);
 
     // mgs_raw_pagesから未処理のデータを取得

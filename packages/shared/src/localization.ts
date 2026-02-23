@@ -19,7 +19,7 @@ export function getLocalizedTitle(
     titleZhTw?: string | null;
     titleKo?: string | null;
   },
-  locale: string
+  locale: string,
 ): string {
   switch (locale) {
     case 'en':
@@ -47,7 +47,7 @@ export function getLocalizedDescription(
     descriptionZhTw?: string | null;
     descriptionKo?: string | null;
   },
-  locale: string
+  locale: string,
 ): string {
   switch (locale) {
     case 'en':
@@ -75,7 +75,7 @@ export function getLocalizedPerformerName(
     nameZhTw?: string | null;
     nameKo?: string | null;
   },
-  locale: string
+  locale: string,
 ): string {
   switch (locale) {
     case 'en':
@@ -103,7 +103,7 @@ export function getLocalizedPerformerBio(
     bioZhTw?: string | null;
     bioKo?: string | null;
   },
-  locale: string
+  locale: string,
 ): string {
   switch (locale) {
     case 'en':
@@ -131,7 +131,7 @@ export function getLocalizedTagName(
     nameZhTw?: string | null;
     nameKo?: string | null;
   },
-  locale: string
+  locale: string,
 ): string {
   switch (locale) {
     case 'en':
@@ -159,7 +159,7 @@ export function getLocalizedTagDescription(
     descriptionZhTw?: string | null;
     descriptionKo?: string | null;
   },
-  locale: string
+  locale: string,
 ): string {
   switch (locale) {
     case 'en':
@@ -182,10 +182,7 @@ export type { ActressAiReview } from './types/product';
  * AIレビューのローカライズ
  * AIレビューはJSONで保存され、各言語のフィールドを持つ可能性がある
  */
-export function getLocalizedAiReview(
-  aiReview: string | null | undefined,
-  locale: string
-): ActressAiReview | undefined {
+export function getLocalizedAiReview(aiReview: string | null | undefined, locale: string): ActressAiReview | undefined {
   if (!aiReview) return undefined;
 
   try {
@@ -198,7 +195,9 @@ export function getLocalizedAiReview(
         overview: localized.overview || '',
         style: localized.style || localized.actingStyle || '',
         appeal: localized.appeal || (Array.isArray(localized.appealPoints) ? localized.appealPoints.join('、') : ''),
-        recommendation: localized.recommendation || (Array.isArray(localized.recommendedFor) ? localized.recommendedFor.join('、') : ''),
+        recommendation:
+          localized.recommendation ||
+          (Array.isArray(localized.recommendedFor) ? localized.recommendedFor.join('、') : ''),
         keywords: localized.keywords || [],
       };
     }
@@ -220,7 +219,8 @@ export function getLocalizedAiReview(
       overview: parsed.overview || '',
       style: parsed.style || parsed.actingStyle || '',
       appeal: parsed.appeal || (Array.isArray(parsed.appealPoints) ? parsed.appealPoints.join('、') : ''),
-      recommendation: parsed.recommendation || (Array.isArray(parsed.recommendedFor) ? parsed.recommendedFor.join('、') : ''),
+      recommendation:
+        parsed.recommendation || (Array.isArray(parsed.recommendedFor) ? parsed.recommendedFor.join('、') : ''),
       keywords: parsed.keywords || [],
     };
   } catch {

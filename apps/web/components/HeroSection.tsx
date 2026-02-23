@@ -85,7 +85,9 @@ const heroTexts = {
     releases: 'titles',
   },
 } as const;
-function getHeroText(locale: string) { return heroTexts[locale as keyof typeof heroTexts] || heroTexts.ja; }
+function getHeroText(locale: string) {
+  return heroTexts[locale as keyof typeof heroTexts] || heroTexts.ja;
+}
 
 // カウントダウンタイマーコンポーネント
 function CountdownTimer({ endAt, locale }: { endAt: string | Date; locale: string }) {
@@ -127,13 +129,12 @@ function CountdownTimer({ endAt, locale }: { endAt: string | Date; locale: strin
 
   return (
     <div className="flex items-center gap-1 text-sm">
-      <Clock className="w-4 h-4" />
+      <Clock className="h-4 w-4" />
       <span className="font-mono">
-        {String(timeLeft.hours).padStart(2, '0')}:
-        {String(timeLeft.minutes).padStart(2, '0')}:
+        {String(timeLeft.hours).padStart(2, '0')}:{String(timeLeft.minutes).padStart(2, '0')}:
         {String(timeLeft.seconds).padStart(2, '0')}
       </span>
-      <span className="text-xs opacity-80 ml-1">
+      <span className="ml-1 text-xs opacity-80">
         {timeLeft.hours > 0
           ? getHeroText(locale).timeRemainingHours(timeLeft.hours, timeLeft.minutes)
           : getHeroText(locale).timeRemainingMinutes(timeLeft.minutes)}
@@ -190,22 +191,23 @@ export default function HeroSection({
       <section className="relative bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 py-8 sm:py-12">
         <div className="container mx-auto px-4">
           <div className="text-center">
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4">
-              {ht.database}<span className="text-pink-400">{ht.databaseHighlight}</span>
+            <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl md:text-5xl">
+              {ht.database}
+              <span className="text-pink-400">{ht.databaseHighlight}</span>
             </h1>
-            <p className="text-gray-300 text-lg mb-8">
+            <p className="mb-8 text-lg text-gray-300">
               {ht.statsDesc(totalActressCount.toLocaleString(), totalProductCount.toLocaleString())}
             </p>
             <div className="flex justify-center gap-4">
               <Link
                 href={localizedHref('/products', locale)}
-                className="px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-lg hover:from-pink-400 hover:to-rose-400 transition-all transform hover:scale-105"
+                className="transform rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3 font-bold text-white transition-all hover:scale-105 hover:from-pink-400 hover:to-rose-400"
               >
                 {ht.searchProducts}
               </Link>
               <Link
                 href={localizedHref('/', locale)}
-                className="px-6 py-3 bg-gray-700 text-white font-bold rounded-lg hover:bg-gray-600 transition-all"
+                className="rounded-lg bg-gray-700 px-6 py-3 font-bold text-white transition-all hover:bg-gray-600"
               >
                 {ht.searchActresses}
               </Link>
@@ -223,79 +225,81 @@ export default function HeroSection({
 
       {/* メインカルーセル */}
       <div className="relative container mx-auto px-4 py-6 sm:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+        <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2">
           {/* 左側: 商品情報 */}
-          <div className="space-y-4 order-2 lg:order-1">
+          <div className="order-2 space-y-4 lg:order-1">
             {/* セールバッジ */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-red-600 to-orange-500 text-white font-bold rounded-full text-sm">
-                <Flame className="w-4 h-4" />
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-red-600 to-orange-500 px-3 py-1.5 text-sm font-bold text-white">
+                <Flame className="h-4 w-4" />
                 {ht.sale}
               </span>
               {currentProduct?.discountPercent && (
-                <span className="px-3 py-1.5 bg-yellow-500 text-black font-bold rounded-full text-sm">
+                <span className="rounded-full bg-yellow-500 px-3 py-1.5 text-sm font-bold text-black">
                   {ht.maxOff(currentProduct.discountPercent)}
                 </span>
               )}
               {currentProduct?.endAt && (
-                <div className="px-3 py-1.5 bg-black/50 text-white rounded-full">
+                <div className="rounded-full bg-black/50 px-3 py-1.5 text-white">
                   <CountdownTimer endAt={currentProduct.endAt} locale={locale} />
                 </div>
               )}
             </div>
 
             {/* タイトル */}
-            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-white leading-tight line-clamp-2 wrap-break-word">
+            <h2 className="line-clamp-2 text-xl leading-tight font-bold wrap-break-word text-white sm:text-2xl md:text-3xl">
               {currentProduct?.title}
             </h2>
 
             {/* 出演者 */}
             {currentProduct?.performers && currentProduct.performers.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-gray-400 text-sm">{ht.cast}</span>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm text-gray-400">{ht.cast}</span>
                 {currentProduct.performers.slice(0, 3).map((performer, i) => (
                   <Link
                     key={performer.id}
                     href={localizedHref(`/actress/${performer.id}`, locale)}
-                    className="text-pink-400 hover:text-pink-300 font-medium transition-colors"
+                    className="font-medium text-pink-400 transition-colors hover:text-pink-300"
                   >
                     {performer.name}
                     {i < Math.min(currentProduct.performers.length, 3) - 1 && ', '}
                   </Link>
                 ))}
-                {currentProduct.performers.length > 3 && (
-                  <span className="text-gray-400 text-sm">{ht.others}</span>
-                )}
+                {currentProduct.performers.length > 3 && <span className="text-sm text-gray-400">{ht.others}</span>}
               </div>
             )}
 
             {/* 価格 */}
             <div className="flex items-baseline gap-3">
-              <span className="text-3xl sm:text-4xl font-bold text-red-400">
+              <span className="text-3xl font-bold text-red-400 sm:text-4xl">
                 ¥{currentProduct?.salePrice?.toLocaleString()}
               </span>
               <span className="text-lg text-gray-400 line-through">
                 ¥{currentProduct?.regularPrice?.toLocaleString()}
               </span>
             </div>
-            {currentProduct?.regularPrice && currentProduct?.salePrice && currentProduct.regularPrice > currentProduct.salePrice && (
-              <p className="text-sm text-green-400 flex items-center gap-1">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                ¥{(currentProduct.regularPrice - currentProduct.salePrice).toLocaleString()} {ht.savings}
-              </p>
-            )}
+            {currentProduct?.regularPrice &&
+              currentProduct?.salePrice &&
+              currentProduct.regularPrice > currentProduct.salePrice && (
+                <p className="flex items-center gap-1 text-sm text-green-400">
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  ¥{(currentProduct.regularPrice - currentProduct.salePrice).toLocaleString()} {ht.savings}
+                </p>
+              )}
 
             {/* CTA */}
-            <div className="flex gap-3 flex-wrap">
+            <div className="flex flex-wrap gap-3">
               <Link
                 href={localizedHref(`/products/${currentProduct?.productId}`, locale)}
-                className="flex-1 sm:flex-none px-6 py-3 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold rounded-lg hover:from-pink-400 hover:to-rose-400 transition-all transform hover:scale-105 text-center shadow-lg shadow-pink-500/30"
+                className="flex-1 transform rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3 text-center font-bold text-white shadow-lg shadow-pink-500/30 transition-all hover:scale-105 hover:from-pink-400 hover:to-rose-400 sm:flex-none"
               >
                 {ht.viewDetails}
               </Link>
               <Link
                 href={localizedHref('/sales', locale)}
-                className="flex-1 sm:flex-none px-6 py-3 bg-gray-700/80 text-white font-bold rounded-lg hover:bg-gray-600 transition-all text-center"
+                className="flex-1 rounded-lg bg-gray-700/80 px-6 py-3 text-center font-bold text-white transition-all hover:bg-gray-600 sm:flex-none"
               >
                 {ht.allSaleProducts}
               </Link>
@@ -305,7 +309,7 @@ export default function HeroSection({
           {/* 右側: 画像 */}
           <div className="relative order-1 lg:order-2">
             <div
-              className="relative aspect-video sm:aspect-[4/3] rounded-2xl overflow-hidden shadow-2xl"
+              className="relative aspect-video overflow-hidden rounded-2xl shadow-2xl sm:aspect-[4/3]"
               onMouseEnter={() => setIsAutoPlaying(false)}
               onMouseLeave={() => setIsAutoPlaying(true)}
             >
@@ -322,8 +326,8 @@ export default function HeroSection({
                   blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/2wBDAQkJCQwLDBgNDRgyIRwhMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjIyMjL/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
                 />
               ) : (
-                <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                  <Play className="w-16 h-16 text-gray-600" />
+                <div className="absolute inset-0 flex items-center justify-center bg-gray-800">
+                  <Play className="h-16 w-16 text-gray-600" />
                 </div>
               )}
 
@@ -335,17 +339,17 @@ export default function HeroSection({
                 <>
                   <button
                     onClick={goToPrev}
-                    className="absolute left-2 top-1/2 -translate-y-1/2 p-3 sm:p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                    className="absolute top-1/2 left-2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70 sm:p-2"
                     aria-label={ht.prevProduct}
                   >
-                    <ChevronLeft className="w-6 h-6" />
+                    <ChevronLeft className="h-6 w-6" />
                   </button>
                   <button
                     onClick={goToNext}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-3 sm:p-2 bg-black/50 hover:bg-black/70 rounded-full text-white transition-colors"
+                    className="absolute top-1/2 right-2 -translate-y-1/2 rounded-full bg-black/50 p-3 text-white transition-colors hover:bg-black/70 sm:p-2"
                     aria-label={ht.nextProduct}
                   >
-                    <ChevronRight className="w-6 h-6" />
+                    <ChevronRight className="h-6 w-6" />
                   </button>
                 </>
               )}
@@ -353,22 +357,20 @@ export default function HeroSection({
 
             {/* ドットインジケーター + スライドカウンター */}
             {heroProducts.length > 1 && (
-              <div className="flex items-center justify-center gap-3 mt-4">
+              <div className="mt-4 flex items-center justify-center gap-3">
                 <div className="flex gap-2">
                   {heroProducts.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSlide(index)}
-                      className={`h-3 rounded-full transition-all p-1 ${
-                        index === currentSlide
-                          ? 'bg-pink-500 w-8'
-                          : 'bg-gray-600 hover:bg-gray-500 w-3'
+                      className={`h-3 rounded-full p-1 transition-all ${
+                        index === currentSlide ? 'w-8 bg-pink-500' : 'w-3 bg-gray-600 hover:bg-gray-500'
                       }`}
                       aria-label={ht.slide(index + 1)}
                     />
                   ))}
                 </div>
-                <span className="text-xs text-gray-400 font-mono">
+                <span className="font-mono text-xs text-gray-400">
                   {currentSlide + 1}/{heroProducts.length}
                 </span>
               </div>
@@ -378,25 +380,22 @@ export default function HeroSection({
 
         {/* トレンド女優ストリップ */}
         {trendingActresses.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <div className="flex items-center gap-2 mb-4">
-              <TrendingUp className="w-5 h-5 text-green-400" />
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <div className="mb-4 flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-green-400" />
               <h3 className="text-lg font-bold text-white">{ht.trendingActresses}</h3>
-              <Link
-                href={localizedHref('/', locale)}
-                className="ml-auto text-sm text-pink-400 hover:text-pink-300"
-              >
+              <Link href={localizedHref('/', locale)} className="ml-auto text-sm text-pink-400 hover:text-pink-300">
                 {ht.seeMore}
               </Link>
             </div>
-            <div className="flex gap-4 overflow-x-auto pb-2 hide-scrollbar">
+            <div className="hide-scrollbar flex gap-4 overflow-x-auto pb-2">
               {trendingActresses.map((actress) => (
                 <Link
                   key={actress.id}
                   href={localizedHref(`/actress/${actress.id}`, locale)}
-                  className="flex-shrink-0 group"
+                  className="group flex-shrink-0"
                 >
-                  <div className="relative w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden ring-2 ring-transparent group-hover:ring-pink-500 transition-all">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-pink-500 sm:h-24 sm:w-24">
                     {actress.thumbnailUrl ? (
                       <Image
                         src={normalizeImageUrl(actress.thumbnailUrl)}
@@ -408,17 +407,18 @@ export default function HeroSection({
                         loading="lazy"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gray-700 flex items-center justify-center text-gray-500 text-2xl">
+                      <div className="flex h-full w-full items-center justify-center bg-gray-700 text-2xl text-gray-500">
                         {actress.name[0]}
                       </div>
                     )}
                   </div>
-                  <p className="text-center text-sm text-white mt-2 truncate max-w-20 sm:max-w-24 group-hover:text-pink-400 transition-colors">
+                  <p className="mt-2 max-w-20 truncate text-center text-sm text-white transition-colors group-hover:text-pink-400 sm:max-w-24">
                     {actress.name}
                   </p>
                   {actress.releaseCount && (
                     <p className="text-center text-xs text-gray-400">
-                      {actress.releaseCount}{ht.releases}
+                      {actress.releaseCount}
+                      {ht.releases}
                     </p>
                   )}
                 </Link>

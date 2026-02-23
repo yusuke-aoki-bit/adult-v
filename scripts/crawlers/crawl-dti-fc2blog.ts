@@ -21,24 +21,24 @@ const BASE_URL = 'http://mankowomiseruavzyoyu.blog.fc2.com';
 
 // 五十音別インデックスページ
 const INDEX_PAGES = [
-  '/blog-entry-578.html',    // あ行
-  '/blog-entry-2016.html',   // い～お行
-  '/blog-entry-577.html',    // か～こ行
-  '/blog-entry-576.html',    // さ～そ行
-  '/blog-entry-2125.html',   // た～と行
-  '/blog-entry-574.html',    // な～の行
-  '/blog-entry-573.html',    // は～ほ行
-  '/blog-entry-572.html',    // ま～も行
-  '/blog-entry-571.html',    // や～よ行
-  '/blog-entry-570.html',    // ら～わ行
+  '/blog-entry-578.html', // あ行
+  '/blog-entry-2016.html', // い～お行
+  '/blog-entry-577.html', // か～こ行
+  '/blog-entry-576.html', // さ～そ行
+  '/blog-entry-2125.html', // た～と行
+  '/blog-entry-574.html', // な～の行
+  '/blog-entry-573.html', // は～ほ行
+  '/blog-entry-572.html', // ま～も行
+  '/blog-entry-571.html', // や～よ行
+  '/blog-entry-570.html', // ら～わ行
 ];
 
 // サイト別の品番パターン
 const PRODUCT_CODE_PATTERNS: { [key: string]: RegExp } = {
-  'カリビアンコム': /moviepages\/(\d{6}-\d{3})\/index\.html/,
-  'カリビアンコムプレミアム': /moviepages\/(\d{6}_\d{3})\/index\.html/,
-  '一本道': /movies\/(\d{6}_\d{3})\/?/,
-  'HEYZO': /moviepages\/(\d{4})\/index\.html/,
+  カリビアンコム: /moviepages\/(\d{6}-\d{3})\/index\.html/,
+  カリビアンコムプレミアム: /moviepages\/(\d{6}_\d{3})\/index\.html/,
+  一本道: /movies\/(\d{6}_\d{3})\/?/,
+  HEYZO: /moviepages\/(\d{4})\/index\.html/,
 };
 
 async function fetchHtml(url: string): Promise<string | null> {
@@ -66,7 +66,7 @@ async function saveToWikiCrawlData(
   source: string,
   productCode: string,
   performerName: string,
-  sourceUrl: string
+  sourceUrl: string,
 ): Promise<boolean> {
   if (!isValidPerformerName(performerName)) return false;
 
@@ -99,7 +99,7 @@ function extractActressPageUrls($: cheerio.CheerioAPI): string[] {
   // インデックスページから女優個別ページへのリンクを抽出
   $('a[href*="blog-entry-"]').each((_, elem) => {
     const href = $(elem).attr('href');
-    if (href && !INDEX_PAGES.some(idx => href.includes(idx))) {
+    if (href && !INDEX_PAGES.some((idx) => href.includes(idx))) {
       const fullUrl = href.startsWith('http') ? href : `${BASE_URL}${href.startsWith('/') ? '' : '/'}${href}`;
       if (!urls.includes(fullUrl) && fullUrl.includes('blog-entry-')) {
         urls.push(fullUrl);
@@ -126,7 +126,7 @@ function extractActressData($: cheerio.CheerioAPI, url: string): ActressData | n
   const aliasMatch = title.match(/[（(]([^）)]+)[）)]/);
   if (aliasMatch) {
     const aliasStr = aliasMatch[1];
-    aliasStr.split(/[／\/、,]/).forEach(alias => {
+    aliasStr.split(/[／\/、,]/).forEach((alias) => {
       const trimmed = alias.trim();
       if (trimmed && trimmed !== mainName) {
         aliases.push(trimmed);
@@ -181,7 +181,7 @@ function extractActressData($: cheerio.CheerioAPI, url: string): ActressData | n
             code = code.replace('-', '_');
           }
 
-          if (!products.some(p => p.code === code && p.site === currentSite)) {
+          if (!products.some((p) => p.code === code && p.site === currentSite)) {
             products.push({
               site: currentSite,
               code,
@@ -264,7 +264,7 @@ async function main() {
         allActressUrls.push(url);
       }
     }
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise((r) => setTimeout(r, 500));
   }
 
   console.log(`\n📊 Total unique actress pages: ${allActressUrls.length}`);
@@ -284,7 +284,7 @@ async function main() {
       console.log(`\n📊 Progress: ${processed} pages, ${totalSaved} records saved\n`);
     }
 
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise((r) => setTimeout(r, 300));
   }
 
   console.log(`\n✅ Crawl complete!`);

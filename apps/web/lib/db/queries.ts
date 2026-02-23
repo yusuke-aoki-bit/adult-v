@@ -3,12 +3,31 @@
  * 共通ファクトリ (createAppQueries) を使用し、web固有のキャッシュラッパーを追加
  */
 import { getDb } from './index';
-import { products, performers, productPerformers, tags, productTags, productSources, performerAliases, productImages, productVideos, productSales, productRatingSummary } from './schema';
+import {
+  products,
+  performers,
+  productPerformers,
+  tags,
+  productTags,
+  productSources,
+  performerAliases,
+  productImages,
+  productVideos,
+  productSales,
+  productRatingSummary,
+} from './schema';
 import { eq, and, desc, sql } from 'drizzle-orm';
 import type { Product as ProductType, Actress as ActressType } from '@/types/product';
 import { mapLegacyProvider } from '@adult-v/shared/lib/provider-utils';
 import { getDtiServiceFromUrl } from '@adult-v/shared/lib/image-utils';
-import { getLocalizedTitle, getLocalizedDescription, getLocalizedPerformerName, getLocalizedPerformerBio, getLocalizedTagName, getLocalizedAiReview } from '@adult-v/shared/lib/localization';
+import {
+  getLocalizedTitle,
+  getLocalizedDescription,
+  getLocalizedPerformerName,
+  getLocalizedPerformerBio,
+  getLocalizedTagName,
+  getLocalizedAiReview,
+} from '@adult-v/shared/lib/localization';
 import { cache } from 'react';
 import { unstable_cache } from 'next/cache';
 import {
@@ -38,11 +57,7 @@ import type {
   MakerInfo as SharedMakerInfo,
   SeriesBasicInfo,
 } from '@adult-v/shared';
-import type {
-  RandomProduct,
-  ProductSourceWithSales,
-  SeriesInfo,
-} from '@adult-v/shared/db-queries/create-app-queries';
+import type { RandomProduct, ProductSourceWithSales, SeriesInfo } from '@adult-v/shared/db-queries/create-app-queries';
 
 // Re-export types
 export type { SaleProduct, CareerAnalysis };
@@ -149,36 +164,32 @@ export const {
 // generateMetadata + page で同じデータを二重取得するのを防止
 // ============================================================
 
-export const getCachedProductByIdOrCode = cache(
-  (id: string, locale: string): Promise<ProductType | null> => {
-    return unstable_cache(
-      async () => {
-        let product = await appQueries.searchProductByProductId(id, locale);
-        if (!product && !isNaN(parseInt(id))) {
-          product = await appQueries.getProductById(id, locale);
-        }
-        return product;
-      },
-      [`product-detail-${id}-${locale}`],
-      { revalidate: 300, tags: [`products-detail-${id}`] }
-    )();
-  }
-);
+export const getCachedProductByIdOrCode = cache((id: string, locale: string): Promise<ProductType | null> => {
+  return unstable_cache(
+    async () => {
+      let product = await appQueries.searchProductByProductId(id, locale);
+      if (!product && !isNaN(parseInt(id))) {
+        product = await appQueries.getProductById(id, locale);
+      }
+      return product;
+    },
+    [`product-detail-${id}-${locale}`],
+    { revalidate: 300, tags: [`products-detail-${id}`] },
+  )();
+});
 
-export const getCachedActressById = cache(
-  (id: string, locale: string): Promise<ActressType | null> => {
-    return unstable_cache(
-      async () => {
-        const decoded = decodeURIComponent(id);
-        let actress = await appQueries.getActressById(decoded, locale);
-        if (!actress) actress = await appQueries.getActressById(id, locale);
-        return actress;
-      },
-      [`actress-detail-${id}-${locale}`],
-      { revalidate: 300, tags: [`actresses-detail-${id}`] }
-    )();
-  }
-);
+export const getCachedActressById = cache((id: string, locale: string): Promise<ActressType | null> => {
+  return unstable_cache(
+    async () => {
+      const decoded = decodeURIComponent(id);
+      let actress = await appQueries.getActressById(decoded, locale);
+      if (!actress) actress = await appQueries.getActressById(id, locale);
+      return actress;
+    },
+    [`actress-detail-${id}-${locale}`],
+    { revalidate: 300, tags: [`actresses-detail-${id}`] },
+  )();
+});
 
 // ============================================================
 // Web固有: キャッシュラッパー付きオーバーライド
@@ -191,37 +202,37 @@ function getCachedProductsList(offset: number, limit: number, sortBy: string, lo
   const cached = unstable_cache(
     () => appQueries._getProductsShared<ProductType>({ offset, limit, sortBy: sortBy as ProductSortOption, locale }),
     [`products-list-${offset}-${limit}-${sortBy}-${locale}`],
-    { revalidate: 60, tags: ['products-list'] }
+    { revalidate: 60, tags: ['products-list'] },
   );
   return cached();
 }
 
 export async function getProducts(options?: GetProductsOptions): Promise<ProductType[]> {
-  const hasFilters = options && (
-    options.query ||
-    options.providers?.length ||
-    options.excludeProviders?.length ||
-    options.tags?.length ||
-    options.excludeTags?.length ||
-    options.hasVideo ||
-    options.hasImage ||
-    options.onSale ||
-    options.uncategorized ||
-    options.performerType ||
-    options.actressId ||
-    options.isNew ||
-    options.isFeatured ||
-    options.releaseDate ||
-    options.minPrice !== undefined ||
-    options.maxPrice !== undefined
-  );
+  const hasFilters =
+    options &&
+    (options.query ||
+      options.providers?.length ||
+      options.excludeProviders?.length ||
+      options.tags?.length ||
+      options.excludeTags?.length ||
+      options.hasVideo ||
+      options.hasImage ||
+      options.onSale ||
+      options.uncategorized ||
+      options.performerType ||
+      options.actressId ||
+      options.isNew ||
+      options.isFeatured ||
+      options.releaseDate ||
+      options.minPrice !== undefined ||
+      options.maxPrice !== undefined);
 
   if (!hasFilters && options?.offset !== undefined && options?.limit !== undefined) {
     return getCachedProductsList(
       options.offset,
       options.limit,
       options.sortBy || 'releaseDateDesc',
-      options.locale || 'ja'
+      options.locale || 'ja',
     );
   }
 
@@ -234,28 +245,30 @@ export async function getProducts(options?: GetProductsOptions): Promise<Product
 const getCachedTotalProductCount = unstable_cache(
   async () => appQueries._getProductsCountShared(),
   ['total-product-count'],
-  { revalidate: 300 }
+  { revalidate: 300 },
 );
 
-export async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
-  const hasFilters = options && (
-    options.query ||
-    options.providers?.length ||
-    options.excludeProviders?.length ||
-    options.tags?.length ||
-    options.excludeTags?.length ||
-    options.hasVideo ||
-    options.hasImage ||
-    options.onSale ||
-    options.uncategorized ||
-    options.performerType ||
-    options.actressId ||
-    options.isNew ||
-    options.isFeatured ||
-    options.releaseDate ||
-    options.minPrice !== undefined ||
-    options.maxPrice !== undefined
-  );
+export async function getProductsCount(
+  options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>,
+): Promise<number> {
+  const hasFilters =
+    options &&
+    (options.query ||
+      options.providers?.length ||
+      options.excludeProviders?.length ||
+      options.tags?.length ||
+      options.excludeTags?.length ||
+      options.hasVideo ||
+      options.hasImage ||
+      options.onSale ||
+      options.uncategorized ||
+      options.performerType ||
+      options.actressId ||
+      options.isNew ||
+      options.isFeatured ||
+      options.releaseDate ||
+      options.minPrice !== undefined ||
+      options.maxPrice !== undefined);
 
   if (!hasFilters) {
     return getCachedTotalProductCount();
@@ -271,27 +284,27 @@ function getCachedTopActresses(limit: number, offset: number, locale: string) {
   const cached = unstable_cache(
     () => appQueries._getActressesShared<ActressType>({ limit, offset, sortBy: 'recent', locale }),
     [`actresses-top-${offset}-${limit}-${locale}`],
-    { revalidate: 300, tags: ['actresses-list'] }
+    { revalidate: 300, tags: ['actresses-list'] },
   );
   return cached();
 }
 
 export async function getActresses(options?: GetActressesOptions): Promise<ActressType[]> {
-  const hasFilters = options && (
-    options.query ||
-    options.includeTags?.length ||
-    options.excludeTags?.length ||
-    options.includeAsps?.length ||
-    options.excludeAsps?.length ||
-    options.hasVideo ||
-    options.hasImage ||
-    options.hasReview ||
-    options.excludeInitials ||
-    options.cupSizes?.length ||
-    options.heightMin ||
-    options.heightMax ||
-    options.bloodTypes?.length
-  );
+  const hasFilters =
+    options &&
+    (options.query ||
+      options.includeTags?.length ||
+      options.excludeTags?.length ||
+      options.includeAsps?.length ||
+      options.excludeAsps?.length ||
+      options.hasVideo ||
+      options.hasImage ||
+      options.hasReview ||
+      options.excludeInitials ||
+      options.cupSizes?.length ||
+      options.heightMin ||
+      options.heightMax ||
+      options.bloodTypes?.length);
   const sortBy = options?.sortBy || 'recent';
   const isDefaultSort = sortBy === 'recent';
 
@@ -305,28 +318,27 @@ export async function getActresses(options?: GetActressesOptions): Promise<Actre
 /**
  * 女優数を取得（フィルターなし時はキャッシュ使用）
  */
-const getCachedActressesCount = unstable_cache(
-  () => appQueries._getActressesCountShared(),
-  ['actresses-count-top'],
-  { revalidate: 300, tags: ['actresses-count'] }
-);
+const getCachedActressesCount = unstable_cache(() => appQueries._getActressesCountShared(), ['actresses-count-top'], {
+  revalidate: 300,
+  tags: ['actresses-count'],
+});
 
 export async function getActressesCount(options?: GetActressesCountOptions): Promise<number> {
-  const hasFilters = options && (
-    options.query ||
-    options.includeTags?.length ||
-    options.excludeTags?.length ||
-    options.includeAsps?.length ||
-    options.excludeAsps?.length ||
-    options.hasVideo ||
-    options.hasImage ||
-    options.hasReview ||
-    options.excludeInitials ||
-    options.cupSizes?.length ||
-    options.heightMin ||
-    options.heightMax ||
-    options.bloodTypes?.length
-  );
+  const hasFilters =
+    options &&
+    (options.query ||
+      options.includeTags?.length ||
+      options.excludeTags?.length ||
+      options.includeAsps?.length ||
+      options.excludeAsps?.length ||
+      options.hasVideo ||
+      options.hasImage ||
+      options.hasReview ||
+      options.excludeInitials ||
+      options.cupSizes?.length ||
+      options.heightMin ||
+      options.heightMax ||
+      options.bloodTypes?.length);
 
   if (!hasFilters) {
     return getCachedActressesCount();
@@ -341,7 +353,7 @@ export async function getActressesCount(options?: GetActressesCountOptions): Pro
 const getCachedUncategorizedCount = unstable_cache(
   () => appQueries._getUncategorizedProductsCountShared(),
   ['uncategorized-count'],
-  { revalidate: 300, tags: ['uncategorized-count'] }
+  { revalidate: 300, tags: ['uncategorized-count'] },
 );
 
 export async function getUncategorizedProductsCount(options?: UncategorizedProductsCountOptions): Promise<number> {
@@ -357,10 +369,14 @@ export async function getUncategorizedProductsCount(options?: UncategorizedProdu
 const getCachedSaleProducts = unstable_cache(
   (limit: number) => appQueries._getSaleProductsShared({ limit }),
   ['sale-products-top'],
-  { revalidate: 60, tags: ['sale-products'] }
+  { revalidate: 60, tags: ['sale-products'] },
 );
 
-export async function getSaleProducts(options?: { limit?: number; aspName?: string; minDiscount?: number }): Promise<SaleProduct[]> {
+export async function getSaleProducts(options?: {
+  limit?: number;
+  aspName?: string;
+  minDiscount?: number;
+}): Promise<SaleProduct[]> {
   if (!options?.aspName && !options?.minDiscount) {
     return getCachedSaleProducts(options?.limit || 20);
   }
@@ -374,14 +390,14 @@ export async function getSaleProducts(options?: { limit?: number; aspName?: stri
 /**
  * トレンドの女優を取得（最近作品がリリースされた人気女優）
  */
-export async function getTrendingActresses(options?: {
-  limit?: number;
-}): Promise<Array<{
-  id: number;
-  name: string;
-  thumbnailUrl: string | null;
-  releaseCount?: number;
-}>> {
+export async function getTrendingActresses(options?: { limit?: number }): Promise<
+  Array<{
+    id: number;
+    name: string;
+    thumbnailUrl: string | null;
+    releaseCount?: number;
+  }>
+> {
   const { limit = 8 } = options || {};
   const db = getDb();
 
@@ -400,13 +416,13 @@ export async function getTrendingActresses(options?: {
       and(
         sql`${performers.latestReleaseDate} >= ${thirtyDaysAgo.toISOString().split('T')[0]}`,
         sql`${performers.releaseCount} > 5`,
-        sql`${performers.profileImageUrl} IS NOT NULL`
-      )
+        sql`${performers.profileImageUrl} IS NOT NULL`,
+      ),
     )
     .orderBy(desc(performers.releaseCount), desc(performers.latestReleaseDate))
     .limit(limit);
 
-  return results.map(r => ({
+  return results.map((r) => ({
     id: r.id,
     name: r.name,
     thumbnailUrl: r.thumbnailUrl,

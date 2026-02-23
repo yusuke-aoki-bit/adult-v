@@ -29,12 +29,7 @@ interface TagSuggestionListProps {
   };
 }
 
-export function TagSuggestionList({
-  productId,
-  userId,
-  onLoginRequired,
-  translations: t,
-}: TagSuggestionListProps) {
+export function TagSuggestionList({ productId, userId, onLoginRequired, translations: t }: TagSuggestionListProps) {
   const [suggestions, setSuggestions] = useState<TagSuggestionWithVote[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [votingId, setVotingId] = useState<number | null>(null);
@@ -84,8 +79,8 @@ export function TagSuggestionList({
           prev.map((s) =>
             s.id === suggestionId
               ? { ...s, upvotes: data.upvotes, downvotes: data.downvotes, userVote: data.userVote }
-              : s
-          )
+              : s,
+          ),
         );
       }
     } catch {
@@ -98,7 +93,7 @@ export function TagSuggestionList({
   if (isLoading) {
     return (
       <div className="flex justify-center py-4">
-        <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
+        <Loader2 className="h-5 w-5 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -110,7 +105,7 @@ export function TagSuggestionList({
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <Tag className="w-5 h-5 text-gray-500" />
+        <Tag className="h-5 w-5 text-gray-500" />
         <h4 className="font-medium text-gray-900 dark:text-white">{t.title}</h4>
       </div>
 
@@ -118,44 +113,42 @@ export function TagSuggestionList({
         {suggestions.map((suggestion) => (
           <div
             key={suggestion['id']}
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm ${
+            className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm ${
               suggestion['status'] === 'approved'
-                ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-200'
+                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
             }`}
           >
             {suggestion['status'] === 'approved' ? (
-              <CheckCircle className="w-3.5 h-3.5" />
+              <CheckCircle className="h-3.5 w-3.5" />
             ) : (
-              <Clock className="w-3.5 h-3.5" />
+              <Clock className="h-3.5 w-3.5" />
             )}
             <span>{suggestion.suggestedTagName}</span>
 
-            <div className="flex items-center gap-1 ml-1 border-l border-gray-300 dark:border-gray-600 pl-2">
+            <div className="ml-1 flex items-center gap-1 border-l border-gray-300 pl-2 dark:border-gray-600">
               <button
                 onClick={() => handleVote(suggestion['id'], 'up')}
                 disabled={votingId === suggestion['id']}
-                className={`p-0.5 rounded transition-colors ${
+                className={`rounded p-0.5 transition-colors ${
                   suggestion.userVote === 'up'
                     ? 'text-green-600 dark:text-green-400'
                     : 'text-gray-400 hover:text-green-600 dark:hover:text-green-400'
                 }`}
               >
-                <ThumbsUp className="w-3.5 h-3.5" />
+                <ThumbsUp className="h-3.5 w-3.5" />
               </button>
-              <span className="text-xs min-w-[1.5rem] text-center">
-                {suggestion.upvotes - suggestion.downvotes}
-              </span>
+              <span className="min-w-[1.5rem] text-center text-xs">{suggestion.upvotes - suggestion.downvotes}</span>
               <button
                 onClick={() => handleVote(suggestion['id'], 'down')}
                 disabled={votingId === suggestion['id']}
-                className={`p-0.5 rounded transition-colors ${
+                className={`rounded p-0.5 transition-colors ${
                   suggestion.userVote === 'down'
                     ? 'text-red-600 dark:text-red-400'
                     : 'text-gray-400 hover:text-red-600 dark:hover:text-red-400'
                 }`}
               >
-                <ThumbsDown className="w-3.5 h-3.5" />
+                <ThumbsDown className="h-3.5 w-3.5" />
               </button>
             </div>
           </div>

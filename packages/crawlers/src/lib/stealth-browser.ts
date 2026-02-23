@@ -23,7 +23,8 @@ export interface FetchResult {
   url: string;
 }
 
-const DEFAULT_USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+const DEFAULT_USER_AGENT =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
 const DEFAULT_VIEWPORT = { width: 1920, height: 1080 };
 
@@ -87,10 +88,7 @@ export async function setupPage(page: Page, options: BrowserOptions = {}): Promi
 /**
  * URLからHTMLを取得（Stealth対応）
  */
-export async function fetchWithStealth(
-  url: string,
-  options: BrowserOptions = {}
-): Promise<FetchResult> {
+export async function fetchWithStealth(url: string, options: BrowserOptions = {}): Promise<FetchResult> {
   const browser = await createStealthBrowser(options);
 
   try {
@@ -116,7 +114,7 @@ export async function fetchWithStealth(
  */
 export async function fetchMultipleWithStealth(
   urls: string[],
-  options: BrowserOptions & { delayMs?: number } = {}
+  options: BrowserOptions & { delayMs?: number } = {},
 ): Promise<Map<string, FetchResult>> {
   const browser = await createStealthBrowser(options);
   const results = new Map<string, FetchResult>();
@@ -144,7 +142,7 @@ export async function fetchMultipleWithStealth(
 
         // レート制限
         if (i < urls.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, delayMs));
+          await new Promise((resolve) => setTimeout(resolve, delayMs));
         }
       } catch (error) {
         console.error(`  Error fetching ${url}:`, error);
@@ -219,14 +217,14 @@ export class StealthCrawler {
  */
 export async function simpleFetch(
   url: string,
-  options: { userAgent?: string } = {}
+  options: { userAgent?: string } = {},
 ): Promise<{ html: string; status: number }> {
   const userAgent = options.userAgent || DEFAULT_USER_AGENT;
 
   const response = await fetch(url, {
     headers: {
       'User-Agent': userAgent,
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
       'Accept-Encoding': 'gzip, deflate, br',
     },

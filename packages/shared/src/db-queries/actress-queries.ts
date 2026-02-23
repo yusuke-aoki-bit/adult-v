@@ -44,7 +44,7 @@ export interface ActressQueryDeps {
     services: string[] | undefined,
     aliases: string[] | undefined,
     productCount: number,
-    locale: string
+    locale: string,
   ) => unknown;
 }
 
@@ -239,14 +239,11 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
     if (result.rows.length === 0) return null;
 
-    const avgPricePerMin = (result.rows[0] as { avg_price_per_min: string | number | null })
-      .avg_price_per_min;
+    const avgPricePerMin = (result.rows[0] as { avg_price_per_min: string | number | null }).avg_price_per_min;
 
     if (avgPricePerMin === null) return null;
 
-    return typeof avgPricePerMin === 'string'
-      ? parseFloat(avgPricePerMin)
-      : avgPricePerMin;
+    return typeof avgPricePerMin === 'string' ? parseFloat(avgPricePerMin) : avgPricePerMin;
   }
 
   /**
@@ -254,12 +251,14 @@ export function createActressQueries(deps: ActressQueryDeps) {
    * バッチ関数が提供されている場合はN+1を回避してバッチ処理
    * @param getActressByIdCallback - 外部から渡すgetActressById関数（後方互換用、バッチ関数推奨）
    */
-  async function getActressesWithNewReleases<T>(options: {
-    limit?: number;
-    daysAgo?: number;
-    locale?: string;
-    getActressByIdCallback?: (id: string, locale?: string) => Promise<T | null>;
-  } = {}): Promise<T[]> {
+  async function getActressesWithNewReleases<T>(
+    options: {
+      limit?: number;
+      daysAgo?: number;
+      locale?: string;
+      getActressByIdCallback?: (id: string, locale?: string) => Promise<T | null>;
+    } = {},
+  ): Promise<T[]> {
     const { limit = 20, daysAgo = 30, locale = 'ja', getActressByIdCallback } = options;
 
     try {
@@ -322,17 +321,19 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
       // バッチ関数が提供されている場合はN+1を回避
       if (batchGetPerformerThumbnails && batchGetPerformerServices && mapPerformerWithBatchData) {
-        const performerIds = rows.map(r => r.id);
+        const performerIds = rows.map((r) => r.id);
 
         // バッチで関連データを取得（3クエリで済む）
         const [thumbnailsMap, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerThumbnails(performerIds),
           batchGetPerformerServices(performerIds),
-          batchGetPerformerAliases ? batchGetPerformerAliases(performerIds) : Promise.resolve(new Map<number, string[]>()),
+          batchGetPerformerAliases
+            ? batchGetPerformerAliases(performerIds)
+            : Promise.resolve(new Map<number, string[]>()),
         ]);
 
         // 各女優をマッピング（N回のDB呼び出しなし）
-        return rows.map(row => {
+        return rows.map((row) => {
           const performer = {
             id: row['id'],
             name: row['name'],
@@ -352,7 +353,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
             servicesMap.get(row['id']),
             aliasesMap.get(row['id']),
             parseInt(row.product_count, 10),
-            locale
+            locale,
           ) as T;
         });
       }
@@ -386,7 +387,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
             highlightWorks: [],
             tags: [],
           } as T;
-        })
+        }),
       );
 
       return actressesWithDetails;
@@ -442,10 +443,13 @@ export function createActressQueries(deps: ActressQueryDeps) {
       }));
 
       // 全盛期（最も作品数が多い年）
-      const peakYearData = yearlyStats.length > 0
-        ? yearlyStats.reduce((max: YearlyStat, curr: YearlyStat) =>
-            curr.count > max.count ? curr : max, yearlyStats[0]!)
-        : null;
+      const peakYearData =
+        yearlyStats.length > 0
+          ? yearlyStats.reduce(
+              (max: YearlyStat, curr: YearlyStat) => (curr.count > max.count ? curr : max),
+              yearlyStats[0]!,
+            )
+          : null;
 
       // デビュー作と最新作
       const firstYear = yearlyStats[0];
@@ -466,9 +470,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
       if (latestProduct?.releaseDate) {
         const lastDate = new Date(latestProduct.releaseDate);
         const now = new Date();
-        monthsSinceLastRelease = Math.floor(
-          (now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24 * 30)
-        );
+        monthsSinceLastRelease = Math.floor((now.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
         isActive = monthsSinceLastRelease <= 6;
       }
 
@@ -497,11 +499,13 @@ export function createActressQueries(deps: ActressQueryDeps) {
    * @param options.minAspCount - 最低何ASP以上に出演しているか（デフォルト2）
    * @param options.locale - ロケール（デフォルト'ja'）
    */
-  async function getMultiAspActresses<T>(options: {
-    limit?: number;
-    minAspCount?: number;
-    locale?: string;
-  } = {}): Promise<T[]> {
+  async function getMultiAspActresses<T>(
+    options: {
+      limit?: number;
+      minAspCount?: number;
+      locale?: string;
+    } = {},
+  ): Promise<T[]> {
     const { limit = 20, minAspCount = 2, locale = 'ja' } = options;
 
     try {
@@ -565,15 +569,17 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
       // バッチ関数が提供されている場合はN+1を回避
       if (batchGetPerformerThumbnails && batchGetPerformerServices && mapPerformerWithBatchData) {
-        const performerIds = rows.map(r => r.performer_id);
+        const performerIds = rows.map((r) => r.performer_id);
 
         const [thumbnailsMap, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerThumbnails(performerIds),
           batchGetPerformerServices(performerIds),
-          batchGetPerformerAliases ? batchGetPerformerAliases(performerIds) : Promise.resolve(new Map<number, string[]>()),
+          batchGetPerformerAliases
+            ? batchGetPerformerAliases(performerIds)
+            : Promise.resolve(new Map<number, string[]>()),
         ]);
 
-        return rows.map(row => {
+        return rows.map((row) => {
           const performer = {
             id: row.performer_id,
             name: row['name'],
@@ -593,7 +599,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
             servicesMap.get(row.performer_id),
             aliasesMap.get(row.performer_id),
             parseInt(row.total_products, 10),
-            locale
+            locale,
           ) as T;
         });
       }
@@ -608,7 +614,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
         rows.map(async (row) => {
           const fullActress = await fetchActress(row.performer_id.toString());
           return fullActress;
-        })
+        }),
       );
 
       return actresses.filter((a): a is T => a !== null);
@@ -624,11 +630,13 @@ export function createActressQueries(deps: ActressQueryDeps) {
    * @param options.limit - 取得件数（デフォルト10）
    * @param options.locale - ロケール（デフォルト'ja'）
    */
-  async function getActressesByAsp<T>(options: {
-    aspName: string;
-    limit?: number;
-    locale?: string;
-  } = { aspName: 'DUGA' }): Promise<T[]> {
+  async function getActressesByAsp<T>(
+    options: {
+      aspName: string;
+      limit?: number;
+      locale?: string;
+    } = { aspName: 'DUGA' },
+  ): Promise<T[]> {
     const { aspName, limit = 10, locale = 'ja' } = options;
 
     try {
@@ -682,15 +690,17 @@ export function createActressQueries(deps: ActressQueryDeps) {
 
       // バッチ関数が提供されている場合はN+1を回避
       if (batchGetPerformerThumbnails && batchGetPerformerServices && mapPerformerWithBatchData) {
-        const performerIds = rows.map(r => r.performer_id);
+        const performerIds = rows.map((r) => r.performer_id);
 
         const [thumbnailsMap, servicesMap, aliasesMap] = await Promise.all([
           batchGetPerformerThumbnails(performerIds),
           batchGetPerformerServices(performerIds),
-          batchGetPerformerAliases ? batchGetPerformerAliases(performerIds) : Promise.resolve(new Map<number, string[]>()),
+          batchGetPerformerAliases
+            ? batchGetPerformerAliases(performerIds)
+            : Promise.resolve(new Map<number, string[]>()),
         ]);
 
-        return rows.map(row => {
+        return rows.map((row) => {
           const performer = {
             id: row.performer_id,
             name: row['name'],
@@ -710,7 +720,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
             servicesMap.get(row.performer_id),
             aliasesMap.get(row.performer_id),
             parseInt(row.product_count, 10),
-            locale
+            locale,
           ) as T;
         });
       }
@@ -725,7 +735,7 @@ export function createActressQueries(deps: ActressQueryDeps) {
         rows.map(async (row) => {
           const fullActress = await fetchActress(row.performer_id.toString());
           return fullActress;
-        })
+        }),
       );
 
       return actresses.filter((a): a is T => a !== null);

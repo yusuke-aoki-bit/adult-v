@@ -17,7 +17,7 @@ const WIKI_API_URL = 'https://ja.wikipedia.org/w/api.php';
 interface ActressData {
   name: string;
   aliases: string[];
-  productIds: string[];  // 品番のみ
+  productIds: string[]; // 品番のみ
 }
 
 /**
@@ -29,14 +29,14 @@ async function fetchWikipediaPage(title: string): Promise<string | null> {
     page: title,
     format: 'json',
     prop: 'text',
-    redirects: '1',  // リダイレクトを自動追従
+    redirects: '1', // リダイレクトを自動追従
   });
 
   try {
     const response = await fetch(`${WIKI_API_URL}?${params}`, {
       headers: {
         'User-Agent': 'ActressInfoBot/1.0 (https://example.com; contact@example.com)',
-        'Accept': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -93,17 +93,25 @@ function extractAliases(html: string, actressName: string): string[] {
       const textContent = $temp('div').text();
 
       // カンマ、読点、スラッシュ、改行で分割
-      const parts = textContent.split(/[,、/／\n]/).map(a => a.trim()).filter(a => {
-        // 空文字、現在の名前、説明的なテキスト、括弧内の注釈を除外
-        const cleaned = a.replace(/（[^）]*）/g, '').replace(/\([^)]*\)/g, '').trim();
-        return cleaned.length > 0 &&
-               cleaned.length < 20 &&  // 長すぎるものは説明文
-               cleaned !== actressName &&
-               !cleaned.includes('など') &&
-               !cleaned.includes('→') &&
-               !cleaned.includes('の') &&  // 「〇〇の愛称」などを除外
-               !/^[a-zA-Z\s]+$/.test(cleaned);  // 英語のみは除外（中華圈表記は含める）
-      });
+      const parts = textContent
+        .split(/[,、/／\n]/)
+        .map((a) => a.trim())
+        .filter((a) => {
+          // 空文字、現在の名前、説明的なテキスト、括弧内の注釈を除外
+          const cleaned = a
+            .replace(/（[^）]*）/g, '')
+            .replace(/\([^)]*\)/g, '')
+            .trim();
+          return (
+            cleaned.length > 0 &&
+            cleaned.length < 20 && // 長すぎるものは説明文
+            cleaned !== actressName &&
+            !cleaned.includes('など') &&
+            !cleaned.includes('→') &&
+            !cleaned.includes('の') && // 「〇〇の愛称」などを除外
+            !/^[a-zA-Z\s]+$/.test(cleaned)
+          ); // 英語のみは除外（中華圈表記は含める）
+        });
 
       // 括弧内の中華圈表記などを個別に抽出
       const bracketMatches = textContent.match(/（([^）]+)）/g);
@@ -129,12 +137,12 @@ function extractAliases(html: string, actressName: string): string[] {
       const $temp = cheerio.load(`<div>${normalizedText}</div>`);
       const textContent = $temp('div').text();
 
-      const parts = textContent.split(/[,、/／\n]/).map(a => a.trim()).filter(a => {
-        return a.length > 0 &&
-               a.length < 15 &&
-               a !== actressName &&
-               !a.includes('など');
-      });
+      const parts = textContent
+        .split(/[,、/／\n]/)
+        .map((a) => a.trim())
+        .filter((a) => {
+          return a.length > 0 && a.length < 15 && a !== actressName && !a.includes('など');
+        });
       aliases.push(...parts);
     }
   });
@@ -142,11 +150,7 @@ function extractAliases(html: string, actressName: string): string[] {
   // ページ冒頭の括弧内の別名も抽出
   // 例: 〇〇（旧芸名: △△、〇〇とも）
   const leadText = $('div.mw-parser-output > p').first().text();
-  const namePatterns = [
-    /旧芸名[：:]\s*([^、,。）]+)/g,
-    /別名[：:]\s*([^、,。）]+)/g,
-    /旧名[：:]\s*([^、,。）]+)/g,
-  ];
+  const namePatterns = [/旧芸名[：:]\s*([^、,。）]+)/g, /別名[：:]\s*([^、,。）]+)/g, /旧名[：:]\s*([^、,。）]+)/g];
 
   for (const pattern of namePatterns) {
     let match;
@@ -159,7 +163,7 @@ function extractAliases(html: string, actressName: string): string[] {
   }
 
   // 重複を除去して返却
-  return [...new Set(aliases)].filter(a => a.length >= 2);
+  return [...new Set(aliases)].filter((a) => a.length >= 2);
 }
 
 /**
@@ -183,7 +187,7 @@ function extractProductIds(html: string): string[] {
     // セクション見出しをチェック
     if (tagName === 'h2' || tagName === 'h3') {
       const headlineText = $elem.find('.mw-headline').text().trim();
-      inWorksSection = worksSections.some(s => headlineText.includes(s));
+      inWorksSection = worksSections.some((s) => headlineText.includes(s));
     }
 
     // 作品セクション内のテーブルから品番を抽出
@@ -192,7 +196,7 @@ function extractProductIds(html: string): string[] {
         const text = $(cell).text().trim();
         const matches = text.match(productPattern);
         if (matches) {
-          matches.forEach(m => foundProducts.add(m.toUpperCase()));
+          matches.forEach((m) => foundProducts.add(m.toUpperCase()));
         }
       });
     }
@@ -203,7 +207,7 @@ function extractProductIds(html: string): string[] {
         const text = $(item).text().trim();
         const matches = text.match(productPattern);
         if (matches) {
-          matches.forEach(m => foundProducts.add(m.toUpperCase()));
+          matches.forEach((m) => foundProducts.add(m.toUpperCase()));
         }
       });
     }
@@ -216,7 +220,7 @@ function extractProductIds(html: string): string[] {
     const strictPattern = /\b([A-Z]{2,5}-\d{3,5})\b/g;
     const matches = text.match(strictPattern);
     if (matches) {
-      matches.forEach(m => foundProducts.add(m.toUpperCase()));
+      matches.forEach((m) => foundProducts.add(m.toUpperCase()));
     }
   });
 
@@ -249,19 +253,25 @@ async function fetchActressPage(actressName: string): Promise<ActressData | null
 /**
  * データベースに保存
  */
-async function saveActressData(db: any, performerId: number, data: ActressData): Promise<{ aliases: number; products: number }> {
+async function saveActressData(
+  db: any,
+  performerId: number,
+  data: ActressData,
+): Promise<{ aliases: number; products: number }> {
   const result = { aliases: 0, products: 0 };
 
   // 別名を保存
   for (const alias of data.aliases) {
     if (!alias || alias === data['name']) continue;
     try {
-      await db['insert'](performerAliases).values({
-        performerId,
-        aliasName: alias,
-        source: 'wikipedia-ja',
-        isPrimary: false,
-      }).onConflictDoNothing();
+      await db['insert'](performerAliases)
+        .values({
+          performerId,
+          aliasName: alias,
+          source: 'wikipedia-ja',
+          isPrimary: false,
+        })
+        .onConflictDoNothing();
       result.aliases++;
     } catch {
       // 重複は無視
@@ -280,10 +290,12 @@ async function saveActressData(db: any, performerId: number, data: ActressData):
         .limit(1);
 
       if (existingProduct.length > 0) {
-        await db['insert'](productPerformers).values({
-          productId: existingProduct[0]['id'],
-          performerId,
-        }).onConflictDoNothing();
+        await db['insert'](productPerformers)
+          .values({
+            productId: existingProduct[0]['id'],
+            performerId,
+          })
+          .onConflictDoNothing();
         result.products++;
       }
     } catch {
@@ -355,7 +367,7 @@ async function main() {
     }
 
     // Rate limiting: 1秒待機（WikipediaのAPI利用規約に従う）
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
   }
 
   console.log('\n=== Summary ===');

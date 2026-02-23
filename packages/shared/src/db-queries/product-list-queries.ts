@@ -7,9 +7,19 @@ import { logDbErrorAndReturn, logDbErrorAndThrow, logDbWarning } from '../lib/db
 import type { GetProductsOptions, ProductSortOption, CursorPaginatedResult, CursorData } from './types';
 import type { SiteMode } from './asp-filter';
 import { decodeCursor, encodeCursor, createCursorFromProduct } from '../lib/cursor-pagination';
-import { createAspFilterCondition, createProviderFilterCondition, createMultiProviderFilterCondition, createExcludeProviderFilterCondition } from './asp-filter';
+import {
+  createAspFilterCondition,
+  createProviderFilterCondition,
+  createMultiProviderFilterCondition,
+  createExcludeProviderFilterCondition,
+} from './asp-filter';
 import { generateProductIdVariations } from '../lib/product-id-utils';
-import { normalizeTitle, deduplicateProductsByTitle, type DeduplicatableProduct, type AlternativeSource } from '../lib/deduplication';
+import {
+  normalizeTitle,
+  deduplicateProductsByTitle,
+  type DeduplicatableProduct,
+  type AlternativeSource,
+} from '../lib/deduplication';
 import type { BatchRelatedDataResult } from './core-queries';
 import type { MapProductsWithBatchDataDeps, DbProduct } from './mappers';
 import { mapProductsWithBatchData } from './mappers';
@@ -54,7 +64,7 @@ export interface ProductListQueryDeps {
     options?: {
       limitImagesPerProduct?: number;
       limitVideosPerProduct?: number;
-    }
+    },
   ) => Promise<BatchRelatedDataResult>;
   /** 商品マッパー依存性 */
   mapperDeps: MapProductsWithBatchDataDeps;
@@ -75,7 +85,7 @@ export interface ProductListQueryDeps {
     cache: unknown,
     images: unknown[],
     videos: unknown[],
-    locale: string
+    locale: string,
   ) => unknown;
 }
 
@@ -99,7 +109,9 @@ export interface ProductListQueries {
   getProducts: <T extends DeduplicatableProduct>(options?: GetProductsOptions) => Promise<T[]>;
   getProductsCount: (options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>) => Promise<number>;
   getProductsByCategory: <T>(tagId: number, options?: GetProductsByCategoryOptions) => Promise<T[]>;
-  getProductsWithCursor: <T extends DeduplicatableProduct>(options?: Omit<GetProductsOptions, 'offset'> & { cursor?: string }) => Promise<CursorPaginatedResult<T>>;
+  getProductsWithCursor: <T extends DeduplicatableProduct>(
+    options?: Omit<GetProductsOptions, 'offset'> & { cursor?: string },
+  ) => Promise<CursorPaginatedResult<T>>;
 }
 
 // ============================================================
@@ -170,7 +182,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products['id']}
           AND ${sql.join(priceConditions, sql` AND `)}
-        )`
+        )`,
       );
     }
 
@@ -183,35 +195,41 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
             SELECT 1 FROM ${productPerformers} pp
             WHERE pp.product_id = ${products['id']}
             AND pp.performer_id = ${performerId}
-          )`
+          )`,
         );
       }
     }
 
     // タグでフィルタ（対象タグ - いずれかを含む）
     if (options?.tags && options.tags.length > 0) {
-      const tagIds = options.tags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const tagIds = options.tags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (tagIds.length > 0) {
         conditions.push(
           sql`EXISTS (
             SELECT 1 FROM ${productTags} pt
             WHERE pt.product_id = ${products['id']}
-            AND pt.tag_id IN (${sql.join(tagIds.map(id => sql`${id}`), sql`, `)})
-          )`
+            AND pt.tag_id IN (${sql.join(
+              tagIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
 
     // 除外タグでフィルタ（いずれも含まない）
     if (options?.excludeTags && options.excludeTags.length > 0) {
-      const excludeTagIds = options.excludeTags.map(t => parseInt(t)).filter(id => !isNaN(id));
+      const excludeTagIds = options.excludeTags.map((t) => parseInt(t)).filter((id) => !isNaN(id));
       if (excludeTagIds.length > 0) {
         conditions.push(
           sql`NOT EXISTS (
             SELECT 1 FROM ${productTags} pt
             WHERE pt.product_id = ${products['id']}
-            AND pt.tag_id IN (${sql.join(excludeTagIds.map(id => sql`${id}`), sql`, `)})
-          )`
+            AND pt.tag_id IN (${sql.join(
+              excludeTagIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})
+          )`,
         );
       }
     }
@@ -227,11 +245,17 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       if (isProductIdPattern) {
         // 品番検索: バリエーションを生成してnormalizedProductIdとoriginalProductIdで検索
         const variants = generateProductIdVariations(query);
-        const variantPatterns = variants.map(v => `%${v}%`);
+        const variantPatterns = variants.map((v) => `%${v}%`);
 
         // PostgreSQL ANY()にはARRAY[]構文が必要（Drizzleのデフォルト展開はタプル形式のため）
-        const variantArray = sql`ARRAY[${sql.join(variants.map(v => sql`${v}`), sql`, `)}]::text[]`;
-        const patternArray = sql`ARRAY[${sql.join(variantPatterns.map(v => sql`${v}`), sql`, `)}]::text[]`;
+        const variantArray = sql`ARRAY[${sql.join(
+          variants.map((v) => sql`${v}`),
+          sql`, `,
+        )}]::text[]`;
+        const patternArray = sql`ARRAY[${sql.join(
+          variantPatterns.map((v) => sql`${v}`),
+          sql`, `,
+        )}]::text[]`;
 
         conditions.push(
           sql`(
@@ -245,7 +269,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
             )
             OR ${products}.search_vector @@ plainto_tsquery('simple', ${query})
             OR ${products['title']} ILIKE ${searchPattern}
-          )`
+          )`,
         );
       } else {
         // 通常の全文検索（タイトル、説明文、AI説明文）
@@ -254,7 +278,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
             ${products}.search_vector @@ plainto_tsquery('simple', ${query})
             OR ${products['title']} ILIKE ${searchPattern}
             OR ${products['aiDescription']}::text ILIKE ${searchPattern}
-          )`
+          )`,
         );
       }
     }
@@ -265,7 +289,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         sql`EXISTS (
           SELECT 1 FROM ${productVideos} pv
           WHERE pv.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -275,7 +299,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         sql`EXISTS (
           SELECT 1 FROM ${productImages} pi
           WHERE pi.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -286,7 +310,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        ) = 1`
+        ) = 1`,
       );
     } else if (options?.performerType === 'multi') {
       // 複数出演: 出演者が2人以上
@@ -294,7 +318,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         sql`(
           SELECT COUNT(*) FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        ) >= 2`
+        ) >= 2`,
       );
     }
 
@@ -307,7 +331,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           WHERE ps.product_id = ${products['id']}
           AND psl.is_active = true
           AND (psl.end_at IS NULL OR psl.end_at > NOW())
-        )`
+        )`,
       );
     }
 
@@ -317,7 +341,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         sql`NOT EXISTS (
           SELECT 1 FROM ${productPerformers} pp
           WHERE pp.product_id = ${products['id']}
-        )`
+        )`,
       );
     }
 
@@ -339,9 +363,17 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       case 'titleAsc':
         return [asc(products['title']), asc(products['normalizedProductId'])];
       case 'durationDesc':
-        return [desc(sql`COALESCE(${products['duration']}, 0)`), sql`${products['releaseDate']} DESC NULLS LAST`, desc(products['normalizedProductId'])];
+        return [
+          desc(sql`COALESCE(${products['duration']}, 0)`),
+          sql`${products['releaseDate']} DESC NULLS LAST`,
+          desc(products['normalizedProductId']),
+        ];
       case 'durationAsc':
-        return [asc(sql`COALESCE(${products['duration']}, 0)`), sql`${products['releaseDate']} DESC NULLS LAST`, asc(products['normalizedProductId'])];
+        return [
+          asc(sql`COALESCE(${products['duration']}, 0)`),
+          sql`${products['releaseDate']} DESC NULLS LAST`,
+          asc(products['normalizedProductId']),
+        ];
       case 'random':
         return [sql`RANDOM()`];
       case 'releaseDateDesc':
@@ -372,7 +404,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       }
 
       const seenTitles = new Set<string>();
-      return mappedProducts.filter(product => {
+      return mappedProducts.filter((product) => {
         const normalizedTitleKey = normalizeTitle(product['title']);
         if (seenTitles.has(normalizedTitleKey)) return false;
         seenTitles.add(normalizedTitleKey);
@@ -399,20 +431,25 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         const cheapest = sortedGroup[0];
         if (cheapest) {
           if (sortedGroup.length > 1) {
-            cheapest.alternativeSources = sortedGroup.slice(1).map(p => ({
-              aspName: p.provider || 'unknown',
-              price: p.price,
-              salePrice: p.salePrice,
-              affiliateUrl: p.affiliateUrl || '',
-              productId: typeof p.id === 'string' ? parseInt(p.id, 10) : (p.id as number),
-            } as AlternativeSource));
+            cheapest.alternativeSources = sortedGroup.slice(1).map(
+              (p) =>
+                ({
+                  aspName: p.provider || 'unknown',
+                  price: p.price,
+                  salePrice: p.salePrice,
+                  affiliateUrl: p.affiliateUrl || '',
+                  productId: typeof p.id === 'string' ? parseInt(p.id, 10) : (p.id as number),
+                }) as AlternativeSource,
+            );
           }
           deduplicatedProducts.push(cheapest);
         }
       }
 
       const originalOrder = new Map(mappedProducts.map((p, i) => [p.id, i]));
-      deduplicatedProducts.sort((a, b) => (originalOrder.get(a.id) ?? Infinity) - (originalOrder.get(b.id) ?? Infinity));
+      deduplicatedProducts.sort(
+        (a, b) => (originalOrder.get(a.id) ?? Infinity) - (originalOrder.get(b.id) ?? Infinity),
+      );
       return deduplicatedProducts;
     }
   }
@@ -436,11 +473,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           .from(products)
           .innerJoin(productSources, eq(products['id'], productSources['productId']))
           .where(whereClause)
-          .orderBy(
-            options.sortBy === 'priceAsc'
-              ? asc(productSources['price'])
-              : desc(productSources['price'])
-          )
+          .orderBy(options.sortBy === 'priceAsc' ? asc(productSources['price']) : desc(productSources['price']))
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
 
@@ -453,17 +486,27 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         // サイトモードに応じてプロバイダーフィルターを渡す
         // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
         const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
-        const batchData = siteMode === 'all'
-          ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
-          : await batchFetchProductRelatedData(productIds, undefined, listLimits);
-        const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
+        const batchData =
+          siteMode === 'all'
+            ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+            : await batchFetchProductRelatedData(productIds, undefined, listLimits);
+        const mappedProducts = mapProductsWithBatchData(
+          productList,
+          batchData,
+          mapperDeps,
+          options?.locale || 'ja',
+        ) as T[];
 
         // タイトルベースの重複排除（サイトモードに応じた処理）
         return deduplicateForPriceSort(mappedProducts);
       }
 
       // 評価/レビュー数ソートの場合は特別な処理が必要（productRatingSummaryとJOIN）
-      if (options?.sortBy === 'ratingDesc' || options?.sortBy === 'ratingAsc' || options?.sortBy === 'reviewCountDesc') {
+      if (
+        options?.sortBy === 'ratingDesc' ||
+        options?.sortBy === 'ratingAsc' ||
+        options?.sortBy === 'reviewCountDesc'
+      ) {
         const results = await db
           .select({
             product: products,
@@ -477,9 +520,9 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
             options.sortBy === 'ratingDesc'
               ? desc(sql`COALESCE(${productRatingSummary['averageRating']}, 0)`)
               : options.sortBy === 'ratingAsc'
-              ? asc(sql`COALESCE(${productRatingSummary['averageRating']}, 0)`)
-              : desc(sql`COALESCE(${productRatingSummary['totalReviews']}, 0)`),
-            desc(products['releaseDate'])
+                ? asc(sql`COALESCE(${productRatingSummary['averageRating']}, 0)`)
+                : desc(sql`COALESCE(${productRatingSummary['totalReviews']}, 0)`),
+            desc(products['releaseDate']),
           )
           .limit(options?.limit || 100)
           .offset(options?.offset || 0);
@@ -493,10 +536,16 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         // サイトモードに応じてプロバイダーフィルターを渡す
         // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
         const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
-        const batchData = siteMode === 'all'
-          ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
-          : await batchFetchProductRelatedData(productIds, undefined, listLimits);
-        const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
+        const batchData =
+          siteMode === 'all'
+            ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+            : await batchFetchProductRelatedData(productIds, undefined, listLimits);
+        const mappedProducts = mapProductsWithBatchData(
+          productList,
+          batchData,
+          mapperDeps,
+          options?.locale || 'ja',
+        ) as T[];
 
         // タイトルベースの重複排除（共通関数使用）
         return deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
@@ -507,24 +556,22 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
 
       // パフォーマンス最適化: ASPフィルタはJOINで処理
       // buildConditionsからASP条件を除外してJOINで処理
-      const nonAspConditions = conditions.filter(c => {
+      const nonAspConditions = conditions.filter((c) => {
         const sqlStr = c.queryChunks?.toString() || '';
         return !sqlStr.includes('ps_fanza') && !sqlStr.includes('ps_check');
       });
       const optimizedWhereClause = nonAspConditions.length > 0 ? and(...nonAspConditions) : undefined;
 
       // サイトモードに応じてJOIN条件を構築
-      const aspCondition = siteMode === 'fanza-only'
-        ? sql`${productSources}.asp_name = 'FANZA'`
-        : sql`${productSources}.asp_name != 'FANZA'`;
+      const aspCondition =
+        siteMode === 'fanza-only'
+          ? sql`${productSources}.asp_name = 'FANZA'`
+          : sql`${productSources}.asp_name != 'FANZA'`;
 
       const results = await db
         .selectDistinct({ product: products })
         .from(products)
-        .innerJoin(productSources, and(
-          sql`${productSources}.product_id = ${products}.id`,
-          aspCondition
-        ))
+        .innerJoin(productSources, and(sql`${productSources}.product_id = ${products}.id`, aspCondition))
         .where(optimizedWhereClause)
         .orderBy(...orderByClause)
         .limit(options?.limit || 100)
@@ -541,10 +588,16 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // サイトモードに応じてプロバイダーフィルターを渡す
       // 一覧表示では画像1枚、動画1件で十分、タグ・セール情報もスキップ（パフォーマンス最適化）
       const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1, lightMode: true };
-      const batchData = siteMode === 'all'
-        ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
-        : await batchFetchProductRelatedData(productIds, undefined, listLimits);
-      const mappedProducts = mapProductsWithBatchData(productList, batchData, mapperDeps, options?.locale || 'ja') as T[];
+      const batchData =
+        siteMode === 'all'
+          ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+          : await batchFetchProductRelatedData(productIds, undefined, listLimits);
+      const mappedProducts = mapProductsWithBatchData(
+        productList,
+        batchData,
+        mapperDeps,
+        options?.locale || 'ja',
+      ) as T[];
 
       // タイトルベースの重複排除（共通関数使用）
       return deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
@@ -558,22 +611,24 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
    */
   function hasNoFilters(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): boolean {
     if (!options) return true;
-    return !options.query &&
-           !options.providers?.length &&
-           !options.excludeProviders?.length &&
-           !options.tags?.length &&
-           !options.excludeTags?.length &&
-           !options.hasVideo &&
-           !options.hasImage &&
-           !options.onSale &&
-           !options.uncategorized &&
-           !options.performerType &&
-           !options.actressId &&
-           !options.isNew &&
-           !options.isFeatured &&
-           !options['releaseDate'] &&
-           options['minPrice'] === undefined &&
-           options['maxPrice'] === undefined;
+    return (
+      !options.query &&
+      !options.providers?.length &&
+      !options.excludeProviders?.length &&
+      !options.tags?.length &&
+      !options.excludeTags?.length &&
+      !options.hasVideo &&
+      !options.hasImage &&
+      !options.onSale &&
+      !options.uncategorized &&
+      !options.performerType &&
+      !options.actressId &&
+      !options.isNew &&
+      !options.isFeatured &&
+      !options['releaseDate'] &&
+      options['minPrice'] === undefined &&
+      options['maxPrice'] === undefined
+    );
   }
 
   /**
@@ -583,31 +638,31 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
    *
    * 注: 重複排除はgetProducts側で行うため、カウントは概算値となる
    */
-  async function getProductsCount(options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>): Promise<number> {
+  async function getProductsCount(
+    options?: Omit<GetProductsOptions, 'limit' | 'offset' | 'sortBy' | 'locale'>,
+  ): Promise<number> {
     try {
       const db = getDb();
 
       // サイトモードに応じたASP条件
-      const aspCondition = siteMode === 'fanza-only'
-        ? sql`${productSources}.asp_name = 'FANZA'`
-        : sql`${productSources}.asp_name != 'FANZA'`;
+      const aspCondition =
+        siteMode === 'fanza-only'
+          ? sql`${productSources}.asp_name = 'FANZA'`
+          : sql`${productSources}.asp_name != 'FANZA'`;
 
       // フィルターなしの場合でもサイトモード条件は必要
       if (hasNoFilters(options)) {
         const result = await db
           .select({ count: sql<number>`count(DISTINCT ${products['id']})` })
           .from(products)
-          .innerJoin(productSources, and(
-            sql`${productSources}.product_id = ${products}.id`,
-            aspCondition
-          ));
+          .innerJoin(productSources, and(sql`${productSources}.product_id = ${products}.id`, aspCondition));
         return Number(result[0]?.count || 0);
       }
 
       // フィルターありの場合
       const conditions = buildConditions(options as GetProductsOptions);
       // ASP条件を除外（JOINで処理）
-      const nonAspConditions = conditions.filter(c => {
+      const nonAspConditions = conditions.filter((c) => {
         const sqlStr = c.queryChunks?.toString() || '';
         return !sqlStr.includes('ps_fanza') && !sqlStr.includes('ps_check');
       });
@@ -616,10 +671,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       const result = await db
         .select({ count: sql<number>`count(DISTINCT ${products['id']})` })
         .from(products)
-        .innerJoin(productSources, and(
-          sql`${productSources}.product_id = ${products}.id`,
-          aspCondition
-        ))
+        .innerJoin(productSources, and(sql`${productSources}.product_id = ${products}.id`, aspCondition))
         .where(whereClause);
 
       return Number(result[0]?.count || 0);
@@ -631,13 +683,13 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
   /**
    * 特定カテゴリの商品一覧を取得
    */
-  async function getProductsByCategory<T>(
-    tagId: number,
-    options?: GetProductsByCategoryOptions
-  ): Promise<T[]> {
+  async function getProductsByCategory<T>(tagId: number, options?: GetProductsByCategoryOptions): Promise<T[]> {
     // fetchProductRelatedData と mapProductToType が必須
     if (!deps.fetchProductRelatedData || !deps.mapProductToType) {
-      logDbWarning('getProductsByCategory requires fetchProductRelatedData and mapProductToType in deps', 'getProductsByCategory');
+      logDbWarning(
+        'getProductsByCategory requires fetchProductRelatedData and mapProductToType in deps',
+        'getProductsByCategory',
+      );
       return [];
     }
 
@@ -668,11 +720,17 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // ASPフィルター条件（対象/除外、大文字小文字を無視）
       let aspCondition = sql`TRUE`;
       if (includeAsp.length > 0) {
-        aspCondition = sql`LOWER(ps.asp_name) IN (${sql.join(includeAsp.map(a => sql`${a.toLowerCase()}`), sql`, `)})`;
+        aspCondition = sql`LOWER(ps.asp_name) IN (${sql.join(
+          includeAsp.map((a) => sql`${a.toLowerCase()}`),
+          sql`, `,
+        )})`;
       }
       let excludeAspCondition = sql`TRUE`;
       if (excludeAsp.length > 0) {
-        excludeAspCondition = sql`(ps.asp_name IS NULL OR LOWER(ps.asp_name) NOT IN (${sql.join(excludeAsp.map(a => sql`${a.toLowerCase()}`), sql`, `)}))`;
+        excludeAspCondition = sql`(ps.asp_name IS NULL OR LOWER(ps.asp_name) NOT IN (${sql.join(
+          excludeAsp.map((a) => sql`${a.toLowerCase()}`),
+          sql`, `,
+        )}))`;
       }
 
       // サンプルコンテンツフィルター条件
@@ -740,7 +798,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         created_at?: Date;
         updated_at?: Date;
       }>;
-      const productIds = rows.map(r => r.id);
+      const productIds = rows.map((r) => r.id);
       if (productIds.length === 0) return [];
 
       // バッチ取得を使用してN+1問題を解消
@@ -750,9 +808,10 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // rows を DbProduct 形式に変換
       const dbProducts: DbProduct[] = rows.map((r) => {
         // 日付処理: Date型の場合はISO文字列に変換
-        const releaseDate = r.release_date instanceof Date
-          ? r.release_date.toISOString().split('T')[0] ?? null
-          : r.release_date ?? null;
+        const releaseDate =
+          r.release_date instanceof Date
+            ? (r.release_date.toISOString().split('T')[0] ?? null)
+            : (r.release_date ?? null);
 
         return {
           id: r.id,
@@ -801,7 +860,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
    * - ランダムソート非対応
    */
   async function getProductsWithCursor<T extends DeduplicatableProduct>(
-    options?: Omit<GetProductsOptions, 'offset'> & { cursor?: string }
+    options?: Omit<GetProductsOptions, 'offset'> & { cursor?: string },
   ): Promise<CursorPaginatedResult<T>> {
     try {
       const db = getDb();
@@ -837,19 +896,11 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
             baseConditions.push(
               or(
                 sql`${products['releaseDate']} IS NOT NULL`,
-                and(
-                  sql`${products['releaseDate']} IS NULL`,
-                  lt(products['id'], id)
-                )
-              )!
+                and(sql`${products['releaseDate']} IS NULL`, lt(products['id'], id)),
+              )!,
             );
           } else {
-            baseConditions.push(
-              and(
-                sql`${products['releaseDate']} IS NULL`,
-                gt(products['id'], id)
-              )!
-            );
+            baseConditions.push(and(sql`${products['releaseDate']} IS NULL`, gt(products['id'], id))!);
           }
         } else {
           // 通常のカーソル条件
@@ -858,22 +909,16 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
             baseConditions.push(
               or(
                 lt(products['releaseDate'], cursorDate),
-                and(
-                  eq(products['releaseDate'], cursorDate),
-                  lt(products['id'], id)
-                ),
-                sql`${products['releaseDate']} IS NULL`
-              )!
+                and(eq(products['releaseDate'], cursorDate), lt(products['id'], id)),
+                sql`${products['releaseDate']} IS NULL`,
+              )!,
             );
           } else {
             baseConditions.push(
               or(
                 gt(products['releaseDate'], cursorDate),
-                and(
-                  eq(products['releaseDate'], cursorDate),
-                  gt(products['id'], id)
-                )
-              )!
+                and(eq(products['releaseDate'], cursorDate), gt(products['id'], id)),
+              )!,
             );
           }
         }
@@ -890,7 +935,7 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
           isDescending
             ? desc(sql`COALESCE(${products['releaseDate']}, '1970-01-01')`)
             : asc(sql`COALESCE(${products['releaseDate']}, '9999-12-31')`),
-          isDescending ? desc(products['id']) : asc(products['id'])
+          isDescending ? desc(products['id']) : asc(products['id']),
         )
         .limit(limit + 1);
 
@@ -907,9 +952,10 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
       // バッチでデータを取得
       // 一覧表示では画像1枚、動画1件で十分（パフォーマンス最適化）
       const listLimits = { limitImagesPerProduct: 1, limitVideosPerProduct: 1 };
-      const batchData = siteMode === 'all'
-        ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
-        : await batchFetchProductRelatedData(productIds, undefined, listLimits);
+      const batchData =
+        siteMode === 'all'
+          ? await batchFetchProductRelatedData(productIds, options?.providers, listLimits)
+          : await batchFetchProductRelatedData(productIds, undefined, listLimits);
 
       const dbProducts = itemsToProcess.map((p) => ({
         id: p.id as number,
@@ -927,7 +973,12 @@ export function createProductListQueries(deps: ProductListQueryDeps): ProductLis
         updatedAt: p.updatedAt as Date | null,
       })) as DbProduct[];
 
-      const mappedProducts = mapProductsWithBatchData(dbProducts, batchData, mapperDeps, options?.locale || 'ja') as T[];
+      const mappedProducts = mapProductsWithBatchData(
+        dbProducts,
+        batchData,
+        mapperDeps,
+        options?.locale || 'ja',
+      ) as T[];
       const deduplicatedProducts = deduplicateProductsByTitle(mappedProducts, siteMode) as T[];
 
       // 次のカーソルを生成

@@ -19,7 +19,7 @@ import { DEFAULT_MATCHING_CONFIG } from './types';
  */
 export async function findMatchByProductCode(
   product: ProductForMatching,
-  config: MatchingConfig = DEFAULT_MATCHING_CONFIG
+  config: MatchingConfig = DEFAULT_MATCHING_CONFIG,
 ): Promise<MatchResult | null> {
   const db = getDb();
 
@@ -61,7 +61,7 @@ export async function findMatchByProductCode(
  */
 async function findByExactCode(
   code: string,
-  excludeProductId: number
+  excludeProductId: number,
 ): Promise<{ productId: number; groupId?: number; aspName: string } | null> {
   const db = getDb();
 
@@ -105,7 +105,7 @@ async function findByExactCode(
  */
 async function findByNormalizedCode(
   normalizedCode: string,
-  excludeProductId: number
+  excludeProductId: number,
 ): Promise<{ productId: number; groupId?: number; aspName: string } | null> {
   const db = getDb();
 

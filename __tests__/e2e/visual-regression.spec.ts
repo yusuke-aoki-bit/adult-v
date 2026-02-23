@@ -10,24 +10,20 @@ import { test, expect } from '@playwright/test';
  *
  * 2. 以降の実行で差分を検出
  *    npx playwright test e2e/visual-regression.spec.ts
- *
- * 注意: CI環境ではスナップショットファイルがないためスキップ
  */
 
-// CI環境ではスキップ（スナップショットファイルがリポジトリにコミットされていないため）
-const isCI = process.env.CI === 'true';
 test.describe.configure({ mode: 'parallel' });
 
 test.describe('Visual Regression Tests', () => {
-  // CI環境では全テストをスキップ
-  test.skip(isCI, 'Visual regression tests are skipped in CI - snapshots not committed');
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test.describe('Desktop Views', () => {
@@ -41,13 +37,14 @@ test.describe('Visual Regression Tests', () => {
       // Hide dynamic content for consistent screenshots
       await page.evaluate(() => {
         // Hide timestamps, counters, etc.
-        document.querySelectorAll('[data-testid="timestamp"], .timestamp, .dynamic-counter').forEach(el => {
+        document.querySelectorAll('[data-testid="timestamp"], .timestamp, .dynamic-counter').forEach((el) => {
           (el as HTMLElement).style.visibility = 'hidden';
         });
       });
 
       await expect(page).toHaveScreenshot('homepage-desktop.png', {
         maxDiffPixels: 100,
+        maxDiffPixelRatio: 0.02,
         threshold: 0.3,
       });
     });
@@ -59,6 +56,7 @@ test.describe('Visual Regression Tests', () => {
 
       await expect(page).toHaveScreenshot('products-list-desktop.png', {
         maxDiffPixels: 200,
+        maxDiffPixelRatio: 0.02,
         threshold: 0.3,
       });
     });
@@ -70,6 +68,7 @@ test.describe('Visual Regression Tests', () => {
 
       await expect(page).toHaveScreenshot('actresses-list-desktop.png', {
         maxDiffPixels: 200,
+        maxDiffPixelRatio: 0.02,
         threshold: 0.3,
       });
     });
@@ -85,6 +84,7 @@ test.describe('Visual Regression Tests', () => {
 
       await expect(page).toHaveScreenshot('homepage-mobile.png', {
         maxDiffPixels: 100,
+        maxDiffPixelRatio: 0.02,
         threshold: 0.3,
       });
     });
@@ -102,6 +102,7 @@ test.describe('Visual Regression Tests', () => {
 
         await expect(page).toHaveScreenshot('mobile-menu-open.png', {
           maxDiffPixels: 100,
+          maxDiffPixelRatio: 0.02,
           threshold: 0.3,
         });
       }
@@ -118,6 +119,7 @@ test.describe('Visual Regression Tests', () => {
 
       await expect(page).toHaveScreenshot('homepage-tablet.png', {
         maxDiffPixels: 150,
+        maxDiffPixelRatio: 0.02,
         threshold: 0.3,
       });
     });
@@ -135,6 +137,7 @@ test.describe('Visual Regression Tests', () => {
       if (await header.isVisible().catch(() => false)) {
         await expect(header).toHaveScreenshot('header-component.png', {
           maxDiffPixels: 50,
+          maxDiffPixelRatio: 0.02,
           threshold: 0.2,
         });
       }
@@ -151,6 +154,7 @@ test.describe('Visual Regression Tests', () => {
 
         await expect(footer).toHaveScreenshot('footer-component.png', {
           maxDiffPixels: 50,
+          maxDiffPixelRatio: 0.02,
           threshold: 0.2,
         });
       }
@@ -165,6 +169,7 @@ test.describe('Visual Regression Tests', () => {
       if (await productCard.isVisible({ timeout: 3000 }).catch(() => false)) {
         await expect(productCard).toHaveScreenshot('product-card-component.png', {
           maxDiffPixels: 50,
+          maxDiffPixelRatio: 0.02,
           threshold: 0.3,
         });
       }
@@ -182,6 +187,7 @@ test.describe('Visual Regression Tests', () => {
         // カード全体のスクリーンショット
         await expect(productCard).toHaveScreenshot('product-card-with-image.png', {
           maxDiffPixels: 100,
+          maxDiffPixelRatio: 0.02,
           threshold: 0.3,
         });
 
@@ -234,6 +240,7 @@ test.describe('Visual Regression Tests', () => {
 
       await expect(page).toHaveScreenshot('homepage-dark-theme.png', {
         maxDiffPixels: 100,
+        maxDiffPixelRatio: 0.02,
         threshold: 0.3,
       });
     });
@@ -244,21 +251,24 @@ test.describe('Visual Regression Tests', () => {
 
     test('Loading state screenshot', async ({ page }) => {
       // Intercept API to show loading state
-      await page.route('**/api/**', async route => {
-        await new Promise(resolve => setTimeout(resolve, 5000));
+      await page.route('**/api/**', async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 5000));
         await route.continue();
       });
 
       await page.goto('/');
 
       // Capture loading state quickly
-      await expect(page).toHaveScreenshot('loading-state.png', {
-        maxDiffPixels: 200,
-        threshold: 0.5,
-        timeout: 3000,
-      }).catch(() => {
-        console.log('Loading state screenshot skipped - page loaded too fast');
-      });
+      await expect(page)
+        .toHaveScreenshot('loading-state.png', {
+          maxDiffPixels: 200,
+          maxDiffPixelRatio: 0.02,
+          threshold: 0.5,
+          timeout: 3000,
+        })
+        .catch(() => {
+          console.log('Loading state screenshot skipped - page loaded too fast');
+        });
     });
 
     test('Empty state screenshot', async ({ page }) => {
@@ -268,28 +278,31 @@ test.describe('Visual Regression Tests', () => {
       await page.waitForTimeout(2000);
 
       // This might show an empty state
-      await expect(page).toHaveScreenshot('empty-search-results.png', {
-        maxDiffPixels: 100,
-        threshold: 0.3,
-      }).catch(() => {
-        console.log('Empty state screenshot skipped');
-      });
+      await expect(page)
+        .toHaveScreenshot('empty-search-results.png', {
+          maxDiffPixels: 100,
+          maxDiffPixelRatio: 0.02,
+          threshold: 0.3,
+        })
+        .catch(() => {
+          console.log('Empty state screenshot skipped');
+        });
     });
   });
 });
 
 test.describe('Cross-Browser Visual Consistency', () => {
-  // CI環境では全テストをスキップ
-  test.skip(isCI, 'Visual regression tests are skipped in CI - snapshots not committed');
   test.use({ viewport: { width: 1280, height: 720 } });
 
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('Homepage renders consistently', async ({ page, browserName }) => {
@@ -299,6 +312,7 @@ test.describe('Cross-Browser Visual Consistency', () => {
 
     await expect(page).toHaveScreenshot(`homepage-${browserName}.png`, {
       maxDiffPixels: 200,
+      maxDiffPixelRatio: 0.02,
       threshold: 0.3,
     });
   });

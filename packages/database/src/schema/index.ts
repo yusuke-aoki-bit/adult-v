@@ -29,12 +29,7 @@ export type {
 } from './products';
 
 // Performers
-export {
-  performers,
-  performerAliases,
-  performerExternalIds,
-  performerImages,
-} from './performers';
+export { performers, performerAliases, performerExternalIds, performerImages } from './performers';
 export type {
   Performer,
   NewPerformer,
@@ -45,30 +40,12 @@ export type {
 } from './performers';
 
 // Tags
-export {
-  tags,
-  productTags,
-  productPerformers,
-  performerTags,
-} from './tags';
-export type {
-  Tag,
-  NewTag,
-  PerformerTag,
-  NewPerformerTag,
-} from './tags';
+export { tags, productTags, productPerformers, performerTags } from './tags';
+export type { Tag, NewTag, PerformerTag, NewPerformerTag } from './tags';
 
 // Reviews
-export {
-  productReviews,
-  productRatingSummary,
-} from './reviews';
-export type {
-  ProductReview,
-  NewProductReview,
-  ProductRatingSummary,
-  NewProductRatingSummary,
-} from './reviews';
+export { productReviews, productRatingSummary } from './reviews';
+export type { ProductReview, NewProductReview, ProductRatingSummary, NewProductRatingSummary } from './reviews';
 
 // Raw Data
 export {
@@ -141,12 +118,7 @@ export type {
 } from './user-content';
 
 // Analytics
-export {
-  priceHistory,
-  salePatterns,
-  videoTimestamps,
-  footerFeaturedActresses,
-} from './analytics';
+export { priceHistory, salePatterns, videoTimestamps, footerFeaturedActresses } from './analytics';
 export type {
   PriceHistory,
   NewPriceHistory,

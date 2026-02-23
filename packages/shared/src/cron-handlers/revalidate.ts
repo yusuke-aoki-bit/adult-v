@@ -59,15 +59,7 @@ export function createRevalidateHandler(deps: {
 
       // 何も指定されていない場合はトップページとリスト系をrevalidate
       if (revalidated.length === 0) {
-        const defaultPaths = [
-          '/',
-          '/products',
-          '/lists/ranking',
-          '/sales',
-          '/calendar',
-          '/rookies',
-          '/daily-pick',
-        ];
+        const defaultPaths = ['/', '/products', '/lists/ranking', '/sales', '/calendar', '/rookies', '/daily-pick'];
         for (const path of defaultPaths) {
           revalidatePath(path);
           revalidated.push(`path:${path}`);
@@ -80,10 +72,7 @@ export function createRevalidateHandler(deps: {
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
-      return NextResponse.json(
-        { error: 'Revalidation failed', message: String(error) },
-        { status: 500 },
-      );
+      return NextResponse.json({ error: 'Revalidation failed', message: String(error) }, { status: 500 });
     }
   };
 }

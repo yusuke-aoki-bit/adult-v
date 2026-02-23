@@ -1,0 +1,12 @@
+[
+  {
+    "name": "web - JS chunks",
+    "path": "apps/web/.next/static/chunks/**/*.js",
+    "limit": "500 kB"
+  },
+  {
+    "name": "fanza - JS chunks",
+    "path": "apps/fanza/.next/static/chunks/**/*.js",
+    "limit": "500 kB"
+  }
+]

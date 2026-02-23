@@ -22,7 +22,7 @@ export function createProductBatchPricesHandler(deps: ProductBatchPricesHandlerD
 
       const limitedIds = productIds.slice(0, 100);
       const numericIds = limitedIds
-        .map((id: any) => typeof id === 'string' ? parseInt(id) : id)
+        .map((id: any) => (typeof id === 'string' ? parseInt(id) : id))
         .filter((id: number) => !isNaN(id));
 
       if (numericIds.length === 0) {
@@ -50,19 +50,24 @@ export function createProductBatchPricesHandler(deps: ProductBatchPricesHandlerD
 
       const sourceIds = sourceRows.map((s: any) => s.id);
 
-      const saleRows: any[] = sourceIds.length > 0 ? await db
-        .select({
-          productSourceId: deps.productSales.productSourceId,
-          regularPrice: deps.productSales.regularPrice,
-          salePrice: deps.productSales.salePrice,
-          discountPercent: deps.productSales.discountPercent,
-          endAt: deps.productSales.endAt,
-        })
-        .from(deps.productSales)
-        .where(deps.and(
-          deps.inArray(deps.productSales.productSourceId, sourceIds),
-          deps.eq(deps.productSales.isActive, true),
-        )) : [];
+      const saleRows: any[] =
+        sourceIds.length > 0
+          ? await db
+              .select({
+                productSourceId: deps.productSales.productSourceId,
+                regularPrice: deps.productSales.regularPrice,
+                salePrice: deps.productSales.salePrice,
+                discountPercent: deps.productSales.discountPercent,
+                endAt: deps.productSales.endAt,
+              })
+              .from(deps.productSales)
+              .where(
+                deps.and(
+                  deps.inArray(deps.productSales.productSourceId, sourceIds),
+                  deps.eq(deps.productSales.isActive, true),
+                ),
+              )
+          : [];
 
       const saleMap = new Map(saleRows.map((s: any) => [s.productSourceId, s]));
 
@@ -91,7 +96,14 @@ export function createProductBatchPricesHandler(deps: ProductBatchPricesHandlerD
             duration,
           };
         } else {
-          result[String(productId)] = { price: null, salePrice: null, discount: null, saleEndDate: null, provider: null, duration };
+          result[String(productId)] = {
+            price: null,
+            salePrice: null,
+            discount: null,
+            saleEndDate: null,
+            provider: null,
+            duration,
+          };
         }
       }
 

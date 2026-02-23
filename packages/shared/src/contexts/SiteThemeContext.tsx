@@ -19,11 +19,7 @@ interface SiteThemeProviderProps {
 }
 
 export function SiteThemeProvider({ children, theme, primaryColor }: SiteThemeProviderProps) {
-  return (
-    <SiteThemeContext.Provider value={{ theme, primaryColor }}>
-      {children}
-    </SiteThemeContext.Provider>
-  );
+  return <SiteThemeContext.Provider value={{ theme, primaryColor }}>{children}</SiteThemeContext.Provider>;
 }
 
 export function useSiteTheme(): SiteThemeContextValue {

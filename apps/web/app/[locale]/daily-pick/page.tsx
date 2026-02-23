@@ -21,7 +21,8 @@ const metaTranslations = {
   },
   en: {
     title: 'Daily Pick',
-    description: "Updated daily! Today's recommended AV work selected by AI. Curated picks considering season, trends, and popularity.",
+    description:
+      "Updated daily! Today's recommended AV work selected by AI. Curated picks considering season, trends, and popularity.",
     keywords: ['daily pick', 'AV', 'recommended', 'curated', 'best selection'],
     ogDescription: "Today's AI-selected recommendation",
   },
@@ -92,7 +93,7 @@ const translations = {
     twoDaysAgo: '2 days ago',
     threeDaysAgo: '3 days ago',
     refreshTime: 'Updates daily at midnight',
-    noPickAvailable: 'Preparing today\'s recommendation',
+    noPickAvailable: "Preparing today's recommendation",
     noPickDescription: 'Please wait a moment.',
     highlyRated: 'Highly rated',
     manyReviews: 'Many reviews',
@@ -136,9 +137,14 @@ export default async function DailyPickPage({ params }: Props) {
   // 今日のピック：高評価・人気作品から日付ベースで選択
   // 季節要素: 月によってジャンル傾向を変える
   const month = today.getMonth() + 1;
-  const seasonalBoost = month >= 6 && month <= 8 ? 'ビキニ,水着,プール' :
-                        month === 12 || month <= 2 ? 'コタツ,温泉,鍋' :
-                        month >= 3 && month <= 5 ? '新生活,入学,制服' : '';
+  const seasonalBoost =
+    month >= 6 && month <= 8
+      ? 'ビキニ,水着,プール'
+      : month === 12 || month <= 2
+        ? 'コタツ,温泉,鍋'
+        : month >= 3 && month <= 5
+          ? '新生活,入学,制服'
+          : '';
 
   // product_viewsテーブルが存在しない場合も動作するようにする
   // エラー時はフォールバッククエリを実行、それでも失敗したら空の結果
@@ -209,8 +215,8 @@ export default async function DailyPickPage({ params }: Props) {
   } catch (primaryError) {
     console.error('[daily-pick] Primary query failed:', primaryError);
     try {
-    // product_viewsテーブルが存在しない場合はview_countなしでクエリ
-    todayPickResult = await db.execute(sql`
+      // product_viewsテーブルが存在しない場合はview_countなしでクエリ
+      todayPickResult = await db.execute(sql`
       WITH ranked_products AS (
         SELECT
           p.id,
@@ -384,25 +390,25 @@ export default async function DailyPickPage({ params }: Props) {
 
   return (
     <main className="theme-body min-h-screen py-8">
-      <div className="container mx-auto px-4 max-w-4xl">
+      <div className="container mx-auto max-w-4xl px-4">
         {/* PR表記 */}
-        <p className="text-xs text-gray-400 mb-4 text-center">
-          <span className="font-bold text-yellow-400 bg-yellow-900/30 px-1.5 py-0.5 rounded mr-1.5">PR</span>
+        <p className="mb-4 text-center text-xs text-gray-400">
+          <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
           {t.prNotice}
         </p>
 
         {/* ヘッダー */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 mb-4">
-            <Sparkles className="w-5 h-5 text-yellow-400" />
-            <span className="text-yellow-300 font-medium">
+        <div className="mb-8 text-center">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-gradient-to-r from-yellow-500/20 to-orange-500/20 px-4 py-2">
+            <Sparkles className="h-5 w-5 text-yellow-400" />
+            <span className="font-medium text-yellow-300">
               {today.getFullYear()}/{today.getMonth() + 1}/{today.getDate()}
             </span>
           </div>
-          <h1 className="text-3xl font-bold theme-text mb-2">{t.title}</h1>
+          <h1 className="theme-text mb-2 text-3xl font-bold">{t.title}</h1>
           <p className="theme-text-muted">{t.subtitle}</p>
-          <p className="text-xs text-gray-500 mt-2 flex items-center justify-center gap-1">
-            <Clock className="w-3 h-3" />
+          <p className="mt-2 flex items-center justify-center gap-1 text-xs text-gray-500">
+            <Clock className="h-3 w-3" />
             {t.refreshTime}
           </p>
         </div>
@@ -410,55 +416,54 @@ export default async function DailyPickPage({ params }: Props) {
         {/* 今日のピック */}
         {todayPick ? (
           <section className="mb-10">
-            <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
-              <Star className="w-6 h-6 text-yellow-400" />
+            <h2 className="theme-text mb-4 flex items-center gap-2 text-xl font-bold">
+              <Star className="h-6 w-6 text-yellow-400" />
               {t.todaysPick}
             </h2>
-            <div className="rounded-xl overflow-hidden theme-card">
+            <div className="theme-card overflow-hidden rounded-xl">
               <div className="md:flex">
                 {/* サムネイル */}
-                <div className="md:w-1/2 aspect-video md:aspect-auto relative">
+                <div className="relative aspect-video md:aspect-auto md:w-1/2">
                   {todayPick.default_thumbnail_url ? (
                     <img
                       src={todayPick.default_thumbnail_url}
                       alt={todayPick.title}
-                      className="w-full h-full object-cover"
+                      className="h-full w-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-gray-800 text-gray-600">
+                    <div className="flex h-full min-h-[200px] w-full items-center justify-center bg-gray-800 text-gray-600">
                       No Image
                     </div>
                   )}
-                  <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-yellow-500 text-black text-sm font-bold">
+                  <div className="absolute top-4 left-4 rounded-full bg-yellow-500 px-3 py-1 text-sm font-bold text-black">
                     TODAY&apos;S PICK
                   </div>
                 </div>
 
                 {/* 情報 */}
-                <div className="md:w-1/2 p-6">
-                  <h3 className="text-xl font-bold theme-text mb-3 line-clamp-2">
-                    {todayPick.title}
-                  </h3>
+                <div className="p-6 md:w-1/2">
+                  <h3 className="theme-text mb-3 line-clamp-2 text-xl font-bold">{todayPick.title}</h3>
 
                   {/* 選出理由 */}
-                  <div className="mb-4 p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                  <div className="mb-4 rounded-lg border border-yellow-500/30 bg-yellow-500/10 p-3">
                     <p className="text-sm text-yellow-300">
                       <span className="font-medium">{t.whySelected}:</span> {generateReason(todayPick)}
                     </p>
                   </div>
 
                   {/* メタ情報 */}
-                  <div className="space-y-2 text-sm theme-text-muted mb-4">
+                  <div className="theme-text-muted mb-4 space-y-2 text-sm">
                     {todayPick.release_date && (
                       <p className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
+                        <Calendar className="h-4 w-4" />
                         {t.releaseDate}: {todayPick.release_date}
                       </p>
                     )}
                     {todayPick.duration && (
                       <p className="flex items-center gap-2">
-                        <Clock className="w-4 h-4" />
-                        {t.duration}: {todayPick.duration}{t.min}
+                        <Clock className="h-4 w-4" />
+                        {t.duration}: {todayPick.duration}
+                        {t.min}
                       </p>
                     )}
                   </div>
@@ -466,13 +471,13 @@ export default async function DailyPickPage({ params }: Props) {
                   {/* 出演者 */}
                   {todayPick.performers && todayPick.performers.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs theme-text-muted mb-1">{t.performers}</p>
+                      <p className="theme-text-muted mb-1 text-xs">{t.performers}</p>
                       <div className="flex flex-wrap gap-1">
                         {todayPick.performers.map((p) => (
                           <Link
                             key={p.id}
                             href={localizedHref(`/actress/${p.id}`, locale)}
-                            className="text-sm px-2 py-0.5 rounded bg-pink-500/20 text-pink-300 hover:bg-pink-500/30 transition-colors"
+                            className="rounded bg-pink-500/20 px-2 py-0.5 text-sm text-pink-300 transition-colors hover:bg-pink-500/30"
                           >
                             {p.name}
                           </Link>
@@ -484,13 +489,10 @@ export default async function DailyPickPage({ params }: Props) {
                   {/* タグ */}
                   {todayPick.tags && todayPick.tags.length > 0 && (
                     <div className="mb-4">
-                      <p className="text-xs theme-text-muted mb-1">{t.tags}</p>
+                      <p className="theme-text-muted mb-1 text-xs">{t.tags}</p>
                       <div className="flex flex-wrap gap-1">
                         {todayPick.tags.slice(0, 6).map((tag) => (
-                          <span
-                            key={tag.id}
-                            className="text-xs px-2 py-0.5 rounded bg-gray-700 text-gray-300"
-                          >
+                          <span key={tag.id} className="rounded bg-gray-700 px-2 py-0.5 text-xs text-gray-300">
                             {tag.name}
                           </span>
                         ))}
@@ -499,7 +501,7 @@ export default async function DailyPickPage({ params }: Props) {
                   )}
 
                   {/* 価格・ボタン */}
-                  <div className="flex items-center gap-3 mt-4">
+                  <div className="mt-4 flex items-center gap-3">
                     {todayPick.min_price && (
                       <span className="text-xl font-bold text-pink-400">
                         ¥{Number(todayPick.min_price).toLocaleString()}〜
@@ -507,10 +509,10 @@ export default async function DailyPickPage({ params }: Props) {
                     )}
                     <Link
                       href={localizedHref(`/products/${todayPick.normalized_product_id}`, locale)}
-                      className="flex items-center gap-1 px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-medium transition-colors"
+                      className="flex items-center gap-1 rounded-lg bg-pink-600 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-500"
                     >
                       {t.viewDetails}
-                      <ExternalLink className="w-4 h-4" />
+                      <ExternalLink className="h-4 w-4" />
                     </Link>
                   </div>
                 </div>
@@ -519,9 +521,9 @@ export default async function DailyPickPage({ params }: Props) {
           </section>
         ) : (
           <section className="mb-10">
-            <div className="rounded-xl overflow-hidden theme-card p-8 text-center">
-              <Sparkles className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-              <h2 className="text-xl font-bold theme-text mb-2">{t.noPickAvailable}</h2>
+            <div className="theme-card overflow-hidden rounded-xl p-8 text-center">
+              <Sparkles className="mx-auto mb-4 h-12 w-12 text-yellow-400" />
+              <h2 className="theme-text mb-2 text-xl font-bold">{t.noPickAvailable}</h2>
               <p className="theme-text-muted">{t.noPickDescription}</p>
             </div>
           </section>
@@ -530,38 +532,36 @@ export default async function DailyPickPage({ params }: Props) {
         {/* 過去のピック */}
         {previousPicks.length > 0 && (
           <section>
-            <h2 className="text-xl font-bold theme-text mb-4 flex items-center gap-2">
-              <TrendingUp className="w-6 h-6 text-blue-400" />
+            <h2 className="theme-text mb-4 flex items-center gap-2 text-xl font-bold">
+              <TrendingUp className="h-6 w-6 text-blue-400" />
               {t.previousPicks}
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               {previousPicks.map((pick, idx) => (
-              <Link
-                key={pick.id}
-                href={localizedHref(`/products/${pick.normalized_product_id}`, locale)}
-                className="block rounded-lg overflow-hidden theme-card hover:ring-2 hover:ring-blue-500/50 transition-all"
-              >
-                <div className="aspect-video bg-gray-800 relative">
-                  {pick.default_thumbnail_url ? (
-                    <img
-                      src={pick.default_thumbnail_url}
-                      alt={pick.title}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-600">
-                      No Image
+                <Link
+                  key={pick.id}
+                  href={localizedHref(`/products/${pick.normalized_product_id}`, locale)}
+                  className="theme-card block overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-blue-500/50"
+                >
+                  <div className="relative aspect-video bg-gray-800">
+                    {pick.default_thumbnail_url ? (
+                      <img
+                        src={pick.default_thumbnail_url}
+                        alt={pick.title}
+                        className="h-full w-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
+                    )}
+                    <div className="absolute top-2 left-2 rounded bg-black/70 px-2 py-1 text-xs text-gray-300">
+                      {dayLabels[idx]}
                     </div>
-                  )}
-                  <div className="absolute top-2 left-2 px-2 py-1 rounded bg-black/70 text-xs text-gray-300">
-                    {dayLabels[idx]}
                   </div>
-                </div>
-                <div className="p-3">
-                  <h3 className="text-sm font-medium theme-text line-clamp-2">{pick.title}</h3>
-                </div>
-              </Link>
+                  <div className="p-3">
+                    <h3 className="theme-text line-clamp-2 text-sm font-medium">{pick.title}</h3>
+                  </div>
+                </Link>
               ))}
             </div>
           </section>

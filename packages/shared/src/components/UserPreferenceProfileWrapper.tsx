@@ -11,14 +11,12 @@ interface UserPreferenceProfileWrapperProps {
 export default function UserPreferenceProfileWrapper({ locale }: UserPreferenceProfileWrapperProps) {
   const router = useRouter();
 
-  const handleTagClick = useCallback((tag: string) => {
-    router.push(`/${locale}/products?q=${encodeURIComponent(tag)}`);
-  }, [router, locale]);
-
-  return (
-    <UserPreferenceProfile
-      locale={locale}
-      onTagClick={handleTagClick}
-    />
+  const handleTagClick = useCallback(
+    (tag: string) => {
+      router.push(`/${locale}/products?q=${encodeURIComponent(tag)}`);
+    },
+    [router, locale],
   );
+
+  return <UserPreferenceProfile locale={locale} onTagClick={handleTagClick} />;
 }

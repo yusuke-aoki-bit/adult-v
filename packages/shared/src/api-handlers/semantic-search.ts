@@ -16,7 +16,8 @@ export function createSemanticSearchHandler(deps: SemanticSearchHandlerDeps) {
       const hybridParam = searchParams.get('hybrid');
 
       if (!query) return NextResponse.json({ error: 'Search query is required' }, { status: 400 });
-      if (query.length > 500) return NextResponse.json({ error: 'Search query is too long (max 500 characters)' }, { status: 400 });
+      if (query.length > 500)
+        return NextResponse.json({ error: 'Search query is too long (max 500 characters)' }, { status: 400 });
 
       const limit = Math.min(Math.max(parseInt(limitParam || '20', 10) || 20, 1), 100);
       const offset = Math.max(parseInt(offsetParam || '0', 10) || 0, 0);
@@ -71,12 +72,20 @@ export function createSemanticSearchHandler(deps: SemanticSearchHandlerDeps) {
       }
 
       return NextResponse.json({
-        query, mode: useHybrid ? 'hybrid' : 'semantic', results: results.rows,
+        query,
+        mode: useHybrid ? 'hybrid' : 'semantic',
+        results: results.rows,
         pagination: { limit, offset, hasMore: results.rows.length === limit },
       });
     } catch (error) {
       console.error('Semantic search error:', error);
-      return NextResponse.json({ query: '', mode: 'semantic', results: [], fallback: true, pagination: { limit: 20, offset: 0, hasMore: false } });
+      return NextResponse.json({
+        query: '',
+        mode: 'semantic',
+        results: [],
+        fallback: true,
+        pagination: { limit: 20, offset: 0, hasMore: false },
+      });
     }
   };
 }

@@ -25,8 +25,8 @@ export default function SeriesProgressTracker({
   useEffect(() => {
     if (isLoading) return;
 
-    const viewedIds = new Set(viewedItems.map(item => item.id));
-    const count = productIds.filter(id => viewedIds.has(id)).length;
+    const viewedIds = new Set(viewedItems.map((item) => item.id));
+    const count = productIds.filter((id) => viewedIds.has(id)).length;
     setWatchedCount(count);
   }, [viewedItems, productIds, isLoading]);
 
@@ -35,7 +35,7 @@ export default function SeriesProgressTracker({
   if (isLoading) {
     return (
       <div className="animate-pulse">
-        <div className="h-6 bg-gray-200 rounded w-16"></div>
+        <div className="h-6 w-16 rounded bg-gray-200"></div>
       </div>
     );
   }
@@ -44,9 +44,9 @@ export default function SeriesProgressTracker({
     <div>
       <p className="text-2xl font-bold text-gray-900">
         {watchedCount}/{totalProducts}
-        <span className="text-sm ml-1">({progress}%)</span>
+        <span className="ml-1 text-sm">({progress}%)</span>
       </p>
-      <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-200">
         <div
           className="h-full bg-linear-to-r from-purple-500 to-pink-500 transition-all duration-500"
           style={{ width: `${progress}%` }}

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Calendar, TrendingUp, Star, Clock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { getTranslation, actressCareerTimelineTranslations } from '../lib/translations';
 
 interface CareerProduct {
   id: number;
@@ -36,79 +37,6 @@ interface ActressCareerTimelineProps {
   locale: string;
   theme?: 'dark' | 'light';
 }
-
-const translations = {
-  ja: {
-    title: 'キャリア分析',
-    debut: '最も古い作品',
-    latest: '最新作',
-    peakYear: '全盛期',
-    totalProducts: '総作品数',
-    avgPerYear: '年平均',
-    products: '作品',
-    active: '現役',
-    inactive: '活動休止中',
-    monthsAgo: 'ヶ月前',
-    lastRelease: '最終リリース',
-    showTimeline: 'タイムラインを表示',
-    hideTimeline: 'タイムラインを非表示',
-    yearLabel: '年',
-    viewProduct: '詳細',
-  },
-  en: {
-    title: 'Career Analysis',
-    debut: 'Earliest',
-    latest: 'Latest',
-    peakYear: 'Peak Year',
-    totalProducts: 'Total Products',
-    avgPerYear: 'Avg/Year',
-    products: 'products',
-    active: 'Active',
-    inactive: 'Inactive',
-    monthsAgo: 'months ago',
-    lastRelease: 'Last Release',
-    showTimeline: 'Show Timeline',
-    hideTimeline: 'Hide Timeline',
-    yearLabel: '',
-    viewProduct: 'View',
-  },
-  zh: {
-    title: '职业生涯分析',
-    debut: '最早作品',
-    latest: '最新作',
-    peakYear: '巅峰期',
-    totalProducts: '总作品数',
-    avgPerYear: '年均',
-    products: '部作品',
-    active: '现役',
-    inactive: '休止中',
-    monthsAgo: '个月前',
-    lastRelease: '最后发布',
-    showTimeline: '显示时间线',
-    hideTimeline: '隐藏时间线',
-    yearLabel: '年',
-    viewProduct: '查看',
-  },
-  ko: {
-    title: '커리어 분석',
-    debut: '가장 오래된 작품',
-    latest: '최신작',
-    peakYear: '전성기',
-    totalProducts: '총 작품 수',
-    avgPerYear: '연평균',
-    products: '작품',
-    active: '현역',
-    inactive: '활동 휴지',
-    monthsAgo: '개월 전',
-    lastRelease: '마지막 발매',
-    showTimeline: '타임라인 보기',
-    hideTimeline: '타임라인 숨기기',
-    yearLabel: '년',
-    viewProduct: '보기',
-  },
-} as const;
-
-type TranslationKey = keyof typeof translations;
 
 const themes = {
   dark: {
@@ -177,11 +105,11 @@ export function ActressCareerTimeline({
 }: ActressCareerTimelineProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
-  const t = translations[locale as TranslationKey] || translations.ja;
+  const t = getTranslation(actressCareerTimelineTranslations, locale);
   const s = themes[theme];
   const [showTimeline, setShowTimeline] = useState(false);
 
-  const maxCount = Math.max(...career.yearlyStats.map(y => y.count));
+  const maxCount = Math.max(...career.yearlyStats.map((y) => y.count));
 
   return (
     <div className={s.container}>
@@ -190,7 +118,7 @@ export function ActressCareerTimeline({
         {t.title}
       </h3>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className={s.statCard}>
           <div className={s.statValue}>{career.totalProducts}</div>
           <div className={s.statLabel}>{t.totalProducts}</div>
@@ -203,78 +131,74 @@ export function ActressCareerTimeline({
 
         <div className={s.statCard}>
           <div className={s.peakValue}>
-            <Star className="w-4 h-4" />
-            {career.peakYear}{t.yearLabel}
+            <Star className="h-4 w-4" />
+            {career.peakYear}
+            {t.yearLabel}
           </div>
-          <div className={s.statLabel}>{t.peakYear} ({career.peakYearCount}{t.products})</div>
+          <div className={s.statLabel}>
+            {t.peakYear} ({career.peakYearCount}
+            {t.products})
+          </div>
         </div>
 
         <div className={s.statCard}>
           {career.isActive ? (
             <>
               <div className={s.activeValue}>
-                <TrendingUp className="w-4 h-4" />
+                <TrendingUp className="h-4 w-4" />
                 {t.active}
               </div>
-              <div className={s.statLabel}>{t.lastRelease}: {career.monthsSinceLastRelease}{t.monthsAgo}</div>
+              <div className={s.statLabel}>
+                {t.lastRelease}: {career.monthsSinceLastRelease}
+                {t.monthsAgo}
+              </div>
             </>
           ) : (
             <>
               <div className={s.inactiveValue}>
-                <AlertTriangle className="w-4 h-4" />
+                <AlertTriangle className="h-4 w-4" />
                 {t.inactive}
               </div>
-              <div className={s.statLabel}>{career.monthsSinceLastRelease}{t.monthsAgo}</div>
+              <div className={s.statLabel}>
+                {career.monthsSinceLastRelease}
+                {t.monthsAgo}
+              </div>
             </>
           )}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {career.debutProduct && (
-          <Link
-            href={`/${locale}/products/${career.debutProduct.id}`}
-            className={s.productCard}
-          >
+          <Link href={`/${locale}/products/${career.debutProduct.id}`} className={s.productCard}>
             <div className={s.debutIcon}>
-              <Star className="w-5 h-5 text-white" />
+              <Star className="h-5 w-5 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
-              <div className={s.debutBadge}>{t.debut} ({career.debutYear}{t.yearLabel})</div>
-              <div className={s.productTitle}>
-                {career.debutProduct.title}
+            <div className="min-w-0 flex-1">
+              <div className={s.debutBadge}>
+                {t.debut} ({career.debutYear}
+                {t.yearLabel})
               </div>
+              <div className={s.productTitle}>{career.debutProduct.title}</div>
             </div>
           </Link>
         )}
 
         {career.latestProduct && (
-          <Link
-            href={`/${locale}/products/${career.latestProduct.id}`}
-            className={s.productCard}
-          >
+          <Link href={`/${locale}/products/${career.latestProduct.id}`} className={s.productCard}>
             <div className={s.latestIcon}>
-              <Clock className="w-5 h-5 text-white" />
+              <Clock className="h-5 w-5 text-white" />
             </div>
-            <div className="flex-1 min-w-0">
+            <div className="min-w-0 flex-1">
               <div className={s.latestBadge}>{t.latest}</div>
-              <div className={s.productTitle}>
-                {career.latestProduct.title}
-              </div>
+              <div className={s.productTitle}>{career.latestProduct.title}</div>
             </div>
           </Link>
         )}
       </div>
 
-      <button
-        onClick={() => setShowTimeline(!showTimeline)}
-        className={s.toggleButton}
-      >
-        {showTimeline ? (
-          <ChevronUp className="w-4 h-4" />
-        ) : (
-          <ChevronDown className="w-4 h-4" />
-        )}
+      <button onClick={() => setShowTimeline(!showTimeline)} className={s.toggleButton}>
+        {showTimeline ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
         {showTimeline ? t.hideTimeline : t.showTimeline}
       </button>
 
@@ -298,19 +222,15 @@ export function ActressCareerTimeline({
                     />
                   </div>
 
-                  <div className={`w-8 text-sm text-right ${isPeakYear ? s.countPeak : s.countNormal}`}>
+                  <div className={`w-8 text-right text-sm ${isPeakYear ? s.countPeak : s.countNormal}`}>
                     {yearData.count}
                   </div>
                 </div>
 
                 {isPeakYear && yearData.products.length > 0 && (
-                  <div className="ml-16 mt-1 flex flex-wrap gap-1">
+                  <div className="mt-1 ml-16 flex flex-wrap gap-1">
                     {yearData.products.slice(0, 3).map((product) => (
-                      <Link
-                        key={product['id']}
-                        href={`/${locale}/products/${product['id']}`}
-                        className={s.productLink}
-                      >
+                      <Link key={product['id']} href={`/${locale}/products/${product['id']}`} className={s.productLink}>
                         {product['title']}
                       </Link>
                     ))}

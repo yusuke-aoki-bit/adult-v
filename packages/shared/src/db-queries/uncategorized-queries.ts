@@ -26,7 +26,10 @@ export interface UncategorizedProductsOptions {
   sortBy?: string;
 }
 
-export type UncategorizedProductsCountOptions = Omit<UncategorizedProductsOptions, 'limit' | 'offset' | 'locale' | 'sortBy'>;
+export type UncategorizedProductsCountOptions = Omit<
+  UncategorizedProductsOptions,
+  'limit' | 'offset' | 'locale' | 'sortBy'
+>;
 
 export interface RawProductRow {
   id: number;
@@ -75,13 +78,7 @@ export interface UncategorizedQueries {
  * 未整理商品クエリファクトリー
  */
 export function createUncategorizedQueries(deps: UncategorizedQueryDeps): UncategorizedQueries {
-  const {
-    getDb,
-    siteMode,
-    fetchProductRelatedData,
-    getFromMemoryCache,
-    setToMemoryCache,
-  } = deps;
+  const { getDb, siteMode, fetchProductRelatedData, getFromMemoryCache, setToMemoryCache } = deps;
 
   /**
    * キャッシュキープレフィックス
@@ -137,17 +134,26 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
   /**
    * ASPフィルター条件を構築（getUncategorizedProducts用 - DTI正規化あり）
    */
-  function buildAspFilterConditions(includeAsp: string[], excludeAsp: string[]): { aspCondition: SQL; excludeAspCondition: SQL } {
+  function buildAspFilterConditions(
+    includeAsp: string[],
+    excludeAsp: string[],
+  ): { aspCondition: SQL; excludeAspCondition: SQL } {
     const aspNormalizeSql = buildAspNormalizationSql('ps.asp_name', 'p.default_thumbnail_url');
 
     let aspCondition: SQL = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`(${sql.raw(aspNormalizeSql)}) IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`(${sql.raw(aspNormalizeSql)}) IN (${sql.join(
+        includeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )})`;
     }
 
     let excludeAspCondition: SQL = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR (${sql.raw(aspNormalizeSql)}) NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR (${sql.raw(aspNormalizeSql)}) NOT IN (${sql.join(
+        excludeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )}))`;
     }
 
     return { aspCondition, excludeAspCondition };
@@ -156,15 +162,24 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
   /**
    * ASPフィルター条件を構築（getUncategorizedProductsCount用 - シンプル版）
    */
-  function buildSimpleAspFilterConditions(includeAsp: string[], excludeAsp: string[]): { aspCondition: SQL; excludeAspCondition: SQL } {
+  function buildSimpleAspFilterConditions(
+    includeAsp: string[],
+    excludeAsp: string[],
+  ): { aspCondition: SQL; excludeAspCondition: SQL } {
     let aspCondition: SQL = sql`TRUE`;
     if (includeAsp.length > 0) {
-      aspCondition = sql`ps.asp_name IN (${sql.join(includeAsp.map(a => sql`${a}`), sql`, `)})`;
+      aspCondition = sql`ps.asp_name IN (${sql.join(
+        includeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )})`;
     }
 
     let excludeAspCondition: SQL = sql`TRUE`;
     if (excludeAsp.length > 0) {
-      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(excludeAsp.map(a => sql`${a}`), sql`, `)}))`;
+      excludeAspCondition = sql`(ps.asp_name IS NULL OR ps.asp_name NOT IN (${sql.join(
+        excludeAsp.map((a) => sql`${a}`),
+        sql`, `,
+      )}))`;
     }
 
     return { aspCondition, excludeAspCondition };
@@ -280,20 +295,26 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
           const { tagData, sourceData, imagesData, videosData } = await fetchProductRelatedData(product['id']);
 
           // ローカライズ適用
-          const localizedTitle = getLocalizedTitle({
-            title: product['title'] || '',
-            titleEn: product.title_en,
-            titleZh: product.title_zh,
-            titleZhTw: product.title_zh_tw,
-            titleKo: product.title_ko,
-          }, locale);
-          const localizedDescription = getLocalizedDescription({
-            description: product['description'],
-            descriptionEn: product.description_en,
-            descriptionZh: product.description_zh,
-            descriptionZhTw: product.description_zh_tw,
-            descriptionKo: product.description_ko,
-          }, locale);
+          const localizedTitle = getLocalizedTitle(
+            {
+              title: product['title'] || '',
+              titleEn: product.title_en,
+              titleZh: product.title_zh,
+              titleZhTw: product.title_zh_tw,
+              titleKo: product.title_ko,
+            },
+            locale,
+          );
+          const localizedDescription = getLocalizedDescription(
+            {
+              description: product['description'],
+              descriptionEn: product.description_en,
+              descriptionZh: product.description_zh,
+              descriptionZhTw: product.description_zh_tw,
+              descriptionKo: product.description_ko,
+            },
+            locale,
+          );
 
           return {
             id: String(product['id']),
@@ -305,17 +326,17 @@ export function createUncategorizedQueries(deps: UncategorizedQueryDeps): Uncate
             createdAt: product.created_at || '',
             normalizedProductId: product.normalized_product_id || '',
             makerProductCode: product.maker_product_code || '',
-            tags: tagData.map(t => t.name),
+            tags: tagData.map((t) => t.name),
             sources: sourceData,
-            images: imagesData.map(i => i.imageUrl),
-            videos: videosData.map(v => v.videoUrl),
+            images: imagesData.map((i) => i.imageUrl),
+            videos: videosData.map((v) => v.videoUrl),
             // sourceDataから価格情報を取得
             price: sourceData?.price || 0,
             salePrice: undefined,
             affiliateUrl: sourceData?.affiliateUrl || '',
             provider: sourceData?.aspName || '',
           } as T;
-        })
+        }),
       );
 
       return productsWithData;

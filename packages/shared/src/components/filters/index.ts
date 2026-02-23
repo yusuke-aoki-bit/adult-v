@@ -14,5 +14,10 @@ export {
   getSortTranslation,
   getPerPageTranslation,
   getActiveFiltersTranslation,
-} from './translations';
-export type { SortTranslationKey, PerPageTranslationKey, ActiveFiltersTranslationKey, SupportedLocale } from './translations';
+} from '../../lib/translations/filters';
+export type {
+  SortTranslationKey,
+  PerPageTranslationKey,
+  ActiveFiltersTranslationKey,
+  SupportedLocale,
+} from '../../lib/translations/filters';

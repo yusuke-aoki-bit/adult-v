@@ -5,10 +5,7 @@ export interface MakerByIdHandlerDeps {
 }
 
 export function createMakerByIdHandler(deps: MakerByIdHandlerDeps) {
-  return async function GET(
-    request: NextRequest,
-    { params }: { params: Promise<{ makerId: string }> },
-  ) {
+  return async function GET(request: NextRequest, { params }: { params: Promise<{ makerId: string }> }) {
     try {
       const { makerId } = await params;
       const searchParams = request.nextUrl.searchParams;

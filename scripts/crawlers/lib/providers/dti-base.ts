@@ -18,24 +18,12 @@ import {
 } from '../db/schema';
 import { eq, and, sql } from 'drizzle-orm';
 import { generateDTILink } from '../affiliate';
-import {
-  isValidPerformerName,
-  normalizePerformerName,
-  isValidPerformerForProduct,
-} from '../performer-validation';
+import { isValidPerformerName, normalizePerformerName, isValidPerformerForProduct } from '../performer-validation';
 import { validateProductData } from '../crawler-utils';
-import {
-  generateProductDescription,
-  extractProductTags,
-  translateProduct,
-} from '../google-apis';
+import { generateProductDescription, extractProductTags, translateProduct } from '../google-apis';
 import { calculateHash } from '../gcs-crawler-helper';
 import { saveSaleInfo, SaleInfo } from '../sale-helper';
-import {
-  upsertRawHtmlDataWithGcs,
-  markRawDataAsProcessed,
-  type UpsertRawDataResult,
-} from '../crawler/dedup-helper';
+import { upsertRawHtmlDataWithGcs, markRawDataAsProcessed, type UpsertRawDataResult } from '../crawler/dedup-helper';
 
 // ============================================================
 // Types & Interfaces
@@ -87,11 +75,7 @@ export interface CrawlResult {
 /**
  * Detect encoding from HTML content or response headers
  */
-export function detectEncoding(
-  buffer: Buffer,
-  contentType?: string,
-  url?: string
-): string {
+export function detectEncoding(buffer: Buffer, contentType?: string, url?: string): string {
   // Check Content-Type header first
   if (contentType) {
     const charsetMatch = contentType.match(/charset=([^\s;]+)/i);
@@ -134,15 +118,9 @@ export function detectEncoding(
 /**
  * Decode buffer to string with proper encoding
  */
-export function decodeHtml(
-  buffer: Buffer,
-  contentType?: string,
-  url?: string
-): string {
+export function decodeHtml(buffer: Buffer, contentType?: string, url?: string): string {
   const encoding = detectEncoding(buffer, contentType, url);
-  console.log(
-    `    🔤 Detected encoding: ${encoding} for ${url?.substring(0, 50) || 'unknown'}`
-  );
+  console.log(`    🔤 Detected encoding: ${encoding} for ${url?.substring(0, 50) || 'unknown'}`);
 
   // Normalize encoding names
   const normalizedEncoding = encoding
@@ -153,18 +131,13 @@ export function decodeHtml(
     .replace('eucjp', 'EUC-JP');
 
   try {
-    if (
-      normalizedEncoding.toLowerCase() === 'utf-8' ||
-      normalizedEncoding.toLowerCase() === 'utf8'
-    ) {
+    if (normalizedEncoding.toLowerCase() === 'utf-8' || normalizedEncoding.toLowerCase() === 'utf8') {
       return buffer.toString('utf-8');
     }
     // Use iconv-lite for other encodings
     return iconv.decode(buffer, normalizedEncoding);
   } catch (error) {
-    console.warn(
-      `Failed to decode with ${normalizedEncoding}, falling back to UTF-8`
-    );
+    console.warn(`Failed to decode with ${normalizedEncoding}, falling back to UTF-8`);
     return buffer.toString('utf-8');
   }
 }
@@ -176,11 +149,7 @@ export function decodeHtml(
 /**
  * Generate next ID based on format
  */
-export function generateNextId(
-  currentId: string,
-  format: string,
-  reverse: boolean = false
-): string | null {
+export function generateNextId(currentId: string, format: string, reverse: boolean = false): string | null {
   if (format === 'NNNN') {
     // Simple numeric increment: 0001 -> 0002 -> ... -> 9999
     const num = parseInt(currentId);
@@ -257,10 +226,7 @@ export function generateNextId(
 /**
  * Generate DTI image URL as fallback based on site patterns
  */
-export function generateDtiImageUrlFallback(
-  siteName: string,
-  productId: string
-): string | null {
+export function generateDtiImageUrlFallback(siteName: string, productId: string): string | null {
   switch (siteName) {
     case '一本道':
       return `https://www.1pondo.tv/moviepages/${productId}/images/str.jpg`;
@@ -293,10 +259,7 @@ export function generateDtiImageUrlFallback(
 /**
  * Fetch gallery.zip for sample images
  */
-export async function fetchGalleryZip(
-  galleryZipUrl: string,
-  productId: string
-): Promise<string[]> {
+export async function fetchGalleryZip(galleryZipUrl: string, productId: string): Promise<string[]> {
   const sampleImages: string[] = [];
 
   try {
@@ -313,24 +276,17 @@ export async function fetchGalleryZip(
       const baseImageUrl = galleryZipUrl.replace(/\/gallery\.zip$/, '');
 
       for (const entry of zipEntries) {
-        if (
-          !entry.isDirectory &&
-          entry.entryName.match(/\.(jpg|jpeg|png)$/i)
-        ) {
+        if (!entry.isDirectory && entry.entryName.match(/\.(jpg|jpeg|png)$/i)) {
           const imageUrl = `${baseImageUrl}/${entry.entryName}`;
           sampleImages.push(imageUrl);
         }
       }
-      console.log(
-        `    ✓ Extracted ${sampleImages.length} sample images from gallery.zip`
-      );
+      console.log(`    ✓ Extracted ${sampleImages.length} sample images from gallery.zip`);
     } else {
       console.log(`    ⚠️  Gallery.zip not available (${zipResponse.status})`);
     }
   } catch (error) {
-    console.log(
-      `    ⚠️  Could not fetch gallery.zip: ${error instanceof Error ? error.message : 'Unknown error'}`
-    );
+    console.log(`    ⚠️  Could not fetch gallery.zip: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 
   return sampleImages;
@@ -339,10 +295,7 @@ export async function fetchGalleryZip(
 /**
  * Get gallery.zip URL for a specific site
  */
-export function getGalleryZipUrl(
-  siteName: string,
-  productId: string
-): string | null {
+export function getGalleryZipUrl(siteName: string, productId: string): string | null {
   switch (siteName) {
     case '一本道':
       return `https://www.1pondo.tv/assets/sample/${productId}/gallery.zip`;
@@ -372,10 +325,7 @@ export function getGalleryZipUrl(
 /**
  * Get sample video URL pattern for a site
  */
-export function getSampleVideoUrl(
-  siteName: string,
-  productId: string
-): string | null {
+export function getSampleVideoUrl(siteName: string, productId: string): string | null {
   switch (siteName) {
     case '一本道':
       return `https://smovie.1pondo.tv/sample/movies/${productId}/1080p.mp4`;
@@ -412,12 +362,7 @@ const SITE_SUFFIXES = [
 /**
  * Invalid titles (site name only, no actual product title)
  */
-const INVALID_TITLE_PATTERNS = [
-  /^一本道$/,
-  /^カリビアンコム$/,
-  /^カリビアンコムプレミアム$/,
-  /^HEYZO$/,
-];
+const INVALID_TITLE_PATTERNS = [/^一本道$/, /^カリビアンコム$/, /^カリビアンコムプレミアム$/, /^HEYZO$/];
 
 /**
  * Extract basic product info from HTML
@@ -428,12 +373,8 @@ export function extractBasicInfo(html: string): {
   imageUrl?: string;
 } {
   const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-  const descMatch = html.match(
-    /<meta\s+name=["']description["']\s+content=["'](.*?)["']/i
-  );
-  const imgMatch = html.match(
-    /<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i
-  );
+  const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["'](.*?)["']/i);
+  const imgMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["'](.*?)["']/i);
 
   let rawTitle = titleMatch ? titleMatch[1].trim() : undefined;
 
@@ -470,9 +411,7 @@ export function extractPrice(html: string): {
   let saleInfo: SaleInfo | undefined;
 
   // Pattern 1: var ec_price = parseFloat('50.00');
-  const priceMatch = html.match(
-    /var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/
-  );
+  const priceMatch = html.match(/var\s+ec_price\s*=\s*parseFloat\s*\(\s*['"](\d+(?:\.\d+)?)['"]\s*\)/);
   if (priceMatch) {
     const usdPrice = parseFloat(priceMatch[1]);
     price = Math.round(usdPrice * 150);
@@ -480,9 +419,7 @@ export function extractPrice(html: string): {
 
   // Pattern 2: ec_item_price = '50.00'
   if (!price) {
-    const itemPriceMatch = html.match(
-      /ec_item_price\s*=\s*['"]?(\d+(?:\.\d+)?)['"]?/
-    );
+    const itemPriceMatch = html.match(/ec_item_price\s*=\s*['"]?(\d+(?:\.\d+)?)['"]?/);
     if (itemPriceMatch) {
       const usdPrice = parseFloat(itemPriceMatch[1]);
       price = Math.round(usdPrice * 150);
@@ -498,9 +435,7 @@ export function extractPrice(html: string): {
   }
 
   // Check for sale price
-  const originalPriceMatch = html.match(
-    /(?:通常|定価|元)[価値:]?\s*\$?\s*(\d+(?:\.\d+)?)/i
-  );
+  const originalPriceMatch = html.match(/(?:通常|定価|元)[価値:]?\s*\$?\s*(\d+(?:\.\d+)?)/i);
   const discountMatch = html.match(/(\d+)\s*%\s*(?:OFF|オフ|off|割引)/);
 
   if (originalPriceMatch && price) {
@@ -510,9 +445,7 @@ export function extractPrice(html: string): {
       saleInfo = {
         regularPrice,
         salePrice: price,
-        discountPercent: discountMatch
-          ? parseInt(discountMatch[1])
-          : Math.round((1 - price / regularPrice) * 100),
+        discountPercent: discountMatch ? parseInt(discountMatch[1]) : Math.round((1 - price / regularPrice) * 100),
         saleType: 'sale',
       };
     }
@@ -520,7 +453,7 @@ export function extractPrice(html: string): {
 
   // Pattern: JavaScript variables for sale detection
   const regularPriceVar = html.match(
-    /(?:ec_regular_price|regular_price|original_price)\s*=\s*(?:parseFloat\s*\(\s*)?['"]?(\d+(?:\.\d+)?)['"]?/
+    /(?:ec_regular_price|regular_price|original_price)\s*=\s*(?:parseFloat\s*\(\s*)?['"]?(\d+(?:\.\d+)?)['"]?/,
   );
   if (regularPriceVar && price && !saleInfo) {
     const regularUsd = parseFloat(regularPriceVar[1]);
@@ -575,22 +508,15 @@ export function extractActors(html: string, title?: string): string[] {
   // Apply performer validation
   return rawActors
     .map((name) => normalizePerformerName(name))
-    .filter(
-      (name): name is string =>
-        name !== null && isValidPerformerForProduct(name, title)
-    );
+    .filter((name): name is string => name !== null && isValidPerformerForProduct(name, title));
 }
 
 /**
  * Extract release date from HTML
  */
 export function extractReleaseDate(html: string): string | undefined {
-  const dateMatch = html.match(
-    /配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/
-  );
-  return dateMatch
-    ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}`
-    : undefined;
+  const dateMatch = html.match(/配信日[:：]?\s*(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/);
+  return dateMatch ? `${dateMatch[1]}-${dateMatch[2].padStart(2, '0')}-${dateMatch[3].padStart(2, '0')}` : undefined;
 }
 
 /**
@@ -620,12 +546,16 @@ export function extractReviews(html: string): DtiReview[] {
 
   // Pattern: section blocks containing reviews
   // Match each review block: <div class="section is-dense">..rating..review-comment..review-info..</div>
-  const reviewBlockRegex = /<div class="section is-dense">\s*<div class="rating"[^>]*>([\s\S]*?)<\/div>\s*<div class="review-comment">([\s\S]*?)<\/div>\s*<div class="review-info">\s*<span class="review-info__user">([^<]*)<\/span>\s*<span class="review-info__date">([^<]*)<\/span>/g;
+  const reviewBlockRegex =
+    /<div class="section is-dense">\s*<div class="rating"[^>]*>([\s\S]*?)<\/div>\s*<div class="review-comment">([\s\S]*?)<\/div>\s*<div class="review-info">\s*<span class="review-info__user">([^<]*)<\/span>\s*<span class="review-info__date">([^<]*)<\/span>/g;
 
   let match;
   while ((match = reviewBlockRegex.exec(html)) !== null) {
     const ratingHtml = match[1];
-    const content = match[2].replace(/<br\s*\/?>/gi, '\n').replace(/<[^>]+>/g, '').trim();
+    const content = match[2]
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+      .trim();
     const reviewerRaw = match[3].trim();
     const dateRaw = match[4].trim();
 
@@ -665,40 +595,32 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
 
   // Pattern 1: Sample image gallery members
   const memberGalleryMatches = Array.from(
-    html.matchAll(/<a[^>]*href=["']([^"']*members[^"']*gallery[^"']*\.jpg)["']/gi)
+    html.matchAll(/<a[^>]*href=["']([^"']*members[^"']*gallery[^"']*\.jpg)["']/gi),
   );
   for (const match of memberGalleryMatches) {
     imageSet.add(match[1]);
   }
 
   // Pattern 2: Movie thumb images
-  const movieThumbMatches = Array.from(
-    html.matchAll(/<img[^>]*src=["']([^"']*moviepages[^"']*\.jpg)["']/gi)
-  );
+  const movieThumbMatches = Array.from(html.matchAll(/<img[^>]*src=["']([^"']*moviepages[^"']*\.jpg)["']/gi));
   for (const match of movieThumbMatches) {
     imageSet.add(match[1]);
   }
 
   // Pattern 3: Sample image links
-  const sampleLinkMatches = Array.from(
-    html.matchAll(/<a[^>]*href=["']([^"']*\/posters\/[^"']*\.jpg)["']/gi)
-  );
+  const sampleLinkMatches = Array.from(html.matchAll(/<a[^>]*href=["']([^"']*\/posters\/[^"']*\.jpg)["']/gi));
   for (const match of sampleLinkMatches) {
     imageSet.add(match[1]);
   }
 
   // Pattern 4: HEYZO sample images
-  const heyzoMatches = Array.from(
-    html.matchAll(/<img[^>]*src=["']([^"']*\/contents\/[^"']*sample[^"']*\.jpg)["']/gi)
-  );
+  const heyzoMatches = Array.from(html.matchAll(/<img[^>]*src=["']([^"']*\/contents\/[^"']*sample[^"']*\.jpg)["']/gi));
   for (const match of heyzoMatches) {
     imageSet.add(match[1]);
   }
 
   // Pattern 5: Generic sample image patterns
-  const genericSampleMatches = Array.from(
-    html.matchAll(/<img[^>]*src=["']([^"']*sample[^"']*\.jpg)["']/gi)
-  );
+  const genericSampleMatches = Array.from(html.matchAll(/<img[^>]*src=["']([^"']*sample[^"']*\.jpg)["']/gi));
   for (const match of genericSampleMatches) {
     imageSet.add(match[1]);
   }
@@ -716,30 +638,22 @@ export function extractSampleImages(html: string, imageUrl?: string): string[] {
  */
 export function extractSampleVideoFromHtml(html: string): string | undefined {
   // Pattern 1: Video source tag
-  const videoSrcMatch = html.match(
-    /<source[^>]*src=["']([^"']+\.mp4)["']/i
-  );
+  const videoSrcMatch = html.match(/<source[^>]*src=["']([^"']+\.mp4)["']/i);
   if (videoSrcMatch) return videoSrcMatch[1];
 
   // Pattern 2: Sample movie player URLs
-  const sampleMovieMatch = html.match(
-    /sample[_-]?movie[^"']*\.mp4|[^"']*sample[^"']*\.mp4/i
-  );
+  const sampleMovieMatch = html.match(/sample[_-]?movie[^"']*\.mp4|[^"']*sample[^"']*\.mp4/i);
   if (sampleMovieMatch) {
     const fullMatch = html.match(/["']([^"']*sample[^"']*\.mp4)["']/i);
     if (fullMatch) return fullMatch[1];
   }
 
   // Pattern 3: JavaScript variable for sample movie URL
-  const jsSampleMatch = html.match(
-    /(?:sample_?url|movie_?url|video_?url)\s*[=:]\s*["']([^"']+\.mp4)["']/i
-  );
+  const jsSampleMatch = html.match(/(?:sample_?url|movie_?url|video_?url)\s*[=:]\s*["']([^"']+\.mp4)["']/i);
   if (jsSampleMatch) return jsSampleMatch[1];
 
   // Pattern 4: data-video-url attribute
-  const dataVideoMatch = html.match(
-    /data-video-url=["']([^"']+\.mp4)["']/i
-  );
+  const dataVideoMatch = html.match(/data-video-url=["']([^"']+\.mp4)["']/i);
   if (dataVideoMatch) return dataVideoMatch[1];
 
   return undefined;
@@ -756,7 +670,7 @@ export async function saveProductImages(
   productId: number,
   thumbnailUrl?: string,
   sampleImages?: string[],
-  siteName?: string
+  siteName?: string,
 ): Promise<void> {
   if (!thumbnailUrl && (!sampleImages || sampleImages.length === 0)) {
     return;
@@ -770,12 +684,7 @@ export async function saveProductImages(
       const existing = await db
         .select()
         .from(productImages)
-        .where(
-          and(
-            eq(productImages.productId, productId),
-            eq(productImages.imageUrl, thumbnailUrl)
-          )
-        )
+        .where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, thumbnailUrl)))
         .limit(1);
 
       if (existing.length === 0) {
@@ -799,12 +708,7 @@ export async function saveProductImages(
         const existing = await db
           .select()
           .from(productImages)
-          .where(
-            and(
-              eq(productImages.productId, productId),
-              eq(productImages.imageUrl, imageUrl)
-            )
-          )
+          .where(and(eq(productImages.productId, productId), eq(productImages.imageUrl, imageUrl)))
           .limit(1);
 
         if (existing.length === 0) {
@@ -830,10 +734,7 @@ export async function saveProductImages(
 /**
  * Save sample video to product_videos table
  */
-export async function saveProductVideo(
-  productId: number,
-  sampleVideoUrl?: string
-): Promise<void> {
+export async function saveProductVideo(productId: number, sampleVideoUrl?: string): Promise<void> {
   if (!sampleVideoUrl) {
     return;
   }
@@ -844,22 +745,20 @@ export async function saveProductVideo(
     const existing = await db
       .select()
       .from(productVideos)
-      .where(
-        and(
-          eq(productVideos.productId, productId),
-          eq(productVideos.videoUrl, sampleVideoUrl)
-        )
-      )
+      .where(and(eq(productVideos.productId, productId), eq(productVideos.videoUrl, sampleVideoUrl)))
       .limit(1);
 
     if (existing.length === 0) {
-      await db.insert(productVideos).values({
-        productId,
-        videoUrl: sampleVideoUrl,
-        videoType: 'sample',
-        aspName: 'DTI',
-        displayOrder: 0,
-      }).onConflictDoNothing();
+      await db
+        .insert(productVideos)
+        .values({
+          productId,
+          videoUrl: sampleVideoUrl,
+          videoType: 'sample',
+          aspName: 'DTI',
+          displayOrder: 0,
+        })
+        .onConflictDoNothing();
       console.log(`    🎬 Saved sample video to product_videos`);
     }
   } catch (error) {
@@ -875,7 +774,7 @@ export async function saveProduct(
   productId: string,
   productData: ParsedProductData,
   url: string,
-  enableAI: boolean = true
+  enableAI: boolean = true,
 ): Promise<{ productDbId: number; isNew: boolean } | null> {
   const db = getDb();
   const normalizedProductId = `${config.siteName}-${productId}`;
@@ -909,9 +808,7 @@ export async function saveProduct(
       productDbId = existingProduct[0].id;
     } else {
       isNew = true;
-      const thumbnailUrl =
-        productData.imageUrl ||
-        generateDtiImageUrlFallback(config.siteName, productId);
+      const thumbnailUrl = productData.imageUrl || generateDtiImageUrlFallback(config.siteName, productId);
 
       const [insertedProduct] = await db
         .insert(products)
@@ -940,12 +837,7 @@ export async function saveProduct(
       });
 
       // Save images
-      await saveProductImages(
-        productDbId,
-        thumbnailUrl || undefined,
-        productData.sampleImages,
-        config.siteName
-      );
+      await saveProductImages(productDbId, thumbnailUrl || undefined, productData.sampleImages, config.siteName);
 
       // Save video
       await saveProductVideo(productDbId, productData.sampleVideoUrl);
@@ -968,11 +860,7 @@ export async function saveProduct(
         for (const actorName of productData.actors) {
           if (!actorName) continue;
 
-          const existingPerformer = await db
-            .select()
-            .from(performers)
-            .where(eq(performers.name, actorName))
-            .limit(1);
+          const existingPerformer = await db.select().from(performers).where(eq(performers.name, actorName)).limit(1);
 
           let performerId: number;
 
@@ -991,12 +879,7 @@ export async function saveProduct(
           const existingLink = await db
             .select()
             .from(productPerformers)
-            .where(
-              and(
-                eq(productPerformers.productId, productDbId),
-                eq(productPerformers.performerId, performerId)
-              )
-            )
+            .where(and(eq(productPerformers.productId, productDbId), eq(productPerformers.performerId, performerId)))
             .limit(1);
 
           if (existingLink.length === 0) {
@@ -1009,11 +892,7 @@ export async function saveProduct(
       }
 
       // Link to site tag
-      const existingSiteTag = await db
-        .select()
-        .from(tags)
-        .where(eq(tags.name, config.siteName))
-        .limit(1);
+      const existingSiteTag = await db.select().from(tags).where(eq(tags.name, config.siteName)).limit(1);
 
       if (existingSiteTag.length > 0) {
         const tagId = existingSiteTag[0].id;
@@ -1021,12 +900,7 @@ export async function saveProduct(
         const existingTagLink = await db
           .select()
           .from(productTags)
-          .where(
-            and(
-              eq(productTags.productId, productDbId),
-              eq(productTags.tagId, tagId)
-            )
-          )
+          .where(and(eq(productTags.productId, productDbId), eq(productTags.tagId, tagId)))
           .limit(1);
 
         if (existingTagLink.length === 0) {
@@ -1053,10 +927,7 @@ export async function saveProduct(
 /**
  * Run AI features on a product
  */
-async function runAIFeatures(
-  productId: number,
-  productData: ParsedProductData
-): Promise<void> {
+async function runAIFeatures(productId: number, productData: ParsedProductData): Promise<void> {
   const db = getDb();
 
   try {
@@ -1090,10 +961,7 @@ async function runAIFeatures(
     }
 
     // AI tag extraction
-    const aiTags = await extractProductTags(
-      productData.title || '',
-      productData.description
-    );
+    const aiTags = await extractProductTags(productData.title || '', productData.description);
     if (aiTags.genres.length > 0 || aiTags.attributes.length > 0) {
       console.log(`    ✅ AIタグ抽出完了`);
 
@@ -1110,10 +978,7 @@ async function runAIFeatures(
 
     // Translation
     console.log(`  🌐 翻訳処理を実行中...`);
-    const translation = await translateProduct(
-      productData.title || '',
-      productData.description
-    );
+    const translation = await translateProduct(productData.title || '', productData.description);
     if (translation) {
       try {
         await db.execute(sql`
@@ -1157,10 +1022,7 @@ export abstract class DTIBaseCrawler {
   /**
    * Parse HTML content - to be implemented by subclass
    */
-  abstract parseHtmlContent(
-    html: string,
-    productId: string
-  ): Promise<ParsedProductData | null>;
+  abstract parseHtmlContent(html: string, productId: string): Promise<ParsedProductData | null>;
 
   /**
    * Fetch and decode HTML from URL
@@ -1186,12 +1048,7 @@ export abstract class DTIBaseCrawler {
     return await this.db
       .select()
       .from(rawHtmlData)
-      .where(
-        and(
-          eq(rawHtmlData.source, this.config.siteName),
-          eq(rawHtmlData.productId, productId)
-        )
-      )
+      .where(and(eq(rawHtmlData.source, this.config.siteName), eq(rawHtmlData.productId, productId)))
       .limit(1);
   }
 
@@ -1203,17 +1060,12 @@ export abstract class DTIBaseCrawler {
     productId: string,
     url: string,
     htmlContent: string,
-    forceReprocess: boolean = false
+    forceReprocess: boolean = false,
   ): Promise<UpsertRawDataResult> {
     const siteKey = this.config.siteName.toLowerCase().replace(/[^a-z0-9]/g, '-');
 
     // Use the unified upsert function with GCS support
-    const result = await upsertRawHtmlDataWithGcs(
-      this.config.siteName,
-      productId,
-      url,
-      htmlContent
-    );
+    const result = await upsertRawHtmlDataWithGcs(this.config.siteName, productId, url, htmlContent);
 
     // Log appropriately
     if (result.shouldSkip && !forceReprocess) {
@@ -1272,9 +1124,7 @@ export abstract class DTIBaseCrawler {
       }
 
       if (consecutiveNotFound >= MAX_CONSECUTIVE_NOT_FOUND) {
-        console.log(
-          `Stopping: ${MAX_CONSECUTIVE_NOT_FOUND} consecutive products not found`
-        );
+        console.log(`Stopping: ${MAX_CONSECUTIVE_NOT_FOUND} consecutive products not found`);
         break;
       }
 
@@ -1287,35 +1137,24 @@ export abstract class DTIBaseCrawler {
         consecutiveNotFound++;
 
         if (notFoundCount % 10 === 0) {
-          console.log(
-            `  Progress: ${foundCount} found, ${notFoundCount} not found (current: ${currentId})`
-          );
+          console.log(`  Progress: ${foundCount} found, ${notFoundCount} not found (current: ${currentId})`);
         }
 
-        currentId =
-          generateNextId(currentId, this.config.idFormat, this.config.reverseMode) ||
-          '';
+        currentId = generateNextId(currentId, this.config.idFormat, this.config.reverseMode) || '';
         if (!currentId) break;
         await this.delay(500);
         continue;
       }
 
       // Save raw HTML with deduplication
-      const upsertResult = await this.saveRawHtmlData(
-        currentId,
-        url,
-        fetchedHtml,
-        forceReprocess
-      );
+      const upsertResult = await this.saveRawHtmlData(currentId, url, fetchedHtml, forceReprocess);
 
       // Skip if no changes and already processed
       if (upsertResult.shouldSkip && !forceReprocess) {
         foundCount++;
         skippedUnchanged++;
         consecutiveNotFound = 0;
-        currentId =
-          generateNextId(currentId, this.config.idFormat, this.config.reverseMode) ||
-          '';
+        currentId = generateNextId(currentId, this.config.idFormat, this.config.reverseMode) || '';
         if (!currentId) break;
         await this.delay(500);
         continue;
@@ -1329,26 +1168,16 @@ export abstract class DTIBaseCrawler {
         consecutiveNotFound++;
 
         if (notFoundCount % 10 === 0) {
-          console.log(
-            `  Progress: ${foundCount} found, ${notFoundCount} not found (current: ${currentId})`
-          );
+          console.log(`  Progress: ${foundCount} found, ${notFoundCount} not found (current: ${currentId})`);
         }
       } else {
         foundCount++;
         consecutiveNotFound = 0;
 
-        console.log(
-          `  ✓ Found: ${currentId} - ${productData.title?.substring(0, 50)}...`
-        );
+        console.log(`  ✓ Found: ${currentId} - ${productData.title?.substring(0, 50)}...`);
 
         // Save product
-        const result = await saveProduct(
-          this.config,
-          currentId,
-          productData,
-          url,
-          options.enableAI !== false
-        );
+        const result = await saveProduct(this.config, currentId, productData, url, options.enableAI !== false);
 
         if (result) {
           if (result.isNew) {
@@ -1363,8 +1192,7 @@ export abstract class DTIBaseCrawler {
       }
 
       // Next ID
-      currentId =
-        generateNextId(currentId, this.config.idFormat, this.config.reverseMode) || '';
+      currentId = generateNextId(currentId, this.config.idFormat, this.config.reverseMode) || '';
       if (!currentId) break;
 
       await this.delay(500);

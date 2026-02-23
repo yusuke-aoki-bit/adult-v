@@ -33,7 +33,7 @@ export async function getDUGATotal(): Promise<ASPTotal> {
     return {
       asp: 'DUGA',
       apiTotal: response['count'],
-      source: 'DUGA API (count)'
+      source: 'DUGA API (count)',
     };
   } catch (e) {
     // API認証情報が無い環境やエラー時はフォールバック推定値を返す
@@ -41,7 +41,7 @@ export async function getDUGATotal(): Promise<ASPTotal> {
       asp: 'DUGA',
       apiTotal: FALLBACK_ESTIMATE,
       source: 'duga.jp (推定値)',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -59,21 +59,21 @@ export async function getSOKMILTotal(): Promise<ASPTotal> {
       return {
         asp: 'SOKMIL',
         apiTotal: response['totalCount'],
-        source: 'SOKMIL API (total_count)'
+        source: 'SOKMIL API (total_count)',
       };
     }
     // APIエラーまたは無効な応答時はフォールバック
     return {
       asp: 'SOKMIL',
       apiTotal: 150000, // 推定値
-      source: 'sokmil.com (推定値)'
+      source: 'sokmil.com (推定値)',
     };
   } catch (e) {
     return {
       asp: 'SOKMIL',
       apiTotal: 150000, // 推定値
       source: 'sokmil.com (推定値)',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -97,20 +97,20 @@ export async function getB10FTotal(): Promise<ASPTotal> {
     }
 
     const csv = await response['text']();
-    const lines = csv.split('\n').filter(line => line.trim().length > 0);
+    const lines = csv.split('\n').filter((line) => line.trim().length > 0);
     const apiTotal = lines.length - 1;
 
     return {
       asp: 'b10f',
       apiTotal,
-      source: `b10f.jp CSV (${apiTotal.toLocaleString()}行)`
+      source: `b10f.jp CSV (${apiTotal.toLocaleString()}行)`,
     };
   } catch (e) {
     return {
       asp: 'b10f',
       apiTotal: null,
       source: 'エラー',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -138,7 +138,7 @@ export async function getHEYZOTotal(): Promise<ASPTotal> {
       return {
         asp: 'HEYZO',
         apiTotal: maxId,
-        source: `heyzo.com (最大ID: ${maxId})`
+        source: `heyzo.com (最大ID: ${maxId})`,
       };
     }
 
@@ -153,14 +153,14 @@ export async function getHEYZOTotal(): Promise<ASPTotal> {
     return {
       asp: 'HEYZO',
       apiTotal,
-      source: `heyzo.com (${maxPage}ページ x 12件)`
+      source: `heyzo.com (${maxPage}ページ x 12件)`,
     };
   } catch (e) {
     return {
       asp: 'HEYZO',
       apiTotal: null,
       source: 'エラー',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -173,17 +173,12 @@ export async function getMGSTotal(): Promise<ASPTotal> {
     const response = await fetch('https://www.mgstage.com/search/cSearch.php?search_word=&sort=new&list_cnt=30', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Cookie': 'adc=1',
+        Cookie: 'adc=1',
       },
     });
     const html = await response['text']();
 
-    const patterns = [
-      /全\s*([\d,]+)\s*件/,
-      /約\s*([\d,]+)\s*件/,
-      /([\d,]+)\s*件の商品/,
-      /検索結果[：:]\s*([\d,]+)/,
-    ];
+    const patterns = [/全\s*([\d,]+)\s*件/, /約\s*([\d,]+)\s*件/, /([\d,]+)\s*件の商品/, /検索結果[：:]\s*([\d,]+)/];
 
     for (const pattern of patterns) {
       const match = html.match(pattern);
@@ -193,7 +188,7 @@ export async function getMGSTotal(): Promise<ASPTotal> {
           return {
             asp: 'MGS',
             apiTotal: total,
-            source: 'mgstage.com (検索結果)'
+            source: 'mgstage.com (検索結果)',
           };
         }
       }
@@ -207,21 +202,21 @@ export async function getMGSTotal(): Promise<ASPTotal> {
       return {
         asp: 'MGS',
         apiTotal,
-        source: `mgstage.com (${lastPage}ページ x ${itemsPerPage}件)`
+        source: `mgstage.com (${lastPage}ページ x ${itemsPerPage}件)`,
       };
     }
 
     return {
       asp: 'MGS',
       apiTotal: null,
-      source: 'mgstage.com (パターン不一致)'
+      source: 'mgstage.com (パターン不一致)',
     };
   } catch (e) {
     return {
       asp: 'MGS',
       apiTotal: null,
       source: 'エラー',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -240,8 +235,9 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
 
     const homeRes = await fetch('https://www.japanska-xxx.com/', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
       },
       signal: controller.signal,
@@ -257,10 +253,11 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
 
     const response = await fetch('https://www.japanska-xxx.com/category/list_0.html', {
       headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        'Cookie': `termid=${termid}`,
-        'Referer': 'https://www.japanska-xxx.com/',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        Cookie: `termid=${termid}`,
+        Referer: 'https://www.japanska-xxx.com/',
+        Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',
       },
       signal: controller2.signal,
@@ -271,7 +268,7 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
       return {
         asp: 'Japanska',
         apiTotal: FALLBACK_ESTIMATE,
-        source: `japanska-xxx.com (推定値, HTTP ${response['status']})`
+        source: `japanska-xxx.com (推定値, HTTP ${response['status']})`,
       };
     }
 
@@ -290,7 +287,7 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
       return {
         asp: 'Japanska',
         apiTotal: maxId,
-        source: `japanska-xxx.com (最大ID: ${maxId})`
+        source: `japanska-xxx.com (最大ID: ${maxId})`,
       };
     }
 
@@ -308,7 +305,7 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
       return {
         asp: 'Japanska',
         apiTotal,
-        source: `japanska-xxx.com (${maxPage}ページ x 30件)`
+        source: `japanska-xxx.com (${maxPage}ページ x 30件)`,
       };
     }
 
@@ -316,7 +313,7 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
     return {
       asp: 'Japanska',
       apiTotal: FALLBACK_ESTIMATE,
-      source: 'japanska-xxx.com (推定値)'
+      source: 'japanska-xxx.com (推定値)',
     };
   } catch (e) {
     // エラー時も推定値を返す
@@ -324,7 +321,7 @@ export async function getJapanskaTotal(): Promise<ASPTotal> {
       asp: 'Japanska',
       apiTotal: FALLBACK_ESTIMATE,
       source: 'japanska-xxx.com (推定値)',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -367,7 +364,7 @@ export async function getCaribbeancomTotal(): Promise<ASPTotal> {
       return {
         asp: 'CARIBBEANCOM',
         apiTotal,
-        source: `caribbeancom.com (${maxPage}ページ x 12件)`
+        source: `caribbeancom.com (${maxPage}ページ x 12件)`,
       };
     }
 
@@ -383,21 +380,21 @@ export async function getCaribbeancomTotal(): Promise<ASPTotal> {
       return {
         asp: 'CARIBBEANCOM',
         apiTotal: FALLBACK_ESTIMATE,
-        source: `caribbeancom.com (推定値、${uniqueIds.size}件検出)`
+        source: `caribbeancom.com (推定値、${uniqueIds.size}件検出)`,
       };
     }
 
     return {
       asp: 'CARIBBEANCOM',
       apiTotal: FALLBACK_ESTIMATE,
-      source: 'caribbeancom.com (推定値)'
+      source: 'caribbeancom.com (推定値)',
     };
   } catch (e) {
     return {
       asp: 'CARIBBEANCOM',
       apiTotal: FALLBACK_ESTIMATE,
       source: 'caribbeancom.com (推定値)',
-      error: String(e)
+      error: String(e),
     };
   }
 }
@@ -427,7 +424,7 @@ export async function get1PondoTotal(): Promise<ASPTotal> {
         return {
           asp: '一本道',
           apiTotal: total,
-          source: `1pondo.tv (HTML: ${total}本)`
+          source: `1pondo.tv (HTML: ${total}本)`,
         };
       }
     }
@@ -440,7 +437,7 @@ export async function get1PondoTotal(): Promise<ASPTotal> {
         return {
           asp: '一本道',
           apiTotal: total,
-          source: `1pondo.tv (HTML: ${total}本)`
+          source: `1pondo.tv (HTML: ${total}本)`,
         };
       }
     }
@@ -458,7 +455,7 @@ function createEstimateTotal(asp: string, estimate: number, site: string): ASPTo
   return {
     asp,
     apiTotal: estimate,
-    source: `${site} (推定値)`
+    source: `${site} (推定値)`,
   };
 }
 
@@ -529,10 +526,8 @@ export async function getASPEstimate(aspName: string): Promise<number | null> {
   // DTI形式の変換
   const normalizedName = aspName.replace('DTI: ', '');
 
-  const found = totals.find(t =>
-    t.asp === aspName ||
-    t.asp === normalizedName ||
-    t.asp.toLowerCase() === normalizedName.toLowerCase()
+  const found = totals.find(
+    (t) => t.asp === aspName || t.asp === normalizedName || t.asp.toLowerCase() === normalizedName.toLowerCase(),
   );
 
   return found?.apiTotal ?? null;
@@ -542,13 +537,13 @@ export async function getASPEstimate(aspName: string): Promise<number | null> {
  * 日本語ASP名から英語ASP名へのマッピング
  */
 const JAPANESE_TO_ENGLISH_ASP: Record<string, string> = {
-  'カリビアンコムプレミアム': 'CARIBBEANCOMPR',
-  '一本道': '1PONDO',
-  'カリビアンコム': 'CARIBBEANCOM',
-  '天然むすめ': '10MUSUME',
-  'パコパコママ': 'PACOPACOMAMA',
-  'ムラムラってくる素人': 'MURAMURA',
-  'Hey動画': 'HEYDOUGA',
+  カリビアンコムプレミアム: 'CARIBBEANCOMPR',
+  一本道: '1PONDO',
+  カリビアンコム: 'CARIBBEANCOM',
+  天然むすめ: '10MUSUME',
+  パコパコママ: 'PACOPACOMAMA',
+  ムラムラってくる素人: 'MURAMURA',
+  Hey動画: 'HEYDOUGA',
 };
 
 /**

@@ -117,40 +117,45 @@ npx tsx scripts/pipeline/performer-lookup-pipeline.ts search --asp=DTI --limit=1
 ## 関連ファイル
 
 ### クローラー
+
 - `packages/crawlers/src/performers/wiki-sources/crawl-wiki-performers.ts`
 - `packages/crawlers/src/enrichment/wiki/crawl-wiki-parallel.ts`
 
 ### 名寄せ処理
+
 - `packages/crawlers/src/enrichment/performer-linking/link-wiki-performers.ts`
 - `packages/shared/src/cron-handlers/normalize-performers.ts`
 
 ### 検索
+
 - `scripts/normalize-performers-from-wiki.ts`
 - `packages/shared/src/db-queries/wiki-performer-search.ts`
 
 ## テーブル構造
 
 ### wiki_crawl_data
-| カラム | 型 | 説明 |
-|--------|------|------|
-| id | serial | 主キー |
-| source | varchar | データソース (seesaawiki, av-wiki等) |
-| product_code | varchar | 品番 |
-| performer_name | varchar | 演者名 |
-| source_url | text | ソースURL |
-| created_at | timestamp | 作成日時 |
+
+| カラム         | 型        | 説明                                 |
+| -------------- | --------- | ------------------------------------ |
+| id             | serial    | 主キー                               |
+| source         | varchar   | データソース (seesaawiki, av-wiki等) |
+| product_code   | varchar   | 品番                                 |
+| performer_name | varchar   | 演者名                               |
+| source_url     | text      | ソースURL                            |
+| created_at     | timestamp | 作成日時                             |
 
 ### product_performer_lookup
-| カラム | 型 | 説明 |
-|--------|------|------|
-| id | serial | 主キー |
-| product_code | varchar | 品番（オリジナル） |
-| product_code_normalized | varchar | 正規化品番 |
-| performer_names | text[] | 演者名配列 |
-| source | varchar | データソース |
-| title | varchar | 商品タイトル |
-| source_url | text | ソースURL |
-| crawled_at | timestamp | クロール日時 |
+
+| カラム                  | 型        | 説明               |
+| ----------------------- | --------- | ------------------ |
+| id                      | serial    | 主キー             |
+| product_code            | varchar   | 品番（オリジナル） |
+| product_code_normalized | varchar   | 正規化品番         |
+| performer_names         | text[]    | 演者名配列         |
+| source                  | varchar   | データソース       |
+| title                   | varchar   | 商品タイトル       |
+| source_url              | text      | ソースURL          |
+| crawled_at              | timestamp | クロール日時       |
 
 ## 注意事項
 

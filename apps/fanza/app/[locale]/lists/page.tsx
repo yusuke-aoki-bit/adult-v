@@ -202,7 +202,12 @@ export default function ListsPage() {
 
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingList, setEditingList] = useState<{ id: number; title: string; description: string; isPublic: boolean } | null>(null);
+  const [editingList, setEditingList] = useState<{
+    id: number;
+    title: string;
+    description: string;
+    isPublic: boolean;
+  } | null>(null);
 
   // 初期データ取得
   useEffect(() => {
@@ -246,7 +251,7 @@ export default function ListsPage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+          <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-gray-900">
             <List className="h-8 w-8 text-pink-500" />
             {t.title}
           </h1>
@@ -254,14 +259,12 @@ export default function ListsPage() {
         </div>
 
         {/* Tabs and Create Button */}
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
           <div className="flex gap-2">
             <button
               onClick={() => setActiveTab('public')}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                activeTab === 'public'
-                  ? 'bg-pink-500 text-white'
-                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              className={`rounded-lg px-4 py-2 font-medium transition-colors ${
+                activeTab === 'public' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {t.publicLists}
@@ -269,10 +272,8 @@ export default function ListsPage() {
             {userId && (
               <button
                 onClick={() => setActiveTab('my')}
-                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                  activeTab === 'my'
-                    ? 'bg-pink-500 text-white'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                className={`rounded-lg px-4 py-2 font-medium transition-colors ${
+                  activeTab === 'my' ? 'bg-pink-500 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                 }`}
               >
                 {t.myLists} ({myLists.length})
@@ -283,19 +284,19 @@ export default function ListsPage() {
           {userId ? (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white rounded-lg font-medium transition-colors"
+              className="flex items-center gap-2 rounded-lg bg-pink-500 px-4 py-2 font-medium text-white transition-colors hover:bg-pink-600"
             >
               <Plus className="h-4 w-4" />
               {t.createList}
             </button>
-          ) : !isAuthLoading && (
-            <p className="text-sm text-gray-500">{t.loginToCreate}</p>
+          ) : (
+            !isAuthLoading && <p className="text-sm text-gray-500">{t.loginToCreate}</p>
           )}
         </div>
 
         {/* Error State */}
         {error && (
-          <div className="text-center py-8 text-red-500">
+          <div className="py-8 text-center text-red-500">
             {t.error}: {error}
           </div>
         )}
@@ -310,11 +311,9 @@ export default function ListsPage() {
 
         {/* Lists Grid */}
         {!isLoading && displayLists.length === 0 ? (
-          <div className="text-center py-16">
-            <List className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg">
-              {activeTab === 'public' ? t.emptyPublic : t.emptyMy}
-            </p>
+          <div className="py-16 text-center">
+            <List className="mx-auto mb-4 h-16 w-16 text-gray-300" />
+            <p className="text-lg text-gray-500">{activeTab === 'public' ? t.emptyPublic : t.emptyMy}</p>
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

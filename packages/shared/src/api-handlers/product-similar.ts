@@ -60,10 +60,7 @@ interface ProductSimilarityResponse {
 
 const CACHE_TTL = 60 * 60; // 1時間
 
-export function createProductSimilarHandler(
-  deps: ProductSimilarHandlerDeps,
-  options: ProductSimilarHandlerOptions
-) {
+export function createProductSimilarHandler(deps: ProductSimilarHandlerDeps, options: ProductSimilarHandlerOptions) {
   const { getDb, products, getCache, setCache, generateCacheKey } = deps;
   const { siteMode } = options;
   const isFanza = siteMode === 'fanza';
@@ -71,7 +68,7 @@ export function createProductSimilarHandler(
 
   return async function handleProductSimilar(
     productId: number,
-    limit: number = 12
+    limit: number = 12,
   ): Promise<{ data?: ProductSimilarityResponse; error?: string; status: number }> {
     try {
       if (isNaN(productId)) {
@@ -90,7 +87,7 @@ export function createProductSimilarHandler(
       const db = getDb();
 
       // 対象の作品情報を取得
-      const productData = await (db as ReturnType<typeof getDb>)
+      const productData = (await (db as ReturnType<typeof getDb>)
         .select({
           id: (products as { id: unknown }).id,
           title: (products as { title: unknown }).title,
@@ -99,12 +96,12 @@ export function createProductSimilarHandler(
         })
         .from(products)
         .where(eq((products as { id: unknown }).id as Parameters<typeof eq>[0], productId))
-        .limit(1) as unknown as Array<{
-          id: number;
-          title: string;
-          normalizedProductId: string | null;
-          defaultThumbnailUrl: string | null;
-        }>;
+        .limit(1)) as unknown as Array<{
+        id: number;
+        title: string;
+        normalizedProductId: string | null;
+        defaultThumbnailUrl: string | null;
+      }>;
 
       const product = productData[0];
       if (!product) {
@@ -113,9 +110,7 @@ export function createProductSimilarHandler(
       const limitPerHop = Math.ceil(safeLimit / 2);
 
       // ASPフィルター
-      const aspFilter = isFanza
-        ? sql`AND ps.asp_name = 'FANZA'`
-        : sql`AND ps.asp_name IS NOT NULL`;
+      const aspFilter = isFanza ? sql`AND ps.asp_name = 'FANZA'` : sql`AND ps.asp_name IS NOT NULL`;
 
       // 1ホップ目：同じ出演者の他作品
       const hop1Query = await db.execute(sql`
@@ -190,7 +185,7 @@ export function createProductSimilarHandler(
       }
 
       // 2ホップ目：同じジャンルタグの作品（条件緩和: 1ジャンル以上）
-      const hop1Ids = hop1Results.map(r => r.id);
+      const hop1Ids = hop1Results.map((r) => r.id);
       const excludeIds = [productId, ...hop1Ids];
       const excludeIdsArray = `{${excludeIds.join(',')}}`;
 
@@ -247,9 +242,7 @@ export function createProductSimilarHandler(
       const similarProducts: SimilarProduct[] = [];
 
       // 1ホップ目：同じ出演者 or 同じメーカー
-      const maxSharedPerformers = hop1Results.length > 0
-        ? Math.max(...hop1Results.map(r => r.sharedPerformers))
-        : 1;
+      const maxSharedPerformers = hop1Results.length > 0 ? Math.max(...hop1Results.map((r) => r.sharedPerformers)) : 1;
 
       const isMakerBased = hop1Results.length > 0 && hop1Results[0]?.similarity_type === 'maker';
 
@@ -271,9 +264,7 @@ export function createProductSimilarHandler(
       }
 
       // 2ホップ目：ジャンル類似
-      const maxSharedGenres = hop2Results.length > 0
-        ? Math.max(...hop2Results.map(r => r.sharedGenres))
-        : 1;
+      const maxSharedGenres = hop2Results.length > 0 ? Math.max(...hop2Results.map((r) => r.sharedGenres)) : 1;
 
       for (const r of hop2Results) {
         const genreScore = 0.4 + 0.4 * (r.sharedGenres / maxSharedGenres);
@@ -301,12 +292,11 @@ export function createProductSimilarHandler(
       const finalResults = similarProducts.slice(0, safeLimit);
 
       const totalSimilarCount = finalResults.length;
-      const avgSimilarityScore = totalSimilarCount > 0
-        ? finalResults.reduce((sum, p) => sum + p.similarityScore, 0) / totalSimilarCount
-        : 0;
+      const avgSimilarityScore =
+        totalSimilarCount > 0 ? finalResults.reduce((sum, p) => sum + p.similarityScore, 0) / totalSimilarCount : 0;
 
       // エッジを生成（中心から各ノードへ、類似度ベース）
-      const edges: NetworkEdge[] = finalResults.map(p => ({
+      const edges: NetworkEdge[] = finalResults.map((p) => ({
         source: productId,
         target: p.id,
         weight: Math.round(p.similarityScore * 100),
@@ -331,7 +321,6 @@ export function createProductSimilarHandler(
       await setCache(cacheKey, response, CACHE_TTL);
 
       return { data: response, status: 200 };
-
     } catch (error) {
       logDbErrorAndReturn(error, null, 'getProductSimilar');
       return { error: 'Internal server error', status: 500 };

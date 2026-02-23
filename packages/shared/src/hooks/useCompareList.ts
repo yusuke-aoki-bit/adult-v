@@ -9,9 +9,6 @@ export interface CompareItem {
   addedAt: number;
 }
 
-export const useCompareList = createCompareListHook<CompareItem>(
-  'product_compare_list',
-  4,
-);
+export const useCompareList = createCompareListHook<CompareItem>('product_compare_list', 4);
 
 export default useCompareList;

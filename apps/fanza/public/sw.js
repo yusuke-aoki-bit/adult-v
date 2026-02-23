@@ -1,15 +1,12 @@
 const CACHE_NAME = 'adult-v-cache-v1';
-const urlsToCache = [
-  '/',
-  '/manifest.json',
-];
+const urlsToCache = ['/', '/manifest.json'];
 
 // Install event - cache essential files
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(urlsToCache);
-    })
+    }),
   );
   self.skipWaiting();
 });
@@ -23,9 +20,9 @@ self.addEventListener('activate', (event) => {
           if (cacheName !== CACHE_NAME) {
             return caches.delete(cacheName);
           }
-        })
+        }),
       );
-    })
+    }),
   );
   self.clients.claim();
 });
@@ -76,15 +73,18 @@ self.addEventListener('fetch', (event) => {
       .catch(() => {
         // Network failed, try cache
         return caches.match(event.request).then((response) => {
-          return response || new Response('Offline - content not available', {
-            status: 503,
-            statusText: 'Service Unavailable',
-            headers: new Headers({
-              'Content-Type': 'text/plain',
-            }),
-          });
+          return (
+            response ||
+            new Response('Offline - content not available', {
+              status: 503,
+              statusText: 'Service Unavailable',
+              headers: new Headers({
+                'Content-Type': 'text/plain',
+              }),
+            })
+          );
         });
-      })
+      }),
   );
 });
 
@@ -102,9 +102,7 @@ self.addEventListener('push', (event) => {
     renotify: true,
   };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Notification click event
@@ -126,6 +124,6 @@ self.addEventListener('notificationclick', (event) => {
       if (clients.openWindow) {
         return clients.openWindow(urlToOpen);
       }
-    })
+    }),
   );
 });

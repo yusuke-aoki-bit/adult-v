@@ -56,9 +56,10 @@ export function generateMetaDescription(product: Product): string {
   if (product['title']) {
     // 150文字以内に収める
     const maxTitleLength = 80;
-    const title = product['title'].length > maxTitleLength
-      ? product['title'].substring(0, maxTitleLength) + '...'
-      : product['title'];
+    const title =
+      product['title'].length > maxTitleLength
+        ? product['title'].substring(0, maxTitleLength) + '...'
+        : product['title'];
     parts.push(title);
   }
 
@@ -80,9 +81,7 @@ export function generateMetaDescription(product: Product): string {
 
   // 最大160文字に制限
   const description = parts.join(' | ');
-  return description.length > 160
-    ? description.substring(0, 157) + '...'
-    : description;
+  return description.length > 160 ? description.substring(0, 157) + '...' : description;
 }
 
 /**
@@ -95,9 +94,10 @@ export function generatePageTitle(product: Product, siteName: string = 'Adult-V'
   if (product['title']) {
     // 60文字以内に収める
     const maxTitleLength = 50;
-    const title = product['title'].length > maxTitleLength
-      ? product['title'].substring(0, maxTitleLength) + '...'
-      : product['title'];
+    const title =
+      product['title'].length > maxTitleLength
+        ? product['title'].substring(0, maxTitleLength) + '...'
+        : product['title'];
     parts.push(title);
   }
 
@@ -129,20 +129,17 @@ export function generateVideoSchema(product: Product, siteUrl: string) {
         name: product.actressName,
       },
     }),
-    ...(product.tags && product.tags.length > 0 && {
-      genre: product.tags,
-    }),
+    ...(product.tags &&
+      product.tags.length > 0 && {
+        genre: product.tags,
+      }),
   };
 }
 
 /**
  * 構造化データ (Person Schema) を生成
  */
-export function generatePerformerSchema(performer: {
-  name: string;
-  profileImageUrl?: string;
-  aliases?: string[];
-}) {
+export function generatePerformerSchema(performer: { name: string; profileImageUrl?: string; aliases?: string[] }) {
   return {
     '@context': 'https://schema.org',
     '@type': 'Person',
@@ -150,18 +147,17 @@ export function generatePerformerSchema(performer: {
     ...(performer['profileImageUrl'] && {
       image: performer['profileImageUrl'],
     }),
-    ...(performer.aliases && performer.aliases.length > 0 && {
-      alternateName: performer.aliases,
-    }),
+    ...(performer.aliases &&
+      performer.aliases.length > 0 && {
+        alternateName: performer.aliases,
+      }),
   };
 }
 
 /**
  * 構造化データ (BreadcrumbList Schema) を生成
  */
-export function generateBreadcrumbSchema(
-  items: Array<{ name: string; url: string }>
-) {
+export function generateBreadcrumbSchema(items: Array<{ name: string; url: string }>) {
   return {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
@@ -211,10 +207,7 @@ export function generateActressAltText(actress: {
  * 商品サンプル画像Alt属性を生成（SEO最適化）
  * フォーマット: "タイトル - 女優名 - サンプル画像N"
  */
-export function generateSampleImageAltText(
-  product: { title: string; actressName?: string },
-  index: number
-): string {
+export function generateSampleImageAltText(product: { title: string; actressName?: string }, index: number): string {
   const parts: string[] = [];
 
   parts.push(product['title']);

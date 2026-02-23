@@ -81,7 +81,7 @@ async function searchActress(name: string): Promise<DMMActress | null> {
 
     // 完全一致を優先
     const exactMatch = data.result.actress.find(
-      a => a.name === name || a.name.replace(/\s/g, '') === name.replace(/\s/g, '')
+      (a) => a.name === name || a.name.replace(/\s/g, '') === name.replace(/\s/g, ''),
     );
 
     return exactMatch || data.result.actress[0];
@@ -99,9 +99,9 @@ async function main() {
   }
 
   const args = process.argv.slice(2);
-  const limitArg = args.find(a => a.startsWith('--limit='));
+  const limitArg = args.find((a) => a.startsWith('--limit='));
   const limit = limitArg ? parseInt(limitArg.split('=')[1], 10) : 100;
-  const offsetArg = args.find(a => a.startsWith('--offset='));
+  const offsetArg = args.find((a) => a.startsWith('--offset='));
   const offset = offsetArg ? parseInt(offsetArg.split('=')[1], 10) : 0;
 
   console.log('=== DMM API 女優画像取得 ===');
@@ -133,7 +133,7 @@ async function main() {
       if (!actress) {
         console.log(`  - DMM未登録`);
         notFound++;
-        await new Promise(r => setTimeout(r, DELAY_MS));
+        await new Promise((r) => setTimeout(r, DELAY_MS));
         continue;
       }
 
@@ -142,20 +142,17 @@ async function main() {
       if (!imageUrl) {
         console.log(`  - 画像なし`);
         notFound++;
-        await new Promise(r => setTimeout(r, DELAY_MS));
+        await new Promise((r) => setTimeout(r, DELAY_MS));
         continue;
       }
 
       // 画像URLを保存
-      await db
-        .update(performers)
-        .set({ imageUrl })
-        .where(eq(performers.id, row.id));
+      await db.update(performers).set({ imageUrl }).where(eq(performers.id, row.id));
 
       console.log(`  ✓ 画像取得: ${imageUrl.substring(0, 60)}...`);
       updated++;
 
-      await new Promise(r => setTimeout(r, DELAY_MS));
+      await new Promise((r) => setTimeout(r, DELAY_MS));
     } catch (e) {
       console.error(`  ✗ エラー: ${e}`);
       errors++;
@@ -168,7 +165,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch(e => {
+main().catch((e) => {
   console.error(e);
   process.exit(1);
 });

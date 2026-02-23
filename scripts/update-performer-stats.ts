@@ -106,7 +106,6 @@ async function updatePerformerStats() {
       console.log(`  With release date: ${stats.rows[0].with_release_date}`);
       console.log(`  Average release count: ${stats.rows[0].avg_release_count}`);
     }
-
   } catch (error) {
     console.error('Error updating performer stats:', error);
     process.exit(1);

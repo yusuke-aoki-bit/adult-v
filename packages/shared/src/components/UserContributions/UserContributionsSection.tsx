@@ -113,28 +113,28 @@ export function UserContributionsSection({
   };
 
   return (
-    <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
       {/* Header */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+        className="flex w-full items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 bg-rose-100 dark:bg-rose-900/30 rounded-lg">
-            <Users className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+          <div className="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/30">
+            <Users className="h-5 w-5 text-rose-600 dark:text-rose-400" />
           </div>
           <h3 className="font-semibold text-gray-900 dark:text-white">{t.sectionTitle}</h3>
         </div>
         {isExpanded ? (
-          <ChevronUp className="w-5 h-5 text-gray-500" />
+          <ChevronUp className="h-5 w-5 text-gray-500" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-gray-500" />
+          <ChevronDown className="h-5 w-5 text-gray-500" />
         )}
       </button>
 
       {/* Content */}
       {isExpanded && (
-        <div className="border-t border-gray-200 dark:border-gray-700 p-4 space-y-6">
+        <div className="space-y-6 border-t border-gray-200 p-4 dark:border-gray-700">
           {/* Reviews Section */}
           <div className="space-y-4">
             <UserReviewForm
@@ -144,12 +144,7 @@ export function UserContributionsSection({
               {...(onLoginRequired !== undefined && { onLoginRequired })}
               translations={t.reviewForm}
             />
-            <UserReviewList
-              key={reviewKey}
-              productId={productId}
-              userId={userId}
-              translations={t.reviewList}
-            />
+            <UserReviewList key={reviewKey} productId={productId} userId={userId} translations={t.reviewList} />
           </div>
 
           <hr className="border-gray-200 dark:border-gray-700" />

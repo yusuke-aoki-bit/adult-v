@@ -6,12 +6,14 @@ test.setTimeout(120000);
 test.describe('AB Testing Framework', () => {
   test.beforeEach(async ({ context }) => {
     // Set age verification cookie to bypass age gate
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('AB test variants are assigned and persisted', async ({ page }) => {
@@ -24,7 +26,7 @@ test.describe('AB Testing Framework', () => {
       const experiments = ['ctaButtonText', 'priceDisplayStyle', 'saleCountdownStyle'];
       const result: Record<string, string | null> = {};
 
-      experiments.forEach(exp => {
+      experiments.forEach((exp) => {
         result[exp] = localStorage.getItem(`${storagePrefix}${exp}`);
       });
 
@@ -45,7 +47,7 @@ test.describe('AB Testing Framework', () => {
         const experiments = ['ctaButtonText', 'priceDisplayStyle', 'saleCountdownStyle'];
         const result: Record<string, string | null> = {};
 
-        experiments.forEach(exp => {
+        experiments.forEach((exp) => {
           result[exp] = localStorage.getItem(`${storagePrefix}${exp}`);
         });
 
@@ -114,7 +116,7 @@ test.describe('AB Testing Framework', () => {
     // Reset all experiments
     await page.evaluate(() => {
       const experiments = ['ctaButtonText', 'priceDisplayStyle', 'saleCountdownStyle'];
-      experiments.forEach(exp => {
+      experiments.forEach((exp) => {
         localStorage.removeItem(`ab_test_${exp}`);
       });
     });
@@ -178,12 +180,14 @@ test.describe('AB Testing Framework', () => {
 
 test.describe('AB Test UI Components', () => {
   test.beforeEach(async ({ context }) => {
-    await context.addCookies([{
-      name: 'age-verified',
-      value: 'true',
-      domain: 'localhost',
-      path: '/',
-    }]);
+    await context.addCookies([
+      {
+        name: 'age-verified',
+        value: 'true',
+        domain: 'localhost',
+        path: '/',
+      },
+    ]);
   });
 
   test('CTA button renders based on variant', async ({ page }) => {

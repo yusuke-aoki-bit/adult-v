@@ -98,7 +98,7 @@ export function getPerPage(): number | null {
     }
 
     const value = parseInt(stored, 10);
-    if (isNaN(value) || !ALLOWED_PER_PAGE.includes(value as typeof ALLOWED_PER_PAGE[number])) {
+    if (isNaN(value) || !ALLOWED_PER_PAGE.includes(value as (typeof ALLOWED_PER_PAGE)[number])) {
       return null;
     }
 
@@ -117,7 +117,7 @@ export function savePerPage(perPage: number): void {
     return;
   }
 
-  if (!ALLOWED_PER_PAGE.includes(perPage as typeof ALLOWED_PER_PAGE[number])) {
+  if (!ALLOWED_PER_PAGE.includes(perPage as (typeof ALLOWED_PER_PAGE)[number])) {
     return;
   }
 

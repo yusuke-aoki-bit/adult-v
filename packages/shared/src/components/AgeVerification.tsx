@@ -73,8 +73,8 @@ export default function AgeVerification({
       return;
     }
     // non-httpOnly cookieをクライアント側で読み取り
-    const cookies = document.cookie.split(';').map(c => c.trim());
-    const ageVerified = cookies.some(c => c.startsWith('age-verified=true'));
+    const cookies = document.cookie.split(';').map((c) => c.trim());
+    const ageVerified = cookies.some((c) => c.startsWith('age-verified=true'));
     if (ageVerified) {
       setIsVerified(true);
     }
@@ -124,12 +124,12 @@ export default function AgeVerification({
     <>
       {showModal && (
         <div className={`fixed inset-0 ${config.overlay} z-50 flex items-center justify-center p-4`}>
-          <div className={`${config.modal} rounded-lg shadow-2xl max-w-md w-full p-8 border`}>
+          <div className={`${config.modal} w-full max-w-md rounded-lg border p-8 shadow-2xl`}>
             {/* 警告アイコン */}
-            <div className="flex justify-center mb-6">
-              <div className={`w-16 h-16 ${config.iconBg} rounded-full flex items-center justify-center`}>
+            <div className="mb-6 flex justify-center">
+              <div className={`h-16 w-16 ${config.iconBg} flex items-center justify-center rounded-full`}>
                 <svg
-                  className="w-10 h-10 text-white"
+                  className="h-10 w-10 text-white"
                   fill="none"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -143,15 +143,11 @@ export default function AgeVerification({
             </div>
 
             {/* タイトル */}
-            <h1 className={`text-2xl font-bold ${config['title']} text-center mb-4`}>
-              {t('title')}
-            </h1>
+            <h1 className={`text-2xl font-bold ${config['title']} mb-4 text-center`}>{t('title')}</h1>
 
             {/* メッセージ */}
-            <div className="space-y-4 mb-8">
-              <p className={`${config.message} text-center`}>
-                {t('message')}
-              </p>
+            <div className="mb-8 space-y-4">
+              <p className={`${config.message} text-center`}>{t('message')}</p>
               <p className={`text-lg font-semibold ${config.question} text-center`}>
                 {t('question').replace('{age}', minAge.toString())}
               </p>
@@ -165,21 +161,24 @@ export default function AgeVerification({
               <button
                 onClick={handleConfirm}
                 disabled={isLoading}
-                className={`w-full ${config.confirmBtn} font-semibold py-3 px-6 rounded-lg transition-colors duration-200`}
+                className={`w-full ${config.confirmBtn} rounded-lg px-6 py-3 font-semibold transition-colors duration-200`}
               >
                 {isLoading ? '...' : t('confirm').replace('{age}', minAge.toString())}
               </button>
               <button
                 onClick={handleDeny}
-                className={`w-full ${config.denyBtn} font-semibold py-3 px-6 rounded-lg transition-colors duration-200`}
+                className={`w-full ${config.denyBtn} rounded-lg px-6 py-3 font-semibold transition-colors duration-200`}
               >
                 {t('deny')}
               </button>
             </div>
 
             {/* フッター注意書き */}
-            <p className={`text-xs ${config.footer} text-center mt-6`}>
-              {t('legalNotice', { defaultValue: 'このサイトにアクセスすることで、利用規約とプライバシーポリシーに同意したものとみなされます。' })}
+            <p className={`text-xs ${config.footer} mt-6 text-center`}>
+              {t('legalNotice', {
+                defaultValue:
+                  'このサイトにアクセスすることで、利用規約とプライバシーポリシーに同意したものとみなされます。',
+              })}
             </p>
           </div>
         </div>
