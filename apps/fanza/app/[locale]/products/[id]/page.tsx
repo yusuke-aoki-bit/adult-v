@@ -292,7 +292,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
         }
       : undefined,
     product.salePrice,
-    product.currency || 'JPY',
+    'JPY',
     product.normalizedProductId || undefined,
     // SEO: 外部品番（FANZA ID等）を構造化データに追加
     sources

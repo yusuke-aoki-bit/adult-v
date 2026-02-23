@@ -708,6 +708,17 @@ function getCategoryStyles(locale: string): Record<string, { bg: string; text: s
   };
 }
 
+/** Strip stale/hallucinated dates from AI-generated titles */
+function sanitizeNewsTitle(title: string): string {
+  const now = new Date();
+  const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
+  let s = title.replace(/[〇○]月[〇○]日/g, todayStr);
+  s = s.replace(/[（(]20\d{2}[/／]\d{1,2}[/／]\d{1,2}[)）]/g, '');
+  s = s.replace(/【20\d{2}[/／]\d{1,2}[/／]\d{1,2}】/g, `【${todayStr}】`);
+  s = s.replace(/【[〇○]月[〇○]日】/g, `【${todayStr}】`);
+  return s.trim();
+}
+
 // ニュースコンテンツ
 function NewsContent({ locale }: { locale: string }) {
   const [articles, setArticles] = useState<
@@ -790,7 +801,7 @@ function NewsContent({ locale }: { locale: string }) {
                   <span className="text-xs text-gray-400">{publishedDate}</span>
                   {article.featured && <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />}
                 </div>
-                <h4 className="line-clamp-1 text-sm font-medium text-white">{article.title}</h4>
+                <h4 className="line-clamp-1 text-sm font-medium text-white">{sanitizeNewsTitle(article.title)}</h4>
                 {article.excerpt && <p className="mt-1 line-clamp-2 text-xs text-gray-400">{article.excerpt}</p>}
               </div>
             </div>
