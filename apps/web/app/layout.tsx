@@ -2,8 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { ConditionalLayout } from '@/components/ConditionalLayout';
-import { JsonLD } from '@/components/JsonLD';
-import { generateBaseMetadata, generateWebSiteSchema } from '@/lib/seo';
+import { generateBaseMetadata } from '@/lib/seo';
 import { defaultLocale } from '@/i18n';
 import { CookieConsent } from '@adult-v/shared/components';
 import { SiteProvider } from '@/lib/contexts/SiteContext';
@@ -51,8 +50,6 @@ export const viewport = {
   ],
 };
 
-const websiteSchema = generateWebSiteSchema();
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -82,7 +79,7 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href="https://b10f.jp" />
         {/* RSS autodiscovery */}
         <link rel="alternate" type="application/rss+xml" title="Adult Viewer Lab - 新着動画" href="/feed.xml" />
-        <JsonLD data={websiteSchema} />
+        {/* WebSite JSON-LD is rendered in [locale]/layout.tsx to avoid duplication */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${themeClass} flex min-h-screen flex-col overflow-x-hidden antialiased`}

@@ -225,6 +225,10 @@ export default function HeroSection({
 
       {/* メインカルーセル */}
       <div className="relative container mx-auto px-4 py-6 sm:py-10">
+        <h1 className="mb-4 text-lg font-bold text-white/90 sm:text-xl">
+          {ht.database}
+          <span className="text-pink-400">{ht.databaseHighlight}</span>
+        </h1>
         <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2">
           {/* 左側: 商品情報 */}
           <div className="order-2 space-y-4 lg:order-1">

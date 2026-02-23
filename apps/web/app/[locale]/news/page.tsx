@@ -7,6 +7,21 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { Newspaper, Star, ChevronLeft, ChevronRight } from 'lucide-react';
 import { unstable_cache } from 'next/cache';
 
+function getDateLocale(locale: string): string {
+  switch (locale) {
+    case 'ko':
+      return 'ko-KR';
+    case 'zh-TW':
+      return 'zh-TW';
+    case 'zh':
+      return 'zh-CN';
+    case 'en':
+      return 'en-US';
+    default:
+      return 'ja-JP';
+  }
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   try {
     const { locale } = await params;
@@ -133,18 +148,11 @@ export default async function NewsPage({
           <div className="space-y-4">
             {articles.map((article) => {
               const style = CATEGORY_STYLES[article.category] ?? CATEGORY_STYLES['site_update']!;
-              const publishedDate = new Date(article.published_at).toLocaleDateString(
-                locale === 'ko'
-                  ? 'ko-KR'
-                  : locale === 'zh-TW'
-                    ? 'zh-TW'
-                    : locale === 'zh'
-                      ? 'zh-CN'
-                      : locale === 'en'
-                        ? 'en-US'
-                        : 'ja-JP',
-                { year: 'numeric', month: 'long', day: 'numeric' },
-              );
+              const publishedDate = new Date(article.published_at).toLocaleDateString(getDateLocale(locale), {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              });
 
               return (
                 <a
