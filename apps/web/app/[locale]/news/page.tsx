@@ -11,9 +11,10 @@ import { unstable_cache } from 'next/cache';
 function sanitizeNewsTitle(title: string): string {
   const now = new Date();
   const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
-  let s = title.replace(/〇月〇日/g, todayStr);
-  s = s.replace(/\(20\d{2}\/\d{1,2}\/\d{1,2}\)/g, '');
-  s = s.replace(/【20\d{2}\/\d{1,2}\/\d{1,2}】/g, `【${todayStr}】`);
+  let s = title.replace(/[〇○]月[〇○]日/g, todayStr);
+  s = s.replace(/[（(]20\d{2}[/／]\d{1,2}[/／]\d{1,2}[)）]/g, '');
+  s = s.replace(/【20\d{2}[/／]\d{1,2}[/／]\d{1,2}】/g, `【${todayStr}】`);
+  s = s.replace(/【[〇○]月[〇○]日】/g, `【${todayStr}】`);
   return s.trim();
 }
 

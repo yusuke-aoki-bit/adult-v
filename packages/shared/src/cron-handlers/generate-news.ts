@@ -38,12 +38,13 @@ function generateSlug(prefix: string): string {
 function sanitizeNewsTitle(title: string): string {
   const now = new Date();
   const todayStr = `${now.getMonth() + 1}月${now.getDate()}日`;
-  // Replace placeholder dates like 〇月〇日
-  let sanitized = title.replace(/〇月〇日/g, todayStr);
-  // Strip old parenthesized dates like (2024/05/15) or (2025/01/01)
-  sanitized = sanitized.replace(/\(20\d{2}\/\d{1,2}\/\d{1,2}\)/g, '');
-  // Strip old bracketed dates like 【2024/05/15】
-  sanitized = sanitized.replace(/【20\d{2}\/\d{1,2}\/\d{1,2}】/g, `【${todayStr}】`);
+  // Replace placeholder dates like 〇月〇日 (handles both U+3007 and U+25CB)
+  let sanitized = title.replace(/[〇○]月[〇○]日/g, todayStr);
+  // Strip old parenthesized dates like (2024/05/15) or （2024/05/15）
+  sanitized = sanitized.replace(/[（(]20\d{2}[/／]\d{1,2}[/／]\d{1,2}[)）]/g, '');
+  // Strip old bracketed dates like 【2024/05/15】 or 【〇月〇日】
+  sanitized = sanitized.replace(/【20\d{2}[/／]\d{1,2}[/／]\d{1,2}】/g, `【${todayStr}】`);
+  sanitized = sanitized.replace(/【[〇○]月[〇○]日】/g, `【${todayStr}】`);
   return sanitized.trim();
 }
 
