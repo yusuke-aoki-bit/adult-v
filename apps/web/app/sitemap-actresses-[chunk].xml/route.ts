@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { getDb } from '@/lib/db';
-import { performers } from '@/lib/db/schema';
+import { performers, products } from '@/lib/db/schema';
 import { desc, sql } from 'drizzle-orm';
 
 const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
@@ -34,14 +34,16 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ chun
   try {
     const db = getDb();
 
-    // 女優を商品数順に取得
+    // 女優を商品数順に取得（lastmod用に最新商品の更新日も取得）
     const performerList = await db
       .select({
         id: performers.id,
         productCount: sql<number>`COUNT(DISTINCT pp.product_id)`.as('product_count'),
+        lastUpdated: sql<string>`MAX(${products.updatedAt})`.as('last_updated'),
       })
       .from(performers)
       .leftJoin(sql`product_performers pp`, sql`${performers.id} = pp.performer_id`)
+      .leftJoin(products, sql`pp.product_id = ${products.id}`)
       .groupBy(performers.id)
       .orderBy(desc(sql`product_count`))
       .limit(CHUNK_SIZE)
@@ -53,7 +55,7 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ chun
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${performerList
   .map((performer) => {
-    const lastMod = new Date().toISOString();
+    const lastMod = performer.lastUpdated ? new Date(performer.lastUpdated).toISOString() : new Date().toISOString();
     // Priority based on product count (more products = higher priority)
     const priority = Math.min(0.9, 0.5 + (Number(performer.productCount) / 1000) * 0.1).toFixed(1);
 
