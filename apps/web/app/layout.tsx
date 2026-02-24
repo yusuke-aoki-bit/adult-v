@@ -27,6 +27,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com'),
   ...generateBaseMetadata(
     'ADULT VIEWER LAB - heavy user guide',
     'Multi-platform adult streaming hub with actress-based reviews, rankings, and campaign updates for heavy users.',
