@@ -1313,6 +1313,24 @@ export default async function ProductDetailPage({ params }: PageProps) {
         </div>
       </div>
 
+      {/* 関連カテゴリ（内部リンク強化 — 回遊率向上） */}
+      {genreTags.length > 0 && (
+        <nav aria-label="関連カテゴリ" className="mx-auto mt-8 max-w-5xl px-4">
+          <h2 className="theme-text-secondary mb-3 text-sm font-semibold">関連カテゴリ</h2>
+          <div className="flex flex-wrap gap-2">
+            {genreTags.map((tag) => (
+              <Link
+                key={tag.id}
+                href={localizedHref(`/tags/${tag.id}`, locale)}
+                className="theme-accordion-bg theme-text-secondary rounded-full border border-transparent px-3 py-1.5 text-sm transition-colors hover:border-fuchsia-500/40 hover:bg-fuchsia-600/20 hover:text-fuchsia-300"
+              >
+                {tag.name}
+              </Link>
+            ))}
+          </div>
+        </nav>
+      )}
+
       {/* View tracking */}
       <ViewTracker
         productId={productId}

@@ -358,7 +358,7 @@ function ProductCardBase({
 
     return (
       <div
-        className={`group relative ${resolvedTheme === 'dark' ? 'bg-[#16161f]' : 'bg-white'} overflow-hidden rounded-xl transition-all duration-200 hover:shadow-md hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:ring-white/10' : 'hover:ring-gray-300'}`}
+        className={`group relative ${resolvedTheme === 'dark' ? 'bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'bg-white'} overflow-hidden rounded-xl border ${resolvedTheme === 'dark' ? 'border-white/10' : 'border-gray-200'} transition-all duration-200 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'}`}
       >
         <Link href={`/${locale}/products/${product['id']}`}>
           <div
@@ -464,7 +464,7 @@ function ProductCardBase({
     return (
       <>
         <div
-          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-xl hover:ring-1 ${themeConfig.cardHoverRing} group transition-all duration-200 hover:shadow-md ${resolvedTheme === 'dark' ? 'hover:shadow-fuchsia-500/10' : 'hover:shadow-pink-500/10'}`}
+          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-xl border ${themeConfig.cardBorder} hover:ring-1 ${themeConfig.cardHoverRing} group shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:shadow-fuchsia-500/10' : 'hover:shadow-pink-500/10'}`}
         >
           <Link href={`/${locale}/products/${product['id']}`}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
@@ -672,7 +672,7 @@ function ProductCardBase({
   // Full mode
   return (
     <article
-      className={`group/card ${themeConfig.cardBg} flex flex-col overflow-hidden rounded-xl border shadow-sm transition-shadow duration-200 hover:shadow-md ${themeConfig.cardBorder}`}
+      className={`group/card ${themeConfig.cardBg} flex flex-col overflow-hidden rounded-xl border shadow-[0_4px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5' : ''} ${themeConfig.cardBorder}`}
     >
       <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="group relative block h-full">
@@ -1101,10 +1101,10 @@ function ProductCardBase({
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 onClick={handleCtaClick}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-all active:scale-[0.98] ${
                   isSale
-                    ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover} hover:shadow-red-500/20`
-                    : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover} hover:shadow-fuchsia-500/20`
+                    ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover} shadow-lg shadow-red-500/25 hover:shadow-red-500/40`
+                    : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover} shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40`
                 }`}
                 title={`${product.providerLabel}で購入`}
                 aria-label={`${product.providerLabel}で購入（外部リンク）`}

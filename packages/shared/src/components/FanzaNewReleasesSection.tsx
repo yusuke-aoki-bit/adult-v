@@ -71,7 +71,7 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '', product
               href={`${FANZA_SITE_URL}/products/${product['id']}?hl=${locale}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-xl bg-[#16161f] transition-all hover:ring-1 hover:ring-white/10"
+              className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all hover:bg-white/5 hover:ring-1 hover:ring-fuchsia-400/20"
             >
               <div className="relative" style={{ aspectRatio: '2/3' }}>
                 {product.imageUrl ? (

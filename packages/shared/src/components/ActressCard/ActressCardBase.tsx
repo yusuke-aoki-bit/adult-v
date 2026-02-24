@@ -162,7 +162,7 @@ function ActressCardBaseComponent({
     return (
       <Link
         href={`/${locale}/actress/${actress['id']}`}
-        className={`group ${resolvedTheme === 'dark' ? 'bg-[#16161f]' : 'bg-white'} overflow-hidden rounded-xl transition-all duration-200 hover:shadow-md hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:ring-white/10' : 'hover:ring-gray-300'}`}
+        className={`group ${resolvedTheme === 'dark' ? 'border border-white/10 bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'border border-gray-200 bg-white'} overflow-hidden rounded-xl transition-all duration-200 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'}`}
       >
         <div className={`relative aspect-square ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
           {actress['heroImage'] || actress['thumbnail'] ? (

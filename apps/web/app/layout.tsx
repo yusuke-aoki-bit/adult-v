@@ -85,6 +85,14 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${themeClass} flex min-h-screen flex-col overflow-x-hidden antialiased`}
       >
+        {/* Glassmorphism background orbs (dark theme only) */}
+        {themeClass === 'theme-adult-v' && (
+          <div className="fixed inset-0 -z-10 overflow-hidden motion-reduce:hidden" aria-hidden="true">
+            <div className="absolute -top-1/4 -left-1/4 h-[600px] w-[600px] rounded-full bg-fuchsia-600/[0.07] blur-[120px]" />
+            <div className="absolute top-1/3 -right-1/4 h-[500px] w-[500px] rounded-full bg-purple-600/5 blur-[100px]" />
+            <div className="absolute -bottom-1/4 left-1/3 h-[400px] w-[400px] rounded-full bg-blue-600/4 blur-[100px]" />
+          </div>
+        )}
         {gaId && <CookieConsent gaId={gaId} />}
         <ClientProviders>
           <SiteProvider mode={siteMode}>

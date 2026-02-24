@@ -75,13 +75,13 @@ export interface ThemeConfig {
 
 export const themes: Record<ProductCardTheme, ThemeConfig> = {
   dark: {
-    // Card container
-    cardBg: 'bg-[#16161f]',
-    cardBorder: 'border-white/[0.08]',
-    cardHoverRing: 'hover:ring-white/10',
+    // Card container — グラスモーフィズム
+    cardBg: 'bg-white/3',
+    cardBorder: 'border-white/10',
+    cardHoverRing: 'hover:ring-fuchsia-400/20',
 
     // Gradients
-    gradient: 'from-[#16161f] to-[#111118]',
+    gradient: 'from-white/2 to-transparent',
 
     // Text colors
     textPrimary: 'text-white',
@@ -92,15 +92,15 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     accentColor: 'text-fuchsia-400/80',
     accentHover: 'hover:text-fuchsia-400',
 
-    // Tag styles
-    tagBg: 'bg-gray-700/60',
+    // Tag styles — ガラス質
+    tagBg: 'bg-white/8',
     tagText: 'text-gray-300',
-    tagHoverBg: 'hover:bg-gray-600/80',
+    tagHoverBg: 'hover:bg-white/15',
     tagHoverText: 'hover:text-white',
 
     // Badge backgrounds
-    badgeBg: 'bg-gray-900',
-    priceBadgeBg: 'bg-black/80',
+    badgeBg: 'bg-black/60',
+    priceBadgeBg: 'bg-black/60',
     priceBadgeBorder: 'border-white/10',
 
     // Price colors
@@ -114,24 +114,24 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     urgencyBadgeBg: 'bg-red-600',
     urgencyBadgeText: 'text-white',
 
-    // CTA button — ソリッドカラー
+    // CTA button — fuchsia glow
     ctaGradient: 'from-fuchsia-500 to-fuchsia-500',
     ctaGradientHover: 'hover:from-fuchsia-400 hover:to-fuchsia-400',
     ctaSaleGradient: 'from-red-500 to-red-500',
     ctaSaleGradientHover: 'hover:from-red-400 hover:to-red-400',
 
     // Ranking badge
-    rankingDefaultBg: 'bg-gray-800',
+    rankingDefaultBg: 'bg-white/8',
     rankingDefaultText: 'text-white',
-    rankingDefaultBorder: 'border-gray-600',
+    rankingDefaultBorder: 'border-white/10',
 
     // Favorite button container
-    favoriteButtonBg: 'bg-gray-800/80',
+    favoriteButtonBg: 'bg-white/8',
 
     // No image overlay
-    noImageGradient: 'from-[#16161f] to-[#111118]',
+    noImageGradient: 'from-white/2 to-transparent',
     noImageEmoji: 'text-gray-500',
-    noImageBadgeBg: 'bg-gray-600',
+    noImageBadgeBg: 'bg-white/15',
     noImageBadgeText: 'text-white',
 
     // Separator

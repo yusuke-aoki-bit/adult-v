@@ -188,7 +188,7 @@ export default function HeroSection({
   // セールがない場合は統計情報のみ表示
   if (heroProducts.length === 0) {
     return (
-      <section className="relative bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900 py-8 sm:py-12">
+      <section className="relative bg-gradient-to-br from-fuchsia-950/30 via-purple-950/20 to-transparent py-8 sm:py-12">
         <div className="container mx-auto px-4">
           <div className="text-center">
             <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl md:text-5xl">
@@ -201,13 +201,13 @@ export default function HeroSection({
             <div className="flex justify-center gap-4">
               <Link
                 href={localizedHref('/products', locale)}
-                className="transform rounded-lg bg-fuchsia-500 px-6 py-3 font-bold text-white transition-all hover:scale-105 hover:bg-fuchsia-400"
+                className="transform rounded-lg bg-fuchsia-500 px-6 py-3 font-bold text-white shadow-lg shadow-fuchsia-500/25 transition-all hover:scale-105 hover:bg-fuchsia-400 hover:shadow-fuchsia-500/40"
               >
                 {ht.searchProducts}
               </Link>
               <Link
                 href={localizedHref('/', locale)}
-                className="rounded-lg bg-gray-700 px-6 py-3 font-bold text-white transition-all hover:bg-gray-600"
+                className="rounded-lg border border-white/10 bg-white/10 px-6 py-3 font-bold text-white transition-all hover:bg-white/15"
               >
                 {ht.searchActresses}
               </Link>
@@ -221,7 +221,7 @@ export default function HeroSection({
   return (
     <section className="relative overflow-hidden">
       {/* 背景グラデーション */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-900 via-red-900/30 to-gray-900" />
+      <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-950/30 via-red-950/20 to-transparent" />
 
       {/* メインカルーセル */}
       <div className="relative container mx-auto px-4 py-6 sm:py-10">

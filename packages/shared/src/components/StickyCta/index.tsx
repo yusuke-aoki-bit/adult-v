@@ -36,6 +36,8 @@ export interface StickyCtaBaseProps {
   showTrustBadge?: boolean;
   /** セール緊急度の閾値設定（オプション） */
   urgencyThresholds?: UrgencyThresholds;
+  /** CTAクリック時のトラッキングコールバック */
+  trackCtaClick?: (params: { provider: string; isSale: boolean; device: 'mobile' | 'desktop'; price?: number }) => void;
 }
 
 // テーマに応じたスタイル設定
@@ -102,6 +104,7 @@ export function StickyCtaBase({
   labels,
   showTrustBadge = false,
   urgencyThresholds,
+  trackCtaClick,
 }: StickyCtaBaseProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = (themeProp ?? contextTheme) as ThemeMode;
@@ -267,6 +270,14 @@ export function StickyCtaBase({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${ctaText} - ${providerLabel}`}
+              onClick={() =>
+                trackCtaClick?.({
+                  provider: providerLabel,
+                  isSale: Boolean(isOnSale),
+                  device: 'mobile',
+                  price: displayPrice,
+                })
+              }
               className={`flex max-w-xs flex-1 items-center justify-center gap-2 rounded-lg px-6 py-3.5 text-center font-bold text-white shadow-lg transition-all active:scale-95 ${styles.buttonGradient}`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -344,7 +355,15 @@ export function StickyCtaBase({
               target="_blank"
               rel="noopener noreferrer"
               aria-label={`${ctaText} - ${providerLabel}`}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 text-center font-bold text-white shadow-lg transition-all hover:scale-105 ${styles.buttonGradient}`}
+              onClick={() =>
+                trackCtaClick?.({
+                  provider: providerLabel,
+                  isSale: Boolean(isOnSale),
+                  device: 'desktop',
+                  price: displayPrice,
+                })
+              }
+              className={`flex w-full items-center justify-center gap-2 rounded-xl px-8 py-3 text-center font-bold text-white shadow-lg shadow-fuchsia-500/25 transition-all hover:scale-105 hover:shadow-fuchsia-500/40 ${styles.buttonGradient}`}
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                 <path

@@ -118,11 +118,11 @@ export async function generateMetadata({
 export const dynamic = 'force-dynamic';
 
 // キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
-// データキャッシュ: 300秒TTL（ページは毎回dynamic renderだがデータはキャッシュ）
-const getCachedTags = unstable_cache(async () => getTags(), ['homepage-tags'], { revalidate: 300, tags: ['tags'] });
+// データキャッシュ: 900秒TTL（ページは毎回dynamic renderだがデータはキャッシュ）
+const getCachedTags = unstable_cache(async () => getTags(), ['homepage-tags'], { revalidate: 900, tags: ['tags'] });
 
 const getCachedAspStats = unstable_cache(async () => getAspStats(), ['homepage-asp-stats'], {
-  revalidate: 300,
+  revalidate: 900,
   tags: ['asp-stats'],
 });
 
@@ -170,7 +170,7 @@ const getCachedTopPageData = unstable_cache(
     };
   },
   ['homepage-top-data'],
-  { revalidate: 300, tags: ['homepage-top'] },
+  { revalidate: 900, tags: ['homepage-top'] },
 );
 
 interface PageProps {

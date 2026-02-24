@@ -4,7 +4,7 @@ import { Heart } from 'lucide-react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
 
 type ThemeMode = 'dark' | 'light';
-type PrimaryColor = 'rose' | 'pink';
+type PrimaryColor = 'fuchsia' | 'rose' | 'pink';
 
 interface FavoriteButtonProps {
   type: 'product' | 'actress';

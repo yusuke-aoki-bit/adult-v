@@ -45,28 +45,29 @@ export interface ThemeConfig {
 export const darkTheme: ThemeConfig = {
   recentlyViewed: {
     iconColorClass: 'text-blue-400',
-    bgClass: 'bg-gray-900/50',
-    deleteButtonBgClass: 'bg-gray-900/80',
+    bgClass: 'bg-white/3 border border-white/8',
+    deleteButtonBgClass: 'bg-black/60',
   },
   forYouRecommendations: {
     iconColorClass: 'text-purple-400',
-    bgClass: 'bg-gradient-to-r from-purple-900/30 to-fuchsia-900/30',
+    bgClass: 'bg-white/3 border border-white/8',
     subtitleClass: 'text-gray-400',
   },
   salesSection: {
     iconColorClass: 'text-red-400',
-    bgClass: 'bg-gradient-to-r from-red-900/30 to-orange-900/30',
+    bgClass: 'bg-white/3 border border-white/8',
     linkColorClass: 'text-fuchsia-400 hover:text-fuchsia-300',
   },
   weeklyHighlights: {
-    containerClass: 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 rounded-xl p-4 sm:p-6 border border-red-500',
+    containerClass:
+      'bg-white/3 rounded-xl p-4 sm:p-6 border border-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
     iconBgClass: 'bg-amber-500/20',
     iconColorClass: 'text-amber-400',
     titleClass: 'text-white',
     subtitleClass: 'text-gray-400',
     chevronClass: 'text-gray-400',
-    skeletonBgClass: 'bg-gray-700',
-    cardBgClass: 'bg-gray-800/50',
+    skeletonBgClass: 'bg-white/8',
+    cardBgClass: 'bg-white/5 border border-white/8',
     trendingTitleClass: 'text-amber-400',
     hotTitleClass: 'text-orange-400',
     classicTitleClass: 'text-fuchsia-400',

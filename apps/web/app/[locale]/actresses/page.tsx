@@ -159,7 +159,7 @@ const getCachedPerformers = unstable_cache(
     };
   },
   ['actresses-list'],
-  { revalidate: 300, tags: ['actresses'] },
+  { revalidate: 900, tags: ['actresses'] },
 );
 
 const metaTranslations = {

@@ -111,7 +111,6 @@ const securityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
-    unoptimized: true,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -154,7 +153,7 @@ const nextConfig = {
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
       {
         source: '/:locale(ja|en|zh|ko)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=60, stale-while-revalidate=300' }],
+        headers: [{ key: 'Cache-Control', value: 'public, max-age=120, stale-while-revalidate=600' }],
       },
     ];
   },
