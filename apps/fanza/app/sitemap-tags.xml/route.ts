@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/db';
-import { tags, productTags } from '@/lib/db/schema';
+import { tags, productTags, products } from '@/lib/db/schema';
 import { desc, sql, eq } from 'drizzle-orm';
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://f.adult-v.com';
@@ -39,9 +39,11 @@ export async function GET() {
       .select({
         id: tags.id,
         category: tags.category,
+        lastUpdated: sql<string>`MAX(${products.updatedAt})`.as('last_updated'),
       })
       .from(tags)
       .leftJoin(productTags, eq(tags.id, productTags.tagId))
+      .leftJoin(products, eq(productTags.productId, products.id))
       .where(eq(tags.category, 'genre'))
       .groupBy(tags.id, tags.category)
       .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
@@ -52,9 +54,11 @@ export async function GET() {
       .select({
         id: tags.id,
         category: tags.category,
+        lastUpdated: sql<string>`MAX(${products.updatedAt})`.as('last_updated'),
       })
       .from(tags)
       .leftJoin(productTags, eq(tags.id, productTags.tagId))
+      .leftJoin(products, eq(productTags.productId, products.id))
       .where(eq(tags.category, 'maker'))
       .groupBy(tags.id, tags.category)
       .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
@@ -65,21 +69,21 @@ export async function GET() {
       .select({
         id: tags.id,
         category: tags.category,
+        lastUpdated: sql<string>`MAX(${products.updatedAt})`.as('last_updated'),
       })
       .from(tags)
       .leftJoin(productTags, eq(tags.id, productTags.tagId))
+      .leftJoin(products, eq(productTags.productId, products.id))
       .where(eq(tags.category, 'series'))
       .groupBy(tags.id, tags.category)
       .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
       .limit(1000);
 
-    const today = new Date().toISOString();
-
     // カテゴリ別にURLパスを生成
     const allUrls = [
-      ...genreTags.map((tag) => ({ path: `/tags/${tag.id}`, priority: '0.6' })),
-      ...makerTags.map((tag) => ({ path: `/makers/${tag.id}`, priority: '0.6' })),
-      ...seriesTags.map((tag) => ({ path: `/series/${tag.id}`, priority: '0.6' })),
+      ...genreTags.map((tag) => ({ path: `/tags/${tag.id}`, priority: '0.6', lastUpdated: tag.lastUpdated })),
+      ...makerTags.map((tag) => ({ path: `/makers/${tag.id}`, priority: '0.6', lastUpdated: tag.lastUpdated })),
+      ...seriesTags.map((tag) => ({ path: `/series/${tag.id}`, priority: '0.6', lastUpdated: tag.lastUpdated })),
     ];
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -87,10 +91,10 @@ export async function GET() {
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 ${allUrls
   .map(
-    ({ path, priority }) => `  <url>
+    ({ path, priority, lastUpdated }) => `  <url>
     <loc>${BASE_URL}${path}</loc>
 ${getHreflangLinks(path)}
-    <lastmod>${today}</lastmod>
+    <lastmod>${lastUpdated ? new Date(lastUpdated).toISOString() : new Date().toISOString()}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>${priority}</priority>
   </url>`,

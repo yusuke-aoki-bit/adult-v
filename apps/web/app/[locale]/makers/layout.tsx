@@ -32,15 +32,15 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
-  // hreflang/canonical設定
+  // hreflang/canonical設定（localePrefix: 'never'のため?hl=パラメータ方式）
   const alternates = {
-    canonical: `${baseUrl}/${locale}/makers`,
+    canonical: `${baseUrl}/makers`,
     languages: {
-      ja: `${baseUrl}/ja/makers`,
-      en: `${baseUrl}/en/makers`,
-      zh: `${baseUrl}/zh/makers`,
-      ko: `${baseUrl}/ko/makers`,
-      'x-default': `${baseUrl}/ja/makers`,
+      ja: `${baseUrl}/makers`,
+      en: `${baseUrl}/makers?hl=en`,
+      zh: `${baseUrl}/makers?hl=zh`,
+      ko: `${baseUrl}/makers?hl=ko`,
+      'x-default': `${baseUrl}/makers`,
     },
   };
 

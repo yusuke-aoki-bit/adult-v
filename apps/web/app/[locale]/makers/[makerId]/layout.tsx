@@ -107,15 +107,16 @@ export async function generateMetadata({
 
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
-  // hreflang/canonical設定
+  // hreflang/canonical設定（localePrefix: 'never'のため?hl=パラメータ方式）
+  const makerPath = `/makers/${makerId}`;
   const alternates = {
-    canonical: `${baseUrl}/${locale}/makers/${makerId}`,
+    canonical: `${baseUrl}${makerPath}`,
     languages: {
-      ja: `${baseUrl}/ja/makers/${makerId}`,
-      en: `${baseUrl}/en/makers/${makerId}`,
-      zh: `${baseUrl}/zh/makers/${makerId}`,
-      ko: `${baseUrl}/ko/makers/${makerId}`,
-      'x-default': `${baseUrl}/ja/makers/${makerId}`,
+      ja: `${baseUrl}${makerPath}`,
+      en: `${baseUrl}${makerPath}?hl=en`,
+      zh: `${baseUrl}${makerPath}?hl=zh`,
+      ko: `${baseUrl}${makerPath}?hl=ko`,
+      'x-default': `${baseUrl}${makerPath}`,
     },
   };
 
