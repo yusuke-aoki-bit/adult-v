@@ -1,26 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import {
-  Film,
-  Tag,
-  Sparkles,
-  TrendingUp,
-  BarChart3,
-  AlertTriangle,
-  Clock,
-  ExternalLink,
-  Star,
-  Users,
-  Gem,
-  Vote,
-  List,
-  Search,
-  Cake,
-  Trophy,
-  Play,
-  Newspaper,
-} from 'lucide-react';
+import { Tag, Sparkles, TrendingUp, Clock, ExternalLink, Star, Newspaper } from 'lucide-react';
 import Link from 'next/link';
 import { TopPageMenuSection, ProductCardBase, ActressCardBase, HomeSectionManager } from '@adult-v/shared/components';
 import { localizedHref } from '@adult-v/shared/i18n';
@@ -599,103 +580,6 @@ function MoreLink({ href, label, locale }: { href: string; label: string; locale
   );
 }
 
-// トレンド分析コンテンツ
-function TrendingContent({ locale }: { locale: string }) {
-  const [tags, setTags] = useState<Array<{ name: string; count: number; id?: number }>>([]);
-  const [performers, setPerformers] = useState<Array<{ name: string; count: number; id?: number }>>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchTrends = async () => {
-      try {
-        const response = await fetch(`/api/trends?period=week&locale=${locale}`);
-        if (response.ok) {
-          const data = await response.json();
-          setTags(data.tags?.slice(0, 5) || []);
-          setPerformers(data.performers?.slice(0, 5) || []);
-        }
-      } catch (error) {
-        console.error('Failed to fetch trends:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchTrends();
-  }, [locale]);
-
-  if (loading) {
-    return (
-      <div className="space-y-2">
-        {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 animate-pulse rounded bg-gray-700" />
-        ))}
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        {/* ジャンル */}
-        {tags.length > 0 && (
-          <div>
-            <h4 className="mb-2 text-xs font-semibold text-blue-400">{getSectionText(locale).popularGenres}</h4>
-            <div className="space-y-1">
-              {tags.map((tag, index) => (
-                <a
-                  key={tag.name}
-                  href={tag.id ? localizedHref(`/tags/${tag.id}`, locale) : '#'}
-                  className="flex items-center gap-2 rounded bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                >
-                  <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
-                      index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="flex-1 text-sm text-white">{tag.name}</span>
-                  <span className="text-xs text-gray-400">{getSectionText(locale).productsCount(tag.count)}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-        {/* 女優 */}
-        {performers.length > 0 && (
-          <div>
-            <h4 className="mb-2 text-xs font-semibold text-pink-400">{getSectionText(locale).popularActresses}</h4>
-            <div className="space-y-1">
-              {performers.map((performer, index) => (
-                <a
-                  key={performer.name}
-                  href={performer.id ? localizedHref(`/actress/${performer.id}`, locale) : '#'}
-                  className="flex items-center gap-2 rounded bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                >
-                  <span
-                    className={`flex h-5 w-5 items-center justify-center rounded-full text-xs font-bold ${
-                      index < 3 ? 'bg-yellow-600 text-white' : 'bg-gray-600 text-gray-300'
-                    }`}
-                  >
-                    {index + 1}
-                  </span>
-                  <span className="flex-1 text-sm text-white">{performer.name}</span>
-                  <span className="text-xs text-gray-400">{getSectionText(locale).productsCount(performer.count)}</span>
-                </a>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-      {/* もっと見るリンク */}
-      <div className="grid grid-cols-2 gap-2">
-        <MoreLink href="/tags" label={getSectionText(locale).allGenres} locale={locale} />
-        <MoreLink href="/actresses" label={getSectionText(locale).allActresses} locale={locale} />
-      </div>
-    </div>
-  );
-}
-
 // カテゴリバッジのスタイル
 function getCategoryStyles(locale: string): Record<string, { bg: string; text: string; label: string }> {
   const t = getSectionText(locale);
@@ -930,7 +814,7 @@ export function TopPageLowerSections({
         </div>
       )}
 
-      {/* ニュース */}
+      {/* ニュース — デフォルト閉じ */}
       {isSectionVisible('news') && (
         <div id="news" className="scroll-mt-20">
           <TopPageMenuSection
@@ -939,162 +823,11 @@ export function TopPageLowerSections({
             title={getSectionText(locale).news}
             subtitle={getSectionText(locale).newsSub}
             theme="dark"
-            defaultOpen={true}
+            defaultOpen={false}
           >
             <NewsContent locale={locale} />
           </TopPageMenuSection>
         </div>
-      )}
-
-      {/* トレンド分析 */}
-      {isTopPage && isSectionVisible('trending') && (
-        <div id="trending" className="scroll-mt-20">
-          <TopPageMenuSection
-            type="accordion"
-            icon={<BarChart3 className="h-5 w-5" />}
-            title={getSectionText(locale).trending}
-            subtitle={getSectionText(locale).trendingSub}
-            theme="dark"
-            defaultOpen={false}
-          >
-            <TrendingContent locale={locale} />
-          </TopPageMenuSection>
-        </div>
-      )}
-
-      {/* 分割線 */}
-      <div className="my-2 border-t border-gray-700/50" />
-
-      {/* オリジナルコンテンツ */}
-      {isSectionVisible('original-content') &&
-        (() => {
-          const oc = getSectionText(locale);
-          return (
-            <div id="original-content" className="scroll-mt-20">
-              <TopPageMenuSection
-                type="accordion"
-                icon={<Sparkles className="h-5 w-5" />}
-                title={oc.originalContent}
-                subtitle={oc.originalContentSub}
-                theme="dark"
-                defaultOpen={true}
-              >
-                <div className="grid grid-cols-2 gap-2 md:grid-cols-5">
-                  <a
-                    href={localizedHref('/daily-pick', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Play className="h-4 w-4 flex-shrink-0 text-cyan-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.todaysPick}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/birthdays', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Cake className="h-4 w-4 flex-shrink-0 text-pink-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.birthdays}</span>
-                  </a>
-                  <a
-                    href={localizedHref(`/best/${new Date().getFullYear() - 1}`, locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Trophy className="h-4 w-4 flex-shrink-0 text-yellow-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.annualBest}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/weekly-report', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <TrendingUp className="h-4 w-4 flex-shrink-0 text-green-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.weeklyTrend}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/rookies', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Star className="h-4 w-4 flex-shrink-0 text-rose-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.rookies}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/hidden-gems', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Gem className="h-4 w-4 flex-shrink-0 text-amber-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.hiddenGems}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/reviewers', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Users className="h-4 w-4 flex-shrink-0 text-blue-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.reviewers}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/lists/ranking', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <List className="h-4 w-4 flex-shrink-0 text-purple-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.lists}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/vote', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gray-700/50 p-2 transition-colors hover:bg-gray-700"
-                  >
-                    <Vote className="h-4 w-4 flex-shrink-0 text-orange-400" />
-                    <span className="truncate text-xs font-medium text-white">{oc.vote}</span>
-                  </a>
-                  <a
-                    href={localizedHref('/search/semantic', locale)}
-                    className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-700/50 to-pink-700/50 p-2 transition-colors hover:from-purple-700 hover:to-pink-700"
-                  >
-                    <Search className="h-4 w-4 flex-shrink-0 text-purple-300" />
-                    <span className="truncate text-xs font-medium text-white">{oc.aiSearch}</span>
-                  </a>
-                </div>
-              </TopPageMenuSection>
-            </div>
-          );
-        })()}
-
-      {/* 商品一覧へのリンク */}
-      {isSectionVisible('all-products') && (
-        <div id="all-products" className="scroll-mt-20">
-          <TopPageMenuSection
-            type="link"
-            href={localizedHref('/products', locale)}
-            icon={<Film className="h-5 w-5" />}
-            title={t.viewProductList}
-            subtitle={t.viewProductListDesc}
-            theme="dark"
-          />
-        </div>
-      )}
-
-      {/* 未整理作品へのリンク */}
-      {uncategorizedCount > 0 && isSectionVisible('uncategorized') && (
-        <TopPageMenuSection
-          type="link"
-          href={localizedHref('/products?uncategorized=true', locale)}
-          icon={<AlertTriangle className="h-5 w-5" />}
-          title={t.uncategorizedDescription}
-          badge={t.uncategorizedCount}
-          theme="dark"
-        />
-      )}
-
-      {/* FANZA専門サイトへのバナー */}
-      {!isFanzaSite && isSectionVisible('fanza-site') && (
-        <>
-          <div className="my-2 border-t border-gray-700/50" />
-          <TopPageMenuSection
-            type="link"
-            href="https://fanza.eroxv.com"
-            icon={<ExternalLink className="h-5 w-5" />}
-            title={getSectionText(locale).fanzaSite}
-            subtitle={getSectionText(locale).fanzaSiteSub}
-            theme="dark"
-          />
-        </>
       )}
 
       {/* ホームセクション管理（トップページのみ） */}

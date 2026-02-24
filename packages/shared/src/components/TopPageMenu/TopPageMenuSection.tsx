@@ -88,7 +88,7 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
 
   // リンク型のスタイル
   const linkStyles = isDark
-    ? 'bg-gray-800/50 border-gray-700 hover:border-blue-500/50 hover:bg-gray-800/80'
+    ? 'bg-gray-800/50 border-gray-700 hover:border-fuchsia-500/50 hover:bg-gray-800/80'
     : 'bg-white border-gray-200 hover:border-pink-400 hover:bg-pink-50/30';
 
   // アコーディオン型のスタイル（展開可能を示す紫系）
@@ -96,14 +96,14 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
 
   const accordionHeaderHoverStyles = isDark ? 'hover:bg-gray-700/50' : 'hover:bg-purple-50/50';
 
-  // アイコン色: リンク=青/ピンク、アコーディオン=紫
+  // アイコン色: fuchsia/pink統一
   const iconColor =
     props.type === 'link'
       ? isDark
-        ? 'text-blue-400'
+        ? 'text-fuchsia-400'
         : 'text-pink-500'
       : isDark
-        ? 'text-purple-400'
+        ? 'text-fuchsia-400'
         : 'text-purple-500';
 
   // リンク型
@@ -133,7 +133,7 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
         </div>
         <ChevronRight
           className={`h-5 w-5 transition-colors ${
-            isDark ? 'text-gray-500 group-hover:text-blue-400' : 'text-gray-400 group-hover:text-pink-500'
+            isDark ? 'text-gray-500 group-hover:text-fuchsia-400' : 'text-gray-400 group-hover:text-pink-500'
           }`}
         />
       </Link>
@@ -143,7 +143,7 @@ function TopPageMenuSectionComponent(props: TopPageMenuSectionProps) {
   // アコーディオン型
   return (
     <div
-      className={` ${MENU_BASE_STYLES.rounded} ${MENU_BASE_STYLES.border} ${accordionStyles} overflow-hidden transition-all duration-200`}
+      className={`${MENU_BASE_STYLES.rounded} ${MENU_BASE_STYLES.border} ${accordionStyles} overflow-hidden transition-all duration-200 ${isDark ? 'border-l-2 border-l-fuchsia-500/40' : 'border-l-2 border-l-pink-400/40'}`}
     >
       {/* ヘッダー */}
       <div

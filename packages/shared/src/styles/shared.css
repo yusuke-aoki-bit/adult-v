@@ -59,43 +59,48 @@ html {
 
 /* ADULT VIEWER LAB Theme (Dark: purple-tinted base for more vibrancy) */
 .theme-adult-v {
-  /* Body/Main - より深みのあるダークテーマ */
-  --body-bg: #0c0c14; /* 紫がかった深い黒 */
-  --content-bg: #151520; /* 微かに紫 */
-  --card-bg: #1e1e2a; /* 紫がかったダークグレー */
+  /* Body/Main - 深みのあるダークテーマ */
+  --body-bg: #0a0a12;
+  --content-bg: #111118;
+  --card-bg: #16161f;
 
   /* Text Colors */
   --text-primary: #ffffff;
   --text-secondary: #d1d5db; /* gray-300 */
-  --text-muted: #a1a1aa; /* zinc-400 - より柔らかいグレー */
-  --text-accent: #f472b6; /* pink-400 */
+  --text-muted: #a1a1aa; /* zinc-400 */
+  --text-accent: #e879f9; /* fuchsia-400 — より鮮やか */
 
   /* Border Colors */
-  --border-primary: #2d2d3a; /* 紫がかったボーダー */
+  --border-primary: #2d2d3a;
   --border-secondary: #1e1e2a;
   --section-border: #2d2d3a;
 
-  /* Card Styles - より目立つ効果 */
-  --card-ring: rgba(244, 114, 182, 0.1); /* pink-400/10 */
-  --card-ring-hover: rgba(244, 114, 182, 0.3); /* pink-400/30 */
-  --card-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 4px 6px -2px rgba(244, 114, 182, 0.05);
+  /* Card Styles - クリーンで上品 */
+  --card-ring: rgba(255, 255, 255, 0.08);
+  --card-ring-hover: rgba(255, 255, 255, 0.15);
+  --card-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 
-  /* Link/Button Colors */
-  --link-color: #f472b6; /* pink-400 */
-  --link-hover: #f9a8d4; /* pink-300 */
-  --btn-primary-bg: linear-gradient(135deg, #ec4899, #f43f5e); /* pink-500 to rose-500 */
-  --btn-primary-hover: linear-gradient(135deg, #db2777, #e11d48); /* pink-600 to rose-600 */
+  /* Link/Button Colors — ソリッドカラー */
+  --link-color: #e879f9; /* fuchsia-400 */
+  --link-hover: #f0abfc; /* fuchsia-300 */
+  --btn-primary-bg: #e879f9; /* fuchsia-400 solid */
+  --btn-primary-hover: #d946ef; /* fuchsia-500 */
+
+  /* Design tokens */
+  --radius-card: 0.75rem;
+  --radius-badge: 0.375rem;
+  --transition-fast: 150ms ease;
 
   /* Header */
-  --header-bg: #08080e; /* より深い黒 */
+  --header-bg: #08080e;
   --header-text: #ffffff;
-  --header-border: rgba(244, 114, 182, 0.1); /* ピンクのボーダー */
-  --header-notice-bg: rgba(21, 21, 32, 0.9); /* 紫がかった背景 */
-  --header-notice-border: rgba(244, 114, 182, 0.1);
-  --header-notice-text: #d1d5db; /* gray-300 */
+  --header-border: rgba(255, 255, 255, 0.06);
+  --header-notice-bg: rgba(21, 21, 32, 0.9);
+  --header-notice-border: rgba(255, 255, 255, 0.06);
+  --header-notice-text: #d1d5db;
 
   /* Logo */
-  --logo-primary: #f472b6; /* pink-400 */
+  --logo-primary: #e879f9; /* fuchsia-400 */
   --logo-secondary: #ffffff;
   --logo-subtitle: rgba(255, 255, 255, 0.7);
 
@@ -155,7 +160,7 @@ html {
   --caution-bg: rgba(245, 158, 11, 0.1);
   --overlay-bg: rgba(0, 0, 0, 0.6);
   --input-bg: #1f2937; /* gray-800 */
-  --section-icon-bg: rgba(244, 114, 182, 0.1); /* pink-400/10 */
+  --section-icon-bg: rgba(232, 121, 249, 0.1); /* fuchsia-400/10 */
 
   /* SectionNav */
   --section-nav-bg: rgba(12, 12, 20, 0.95);

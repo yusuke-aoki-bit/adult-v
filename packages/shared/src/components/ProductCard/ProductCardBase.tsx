@@ -358,7 +358,7 @@ function ProductCardBase({
 
     return (
       <div
-        className={`group relative ${resolvedTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:shadow-pink-500/20 hover:ring-pink-500/60`}
+        className={`group relative ${resolvedTheme === 'dark' ? 'bg-[#16161f]' : 'bg-white'} overflow-hidden rounded-xl transition-all duration-200 hover:shadow-md hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:ring-white/10' : 'hover:ring-gray-300'}`}
       >
         <Link href={`/${locale}/products/${product['id']}`}>
           <div
@@ -371,7 +371,7 @@ function ProductCardBase({
                 alt={altText}
                 fill
                 sizes="(max-width: 640px) 15vw, (max-width: 1024px) 10vw, 6vw"
-                className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
+                className={`object-cover transition-transform duration-200 group-hover:scale-[1.02] ${isUncensored ? 'blur-[1px]' : ''}`}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 loading={priority ? 'eager' : 'lazy'}
@@ -397,7 +397,7 @@ function ProductCardBase({
               </div>
             )}
             {product['rating'] && product['rating'] > 0 && (
-              <div className="absolute top-1 right-1 flex items-center gap-0.5 rounded bg-yellow-500 px-1 py-0.5 text-[10px] font-bold text-black">
+              <div className="absolute top-1 right-1 flex items-center gap-0.5 rounded bg-black/60 px-1 py-0.5 text-[10px] font-bold text-amber-400 backdrop-blur-sm">
                 <svg className="h-2.5 w-2.5 fill-current" viewBox="0 0 20 20">
                   <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                 </svg>
@@ -408,10 +408,8 @@ function ProductCardBase({
             {showMiniCta && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
                 <span
-                  className={`rounded px-2 py-1 text-[10px] font-bold text-white ${
-                    product.salePrice
-                      ? 'bg-linear-to-r from-orange-500 to-red-500'
-                      : 'bg-linear-to-r from-pink-500 to-rose-500'
+                  className={`rounded-md px-2 py-1 text-[10px] font-bold text-white ${
+                    product.salePrice ? 'bg-red-500' : 'bg-fuchsia-500'
                   }`}
                 >
                   {product.salePrice ? t('viewSale') : t('viewDetails')}
@@ -421,24 +419,15 @@ function ProductCardBase({
           </div>
           <div className="p-2">
             <p
-              className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} line-clamp-2 text-xs leading-snug font-medium transition-colors`}
+              className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-fuchsia-300' : 'text-gray-800 group-hover:text-pink-600'} line-clamp-2 text-xs leading-snug font-medium transition-colors`}
             >
               {product['title']}
             </p>
-            {/* 品番 + コピーボタン */}
-            <div className="mt-1 flex items-center gap-1">
-              <span className={`text-[9px] ${resolvedTheme === 'dark' ? 'text-gray-400' : 'text-gray-500'} truncate`}>
-                {product.normalizedProductId || product['id']}
-              </span>
-              <CopyButton
-                text={product.normalizedProductId || String(product['id'])}
-                iconOnly
-                size="xs"
-                className={
-                  resolvedTheme === 'light' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800' : ''
-                }
-              />
-            </div>
+            <span
+              className={`mt-0.5 block text-[9px] ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'} truncate`}
+            >
+              {product.normalizedProductId || product['id']}
+            </span>
           </div>
         </Link>
         {/* 購入CTA（miniモード）- 常時表示でクリック率向上 */}
@@ -455,10 +444,8 @@ function ProductCardBase({
                 card_size: 'mini',
               });
             }}
-            className={`absolute right-0 bottom-0 left-0 py-1 text-center text-[9px] font-bold text-white transition-all duration-200 hover:py-1.5 ${
-              product.salePrice
-                ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
-                : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
+            className={`absolute right-0 bottom-0 left-0 py-1 text-center text-[9px] font-bold text-white transition-colors duration-200 ${
+              product.salePrice ? 'bg-red-500 hover:bg-red-400' : 'bg-fuchsia-500 hover:bg-fuchsia-400'
             }`}
           >
             {product.salePrice ? 'SALE ' : ''}
@@ -636,12 +623,12 @@ function ProductCardBase({
                   card_size: 'compact',
                 });
               }}
-              className={`absolute right-0 bottom-0 left-0 z-30 py-1.5 text-center text-[10px] font-bold text-white transition-all duration-200 hover:py-2 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-1.5 text-center text-[10px] font-bold text-white transition-colors duration-200 ${
                 product.salePrice
-                  ? 'bg-linear-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400'
+                  ? 'bg-red-500 hover:bg-red-400'
                   : resolvedTheme === 'dark'
-                    ? 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'
-                    : 'bg-linear-to-r from-pink-500 to-rose-500 hover:from-pink-400 hover:to-rose-400'
+                    ? 'bg-fuchsia-500 hover:bg-fuchsia-400'
+                    : 'bg-pink-500 hover:bg-pink-400'
               }`}
             >
               {product.salePrice ? `${product['discount'] || ''}%OFF ` : ''}
@@ -685,7 +672,7 @@ function ProductCardBase({
   // Full mode
   return (
     <article
-      className={`${themeConfig.cardBg} flex flex-col overflow-hidden rounded-2xl border shadow-lg transition-shadow duration-300 hover:shadow-2xl ${themeConfig.cardBorder}`}
+      className={`group/card ${themeConfig.cardBg} flex flex-col overflow-hidden rounded-xl border shadow-sm transition-shadow duration-200 hover:shadow-md ${themeConfig.cardBorder}`}
     >
       <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="group relative block h-full">
@@ -732,7 +719,7 @@ function ProductCardBase({
             src={imgSrc}
             alt={altText}
             fill
-            className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
+            className={`object-cover transition-transform duration-200 group-hover:scale-[1.02] ${isUncensored ? 'blur-[1px]' : ''}`}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             loading={priority ? 'eager' : 'lazy'}
             placeholder="blur"
@@ -783,7 +770,7 @@ function ProductCardBase({
                 </span>
               )}
               {product.sampleVideos && product.sampleVideos.length > 0 && (
-                <span className="flex items-center gap-0.5 rounded bg-rose-600/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
+                <span className="flex items-center gap-0.5 rounded bg-fuchsia-600/80 px-1.5 py-0.5 text-[10px] font-medium text-white">
                   <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M8 5v14l11-7z" />
                   </svg>
@@ -908,26 +895,13 @@ function ProductCardBase({
                         {resolvedFormatPrice(product.salePrice, product.currency)}
                       </span>
                       {product['discount'] && (
-                        <>
-                          <span
-                            className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} rounded px-1 py-0.5 ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}
-                          >
-                            -{product['discount']}%
-                          </span>
-                          {product['discount'] >= 30 && (
-                            <span className="rounded bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
-                              お得
-                            </span>
-                          )}
-                        </>
+                        <span
+                          className={`font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} rounded px-1 py-0.5 ${isEmphasized ? 'text-xs' : 'text-[10px]'}`}
+                        >
+                          -{product['discount']}%
+                        </span>
                       )}
                     </div>
-                    {/* 節約額（画像オーバーレイ） */}
-                    {product.regularPrice && product.salePrice && product.regularPrice > product.salePrice && (
-                      <span className={`text-[10px] font-bold ${themeConfig.salePriceColor}`}>
-                        ¥{(product.regularPrice - product.salePrice).toLocaleString()}お得
-                      </span>
-                    )}
                     {saleUrgencyInfo.showCountdown && (
                       <span
                         className={`text-[10px] font-bold ${themeConfig.countdownColor} ${isAnimated ? 'animate-pulse' : ''}`}
@@ -1006,14 +980,16 @@ function ProductCardBase({
                 {product.normalizedProductId || product['id']}
               </p>
             </Link>
-            <CopyButton
-              text={product.normalizedProductId || String(product['id'])}
-              iconOnly
-              size="xs"
-              className={
-                resolvedTheme === 'light' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800' : ''
-              }
-            />
+            <span className="opacity-0 transition-opacity group-hover/card:opacity-100">
+              <CopyButton
+                text={product.normalizedProductId || String(product['id'])}
+                iconOnly
+                size="xs"
+                className={
+                  resolvedTheme === 'light' ? 'bg-gray-200 text-gray-600 hover:bg-gray-300 hover:text-gray-800' : ''
+                }
+              />
+            </span>
           </div>
           <Link href={`/${locale}/products/${product['id']}`}>
             <p
@@ -1030,7 +1006,7 @@ function ProductCardBase({
               <Link
                 key={tag}
                 href={getTagFilterUrl(tag)}
-                className={`rounded-full px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-xs ${themeConfig.tagBg} ${themeConfig.tagText} ${themeConfig.tagHoverBg} ${themeConfig.tagHoverText} transition-all`}
+                className={`rounded-md px-1.5 py-0.5 text-[10px] sm:px-2 sm:text-xs ${themeConfig.tagBg} ${themeConfig.tagText} ${themeConfig.tagHoverBg} ${themeConfig.tagHoverText} transition-colors`}
                 onClick={(e) => e.stopPropagation()}
               >
                 {tag}
@@ -1049,22 +1025,6 @@ function ProductCardBase({
                 showCount={true}
               />
             )}
-            {/* 人気バッジ: 高評価かつレビュー多数 */}
-            {product['rating'] &&
-              product['rating'] >= 4.5 &&
-              product['reviewCount'] &&
-              product['reviewCount'] >= 20 && (
-                <span className="flex items-center gap-0.5 rounded bg-linear-to-r from-pink-500 to-rose-500 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                  <svg className="h-2.5 w-2.5" fill="currentColor" viewBox="0 0 20 20">
-                    <path
-                      fillRule="evenodd"
-                      d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  人気
-                </span>
-              )}
             {product['duration'] && <span className="shrink-0">・{product['duration']}分</span>}
           </div>
         )}
@@ -1080,18 +1040,11 @@ function ProductCardBase({
                   {resolvedFormatPrice(product.regularPrice, product.currency)}
                 </p>
                 {product['discount'] && (
-                  <>
-                    <span
-                      className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} rounded px-1 py-0.5`}
-                    >
-                      -{product['discount']}%
-                    </span>
-                    {product['discount'] >= 30 && (
-                      <span className="rounded bg-linear-to-r from-yellow-400 to-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-black">
-                        お得
-                      </span>
-                    )}
-                  </>
+                  <span
+                    className={`text-[10px] font-bold ${themeConfig.discountBadgeText} ${themeConfig.discountBadgeBg} rounded px-1 py-0.5`}
+                  >
+                    -{product['discount']}%
+                  </span>
                 )}
               </div>
               {/* 節約額の表示 */}
@@ -1148,10 +1101,10 @@ function ProductCardBase({
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 onClick={handleCtaClick}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold shadow-md transition-all hover:scale-[1.02] hover:shadow-lg active:scale-[0.98] ${
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold shadow-sm transition-all hover:shadow-md active:scale-[0.98] ${
                   isSale
-                    ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover}`
-                    : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover}`
+                    ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover} hover:shadow-red-500/20`
+                    : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover} hover:shadow-fuchsia-500/20`
                 }`}
                 title={`${product.providerLabel}で購入`}
                 aria-label={`${product.providerLabel}で購入（外部リンク）`}

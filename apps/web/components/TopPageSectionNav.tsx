@@ -88,8 +88,6 @@ export default function TopPageSectionNav({
 
   sections.push({ id: 'weekly-highlights', label: t.weeklyHighlights });
   sections.push({ id: 'news', label: t.news });
-  sections.push({ id: 'trending', label: t.trending });
-  sections.push({ id: 'all-products', label: t.allProducts });
 
   // 1セクションのみの場合はナビゲーションを表示しない
   if (sections.length <= 1) {

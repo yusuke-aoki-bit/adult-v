@@ -76,12 +76,12 @@ export interface ThemeConfig {
 export const themes: Record<ProductCardTheme, ThemeConfig> = {
   dark: {
     // Card container
-    cardBg: 'bg-gray-800',
-    cardBorder: 'border-gray-700',
-    cardHoverRing: 'hover:ring-purple-500/50',
+    cardBg: 'bg-[#16161f]',
+    cardBorder: 'border-white/[0.08]',
+    cardHoverRing: 'hover:ring-white/10',
 
     // Gradients
-    gradient: 'from-gray-700 to-gray-800',
+    gradient: 'from-[#16161f] to-[#111118]',
 
     // Text colors
     textPrimary: 'text-white',
@@ -89,19 +89,19 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     textMuted: 'text-gray-500',
 
     // Accent colors
-    accentColor: 'text-rose-400/80',
-    accentHover: 'hover:text-rose-400',
+    accentColor: 'text-fuchsia-400/80',
+    accentHover: 'hover:text-fuchsia-400',
 
     // Tag styles
-    tagBg: 'bg-gray-700',
+    tagBg: 'bg-gray-700/60',
     tagText: 'text-gray-300',
-    tagHoverBg: 'hover:bg-rose-600',
+    tagHoverBg: 'hover:bg-gray-600/80',
     tagHoverText: 'hover:text-white',
 
     // Badge backgrounds
     badgeBg: 'bg-gray-900',
-    priceBadgeBg: 'bg-gray-900/95',
-    priceBadgeBorder: 'border-gray-700',
+    priceBadgeBg: 'bg-black/80',
+    priceBadgeBorder: 'border-white/10',
 
     // Price colors
     salePriceColor: 'text-red-300',
@@ -111,14 +111,14 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     countdownColor: 'text-yellow-300',
 
     // Urgency badge
-    urgencyBadgeBg: 'bg-gradient-to-r from-red-600 via-orange-500 to-red-600',
+    urgencyBadgeBg: 'bg-red-600',
     urgencyBadgeText: 'text-white',
 
-    // CTA button
-    ctaGradient: 'from-rose-600 to-pink-600',
-    ctaGradientHover: 'hover:from-rose-700 hover:to-pink-700',
-    ctaSaleGradient: 'from-red-600 to-rose-600',
-    ctaSaleGradientHover: 'hover:from-red-700 hover:to-rose-700',
+    // CTA button — ソリッドカラー
+    ctaGradient: 'from-fuchsia-500 to-fuchsia-500',
+    ctaGradientHover: 'hover:from-fuchsia-400 hover:to-fuchsia-400',
+    ctaSaleGradient: 'from-red-500 to-red-500',
+    ctaSaleGradientHover: 'hover:from-red-400 hover:to-red-400',
 
     // Ranking badge
     rankingDefaultBg: 'bg-gray-800',
@@ -126,10 +126,10 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     rankingDefaultBorder: 'border-gray-600',
 
     // Favorite button container
-    favoriteButtonBg: 'bg-gray-700',
+    favoriteButtonBg: 'bg-gray-800/80',
 
     // No image overlay
-    noImageGradient: 'from-gray-700 to-gray-800',
+    noImageGradient: 'from-[#16161f] to-[#111118]',
     noImageEmoji: 'text-gray-500',
     noImageBadgeBg: 'bg-gray-600',
     noImageBadgeText: 'text-white',
@@ -138,7 +138,7 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     separatorColor: 'text-gray-600',
 
     // Subscription text
-    subscriptionColor: 'text-rose-500',
+    subscriptionColor: 'text-fuchsia-400',
   },
   light: {
     // Card container
