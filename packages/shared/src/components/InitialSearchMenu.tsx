@@ -30,7 +30,7 @@ const HIRAGANA_GROUPS = {
 function InitialSearchMenu({ locale, initialFilter, sortBy, includeTags, excludeTags }: InitialSearchMenuProps) {
   const { theme, primaryColor } = useSiteTheme();
   const isDark = theme === 'dark';
-  const activeColor = primaryColor === 'rose' ? 'bg-fuchsia-600' : 'bg-fuchsia-500';
+  const activeColor = isDark ? 'bg-fuchsia-600' : 'bg-fuchsia-500';
   const hoverInactive = isDark ? 'hover:bg-gray-600' : 'hover:bg-pink-50';
 
   const [hoveredGroup, setHoveredGroup] = useState<string | null>(null);

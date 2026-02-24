@@ -23,7 +23,7 @@ const LIGHT_PLACEHOLDER = (() => {
 export const actressCardThemes: Record<ActressCardTheme, ActressCardThemeConfig> = {
   dark: {
     placeholderImage: PLACEHOLDERS.ACTRESS_THUMB,
-    hoverColor: 'hover:text-rose-500',
+    hoverColor: 'hover:text-fuchsia-400',
     modalTheme: 'dark',
   },
   light: {

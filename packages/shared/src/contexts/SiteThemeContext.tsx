@@ -3,7 +3,7 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 
 export type SiteTheme = 'dark' | 'light';
-export type PrimaryColor = 'rose' | 'pink';
+export type PrimaryColor = 'fuchsia' | 'rose' | 'pink';
 
 interface SiteThemeContextValue {
   theme: SiteTheme;
@@ -25,10 +25,10 @@ export function SiteThemeProvider({ children, theme, primaryColor }: SiteThemePr
 export function useSiteTheme(): SiteThemeContextValue {
   const context = useContext(SiteThemeContext);
   if (!context) {
-    // デフォルトはadult-v（ダークテーマ、roseカラー）
+    // デフォルトはadult-v（ダークテーマ、fuchsiaカラー）
     return {
       theme: 'dark',
-      primaryColor: 'rose',
+      primaryColor: 'fuchsia',
     };
   }
   return context;

@@ -464,7 +464,7 @@ function ProductCardBase({
     return (
       <>
         <div
-          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-lg hover:ring-2 ${themeConfig.cardHoverRing} group transition-all duration-300 hover:shadow-xl hover:shadow-pink-500/20`}
+          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-xl hover:ring-1 ${themeConfig.cardHoverRing} group transition-all duration-200 hover:shadow-md ${resolvedTheme === 'dark' ? 'hover:shadow-fuchsia-500/10' : 'hover:shadow-pink-500/10'}`}
         >
           <Link href={`/${locale}/products/${product['id']}`}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
@@ -513,7 +513,7 @@ function ProductCardBase({
             </div>
             <div className="p-2">
               <p
-                className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-snug transition-colors group-hover:text-pink-300`}
+                className={`text-xs font-medium ${themeConfig.textPrimary} line-clamp-2 leading-snug transition-colors ${resolvedTheme === 'dark' ? 'group-hover:text-fuchsia-300' : 'group-hover:text-pink-600'}`}
               >
                 {product['title']}
               </p>

@@ -5,7 +5,7 @@ import type { SiteConfig, SiteMode } from '@/lib/site-config';
 import { siteConfigs } from '@/lib/site-config';
 
 export type SiteTheme = 'dark' | 'light';
-export type PrimaryColor = 'rose' | 'pink';
+export type PrimaryColor = 'fuchsia' | 'rose' | 'pink';
 
 interface SiteContextValue {
   config: SiteConfig;
@@ -27,7 +27,7 @@ export function SiteProvider({ children, mode }: SiteProviderProps) {
   const config = siteConfigs[mode];
   // apps/web: dark theme, apps/fanza: light theme
   const theme: SiteTheme = mode === 'fanza' ? 'light' : 'dark';
-  const primaryColor: PrimaryColor = mode === 'fanza' ? 'pink' : 'rose';
+  const primaryColor: PrimaryColor = mode === 'fanza' ? 'pink' : 'fuchsia';
 
   const value: SiteContextValue = {
     config,
@@ -49,7 +49,7 @@ export function useSite(): SiteContextValue {
       config: siteConfigs['adult-v'],
       mode: 'adult-v',
       theme: 'dark',
-      primaryColor: 'rose',
+      primaryColor: 'fuchsia',
       isFanzaSite: false,
       isMainSite: true,
     };

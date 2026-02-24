@@ -5,12 +5,12 @@ export type ThemeMode = 'dark' | 'light';
 
 interface ThemeConfig {
   mode: ThemeMode;
-  primaryColor: string; // Tailwind color name (e.g., 'rose', 'pink')
+  primaryColor: string; // Tailwind color name (e.g., 'fuchsia', 'rose', 'pink')
 }
 
 let themeConfig: ThemeConfig = {
   mode: 'dark',
-  primaryColor: 'rose',
+  primaryColor: 'fuchsia',
 };
 
 export function setThemeConfig(config: Partial<ThemeConfig>) {
@@ -81,9 +81,9 @@ export function getPaginationStyles() {
       buttonDisabled: 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
       jumpButton: 'bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 border border-blue-700',
       jumpButtonDisabled: 'bg-gray-700 text-gray-500 cursor-not-allowed pointer-events-none opacity-50',
-      input: 'border-gray-600 text-white bg-gray-700 focus:ring-rose-500',
+      input: 'border-gray-600 text-white bg-gray-700 focus:ring-fuchsia-500',
       submitButton: `bg-${primaryColor}-600 text-white hover:bg-${primaryColor}-700 disabled:bg-gray-600 disabled:text-gray-400`,
-      select: 'border-gray-600 text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500',
+      select: 'border-gray-600 text-white bg-gray-700 focus:ring-fuchsia-500 focus:border-fuchsia-500',
       pageInfo: 'text-gray-400',
       dots: 'text-gray-400',
     };

@@ -66,7 +66,7 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <SiteProvider mode={siteMode}>
-        <SiteThemeProvider theme="dark" primaryColor="rose">
+        <SiteThemeProvider theme="dark" primaryColor="fuchsia">
           <FavoritesProvider>
             <ToastProvider>
               <FirebaseProvider>

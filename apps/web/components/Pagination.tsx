@@ -5,7 +5,7 @@ import SharedPagination from '@adult-v/shared/components/Pagination';
 
 // Initialize theme for dark mode (Adult Viewer Lab)
 import { setThemeConfig } from '@adult-v/shared/lib/theme';
-setThemeConfig({ mode: 'dark', primaryColor: 'rose' });
+setThemeConfig({ mode: 'dark', primaryColor: 'fuchsia' });
 
 interface PaginationProps {
   total: number;
