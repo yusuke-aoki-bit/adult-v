@@ -19,7 +19,7 @@ function HeaderSkeleton() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           <div className="text-2xl font-bold tracking-tight">
-            <span className="text-rose-400">ADULT</span>
+            <span className="text-fuchsia-400">ADULT</span>
             <span className="text-white">VIEWER LAB</span>
           </div>
         </div>

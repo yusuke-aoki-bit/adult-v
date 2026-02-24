@@ -132,8 +132,8 @@ export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerforme
             disabled={isRetrying}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               isDark
-                ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
-                : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
+                ? 'bg-fuchsia-600 text-white hover:bg-fuchsia-700 disabled:bg-gray-600'
+                : 'bg-fuchsia-500 text-white hover:bg-fuchsia-600 disabled:bg-gray-400'
             } disabled:cursor-not-allowed`}
           >
             <RefreshCw className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`} />
@@ -174,7 +174,7 @@ export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerforme
                 period === 'week'
                   ? isDark
                     ? 'bg-blue-600 text-white'
-                    : 'bg-pink-600 text-white'
+                    : 'bg-fuchsia-600 text-white'
                   : isDark
                     ? 'bg-gray-700 text-gray-300'
                     : 'bg-gray-100 text-gray-700'
@@ -191,7 +191,7 @@ export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerforme
                 period === 'month'
                   ? isDark
                     ? 'bg-blue-600 text-white'
-                    : 'bg-pink-600 text-white'
+                    : 'bg-fuchsia-600 text-white'
                   : isDark
                     ? 'bg-gray-700 text-gray-300'
                     : 'bg-gray-100 text-gray-700'
@@ -230,7 +230,7 @@ export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerforme
               activeTab === 'tags'
                 ? isDark
                   ? 'border-b-2 border-blue-400 text-blue-400'
-                  : 'border-b-2 border-pink-600 text-pink-600'
+                  : 'border-b-2 border-fuchsia-600 text-fuchsia-600'
                 : isDark
                   ? 'text-gray-400 hover:text-gray-300'
                   : 'text-gray-600 hover:text-gray-800'
@@ -247,7 +247,7 @@ export function TrendAnalysis({ locale, theme: themeProp, onTagClick, onPerforme
               activeTab === 'performers'
                 ? isDark
                   ? 'border-b-2 border-blue-400 text-blue-400'
-                  : 'border-b-2 border-pink-600 text-pink-600'
+                  : 'border-b-2 border-fuchsia-600 text-fuchsia-600'
                 : isDark
                   ? 'text-gray-400 hover:text-gray-300'
                   : 'text-gray-600 hover:text-gray-800'

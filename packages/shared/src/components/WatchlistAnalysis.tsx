@@ -158,7 +158,7 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
 
         {analysis.onSaleCount > 0 && (
           <div className="bg-gray-750 rounded-lg p-3 text-center">
-            <div className="text-xl font-bold text-rose-400 sm:text-2xl">{analysis.onSaleCount}</div>
+            <div className="text-xl font-bold text-fuchsia-400 sm:text-2xl">{analysis.onSaleCount}</div>
             <div className="text-xs text-gray-400">{t.onSale}</div>
           </div>
         )}
@@ -224,13 +224,13 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-              <h5 className="line-clamp-1 text-sm font-medium text-white transition-colors group-hover:text-rose-300">
+              <h5 className="line-clamp-1 text-sm font-medium text-white transition-colors group-hover:text-fuchsia-300">
                 {product['title']}
               </h5>
               <div className="mt-1 flex flex-wrap items-center gap-2">
                 {product.salePrice ? (
                   <>
-                    <span className="text-sm font-bold text-rose-400">¥{product.salePrice.toLocaleString()}</span>
+                    <span className="text-sm font-bold text-fuchsia-400">¥{product.salePrice.toLocaleString()}</span>
                     {product['discount'] && (
                       <span className="rounded bg-red-600 px-1.5 py-0.5 text-xs text-white">
                         -{product['discount']}%

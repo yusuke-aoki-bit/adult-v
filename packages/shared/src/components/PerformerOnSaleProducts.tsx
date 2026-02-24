@@ -73,7 +73,7 @@ export default function PerformerOnSaleProducts({
 
   return (
     <div
-      className={`mt-8 rounded-lg p-6 ${isDark ? 'bg-linear-to-br from-red-900/30 to-pink-900/30' : 'bg-linear-to-br from-red-50 to-pink-50'}`}
+      className={`mt-8 rounded-lg p-6 ${isDark ? 'bg-linear-to-br from-red-900/30 to-fuchsia-900/30' : 'bg-linear-to-br from-red-50 to-pink-50'}`}
     >
       <h2 className={`mb-2 flex items-center gap-2 text-xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
         <svg

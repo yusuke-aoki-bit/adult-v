@@ -20,7 +20,7 @@ const themeConfig = {
     styleCard: 'bg-gray-700/50 rounded-xl p-4',
     styleTitle: 'text-sm font-semibold text-purple-300 mb-2 flex items-center gap-2',
     appealCard: 'bg-gray-700/50 rounded-xl p-4',
-    appealTitle: 'text-sm font-semibold text-pink-300 mb-2 flex items-center gap-2',
+    appealTitle: 'text-sm font-semibold text-fuchsia-300 mb-2 flex items-center gap-2',
     cardText: 'text-gray-300 text-sm',
     recommendCard: 'bg-linear-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-xl p-4',
     recommendTitle: 'text-sm font-semibold text-blue-300 mb-2 flex items-center gap-2',

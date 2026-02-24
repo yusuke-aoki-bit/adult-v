@@ -242,7 +242,7 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
                         {formatPrice(source.price, source.currency ?? undefined)}
                       </span>
                     ) : isSubscriptionProvider(source.aspName) ? (
-                      <span className="font-semibold text-rose-400">{t.subscriptionOnly}</span>
+                      <span className="font-semibold text-fuchsia-400">{t.subscriptionOnly}</span>
                     ) : null}
                   </div>
                 );

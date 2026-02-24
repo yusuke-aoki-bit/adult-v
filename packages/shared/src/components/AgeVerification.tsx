@@ -29,7 +29,7 @@ const themeConfig = {
     message: 'text-gray-300',
     question: 'text-white',
     warning: 'text-amber-400',
-    confirmBtn: 'bg-rose-600 hover:bg-rose-700 disabled:bg-rose-400 text-white',
+    confirmBtn: 'bg-fuchsia-600 hover:bg-fuchsia-700 disabled:bg-fuchsia-400 text-white',
     denyBtn: 'bg-gray-700 hover:bg-gray-600 text-gray-300',
     footer: 'text-gray-400',
   },

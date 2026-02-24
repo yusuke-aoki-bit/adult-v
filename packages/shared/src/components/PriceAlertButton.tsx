@@ -157,7 +157,7 @@ export default function PriceAlertButton({
                   className={`w-full rounded-lg border px-4 py-2 focus:ring-2 focus:outline-none ${
                     theme === 'dark'
                       ? 'border-gray-600 bg-gray-700 text-white focus:ring-blue-500'
-                      : 'border-gray-300 bg-white text-gray-900 focus:ring-pink-500'
+                      : 'border-gray-300 bg-white text-gray-900 focus:ring-fuchsia-500'
                   }`}
                   min="1"
                   required

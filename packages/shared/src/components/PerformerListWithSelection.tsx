@@ -179,7 +179,7 @@ export function PerformerListWithSelection({
               isSelectionMode
                 ? isDark
                   ? 'bg-purple-600 text-white'
-                  : 'bg-pink-600 text-white'
+                  : 'bg-fuchsia-600 text-white'
                 : isDark
                   ? 'border border-gray-700 bg-gray-800 text-gray-300 hover:bg-gray-700'
                   : 'border border-gray-300 bg-gray-100 text-gray-700 hover:bg-gray-200'

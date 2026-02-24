@@ -101,7 +101,7 @@ export function UserReviewForm({
         <p className="text-gray-600 dark:text-gray-400">{t.loginRequired}</p>
         <button
           onClick={onLoginRequired}
-          className="mt-2 rounded-lg bg-rose-600 px-4 py-2 text-white transition-colors hover:bg-rose-700"
+          className="mt-2 rounded-lg bg-fuchsia-600 px-4 py-2 text-white transition-colors hover:bg-fuchsia-700"
         >
           ログイン
         </button>
@@ -147,7 +147,7 @@ export function UserReviewForm({
           onChange={(e) => setTitle(e.target.value)}
           placeholder={t.reviewTitlePlaceholder}
           maxLength={200}
-          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
       </div>
 
@@ -160,7 +160,7 @@ export function UserReviewForm({
           placeholder={t.contentPlaceholder}
           rows={4}
           maxLength={5000}
-          className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
         <p className="mt-1 text-xs text-gray-500">{content.length}/5000</p>
       </div>
@@ -182,7 +182,7 @@ export function UserReviewForm({
       <button
         type="submit"
         disabled={isSubmitting || rating === 0 || content.length < 10}
-        className="flex w-full items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-3 text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+        className="flex w-full items-center justify-center gap-2 rounded-lg bg-fuchsia-600 px-4 py-3 text-white transition-colors hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:bg-gray-400"
       >
         {isSubmitting ? (
           <>

@@ -9,10 +9,10 @@ const themeClasses = {
   dark: {
     container: 'bg-gray-800 border-gray-700',
     title: 'text-white',
-    accent: 'text-rose-500',
+    accent: 'text-fuchsia-500',
     close: 'text-gray-300 hover:text-white',
     description: 'text-gray-200',
-    installBtn: 'bg-rose-600 hover:bg-rose-700',
+    installBtn: 'bg-fuchsia-600 hover:bg-fuchsia-700',
     laterBtn: 'text-gray-300 hover:text-white hover:bg-gray-700',
   },
   light: {

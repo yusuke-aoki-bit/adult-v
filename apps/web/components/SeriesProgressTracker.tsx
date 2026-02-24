@@ -52,7 +52,7 @@ export default function SeriesProgressTracker({
       {/* プログレスバー */}
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-gray-700">
         <div
-          className="h-full bg-linear-to-r from-purple-500 to-pink-500 transition-all duration-500"
+          className="h-full bg-linear-to-r from-purple-500 to-fuchsia-500 transition-all duration-500"
           style={{ width: `${progress}%` }}
         />
       </div>

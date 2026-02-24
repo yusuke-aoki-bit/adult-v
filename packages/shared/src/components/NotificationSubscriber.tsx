@@ -11,11 +11,11 @@ export type NotificationSubscriberTheme = 'dark' | 'light';
 // Theme configuration
 const themeConfig = {
   dark: {
-    subscribed: 'bg-rose-600 text-white hover:bg-rose-700',
+    subscribed: 'bg-fuchsia-600 text-white hover:bg-fuchsia-700',
     unsubscribed: 'bg-gray-700 text-gray-300 hover:bg-gray-600',
   },
   light: {
-    subscribed: 'bg-rose-600 text-white hover:bg-rose-700',
+    subscribed: 'bg-fuchsia-600 text-white hover:bg-fuchsia-700',
     unsubscribed: 'bg-gray-100 text-gray-700 hover:bg-gray-200 border border-gray-300',
   },
 } as const;

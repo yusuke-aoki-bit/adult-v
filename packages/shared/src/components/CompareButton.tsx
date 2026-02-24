@@ -79,7 +79,7 @@ export function CompareButton({
         isInList
           ? isDark
             ? 'bg-blue-600 text-white hover:bg-blue-700'
-            : 'bg-pink-600 text-white hover:bg-pink-700'
+            : 'bg-fuchsia-600 text-white hover:bg-fuchsia-700'
           : isDark
             ? 'bg-gray-700/80 text-gray-300 hover:bg-gray-600 hover:text-white'
             : 'bg-gray-100 text-gray-600 hover:bg-gray-200 hover:text-gray-900'

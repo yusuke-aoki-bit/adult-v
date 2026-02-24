@@ -46,7 +46,8 @@ export function SceneTimeline({
       theme === 'dark'
         ? 'bg-gray-700 border-gray-600 text-white placeholder-gray-400'
         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-400',
-    button: theme === 'dark' ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-pink-500 hover:bg-pink-600 text-white',
+    button:
+      theme === 'dark' ? 'bg-fuchsia-600 hover:bg-fuchsia-700 text-white' : 'bg-pink-500 hover:bg-pink-600 text-white',
     buttonSecondary:
       theme === 'dark' ? 'bg-gray-700 hover:bg-gray-600 text-gray-200' : 'bg-gray-200 hover:bg-gray-300 text-gray-700',
     voteUp: theme === 'dark' ? 'text-green-400' : 'text-green-600',

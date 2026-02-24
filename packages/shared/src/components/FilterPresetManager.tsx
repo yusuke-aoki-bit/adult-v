@@ -103,7 +103,7 @@ export function FilterPresetManager({
         {presets.length > 0 && (
           <span
             className={`rounded-full px-1.5 py-0.5 text-xs ${
-              isDark ? 'bg-rose-600 text-white' : 'bg-rose-500 text-white'
+              isDark ? 'bg-fuchsia-600 text-white' : 'bg-rose-500 text-white'
             }`}
           >
             {presets.length}
@@ -131,14 +131,14 @@ export function FilterPresetManager({
                     isDark
                       ? 'border-gray-600 bg-gray-700 text-white placeholder-gray-400'
                       : 'border-gray-300 bg-gray-50 text-gray-900 placeholder-gray-500'
-                  } border focus:border-transparent focus:ring-2 focus:ring-rose-500`}
+                  } border focus:border-transparent focus:ring-2 focus:ring-fuchsia-500`}
                   autoFocus
                 />
                 <div className="flex gap-2">
                   <button
                     type="button"
                     onClick={handleSave}
-                    className="flex-1 rounded-lg bg-rose-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-rose-700"
+                    className="flex-1 rounded-lg bg-fuchsia-600 px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-fuchsia-700"
                   >
                     {t.save}
                   </button>
@@ -167,7 +167,7 @@ export function FilterPresetManager({
                     onClick={() => setIsSaveMode(true)}
                     className={`mb-3 flex w-full items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                       isDark
-                        ? 'border border-rose-600/30 bg-rose-600/20 text-rose-400 hover:bg-rose-600/30'
+                        ? 'border border-fuchsia-600/30 bg-fuchsia-600/20 text-fuchsia-400 hover:bg-fuchsia-600/30'
                         : 'border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100'
                     }`}
                   >
@@ -197,7 +197,7 @@ export function FilterPresetManager({
                           <button
                             type="button"
                             onClick={() => handleApply(preset)}
-                            className="flex-1 rounded bg-rose-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-rose-700"
+                            className="flex-1 rounded bg-fuchsia-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-fuchsia-700"
                           >
                             {t.apply}
                           </button>

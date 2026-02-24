@@ -166,7 +166,7 @@ export function ChatBot({ locale = 'ja', onSearch, apiEndpoint = '/api/chat' }: 
       {/* Floating button */}
       <button
         onClick={() => setIsOpen(true)}
-        className={`fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-r from-rose-500 to-pink-500 text-white shadow-lg transition-all duration-300 hover:shadow-xl ${isOpen ? 'scale-0' : 'scale-100'}`}
+        className={`fixed right-4 bottom-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-r from-fuchsia-500 to-fuchsia-400 text-white shadow-lg transition-all duration-300 hover:shadow-xl ${isOpen ? 'scale-0' : 'scale-100'}`}
         aria-label={t.title}
       >
         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -183,7 +183,7 @@ export function ChatBot({ locale = 'ja', onSearch, apiEndpoint = '/api/chat' }: 
       {isOpen && (
         <div className="fixed right-4 bottom-4 z-50 flex h-[500px] w-80 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:w-96 dark:border-gray-700 dark:bg-gray-900">
           {/* Header */}
-          <div className="flex items-center justify-between bg-linear-to-r from-rose-500 to-pink-500 px-4 py-3 text-white">
+          <div className="flex items-center justify-between bg-linear-to-r from-fuchsia-500 to-fuchsia-400 px-4 py-3 text-white">
             <div className="flex items-center gap-2">
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -213,7 +213,7 @@ export function ChatBot({ locale = 'ja', onSearch, apiEndpoint = '/api/chat' }: 
                 <div
                   className={`max-w-[80%] rounded-2xl px-4 py-2 ${
                     message.role === 'user'
-                      ? 'rounded-br-md bg-rose-500 text-white'
+                      ? 'rounded-br-md bg-fuchsia-500 text-white'
                       : 'rounded-bl-md bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-white'
                   }`}
                 >
@@ -274,12 +274,12 @@ export function ChatBot({ locale = 'ja', onSearch, apiEndpoint = '/api/chat' }: 
                 onKeyPress={handleKeyPress}
                 placeholder={t.placeholder}
                 disabled={isLoading}
-                className="flex-1 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-rose-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                className="flex-1 rounded-full border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 focus:ring-2 focus:ring-fuchsia-500 focus:outline-none disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               />
               <button
                 onClick={sendMessage}
                 disabled={!input.trim() || isLoading}
-                className="rounded-full bg-rose-500 px-4 py-2 text-white transition-colors hover:bg-rose-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
+                className="rounded-full bg-fuchsia-500 px-4 py-2 text-white transition-colors hover:bg-fuchsia-600 disabled:cursor-not-allowed disabled:bg-gray-300 dark:disabled:bg-gray-600"
                 aria-label={t.send}
               >
                 <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

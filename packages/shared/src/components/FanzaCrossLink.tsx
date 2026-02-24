@@ -45,7 +45,7 @@ export default function FanzaCrossLink({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-pink-500 to-rose-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:from-pink-600 hover:to-rose-600 hover:shadow-lg ${className}`}
+      className={`inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-fuchsia-500 to-fuchsia-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:from-fuchsia-600 hover:to-fuchsia-600 hover:shadow-lg ${className}`}
     >
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
@@ -95,7 +95,7 @@ export function FanzaSiteLink({
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-1 rounded bg-linear-to-r from-pink-500 to-rose-500 px-2 py-1 text-xs font-medium text-white transition-all hover:from-pink-600 hover:to-rose-600 ${className}`}
+        className={`inline-flex items-center gap-1 rounded bg-linear-to-r from-fuchsia-500 to-fuchsia-500 px-2 py-1 text-xs font-medium text-white transition-all hover:from-fuchsia-600 hover:to-fuchsia-600 ${className}`}
       >
         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -115,7 +115,7 @@ export function FanzaSiteLink({
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-pink-500 to-rose-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:from-pink-600 hover:to-rose-600 hover:shadow-lg ${className}`}
+      className={`inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-fuchsia-500 to-fuchsia-500 px-4 py-2 font-medium text-white shadow-md transition-all hover:from-fuchsia-600 hover:to-fuchsia-600 hover:shadow-lg ${className}`}
     >
       <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path

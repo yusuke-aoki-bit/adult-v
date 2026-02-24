@@ -78,7 +78,7 @@ export function CreateListModal({ isOpen, onClose, onSubmit, editingList, transl
               onChange={(e) => setTitle(e.target.value)}
               placeholder={t.titlePlaceholder}
               maxLength={200}
-              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
               required
             />
           </div>
@@ -94,7 +94,7 @@ export function CreateListModal({ isOpen, onClose, onSubmit, editingList, transl
               placeholder={t.descriptionPlaceholder}
               rows={3}
               maxLength={500}
-              className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              className="w-full resize-none rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
           </div>
 
@@ -107,7 +107,7 @@ export function CreateListModal({ isOpen, onClose, onSubmit, editingList, transl
               <label
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
                   isPublic
-                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
+                    ? 'border-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-900/20'
                     : 'border-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
                 }`}
               >
@@ -124,7 +124,7 @@ export function CreateListModal({ isOpen, onClose, onSubmit, editingList, transl
               <label
                 className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
                   !isPublic
-                    ? 'border-rose-500 bg-rose-50 dark:bg-rose-900/20'
+                    ? 'border-fuchsia-500 bg-fuchsia-50 dark:bg-fuchsia-900/20'
                     : 'border-gray-200 hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
                 }`}
               >
@@ -152,7 +152,7 @@ export function CreateListModal({ isOpen, onClose, onSubmit, editingList, transl
             <button
               type="submit"
               disabled={isSubmitting || title.trim().length < 2}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-fuchsia-600 px-4 py-2 text-white transition-colors hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:bg-gray-400"
             >
               {isSubmitting ? (
                 <>

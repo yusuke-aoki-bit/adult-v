@@ -187,7 +187,7 @@ export function SimilarProductMap({ productId, locale, theme: themeProp, onProdu
                 viewMode === 'list'
                   ? isDark
                     ? 'bg-sky-600 text-white'
-                    : 'bg-rose-600 text-white'
+                    : 'bg-fuchsia-600 text-white'
                   : isDark
                     ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -209,7 +209,7 @@ export function SimilarProductMap({ productId, locale, theme: themeProp, onProdu
                 viewMode === 'network'
                   ? isDark
                     ? 'bg-sky-600 text-white'
-                    : 'bg-rose-600 text-white'
+                    : 'bg-fuchsia-600 text-white'
                   : isDark
                     ? 'bg-gray-700 text-gray-400 hover:bg-gray-600'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'

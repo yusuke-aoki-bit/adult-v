@@ -110,7 +110,7 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
           <button
             type="submit"
             disabled={!query.trim() || loading || !isConfigured}
-            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-pink-600 px-6 py-3 font-medium text-white transition-all hover:from-purple-500 hover:to-pink-500 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-fuchsia-600 px-6 py-3 font-medium text-white transition-all hover:from-purple-500 hover:to-fuchsia-500 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
             {translations.searchButton}
@@ -205,7 +205,7 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
                       <div className="flex items-center justify-between text-xs">
                         {/* 価格 */}
                         {result.minPrice && (
-                          <span className="font-medium text-pink-400">¥{result.minPrice.toLocaleString()}〜</span>
+                          <span className="font-medium text-fuchsia-400">¥{result.minPrice.toLocaleString()}〜</span>
                         )}
 
                         {/* 発売日 */}

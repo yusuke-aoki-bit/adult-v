@@ -259,7 +259,7 @@ export function UserMenu({ locale }: UserMenuProps) {
         <button
           onClick={handleLogin}
           disabled={isLoggingIn}
-          className="flex items-center gap-2 rounded-lg bg-rose-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-rose-700 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-lg bg-fuchsia-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-fuchsia-700 disabled:opacity-50"
         >
           {isLoggingIn ? (
             <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -296,7 +296,7 @@ export function UserMenu({ locale }: UserMenuProps) {
             className="h-8 w-8 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-rose-600 text-white">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-600 text-white">
             <UserIcon />
           </div>
         )}

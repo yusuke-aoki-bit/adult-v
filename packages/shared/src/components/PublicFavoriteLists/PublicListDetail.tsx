@@ -174,7 +174,7 @@ export function PublicListDetail({
     return (
       <div className="py-12 text-center">
         <p className="mb-4 text-gray-500 dark:text-gray-400">{error || t.notFound}</p>
-        <button onClick={onBack} className="rounded-lg bg-rose-600 px-4 py-2 text-white hover:bg-rose-700">
+        <button onClick={onBack} className="rounded-lg bg-fuchsia-600 px-4 py-2 text-white hover:bg-fuchsia-700">
           {t.back}
         </button>
       </div>
@@ -214,7 +214,7 @@ export function PublicListDetail({
               {t.views.replace('{count}', String(list['viewCount']))}
             </span>
             <span className="flex items-center gap-1">
-              <Heart className={`h-4 w-4 ${list.userLiked ? 'fill-rose-500 text-rose-500' : ''}`} />
+              <Heart className={`h-4 w-4 ${list.userLiked ? 'fill-fuchsia-500 text-fuchsia-500' : ''}`} />
               {t.likes.replace('{count}', String(list['likeCount']))}
             </span>
           </div>
@@ -241,7 +241,7 @@ export function PublicListDetail({
               disabled={isLiking}
               className={`flex items-center gap-2 rounded-lg px-4 py-2 transition-colors ${
                 list.userLiked
-                  ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400'
+                  ? 'bg-rose-100 text-rose-600 dark:bg-fuchsia-900/30 dark:text-fuchsia-400'
                   : 'border border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-700'
               }`}
             >

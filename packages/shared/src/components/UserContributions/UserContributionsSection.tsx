@@ -120,8 +120,8 @@ export function UserContributionsSection({
         className="flex w-full items-center justify-between p-4 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
       >
         <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-rose-100 p-2 dark:bg-rose-900/30">
-            <Users className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+          <div className="rounded-lg bg-rose-100 p-2 dark:bg-fuchsia-900/30">
+            <Users className="h-5 w-5 text-rose-600 dark:text-fuchsia-400" />
           </div>
           <h3 className="font-semibold text-gray-900 dark:text-white">{t.sectionTitle}</h3>
         </div>

@@ -292,7 +292,7 @@ export function PerformerCompare({
                   </span>
                 )}
                 {isMostTrending && (
-                  <span className="rounded-full bg-gradient-to-r from-pink-500 to-rose-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
+                  <span className="rounded-full bg-gradient-to-r from-fuchsia-500 to-fuchsia-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
                     {ct.mostTrending}
                   </span>
                 )}
@@ -378,7 +378,7 @@ export function PerformerCompare({
                     <div className={`mb-1 text-xs ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>{ct.trending}</div>
                     <div
                       className={`text-xl font-bold ${
-                        isMostTrending ? 'text-pink-500' : isDark ? 'text-white' : 'text-gray-900'
+                        isMostTrending ? 'text-fuchsia-500' : isDark ? 'text-white' : 'text-gray-900'
                       }`}
                     >
                       {performer.metrics?.trendingScore || 0}
@@ -642,7 +642,7 @@ export function PerformerCompare({
                   <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.releases}</p>
                   <div className="space-y-1.5">
                     {performers.map((performer, idx) => {
-                      const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500', 'bg-emerald-500'];
+                      const colors = ['bg-purple-500', 'bg-fuchsia-500', 'bg-blue-500', 'bg-emerald-500'];
                       const percent =
                         maxReleaseCount > 0 ? ((performer.metrics?.releaseCount || 0) / maxReleaseCount) * 100 : 0;
                       return (
@@ -672,7 +672,7 @@ export function PerformerCompare({
                   <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.trending}</p>
                   <div className="space-y-1.5">
                     {performers.map((performer, idx) => {
-                      const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500', 'bg-emerald-500'];
+                      const colors = ['bg-purple-500', 'bg-fuchsia-500', 'bg-blue-500', 'bg-emerald-500'];
                       const percent =
                         maxTrendingScore > 0 ? ((performer.metrics?.trendingScore || 0) / maxTrendingScore) * 100 : 0;
                       return (
@@ -702,7 +702,7 @@ export function PerformerCompare({
                   <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.fanScore}</p>
                   <div className="space-y-1.5">
                     {performers.map((performer, idx) => {
-                      const colors = ['bg-purple-500', 'bg-pink-500', 'bg-blue-500', 'bg-emerald-500'];
+                      const colors = ['bg-purple-500', 'bg-fuchsia-500', 'bg-blue-500', 'bg-emerald-500'];
                       const percent = maxFanScore > 0 ? ((performer.metrics?.fanScore || 0) / maxFanScore) * 100 : 0;
                       return (
                         <div key={performer['id']} className="flex items-center gap-2">

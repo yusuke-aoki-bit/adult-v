@@ -116,7 +116,7 @@ function SectionList({ pageId, locale, theme }: { pageId: PageId; locale: string
               type="button"
               onClick={() => toggleVisibility(section.id)}
               className={`relative h-5 w-10 rounded-full transition-colors ${
-                section.visible ? (isDark ? 'bg-blue-600' : 'bg-pink-600') : isDark ? 'bg-gray-600' : 'bg-gray-300'
+                section.visible ? (isDark ? 'bg-blue-600' : 'bg-fuchsia-600') : isDark ? 'bg-gray-600' : 'bg-gray-300'
               }`}
             >
               <span
@@ -159,7 +159,7 @@ export function SectionSettings({ locale, theme: themeProp }: SectionSettingsPro
                 activeTab === tab.id
                   ? isDark
                     ? 'border-blue-500 text-blue-400'
-                    : 'border-pink-500 text-pink-600'
+                    : 'border-fuchsia-500 text-fuchsia-600'
                   : isDark
                     ? 'border-transparent text-gray-400 hover:text-gray-300'
                     : 'border-transparent text-gray-500 hover:text-gray-700'

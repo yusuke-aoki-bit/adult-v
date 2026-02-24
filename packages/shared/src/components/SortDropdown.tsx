@@ -12,7 +12,7 @@ const themeConfig = {
   dark: {
     label: 'text-sm font-medium text-gray-300',
     select:
-      'px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500',
+      'px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-fuchsia-500 focus:border-fuchsia-500',
   },
   light: {
     label: 'text-sm font-medium text-gray-600',

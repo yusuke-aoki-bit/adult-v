@@ -38,7 +38,7 @@ export function AiSearchBar({
       ? {
           container: 'bg-gray-800/80 border-gray-700',
           input: 'bg-transparent text-white placeholder-gray-400',
-          badge: 'bg-linear-to-r from-purple-600 to-pink-600 text-white',
+          badge: 'bg-linear-to-r from-purple-600 to-fuchsia-600 text-white',
           examples: 'bg-gray-700/50 text-gray-300 hover:bg-gray-600/50',
           spinner: 'border-white',
         }
@@ -184,7 +184,7 @@ export function AiSearchBar({
               disabled={query.trim().length < 3}
               className={`rounded-lg p-2 transition-colors ${
                 query.trim().length >= 3
-                  ? 'bg-linear-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+                  ? 'bg-linear-to-r from-purple-600 to-fuchsia-600 text-white hover:from-purple-700 hover:to-fuchsia-700'
                   : theme === 'dark'
                     ? 'bg-gray-700 text-gray-500'
                     : 'bg-gray-200 text-gray-400'

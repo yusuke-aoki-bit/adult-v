@@ -43,7 +43,7 @@ const themeConfigs: Record<FilterSortBarTheme, ThemeConfig> = {
     container: 'bg-white rounded-2xl shadow-lg p-6 mb-6',
     header: 'text-sm font-semibold text-gray-700',
     label: 'block text-xs font-medium text-gray-500 mb-2',
-    clearButton: 'text-sm text-rose-600 hover:text-rose-800 font-medium flex items-center gap-1',
+    clearButton: 'text-sm text-fuchsia-600 hover:text-fuchsia-800 font-medium flex items-center gap-1',
     select:
       'w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent',
     providerUnselected: 'bg-gray-100 text-gray-700 hover:bg-gray-200',

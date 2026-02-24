@@ -111,7 +111,7 @@ export default function MarkAsViewedButton({
           <div className="w-full max-w-md rounded-xl bg-gray-800 p-6 shadow-xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-bold text-white">
-                <Eye className="h-5 w-5 text-rose-500" />
+                <Eye className="h-5 w-5 text-fuchsia-500" />
                 {t.addToDiary}
               </h3>
               <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-white">
@@ -151,7 +151,7 @@ export default function MarkAsViewedButton({
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
                 placeholder={t.notePlaceholder}
-                className="w-full resize-none rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:border-rose-500 focus:outline-none"
+                className="w-full resize-none rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:border-fuchsia-500 focus:outline-none"
                 rows={3}
               />
             </div>
@@ -166,7 +166,7 @@ export default function MarkAsViewedButton({
               </button>
               <button
                 onClick={handleSave}
-                className="rounded-lg bg-rose-600 px-4 py-2 text-white transition-colors hover:bg-rose-700"
+                className="rounded-lg bg-fuchsia-600 px-4 py-2 text-white transition-colors hover:bg-fuchsia-700"
               >
                 {t.save}
               </button>

@@ -82,7 +82,7 @@ export function CompareFloatingBar({
       {showHint && (
         <div
           className={`animate-fade-in rounded-lg px-4 py-2 text-sm ${
-            isDark ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'
+            isDark ? 'bg-blue-600 text-white' : 'bg-fuchsia-600 text-white'
           }`}
         >
           <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export function CompareFloatingBar({
           isDark ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
         } animate-slide-up rounded-xl border px-4 py-3 shadow-2xl transition-all duration-300 ${
           isFirstShow ? 'animate-pulse ring-2 ring-offset-2' : ''
-        } ${isFirstShow ? (isDark ? 'ring-blue-500 ring-offset-gray-900' : 'ring-pink-500 ring-offset-white') : ''}`}
+        } ${isFirstShow ? (isDark ? 'ring-blue-500 ring-offset-gray-900' : 'ring-fuchsia-500 ring-offset-white') : ''}`}
       >
         <div className="flex items-center gap-4">
           {/* サムネイル一覧 */}
@@ -170,7 +170,7 @@ export function CompareFloatingBar({
             <Link
               href={`/${locale}${comparePagePath}?ids=${items.map((i) => i.id).join(',')}`}
               className={`flex items-center gap-2 rounded-lg px-4 py-1.5 text-sm font-medium transition-colors ${
-                isDark ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-pink-600 text-white hover:bg-pink-700'
+                isDark ? 'bg-blue-600 text-white hover:bg-blue-700' : 'bg-fuchsia-600 text-white hover:bg-fuchsia-700'
               } ${isFirstShow ? 'animate-pulse' : ''}`}
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

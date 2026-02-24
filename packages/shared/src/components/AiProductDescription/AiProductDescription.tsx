@@ -94,7 +94,7 @@ export function AiProductDescription({
         className={`flex w-full items-center justify-between px-4 py-3 ${theme === 'dark' ? 'hover:bg-gray-700/50' : 'hover:bg-gray-100'} transition-colors`}
       >
         <div className="flex items-center gap-2">
-          <svg className="h-5 w-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -137,7 +137,7 @@ export function AiProductDescription({
               <ul className="space-y-1">
                 {description.highlights.map((highlight, i) => (
                   <li key={i} className={`flex items-start gap-2 text-sm ${textClass}`}>
-                    <span className="mt-0.5 text-rose-400">✓</span>
+                    <span className="mt-0.5 text-fuchsia-400">✓</span>
                     {highlight}
                   </li>
                 ))}

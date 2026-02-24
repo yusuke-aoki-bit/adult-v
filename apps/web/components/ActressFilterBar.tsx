@@ -91,7 +91,7 @@ export default function ActressFilterBar() {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-          activeFilterCount > 0 || isOpen ? 'bg-pink-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+          activeFilterCount > 0 || isOpen ? 'bg-fuchsia-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
         }`}
       >
         <Filter className="h-4 w-4" />
@@ -113,7 +113,7 @@ export default function ActressFilterBar() {
                 {debutYear && (
                   <button
                     onClick={() => updateFilter('debutYear', null)}
-                    className="flex items-center gap-1 text-xs text-pink-400 hover:text-pink-300"
+                    className="flex items-center gap-1 text-xs text-fuchsia-400 hover:text-fuchsia-300"
                   >
                     <X className="h-3 w-3" />
                     {t.clear}
@@ -127,7 +127,7 @@ export default function ActressFilterBar() {
                     onClick={() => updateFilter('debutYear', debutYear === option.value ? null : option.value)}
                     className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                       debutYear === option.value
-                        ? 'bg-pink-600 text-white'
+                        ? 'bg-fuchsia-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
@@ -144,7 +144,7 @@ export default function ActressFilterBar() {
                 {minWorks && (
                   <button
                     onClick={() => updateFilter('minWorks', null)}
-                    className="flex items-center gap-1 text-xs text-pink-400 hover:text-pink-300"
+                    className="flex items-center gap-1 text-xs text-fuchsia-400 hover:text-fuchsia-300"
                   >
                     <X className="h-3 w-3" />
                     {t.clear}
@@ -158,7 +158,7 @@ export default function ActressFilterBar() {
                     onClick={() => updateFilter('minWorks', minWorks === option.value ? null : option.value)}
                     className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
                       minWorks === option.value
-                        ? 'bg-pink-600 text-white'
+                        ? 'bg-fuchsia-600 text-white'
                         : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >

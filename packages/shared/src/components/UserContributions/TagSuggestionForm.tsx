@@ -110,12 +110,12 @@ export function TagSuggestionForm({
           onChange={(e) => setTagName(e.target.value)}
           placeholder={t.placeholder}
           maxLength={50}
-          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-rose-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+          className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-transparent focus:ring-2 focus:ring-fuchsia-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
         <button
           type="submit"
           disabled={isSubmitting || tagName.trim().length < 2}
-          className="flex items-center gap-1 rounded-lg bg-rose-600 px-4 py-2 text-sm text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+          className="flex items-center gap-1 rounded-lg bg-fuchsia-600 px-4 py-2 text-sm text-white transition-colors hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:bg-gray-400"
         >
           {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
           {isSubmitting ? t.submitting : t.submit}

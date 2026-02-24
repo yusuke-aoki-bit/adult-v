@@ -159,7 +159,7 @@ export function HomeSectionManager({
                         section.visible
                           ? isDark
                             ? 'bg-blue-600'
-                            : 'bg-pink-600'
+                            : 'bg-fuchsia-600'
                           : isDark
                             ? 'bg-gray-600'
                             : 'bg-gray-300'

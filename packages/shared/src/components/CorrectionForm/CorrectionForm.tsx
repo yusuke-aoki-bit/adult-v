@@ -133,7 +133,7 @@ export function CorrectionForm({
           <select
             value={selectedField}
             onChange={(e) => setSelectedField(e.target.value)}
-            className="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:ring-2 focus:ring-rose-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
           >
             {fields.map((field) => (
               <option key={field.name} value={field.name}>
@@ -156,14 +156,14 @@ export function CorrectionForm({
         {/* Suggested Value */}
         <div>
           <label className="mb-1 block text-sm font-medium text-gray-300">
-            {t.suggestedValue} <span className="text-rose-500">*</span>
+            {t.suggestedValue} <span className="text-fuchsia-500">*</span>
           </label>
           <input
             type="text"
             value={suggestedValue}
             onChange={(e) => setSuggestedValue(e.target.value)}
             placeholder={t.suggestedValuePlaceholder}
-            className="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+            className="w-full rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
             required
           />
         </div>
@@ -176,7 +176,7 @@ export function CorrectionForm({
             onChange={(e) => setReason(e.target.value)}
             placeholder={t.reasonPlaceholder}
             rows={3}
-            className="w-full resize-none rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-rose-500 focus:outline-none"
+            className="w-full resize-none rounded-lg border border-gray-600 bg-gray-700 px-3 py-2 text-white placeholder-gray-500 focus:ring-2 focus:ring-fuchsia-500 focus:outline-none"
           />
         </div>
       </div>
@@ -195,7 +195,7 @@ export function CorrectionForm({
         <button
           type="submit"
           disabled={isSubmitting || !userId}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-gray-600"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-fuchsia-600 px-4 py-2 font-medium text-white transition-colors hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:bg-gray-600"
         >
           {isSubmitting ? (
             <>

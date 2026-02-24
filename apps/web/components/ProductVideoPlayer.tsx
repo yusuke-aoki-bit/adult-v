@@ -122,12 +122,12 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
                 href={selectedVideo.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-6 py-3 text-white transition-colors hover:bg-rose-500"
+                className="flex items-center justify-center gap-2 rounded-lg bg-fuchsia-600 px-6 py-3 text-white transition-colors hover:bg-fuchsia-500"
               >
                 <ExternalLink className="h-5 w-5" />
                 {t('playInNewTab')}
                 {getSourceLabel(selectedVideo.url) && (
-                  <span className="text-sm text-rose-200">({getSourceLabel(selectedVideo.url)})</span>
+                  <span className="text-sm text-fuchsia-200">({getSourceLabel(selectedVideo.url)})</span>
                 )}
               </a>
               <button
@@ -158,7 +158,7 @@ export default function ProductVideoPlayer({ sampleVideos }: ProductVideoPlayerP
               }}
               className={`relative aspect-video overflow-hidden rounded-lg border-2 p-4 transition-all ${
                 selectedVideo === video
-                  ? 'border-rose-600 bg-rose-950/30 ring-2 ring-rose-600/50'
+                  ? 'border-fuchsia-600 bg-fuchsia-950/30 ring-2 ring-fuchsia-600/50'
                   : 'hover:bg-gray-750 border-gray-700 bg-gray-800 hover:border-gray-500'
               }`}
             >

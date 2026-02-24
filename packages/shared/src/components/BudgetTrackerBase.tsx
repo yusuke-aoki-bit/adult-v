@@ -81,7 +81,7 @@ const themeClasses = {
     progressWarn: 'from-yellow-500 to-yellow-400',
     progressOk: 'from-green-500 to-green-400',
     border: 'border-gray-200',
-    purchaseLink: 'text-gray-700 hover:text-rose-600',
+    purchaseLink: 'text-gray-700 hover:text-fuchsia-600',
     purchasePrice: 'text-gray-900',
     deleteHover: 'text-gray-400 hover:text-red-500',
     clearBtn: 'text-gray-400 hover:text-red-500',

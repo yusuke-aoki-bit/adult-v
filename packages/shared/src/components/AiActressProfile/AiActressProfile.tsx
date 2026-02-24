@@ -65,7 +65,7 @@ export function AiActressProfile({ actressId, locale = 'ja', theme: themeProp, a
   const textClass = theme === 'dark' ? 'text-gray-200' : 'text-gray-700';
   const mutedClass = theme === 'dark' ? 'text-gray-400' : 'text-gray-500';
   const chipClass = theme === 'dark' ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600';
-  const genreChipClass = theme === 'dark' ? 'bg-rose-900/50 text-rose-200' : 'bg-rose-100 text-rose-700';
+  const genreChipClass = theme === 'dark' ? 'bg-fuchsia-900/50 text-fuchsia-200' : 'bg-rose-100 text-rose-700';
 
   // Loading state
   if (isLoading) {
@@ -86,7 +86,7 @@ export function AiActressProfile({ actressId, locale = 'ja', theme: themeProp, a
     <div className={`rounded-lg border ${baseClass} space-y-4 p-4`}>
       {/* Header */}
       <div className="flex items-center gap-2">
-        <svg className="h-5 w-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="h-5 w-5 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             strokeLinecap="round"
             strokeLinejoin="round"

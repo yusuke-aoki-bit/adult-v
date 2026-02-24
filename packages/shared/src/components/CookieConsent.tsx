@@ -142,7 +142,7 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
           <div className="container mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-center text-sm text-gray-300 sm:text-left">
               {t.message}{' '}
-              <a href={`/${locale}/privacy`} className="text-rose-400 underline hover:text-rose-300">
+              <a href={`/${locale}/privacy`} className="text-fuchsia-400 underline hover:text-fuchsia-300">
                 {t.learnMore}
               </a>
             </p>
@@ -155,7 +155,7 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
               </button>
               <button
                 onClick={handleAccept}
-                className="rounded bg-rose-600 px-4 py-2 text-sm text-white transition-colors hover:bg-rose-500"
+                className="rounded bg-fuchsia-600 px-4 py-2 text-sm text-white transition-colors hover:bg-fuchsia-500"
               >
                 {t.accept}
               </button>

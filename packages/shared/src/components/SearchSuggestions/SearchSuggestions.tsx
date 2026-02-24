@@ -99,7 +99,7 @@ export function SearchSuggestions({
 
   const genreChipClass =
     theme === 'dark'
-      ? 'bg-rose-900/50 hover:bg-rose-800/50 text-rose-200'
+      ? 'bg-fuchsia-900/50 hover:bg-fuchsia-800/50 text-fuchsia-200'
       : 'bg-rose-100 hover:bg-rose-200 text-rose-700';
 
   const performerChipClass =

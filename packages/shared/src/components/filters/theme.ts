@@ -24,14 +24,14 @@ export const darkFilterTheme: FilterThemeConfig = {
   sortDropdown: {
     labelClass: 'text-sm font-medium text-gray-300',
     selectClass:
-      'px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-rose-500 focus:border-rose-500',
+      'px-3 py-2 border border-gray-600 rounded-md text-sm text-white bg-gray-700 focus:ring-fuchsia-500 focus:border-fuchsia-500',
   },
   activeFilters: {
     containerClass:
-      'flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-gray-800/50 rounded-lg border-l-4 border-rose-500 transition-all',
+      'flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-gray-800/50 rounded-lg border-l-4 border-fuchsia-500 transition-all',
     labelClass: 'text-xs text-gray-300 font-medium',
     chipClass:
-      'inline-flex items-center gap-1 bg-rose-600/80 hover:bg-rose-700 text-white text-xs px-2 py-1 rounded-full transition-colors group',
+      'inline-flex items-center gap-1 bg-fuchsia-600/80 hover:bg-fuchsia-700 text-white text-xs px-2 py-1 rounded-full transition-colors group',
     clearAllClass: 'text-xs text-gray-400 hover:text-white underline transition-colors ml-1',
   },
 };

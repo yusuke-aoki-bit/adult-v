@@ -134,10 +134,10 @@ export function PublicListCard({
           onClick={handleLike}
           disabled={!currentUserId || isOwner || isLiking}
           className={`flex items-center gap-1 transition-colors ${
-            list.userLiked ? 'text-rose-500' : 'hover:text-rose-500 disabled:cursor-default'
+            list.userLiked ? 'text-fuchsia-500' : 'hover:text-fuchsia-500 disabled:cursor-default'
           }`}
         >
-          <Heart className={`h-4 w-4 ${list.userLiked ? 'fill-rose-500' : ''}`} />
+          <Heart className={`h-4 w-4 ${list.userLiked ? 'fill-fuchsia-500' : ''}`} />
           {list['likeCount']}
         </button>
       </div>

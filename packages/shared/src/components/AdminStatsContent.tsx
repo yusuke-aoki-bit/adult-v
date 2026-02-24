@@ -218,7 +218,7 @@ const getThemeClasses = (darkMode: boolean) => ({
   borderLight: darkMode ? 'border-gray-700/50' : 'border-gray-100',
   hoverBg: darkMode ? 'hover:bg-gray-700/30' : 'hover:bg-gray-50',
   progressBg: darkMode ? 'bg-gray-700' : 'bg-gray-200',
-  btnPrimary: darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-rose-700 hover:bg-rose-800',
+  btnPrimary: darkMode ? 'bg-blue-600 hover:bg-blue-700' : 'bg-fuchsia-700 hover:bg-fuchsia-800',
   btnSecondary: darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-100 hover:bg-gray-200 border border-gray-200',
   // Job status colors
   jobRunning: darkMode ? 'bg-blue-900/30 border-blue-700' : 'bg-blue-50 border-blue-300',
@@ -787,7 +787,9 @@ export default function AdminStatsContent({
             <div className={`text-sm ${theme.textMuted}`}>Total Videos</div>
           </div>
           <div className={`${theme.card} rounded-lg p-4`}>
-            <div className="text-2xl font-bold text-pink-400">{formatNumber(totalStats.products_with_performer)}</div>
+            <div className="text-2xl font-bold text-fuchsia-400">
+              {formatNumber(totalStats.products_with_performer)}
+            </div>
             <div className={`text-sm ${theme.textMuted}`}>With Performer</div>
           </div>
         </div>

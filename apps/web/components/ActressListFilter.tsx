@@ -305,7 +305,7 @@ export default function ActressListFilter({
           <span className="text-base sm:text-sm">{t.filterSettings}</span>
         </div>
         {hasActiveFilters && (
-          <span className="rounded-full bg-rose-600 px-2.5 py-1 text-xs font-medium text-white sm:px-2 sm:py-0.5">
+          <span className="rounded-full bg-fuchsia-600 px-2.5 py-1 text-xs font-medium text-white sm:px-2 sm:py-0.5">
             {activeFilterCount}
           </span>
         )}
@@ -317,7 +317,7 @@ export default function ActressListFilter({
             <FilterPresetManager currentFilters={currentFilters} onApplyPreset={handleApplyPreset} theme="dark" />
             {isPending && (
               <div className="flex items-center">
-                <div className="mr-2 h-5 w-5 animate-spin rounded-full border-b-2 border-rose-500" />
+                <div className="mr-2 h-5 w-5 animate-spin rounded-full border-b-2 border-fuchsia-500" />
                 <span className="text-sm text-gray-400">{t.loading}</span>
               </div>
             )}
@@ -335,7 +335,7 @@ export default function ActressListFilter({
                     onClick={() => handleInitialChange(chars[0]!)}
                     className={`rounded px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-2 sm:py-1 ${
                       chars.some((c) => initialFilter === c)
-                        ? 'bg-rose-600 text-white'
+                        ? 'bg-fuchsia-600 text-white'
                         : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
@@ -351,7 +351,7 @@ export default function ActressListFilter({
                           onClick={() => handleInitialChange(char)}
                           className={`rounded px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors ${
                             initialFilter === char
-                              ? 'bg-rose-600 text-white'
+                              ? 'bg-fuchsia-600 text-white'
                               : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                           }`}
                         >
@@ -369,7 +369,7 @@ export default function ActressListFilter({
                   type="button"
                   onClick={() => handleInitialChange(char)}
                   className={`rounded px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-2 sm:py-1 ${
-                    initialFilter === char ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                    initialFilter === char ? 'bg-fuchsia-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                   }`}
                 >
                   {char}
@@ -380,7 +380,7 @@ export default function ActressListFilter({
                 type="button"
                 onClick={() => handleInitialChange('etc')}
                 className={`rounded px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-2 sm:py-1 ${
-                  initialFilter === 'etc' ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                  initialFilter === 'etc' ? 'bg-fuchsia-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                 }`}
               >
                 {t.other}
@@ -405,7 +405,7 @@ export default function ActressListFilter({
               <label
                 className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors sm:min-h-0 sm:rounded sm:p-2 ${
                   hasVideo
-                    ? 'border-rose-500/50 bg-rose-600/30 hover:bg-rose-600/40'
+                    ? 'border-fuchsia-500/50 bg-fuchsia-600/30 hover:bg-fuchsia-600/40'
                     : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
                 }`}
               >
@@ -413,10 +413,10 @@ export default function ActressListFilter({
                   type="checkbox"
                   checked={hasVideo}
                   onChange={handleVideoChange}
-                  className="h-5 w-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                  className="h-5 w-5 rounded border-gray-500 text-fuchsia-600 focus:ring-fuchsia-500"
                 />
                 <svg
-                  className="h-6 w-6 shrink-0 text-rose-500 sm:h-5 sm:w-5"
+                  className="h-6 w-6 shrink-0 text-fuchsia-500 sm:h-5 sm:w-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -447,7 +447,7 @@ export default function ActressListFilter({
                   type="checkbox"
                   checked={hasImage}
                   onChange={handleImageChange}
-                  className="h-5 w-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                  className="h-5 w-5 rounded border-gray-500 text-fuchsia-600 focus:ring-fuchsia-500"
                 />
                 <svg
                   className="h-6 w-6 shrink-0 text-blue-500 sm:h-5 sm:w-5"
@@ -559,7 +559,9 @@ export default function ActressListFilter({
                     type="button"
                     onClick={() => handleCupSizeChange(cup)}
                     className={`rounded px-3 py-1.5 text-sm font-medium transition-colors sm:px-2.5 sm:py-1 ${
-                      cupSizes.includes(cup) ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                      cupSizes.includes(cup)
+                        ? 'bg-fuchsia-600 text-white'
+                        : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
                     {cup}
@@ -600,7 +602,7 @@ export default function ActressListFilter({
                       type="button"
                       onClick={() => handleHeightRangeChange(range.min, range.max)}
                       className={`rounded px-3 py-1.5 text-sm font-medium transition-colors sm:px-2.5 sm:py-1 ${
-                        isSelected ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                        isSelected ? 'bg-fuchsia-600 text-white' : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                       }`}
                     >
                       {range.label}
@@ -630,7 +632,7 @@ export default function ActressListFilter({
                     onClick={() => handleBloodTypeChange(type)}
                     className={`rounded px-3 py-1.5 text-sm font-medium transition-colors sm:px-2.5 sm:py-1 ${
                       bloodTypes.includes(type)
-                        ? 'bg-rose-600 text-white'
+                        ? 'bg-fuchsia-600 text-white'
                         : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
@@ -658,7 +660,7 @@ export default function ActressListFilter({
                     onClick={() => updateFilter('debutYear', debutYear === option.value ? null : option.value)}
                     className={`rounded px-3 py-1.5 text-sm font-medium transition-colors sm:px-2.5 sm:py-1 ${
                       debutYear === option.value
-                        ? 'bg-rose-600 text-white'
+                        ? 'bg-fuchsia-600 text-white'
                         : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
@@ -693,7 +695,7 @@ export default function ActressListFilter({
                     onClick={() => updateFilter('minWorks', minWorks === option.value ? null : option.value)}
                     className={`rounded px-3 py-1.5 text-sm font-medium transition-colors sm:px-2.5 sm:py-1 ${
                       minWorks === option.value
-                        ? 'bg-rose-600 text-white'
+                        ? 'bg-fuchsia-600 text-white'
                         : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
                     }`}
                   >
@@ -727,7 +729,7 @@ export default function ActressListFilter({
                         key={`include-genre-${tag.id}`}
                         className={`flex min-h-[48px] cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors sm:min-h-0 sm:rounded sm:p-1.5 ${
                           includeTags.includes(String(tag.id))
-                            ? 'bg-rose-600/30 hover:bg-rose-600/40'
+                            ? 'bg-fuchsia-600/30 hover:bg-fuchsia-600/40'
                             : 'hover:bg-gray-700 active:bg-gray-600'
                         }`}
                       >
@@ -735,7 +737,7 @@ export default function ActressListFilter({
                           type="checkbox"
                           checked={includeTags.includes(String(tag.id))}
                           onChange={() => handleIncludeTagChange(String(tag.id))}
-                          className="h-5 w-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                          className="h-5 w-5 rounded border-gray-500 text-fuchsia-600 focus:ring-fuchsia-500"
                         />
                         <span className="text-base text-gray-200 sm:text-sm">{tag.name}</span>
                       </label>
@@ -788,14 +790,16 @@ export default function ActressListFilter({
                         <label
                           key={`include-asp-${asp.id}`}
                           className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg p-3 transition-colors sm:min-h-0 sm:rounded sm:p-1.5 ${
-                            isSelected ? 'bg-rose-600/30 ring-2 ring-rose-500' : 'hover:bg-gray-700 active:bg-gray-600'
+                            isSelected
+                              ? 'bg-fuchsia-600/30 ring-2 ring-fuchsia-500'
+                              : 'hover:bg-gray-700 active:bg-gray-600'
                           }`}
                         >
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => handleIncludeAspChange(asp.id)}
-                            className="h-5 w-5 rounded border-gray-500 text-rose-600 focus:ring-rose-500"
+                            className="h-5 w-5 rounded border-gray-500 text-fuchsia-600 focus:ring-fuchsia-500"
                           />
                           <span
                             className="rounded px-3 py-1 text-base font-medium text-white sm:px-2 sm:py-0.5 sm:text-sm"

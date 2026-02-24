@@ -65,7 +65,7 @@ export function BulkActionBar({
       <div className="flex items-center gap-2">
         <span
           className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-            isDark ? 'bg-blue-600 text-white' : 'bg-pink-600 text-white'
+            isDark ? 'bg-blue-600 text-white' : 'bg-fuchsia-600 text-white'
           }`}
         >
           {selectedCount}
@@ -86,7 +86,7 @@ export function BulkActionBar({
             type="button"
             onClick={onSelectAll}
             className={`rounded-lg px-3 py-1.5 text-sm transition-colors ${
-              isDark ? 'text-blue-400 hover:bg-gray-700' : 'text-pink-600 hover:bg-gray-100'
+              isDark ? 'text-blue-400 hover:bg-gray-700' : 'text-fuchsia-600 hover:bg-gray-100'
             }`}
           >
             {t.selectAll}
@@ -125,7 +125,7 @@ export function BulkActionBar({
                     : 'bg-red-500 text-white hover:bg-red-600'
                   : isDark
                     ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-pink-600 text-white hover:bg-pink-700'
+                    : 'bg-fuchsia-600 text-white hover:bg-fuchsia-700'
               }`}
             >
               {isLoading ? (

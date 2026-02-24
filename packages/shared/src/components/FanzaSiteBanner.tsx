@@ -27,7 +27,7 @@ export function FanzaSiteBanner({ locale = 'ja', variant = 'footer', className =
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`inline-flex items-center gap-2 rounded-full bg-linear-to-r from-pink-500 to-rose-500 px-3 py-1.5 text-sm font-medium text-white shadow transition-all hover:from-pink-600 hover:to-rose-600 hover:shadow-md ${className}`}
+        className={`inline-flex items-center gap-2 rounded-full bg-linear-to-r from-fuchsia-500 to-fuchsia-500 px-3 py-1.5 text-sm font-medium text-white shadow transition-all hover:from-fuchsia-600 hover:to-fuchsia-600 hover:shadow-md ${className}`}
       >
         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
@@ -48,20 +48,20 @@ export function FanzaSiteBanner({ locale = 'ja', variant = 'footer', className =
         href={url}
         target="_blank"
         rel="noopener noreferrer"
-        className={`group block rounded-xl border border-pink-500/30 bg-linear-to-br from-pink-500/10 to-rose-500/10 p-4 transition-all hover:from-pink-500/20 hover:to-rose-500/20 ${className}`}
+        className={`group block rounded-xl border border-fuchsia-500/30 bg-linear-to-br from-fuchsia-500/10 to-fuchsia-500/10 p-4 transition-all hover:from-fuchsia-500/20 hover:to-fuchsia-500/20 ${className}`}
       >
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-pink-500 to-rose-500">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-fuchsia-500 to-fuchsia-500">
             <span className="text-lg font-bold text-white">F</span>
           </div>
           <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-pink-600 transition-colors group-hover:text-pink-700 dark:text-pink-400 dark:group-hover:text-pink-300">
+            <h4 className="font-bold text-pink-600 transition-colors group-hover:text-pink-700 dark:text-fuchsia-400 dark:group-hover:text-fuchsia-300">
               {t.title}
             </h4>
             <p className="truncate text-xs text-gray-600 dark:text-gray-400">{t.description}</p>
           </div>
           <svg
-            className="h-5 w-5 text-pink-500 transition-transform group-hover:translate-x-1"
+            className="h-5 w-5 text-fuchsia-500 transition-transform group-hover:translate-x-1"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -79,7 +79,7 @@ export function FanzaSiteBanner({ locale = 'ja', variant = 'footer', className =
       href={url}
       target="_blank"
       rel="noopener noreferrer"
-      className={`group block rounded-xl bg-linear-to-r from-pink-600 to-rose-600 p-4 shadow-lg transition-all hover:from-pink-700 hover:to-rose-700 hover:shadow-xl ${className}`}
+      className={`group block rounded-xl bg-linear-to-r from-fuchsia-600 to-fuchsia-600 p-4 shadow-lg transition-all hover:from-fuchsia-700 hover:to-fuchsia-700 hover:shadow-xl ${className}`}
     >
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-3">

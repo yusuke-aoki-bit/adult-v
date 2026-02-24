@@ -317,7 +317,7 @@ export function ProductCompare({
                   </span>
                 )}
                 {hasSale && !isLowestPrice && (
-                  <span className="rounded-full bg-gradient-to-r from-red-500 to-pink-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
+                  <span className="rounded-full bg-gradient-to-r from-red-500 to-fuchsia-500 px-2.5 py-1 text-xs font-bold text-white shadow-lg">
                     {ct.onSale}
                   </span>
                 )}
@@ -754,7 +754,7 @@ export function ProductCompare({
                     {(() => {
                       const maxPrice = Math.max(...products.map((p) => getBestPrice(p) || 0));
                       return products.map((product, idx) => {
-                        const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
+                        const colors = ['bg-blue-500', 'bg-fuchsia-500', 'bg-purple-500', 'bg-emerald-500'];
                         const price = getBestPrice(product) || maxPrice;
                         const percent = maxPrice > 0 ? ((maxPrice - price) / maxPrice) * 100 : 0;
                         return (
@@ -785,7 +785,7 @@ export function ProductCompare({
                   <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.duration}</p>
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
-                      const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
+                      const colors = ['bg-blue-500', 'bg-fuchsia-500', 'bg-purple-500', 'bg-emerald-500'];
                       const percent = maxDuration > 0 ? ((product['duration'] || 0) / maxDuration) * 100 : 0;
                       return (
                         <div key={product['id']} className="flex items-center gap-2">
@@ -814,7 +814,7 @@ export function ProductCompare({
                   <p className={`mb-1.5 text-xs ${isDark ? 'text-gray-400' : 'text-gray-500'}`}>{ct.rating}</p>
                   <div className="space-y-1.5">
                     {products.map((product, idx) => {
-                      const colors = ['bg-blue-500', 'bg-pink-500', 'bg-purple-500', 'bg-emerald-500'];
+                      const colors = ['bg-blue-500', 'bg-fuchsia-500', 'bg-purple-500', 'bg-emerald-500'];
                       const percent = ((product['rating'].average || 0) / 5) * 100;
                       return (
                         <div key={product['id']} className="flex items-center gap-2">

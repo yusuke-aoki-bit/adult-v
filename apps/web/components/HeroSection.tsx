@@ -193,7 +193,7 @@ export default function HeroSection({
           <div className="text-center">
             <h1 className="mb-4 text-3xl font-bold text-white sm:text-4xl md:text-5xl">
               {ht.database}
-              <span className="text-pink-400">{ht.databaseHighlight}</span>
+              <span className="text-fuchsia-400">{ht.databaseHighlight}</span>
             </h1>
             <p className="mb-8 text-lg text-gray-300">
               {ht.statsDesc(totalActressCount.toLocaleString(), totalProductCount.toLocaleString())}
@@ -201,7 +201,7 @@ export default function HeroSection({
             <div className="flex justify-center gap-4">
               <Link
                 href={localizedHref('/products', locale)}
-                className="transform rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3 font-bold text-white transition-all hover:scale-105 hover:from-pink-400 hover:to-rose-400"
+                className="transform rounded-lg bg-fuchsia-500 px-6 py-3 font-bold text-white transition-all hover:scale-105 hover:bg-fuchsia-400"
               >
                 {ht.searchProducts}
               </Link>
@@ -227,7 +227,7 @@ export default function HeroSection({
       <div className="relative container mx-auto px-4 py-6 sm:py-10">
         <h1 className="mb-4 text-lg font-bold text-white/90 sm:text-xl">
           {ht.database}
-          <span className="text-pink-400">{ht.databaseHighlight}</span>
+          <span className="text-fuchsia-400">{ht.databaseHighlight}</span>
         </h1>
         <div className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2">
           {/* 左側: 商品情報 */}
@@ -263,7 +263,7 @@ export default function HeroSection({
                   <Link
                     key={performer.id}
                     href={localizedHref(`/actress/${performer.id}`, locale)}
-                    className="font-medium text-pink-400 transition-colors hover:text-pink-300"
+                    className="font-medium text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                   >
                     {performer.name}
                     {i < Math.min(currentProduct.performers.length, 3) - 1 && ', '}
@@ -297,7 +297,7 @@ export default function HeroSection({
             <div className="flex flex-wrap gap-3">
               <Link
                 href={localizedHref(`/products/${currentProduct?.productId}`, locale)}
-                className="flex-1 transform rounded-lg bg-gradient-to-r from-pink-500 to-rose-500 px-6 py-3 text-center font-bold text-white shadow-lg shadow-pink-500/30 transition-all hover:scale-105 hover:from-pink-400 hover:to-rose-400 sm:flex-none"
+                className="flex-1 transform rounded-lg bg-fuchsia-500 px-6 py-3 text-center font-bold text-white shadow-lg shadow-fuchsia-500/30 transition-all hover:scale-105 hover:bg-fuchsia-400 sm:flex-none"
               >
                 {ht.viewDetails}
               </Link>
@@ -368,7 +368,7 @@ export default function HeroSection({
                       key={index}
                       onClick={() => goToSlide(index)}
                       className={`h-3 rounded-full p-1 transition-all ${
-                        index === currentSlide ? 'w-8 bg-pink-500' : 'w-3 bg-gray-600 hover:bg-gray-500'
+                        index === currentSlide ? 'w-8 bg-fuchsia-500' : 'w-3 bg-gray-600 hover:bg-gray-500'
                       }`}
                       aria-label={ht.slide(index + 1)}
                     />
@@ -390,7 +390,7 @@ export default function HeroSection({
               <h3 className="text-lg font-bold text-white">{ht.trendingActresses}</h3>
               <Link
                 href={`${localizedHref('/', locale)}?sort=productCountDesc`}
-                className="ml-auto text-sm text-pink-400 hover:text-pink-300"
+                className="ml-auto text-sm text-fuchsia-400 hover:text-fuchsia-300"
               >
                 {ht.seeMore}
               </Link>
@@ -402,7 +402,7 @@ export default function HeroSection({
                   href={localizedHref(`/actress/${actress.id}`, locale)}
                   className="group flex-shrink-0"
                 >
-                  <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-pink-500 sm:h-24 sm:w-24">
+                  <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-fuchsia-500 sm:h-24 sm:w-24">
                     {actress.thumbnailUrl ? (
                       <Image
                         src={normalizeImageUrl(actress.thumbnailUrl)}
@@ -419,7 +419,7 @@ export default function HeroSection({
                       </div>
                     )}
                   </div>
-                  <p className="mt-2 max-w-20 truncate text-center text-sm text-white transition-colors group-hover:text-pink-400 sm:max-w-24">
+                  <p className="mt-2 max-w-20 truncate text-center text-sm text-white transition-colors group-hover:text-fuchsia-400 sm:max-w-24">
                     {actress.name}
                   </p>
                   {actress.releaseCount && (

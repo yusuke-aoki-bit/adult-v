@@ -139,8 +139,8 @@ export function UserPreferenceProfile({
               className={`h-1.5 flex-1 rounded-full ${
                 i < recentlyViewed.length
                   ? isDark
-                    ? 'bg-pink-500'
-                    : 'bg-pink-400'
+                    ? 'bg-fuchsia-500'
+                    : 'bg-fuchsia-400'
                   : isDark
                     ? 'bg-gray-700'
                     : 'bg-gray-300'
@@ -238,7 +238,7 @@ export function UserPreferenceProfile({
               }}
               className={`rounded-full px-2.5 py-1 text-xs font-medium transition-colors ${
                 isDark
-                  ? 'bg-pink-900/50 text-pink-300 hover:bg-pink-800/50'
+                  ? 'bg-fuchsia-900/50 text-fuchsia-300 hover:bg-fuchsia-800/50'
                   : 'bg-pink-100 text-pink-700 hover:bg-pink-200'
               }`}
             >

@@ -32,7 +32,7 @@ function SelectableCardInner({
         isSelected
           ? isDark
             ? 'rounded-lg ring-2 ring-blue-500 ring-offset-2 ring-offset-gray-900'
-            : 'rounded-lg ring-2 ring-pink-500 ring-offset-2 ring-offset-white'
+            : 'rounded-lg ring-2 ring-fuchsia-500 ring-offset-2 ring-offset-white'
           : ''
       }`}
       onClick={(e) => {
@@ -47,7 +47,7 @@ function SelectableCardInner({
           isSelected
             ? isDark
               ? 'bg-blue-600 text-white'
-              : 'bg-pink-600 text-white'
+              : 'bg-fuchsia-600 text-white'
             : isDark
               ? 'border-2 border-gray-600 bg-gray-800/80 text-transparent hover:border-gray-500'
               : 'border-2 border-gray-300 bg-white/80 text-transparent hover:border-gray-400'
@@ -61,7 +61,7 @@ function SelectableCardInner({
       {/* オーバーレイ（選択時） */}
       {isSelected && (
         <div
-          className={`pointer-events-none absolute inset-0 rounded-lg ${isDark ? 'bg-blue-500/10' : 'bg-pink-500/10'}`}
+          className={`pointer-events-none absolute inset-0 rounded-lg ${isDark ? 'bg-blue-500/10' : 'bg-fuchsia-500/10'}`}
         />
       )}
 

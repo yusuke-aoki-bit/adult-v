@@ -9,11 +9,11 @@ import { useSite } from '@/lib/contexts/SiteContext';
 // Static accent color mappings - moved outside component to prevent re-creation on each render
 const accentClasses = {
   rose: {
-    bg: 'bg-rose-600',
-    bgLight: 'bg-rose-600/30',
-    ring: 'ring-rose-500',
-    text: 'text-rose-500',
-    border: 'border-rose-500/50',
+    bg: 'bg-fuchsia-600',
+    bgLight: 'bg-fuchsia-600/30',
+    ring: 'ring-fuchsia-500',
+    text: 'text-fuchsia-500',
+    border: 'border-fuchsia-500/50',
   },
   yellow: {
     bg: 'bg-yellow-600',

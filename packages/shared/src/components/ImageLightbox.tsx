@@ -394,7 +394,7 @@ function ImageLightbox({ images, initialIndex = 0, isOpen, onClose, alt, details
                 type="button"
                 onClick={handleThumbnailClick(idx)}
                 className={`relative h-12 w-16 shrink-0 overflow-hidden rounded border-2 transition-all ${
-                  currentIndex === idx ? 'border-rose-600' : 'border-transparent hover:border-gray-500'
+                  currentIndex === idx ? 'border-fuchsia-600' : 'border-transparent hover:border-gray-500'
                 }`}
                 style={{ backgroundColor: '#374151' }}
                 aria-label={`${t('thumbnailAlt')} ${idx + 1}`}

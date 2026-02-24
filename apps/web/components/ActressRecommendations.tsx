@@ -139,7 +139,7 @@ export default function ActressRecommendations({ favoritePerformerIds, locale }:
   const displayedRecommendations = showAll ? recommendations : recommendations.slice(0, 6);
 
   return (
-    <div className="rounded-xl border border-purple-500/20 bg-linear-to-r from-purple-900/30 to-pink-900/30 p-4 sm:p-6">
+    <div className="rounded-xl border border-purple-500/20 bg-linear-to-r from-purple-900/30 to-fuchsia-900/30 p-4 sm:p-6">
       {/* Header */}
       <button onClick={() => setIsExpanded(!isExpanded)} className="mb-4 flex w-full items-center justify-between">
         <div className="flex items-center gap-3">

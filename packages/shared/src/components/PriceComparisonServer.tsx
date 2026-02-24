@@ -170,7 +170,7 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
                 <div className="flex flex-wrap items-center gap-2">
                   {source.isOnSale && source.salePrice ? (
                     <>
-                      <span className="text-lg font-bold text-rose-400">¥{source.salePrice.toLocaleString()}</span>
+                      <span className="text-lg font-bold text-fuchsia-400">¥{source.salePrice.toLocaleString()}</span>
                       {source.regularPrice && (
                         <span className="text-sm text-gray-500 line-through">
                           ¥{source.regularPrice.toLocaleString()}
@@ -218,7 +218,7 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
                   </span>
                 )}
                 {source.isOnSale && !(isMultiple && isCheapest) && (
-                  <span className="flex items-center gap-1 rounded bg-rose-600 px-2 py-1 text-xs text-white">
+                  <span className="flex items-center gap-1 rounded bg-fuchsia-600 px-2 py-1 text-xs text-white">
                     <TrendingDown className="h-3 w-3" />
                     {t.sale}
                   </span>

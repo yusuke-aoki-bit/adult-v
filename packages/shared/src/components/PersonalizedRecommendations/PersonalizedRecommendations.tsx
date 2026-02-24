@@ -169,7 +169,7 @@ export function PersonalizedRecommendations({
           <button
             onClick={fetchRecommendations}
             className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              isDark ? 'bg-pink-600 text-white hover:bg-pink-500' : 'bg-pink-500 text-white hover:bg-pink-600'
+              isDark ? 'bg-fuchsia-600 text-white hover:bg-fuchsia-500' : 'bg-pink-500 text-white hover:bg-pink-600'
             }`}
           >
             {rt.retry}
@@ -194,7 +194,7 @@ export function PersonalizedRecommendations({
                 <span
                   key={i}
                   className={`rounded px-2 py-0.5 text-xs ${
-                    isDark ? 'bg-pink-900/50 text-pink-300' : 'bg-pink-100 text-pink-700'
+                    isDark ? 'bg-fuchsia-900/50 text-fuchsia-300' : 'bg-pink-100 text-pink-700'
                   }`}
                 >
                   {genre}
@@ -252,7 +252,7 @@ export function PersonalizedRecommendations({
   };
 
   const bgClass = isDark
-    ? 'bg-linear-to-r from-purple-900/30 to-pink-900/30'
+    ? 'bg-linear-to-r from-purple-900/30 to-fuchsia-900/30'
     : 'bg-linear-to-r from-purple-50 to-pink-50';
 
   const iconColorClass = isDark ? 'text-purple-400' : 'text-purple-500';
