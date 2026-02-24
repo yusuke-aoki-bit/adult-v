@@ -266,7 +266,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
             disabled={isRetrying}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
               theme === 'dark'
-                ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
+                ? 'bg-fuchsia-600 text-white hover:bg-fuchsia-500 disabled:bg-gray-600'
                 : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
             } disabled:cursor-not-allowed`}
           >
@@ -283,7 +283,7 @@ export function RecentlyViewedSection<T extends BaseProduct, A extends BaseActre
         {ActressCard && (isActressLoading || actresses.length > 0) && (
           <div>
             <h4
-              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}
+              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-fuchsia-400' : 'text-rose-600'}`}
             >
               <Users className="h-3.5 w-3.5" />
               {t.coStars}

@@ -186,7 +186,7 @@ export function WeeklyHighlightsSection({
                     disabled={isRetrying}
                     className={`flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
                       theme === 'dark'
-                        ? 'bg-rose-600 text-white hover:bg-rose-700 disabled:bg-gray-600'
+                        ? 'bg-fuchsia-600 text-white hover:bg-fuchsia-500 disabled:bg-gray-600'
                         : 'bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-400'
                     } disabled:cursor-not-allowed`}
                   >
@@ -294,7 +294,7 @@ export function WeeklyHighlightsSection({
                               theme={cardTheme}
                             />
                             {/* Years ago badge overlay */}
-                            <div className="absolute top-1 left-1 z-10 rounded bg-rose-600 px-1 py-0.5 text-[10px] font-bold text-white">
+                            <div className="absolute top-1 left-1 z-10 rounded bg-fuchsia-600 px-1 py-0.5 text-[10px] font-bold text-white">
                               {Math.floor(product.daysSinceRelease / 365)}
                               {t.yearsAgo}
                             </div>

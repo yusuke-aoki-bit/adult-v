@@ -162,7 +162,7 @@ function ActressCardBaseComponent({
     return (
       <Link
         href={`/${locale}/actress/${actress['id']}`}
-        className={`group ${resolvedTheme === 'dark' ? 'bg-gray-800' : 'bg-white'} overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:shadow-pink-500/20 hover:ring-pink-500/60`}
+        className={`group ${resolvedTheme === 'dark' ? 'bg-[#16161f]' : 'bg-white'} overflow-hidden rounded-xl transition-all duration-200 hover:shadow-md hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:ring-white/10' : 'hover:ring-gray-300'}`}
       >
         <div className={`relative aspect-square ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
           {actress['heroImage'] || actress['thumbnail'] ? (
@@ -214,7 +214,7 @@ function ActressCardBaseComponent({
         <div className="p-2">
           <div className="flex items-center gap-1">
             <p
-              className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-pink-300' : 'text-gray-800 group-hover:text-pink-600'} flex-1 truncate text-xs font-medium transition-colors`}
+              className={`${resolvedTheme === 'dark' ? 'text-gray-200 group-hover:text-fuchsia-300' : 'text-gray-800 group-hover:text-pink-600'} flex-1 truncate text-xs font-medium transition-colors`}
             >
               {actress['name']}
             </p>
@@ -242,7 +242,7 @@ function ActressCardBaseComponent({
   if (resolvedSize === 'compact') {
     return (
       <>
-        <article className="theme-card theme-text overflow-hidden rounded-lg transition-all duration-300 hover:shadow-xl hover:ring-2 hover:shadow-pink-500/20 hover:ring-pink-500/40">
+        <article className="theme-card theme-text overflow-hidden rounded-xl transition-all duration-200 hover:shadow-md hover:ring-1 hover:ring-white/10">
           {/* Image section - click for modal */}
           <div
             role="button"

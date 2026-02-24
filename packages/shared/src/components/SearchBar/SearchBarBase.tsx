@@ -25,13 +25,13 @@ export interface SearchBarBaseProps {
 
 const themeStyles = {
   dark: {
-    input: 'bg-gray-800 text-white border-gray-700 focus:ring-rose-500',
+    input: 'bg-gray-800 text-white border-gray-700 focus:ring-fuchsia-500',
     shortcutBg: 'bg-gray-700 text-gray-400',
     shortcutText: 'text-gray-500',
     clearHover: 'hover:text-white',
     spinnerBorder: 'border-white',
     aiToggle: 'bg-gray-700 text-gray-400',
-    aiToggleActive: 'bg-linear-to-r from-purple-600 to-pink-600 text-white',
+    aiToggleActive: 'bg-linear-to-r from-purple-600 to-fuchsia-600 text-white',
   },
   light: {
     input: 'bg-white text-gray-900 border-gray-300 focus:ring-pink-500 placeholder:text-gray-400',
@@ -287,7 +287,7 @@ export function SearchBarBase({
           disabled={aiQuery.trim().length < 3 || isAiSearching}
           className={`shrink-0 rounded-lg p-2 transition-colors ${
             aiQuery.trim().length >= 3 && !isAiSearching
-              ? 'bg-linear-to-r from-purple-600 to-pink-600 text-white hover:from-purple-700 hover:to-pink-700'
+              ? 'bg-linear-to-r from-purple-600 to-fuchsia-600 text-white hover:from-purple-700 hover:to-fuchsia-700'
               : theme === 'dark'
                 ? 'bg-gray-700 text-gray-500'
                 : 'bg-gray-200 text-gray-400'

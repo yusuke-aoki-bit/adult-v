@@ -40,7 +40,7 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '', product
         {/* ヘッダー */}
         <div className="mb-3 flex items-center justify-between sm:mb-4">
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-br from-pink-500 to-rose-500 sm:h-10 sm:w-10">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-fuchsia-500 sm:h-10 sm:w-10">
               <span className="text-lg font-bold text-white sm:text-xl">F</span>
             </div>
             <h2 className="text-lg font-bold text-white sm:text-xl">{t.title}</h2>
@@ -49,7 +49,7 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '', product
             href={fanzaSiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 text-xs font-medium text-pink-400 transition-colors hover:text-pink-300 sm:text-sm"
+            className="flex items-center gap-1 text-xs font-medium text-fuchsia-400 transition-colors hover:text-fuchsia-300 sm:text-sm"
           >
             {t.viewMore}
             <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -71,7 +71,7 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '', product
               href={`${FANZA_SITE_URL}/products/${product['id']}?hl=${locale}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative overflow-hidden rounded-lg bg-gray-800 transition-all hover:ring-2 hover:ring-pink-500/50"
+              className="group relative overflow-hidden rounded-xl bg-[#16161f] transition-all hover:ring-1 hover:ring-white/10"
             >
               <div className="relative" style={{ aspectRatio: '2/3' }}>
                 {product.imageUrl ? (
@@ -111,13 +111,13 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '', product
                 )}
                 {/* ホバーオーバーレイ */}
                 <div className="absolute inset-0 flex items-end bg-linear-to-t from-black/80 via-transparent to-transparent p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
-                  <span className="rounded bg-pink-500/80 px-1.5 py-0.5 text-[10px] font-medium text-white sm:text-xs">
+                  <span className="rounded-md bg-fuchsia-500/80 px-1.5 py-0.5 text-[10px] font-medium text-white sm:text-xs">
                     FANZAで見る
                   </span>
                 </div>
               </div>
               <div className="p-1.5">
-                <p className="line-clamp-2 text-[10px] font-medium text-gray-200 transition-colors group-hover:text-pink-300 sm:text-xs">
+                <p className="line-clamp-2 text-[10px] font-medium text-gray-200 transition-colors group-hover:text-fuchsia-300 sm:text-xs">
                   {product['title']}
                 </p>
               </div>
@@ -131,7 +131,7 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '', product
             href={fanzaSiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full rounded-lg bg-linear-to-r from-pink-600 to-rose-600 p-3 text-center text-sm font-medium text-white shadow transition-all hover:from-pink-700 hover:to-rose-700 hover:shadow-lg"
+            className="block w-full rounded-lg bg-fuchsia-500 p-3 text-center text-sm font-medium text-white shadow transition-all hover:bg-fuchsia-400 hover:shadow-md"
           >
             <span className="flex items-center justify-center gap-2">
               FANZA専門サイトで全作品を見る

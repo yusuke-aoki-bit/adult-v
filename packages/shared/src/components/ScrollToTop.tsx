@@ -56,7 +56,7 @@ export default function ScrollToTop() {
   return (
     <button
       onClick={scrollToTop}
-      className={`fixed right-3 bottom-20 z-40 rounded-full bg-rose-600 p-2 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-rose-700 hover:shadow-xl active:scale-95 md:right-4 md:bottom-20 md:p-3 ${
+      className={`fixed right-3 bottom-20 z-40 rounded-full bg-fuchsia-600 p-2 text-white shadow-lg transition-all duration-300 hover:scale-105 hover:bg-fuchsia-500 hover:shadow-xl active:scale-95 md:right-4 md:bottom-20 md:p-3 ${
         isVisible ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-4 opacity-0'
       }`}
       aria-label="ページトップへ戻る"

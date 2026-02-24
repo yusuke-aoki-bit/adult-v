@@ -236,7 +236,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
         {ActressCard && (isActressLoading || actresses.length > 0) && (
           <div>
             <h4
-              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}
+              className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-fuchsia-400' : 'text-rose-600'}`}
             >
               <Users className="h-3.5 w-3.5" />
               {t.onSaleActresses}

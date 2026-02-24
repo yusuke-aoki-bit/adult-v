@@ -50,13 +50,13 @@ export const darkTheme: ThemeConfig = {
   },
   forYouRecommendations: {
     iconColorClass: 'text-purple-400',
-    bgClass: 'bg-gradient-to-r from-purple-900/30 to-pink-900/30',
+    bgClass: 'bg-gradient-to-r from-purple-900/30 to-fuchsia-900/30',
     subtitleClass: 'text-gray-400',
   },
   salesSection: {
     iconColorClass: 'text-red-400',
     bgClass: 'bg-gradient-to-r from-red-900/30 to-orange-900/30',
-    linkColorClass: 'text-rose-400 hover:text-rose-300',
+    linkColorClass: 'text-fuchsia-400 hover:text-fuchsia-300',
   },
   weeklyHighlights: {
     containerClass: 'bg-gradient-to-r from-amber-900/30 to-orange-900/30 rounded-xl p-4 sm:p-6 border border-red-500',
@@ -69,7 +69,7 @@ export const darkTheme: ThemeConfig = {
     cardBgClass: 'bg-gray-800/50',
     trendingTitleClass: 'text-amber-400',
     hotTitleClass: 'text-orange-400',
-    classicTitleClass: 'text-rose-400',
+    classicTitleClass: 'text-fuchsia-400',
     cardTextClass: 'text-white',
     cardHoverTextClass: 'group-hover:text-amber-300',
   },

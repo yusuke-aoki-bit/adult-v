@@ -22,7 +22,7 @@ const themeStyles = {
     container: 'bg-gray-800 border-gray-700',
     input: 'bg-transparent text-white placeholder:text-gray-400',
     modeButton: 'text-gray-400 hover:text-white hover:bg-gray-700',
-    modeButtonActive: 'text-white bg-rose-600',
+    modeButtonActive: 'text-white bg-fuchsia-600',
     shortcutBg: 'bg-gray-700 text-gray-400',
     clearHover: 'hover:text-white',
     spinnerBorder: 'border-white',
@@ -32,7 +32,7 @@ const themeStyles = {
     container: 'bg-white border-gray-300',
     input: 'bg-transparent text-gray-900 placeholder:text-gray-400',
     modeButton: 'text-gray-500 hover:text-gray-700 hover:bg-gray-100',
-    modeButtonActive: 'text-white bg-rose-500',
+    modeButtonActive: 'text-white bg-fuchsia-500',
     shortcutBg: 'bg-gray-100 text-gray-500 border border-gray-200',
     clearHover: 'hover:text-gray-700',
     spinnerBorder: 'border-gray-700',
@@ -260,7 +260,7 @@ export function UnifiedSearchBar({
   return (
     <div ref={containerRef} className="relative w-full">
       <div
-        className={`flex items-center rounded-lg border focus-within:border-transparent focus-within:ring-2 focus-within:ring-rose-500 ${styles.container}`}
+        className={`flex items-center rounded-lg border focus-within:border-transparent focus-within:ring-2 focus-within:ring-fuchsia-500 ${styles.container}`}
       >
         {/* モード切り替えボタン */}
         <div className="relative">
@@ -353,7 +353,7 @@ export function UnifiedSearchBar({
               type="button"
               onClick={() => executeSearch(query)}
               disabled={isSearching}
-              className="ml-1 rounded bg-rose-600 p-1.5 text-white transition-colors hover:bg-rose-700 disabled:opacity-50"
+              className="ml-1 rounded bg-fuchsia-600 p-1.5 text-white transition-colors hover:bg-fuchsia-700 disabled:opacity-50"
               aria-label={t.search}
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

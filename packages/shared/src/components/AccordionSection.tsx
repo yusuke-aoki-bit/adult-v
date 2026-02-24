@@ -47,7 +47,7 @@ function AccordionSection({
   clearConfirmMessage,
   onClear,
   onToggle,
-  iconColorClass = 'text-rose-500',
+  iconColorClass = 'text-fuchsia-500',
   bgClass,
   children,
   className = '',

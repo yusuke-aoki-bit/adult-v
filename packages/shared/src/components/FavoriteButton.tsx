@@ -68,8 +68,8 @@ export default function FavoriteButton({
     if (theme === 'dark') {
       if (isFavorite) {
         return primaryColor === 'pink'
-          ? 'bg-pink-600 text-white hover:bg-pink-700 hover:scale-105'
-          : 'bg-rose-600 text-white hover:bg-rose-700 hover:scale-105';
+          ? 'bg-fuchsia-600 text-white hover:bg-fuchsia-700 hover:scale-105'
+          : 'bg-fuchsia-600 text-white hover:bg-fuchsia-700 hover:scale-105';
       }
       return 'bg-gray-800/80 text-gray-300 hover:bg-gray-700 hover:text-white hover:scale-105';
     } else {

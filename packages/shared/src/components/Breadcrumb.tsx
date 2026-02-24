@@ -25,7 +25,7 @@ interface BreadcrumbProps {
 const themeConfig = {
   dark: {
     currentItem: 'text-gray-400',
-    link: 'text-pink-500 hover:text-pink-400',
+    link: 'text-fuchsia-400 hover:text-fuchsia-300',
   },
   light: {
     currentItem: 'text-gray-600',

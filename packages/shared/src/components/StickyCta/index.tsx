@@ -53,7 +53,7 @@ const getThemeStyles = (theme: ThemeMode, isOnSale: boolean) => {
       // ボタン
       buttonGradient: isOnSale
         ? 'bg-linear-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400'
-        : 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600',
+        : 'bg-fuchsia-500 hover:bg-fuchsia-400',
       // 緊急バッジ
       urgentBadge: 'bg-yellow-500 text-black',
     };
