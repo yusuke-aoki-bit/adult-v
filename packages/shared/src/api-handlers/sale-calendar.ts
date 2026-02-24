@@ -10,7 +10,9 @@ export function createSaleCalendarHandler(deps: SaleCalendarHandlerDeps) {
     try {
       const db = deps.getDb();
       const { searchParams } = new URL(request.url);
-      const year = parseInt(searchParams.get('year') || new Date().getFullYear().toString(), 10);
+      const currentYear = new Date().getFullYear();
+      const rawYear = parseInt(searchParams.get('year') || String(currentYear), 10);
+      const year = isNaN(rawYear) ? currentYear : Math.max(2020, Math.min(rawYear, currentYear));
 
       const saleEventsResult = await db.execute(deps.sql`
         SELECT

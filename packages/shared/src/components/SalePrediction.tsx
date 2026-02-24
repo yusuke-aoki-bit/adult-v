@@ -8,7 +8,10 @@ interface SalePredictionData {
   probability30Days: number;
   probability90Days: number;
   typicalDiscountPercent: number;
-  nextLikelySalePeriod: string | null;
+  nextLikelySaleMonth: number | null;
+  nextLikelySaleIsNextYear?: boolean;
+  // Legacy field support
+  nextLikelySalePeriod?: string | null;
   historicalSaleDates: string[];
   averageSaleDurationDays: number;
   totalHistoricalSales: number;
@@ -236,18 +239,22 @@ export default function SalePrediction({
         <div className={`rounded-lg p-3 ${isDark ? 'bg-gray-800/50' : 'bg-white/80'} text-center`}>
           <p className={`text-xs ${isDark ? 'text-gray-500' : 'text-gray-500'}`}>{t.historicalSales}</p>
           <p className={`text-lg font-bold ${isDark ? 'text-purple-400' : 'text-purple-600'}`}>
-            {data.totalHistoricalSales}回
+            {data.totalHistoricalSales}
+            {t.times}
           </p>
         </div>
       </div>
 
       {/* Next Likely Sale */}
-      {data.nextLikelySalePeriod && (
+      {data.nextLikelySaleMonth && (
         <div
           className={`mt-4 rounded-lg p-3 ${isDark ? 'border border-yellow-700/30 bg-yellow-900/30' : 'border border-yellow-200 bg-yellow-50'}`}
         >
           <p className={`text-sm ${isDark ? 'text-yellow-400' : 'text-yellow-700'}`}>
-            <span className="font-medium">{t.nextLikelySale}:</span> {data.nextLikelySalePeriod}
+            <span className="font-medium">{t.nextLikelySale}:</span>{' '}
+            {data.nextLikelySaleIsNextYear ? `${t.nextYear} ` : ''}
+            {t.monthNames[data.nextLikelySaleMonth - 1]}
+            {t.around}
           </p>
         </div>
       )}

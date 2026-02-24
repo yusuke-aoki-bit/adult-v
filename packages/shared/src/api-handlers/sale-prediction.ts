@@ -65,7 +65,8 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
           probability30Days: 0,
           probability90Days: 0,
           typicalDiscountPercent: 0,
-          nextLikelySalePeriod: null,
+          nextLikelySaleMonth: null,
+          nextLikelySaleIsNextYear: false,
           historicalSaleDates: [],
           averageSaleDurationDays: 0,
           totalHistoricalSales: 0,
@@ -103,18 +104,16 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
       const probability90Days = Math.min(Math.round((next3MonthsCount / totalHistoricalSales) * 100), 95);
 
       // 次回セール予想期間
-      let nextLikelySalePeriod: string | null = null;
+      let nextLikelySaleMonth: number | null = null;
+      let nextLikelySaleIsNextYear = false;
       const peakMonth = Object.entries(monthCounts).sort(([, a], [, b]) => b - a)[0];
       if (peakMonth) {
         const monthNum = parseInt(peakMonth[0]);
-        const monthNames = {
-          ja: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
-        };
         if (monthNum > currentMonth || (monthNum === currentMonth && probability30Days >= 30)) {
-          nextLikelySalePeriod = monthNames.ja[monthNum - 1] ?? null;
+          nextLikelySaleMonth = monthNum;
         } else {
-          // 来年の同じ月
-          nextLikelySalePeriod = `来年${monthNames.ja[monthNum - 1]}頃`;
+          nextLikelySaleMonth = monthNum;
+          nextLikelySaleIsNextYear = true;
         }
       }
 
@@ -149,7 +148,8 @@ export function createSalePredictionHandler(deps: SalePredictionHandlerDeps) {
         probability30Days,
         probability90Days,
         typicalDiscountPercent,
-        nextLikelySalePeriod,
+        nextLikelySaleMonth,
+        nextLikelySaleIsNextYear,
         historicalSaleDates,
         averageSaleDurationDays,
         totalHistoricalSales,

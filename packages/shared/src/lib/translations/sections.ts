@@ -123,22 +123,37 @@ export const salesTranslations = {
   ja: {
     title: 'セール中',
     viewAll: '全てのセール商品を見る',
+    onSaleActresses: 'セール中の女優',
+    saleProducts: 'セール作品',
+    loadingActresses: '読み込み中...',
   },
   en: {
     title: 'On Sale',
     viewAll: 'View all sale products',
+    onSaleActresses: 'Actresses on Sale',
+    saleProducts: 'Sale Products',
+    loadingActresses: 'Loading...',
   },
   zh: {
     title: '特价中',
     viewAll: '查看所有特价商品',
+    onSaleActresses: '特价中的女优',
+    saleProducts: '特价作品',
+    loadingActresses: '加载中...',
   },
   'zh-TW': {
     title: '特價中',
     viewAll: '查看所有特價商品',
+    onSaleActresses: '特價中的女優',
+    saleProducts: '特價作品',
+    loadingActresses: '載入中...',
   },
   ko: {
     title: '세일 중',
     viewAll: '모든 세일 상품 보기',
+    onSaleActresses: '세일 중인 여배우',
+    saleProducts: '세일 작품',
+    loadingActresses: '로딩 중...',
   },
 } as const;
 

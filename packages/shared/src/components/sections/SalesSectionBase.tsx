@@ -239,8 +239,10 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
               className={`mb-2 flex items-center gap-1.5 text-xs font-semibold ${theme === 'dark' ? 'text-rose-400' : 'text-rose-600'}`}
             >
               <Users className="h-3.5 w-3.5" />
-              セール中の女優
-              {isActressLoading && <span className="theme-text-muted animate-pulse text-[10px]">読み込み中...</span>}
+              {t.onSaleActresses}
+              {isActressLoading && (
+                <span className="theme-text-muted animate-pulse text-[10px]">{t.loadingActresses}</span>
+              )}
             </h4>
             {isActressLoading ? (
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
@@ -267,7 +269,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
         <div>
           {ActressCard && actresses.length > 0 && (
             <h4 className={`mb-2 text-xs font-semibold ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              セール作品
+              {t.saleProducts}
             </h4>
           )}
           <div className="grid grid-cols-4 gap-2 sm:grid-cols-6 md:grid-cols-8">
@@ -279,7 +281,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
 
         {/* View all sales link */}
         <Link
-          href={`/${locale}/products?onSale=true`}
+          href={`/${locale}/sales`}
           className={`mt-2 flex items-center justify-center gap-2 py-2 ${themeConfig.salesSection.linkColorClass} text-sm font-medium transition-colors`}
         >
           {t.viewAll}

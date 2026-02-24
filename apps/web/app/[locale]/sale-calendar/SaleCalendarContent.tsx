@@ -212,7 +212,6 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
   const [data, setData] = useState<CalendarData | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [_selectedMonth, _setSelectedMonth] = useState(new Date().getMonth());
 
   const t = TRANSLATIONS[locale as keyof typeof TRANSLATIONS] || TRANSLATIONS.ja;
 
@@ -278,7 +277,7 @@ export default function SaleCalendarContent({ locale }: SaleCalendarContentProps
           className={`flex h-8 w-8 items-center justify-center rounded text-xs ${getIntensityColor(intensity)} ${
             isToday ? 'ring-2 ring-white' : ''
           } ${intensity !== 'none' ? 'font-medium text-white' : 'text-gray-400'}`}
-          title={intensity !== 'none' ? `${dateStr}: セール` : undefined}
+          title={intensity !== 'none' ? `${dateStr}: ${t.title}` : undefined}
         >
           {day}
         </div>,

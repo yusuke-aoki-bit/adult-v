@@ -810,6 +810,10 @@ export const salePredictionTranslations: Record<
     in90Days: string;
     typicalDiscount: string;
     nextLikelySale: string;
+    nextYear: string;
+    around: string;
+    monthNames: string[];
+    times: string;
     historicalSales: string;
     noHistory: string;
     avgDuration: string;
@@ -828,6 +832,10 @@ export const salePredictionTranslations: Record<
     in90Days: '90日以内',
     typicalDiscount: '平均割引率',
     nextLikelySale: '次回セール予想',
+    nextYear: '来年',
+    around: '頃',
+    monthNames: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    times: '回',
     historicalSales: '過去のセール履歴',
     noHistory: 'セール履歴がありません',
     avgDuration: '平均セール期間',
@@ -845,6 +853,10 @@ export const salePredictionTranslations: Record<
     in90Days: 'Within 90 days',
     typicalDiscount: 'Typical discount',
     nextLikelySale: 'Next likely sale',
+    nextYear: 'Next year',
+    around: '',
+    monthNames: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+    times: 'times',
     historicalSales: 'Historical sales',
     noHistory: 'No sale history',
     avgDuration: 'Avg sale duration',
@@ -862,6 +874,10 @@ export const salePredictionTranslations: Record<
     in90Days: '90天内',
     typicalDiscount: '平均折扣',
     nextLikelySale: '下次预计促销',
+    nextYear: '明年',
+    around: '左右',
+    monthNames: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    times: '次',
     historicalSales: '历史促销记录',
     noHistory: '暂无促销记录',
     avgDuration: '平均促销时长',
@@ -879,6 +895,10 @@ export const salePredictionTranslations: Record<
     in90Days: '90天內',
     typicalDiscount: '平均折扣',
     nextLikelySale: '下次預計促銷',
+    nextYear: '明年',
+    around: '左右',
+    monthNames: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+    times: '次',
     historicalSales: '歷史促銷紀錄',
     noHistory: '暫無促銷紀錄',
     avgDuration: '平均促銷時長',
@@ -896,6 +916,10 @@ export const salePredictionTranslations: Record<
     in90Days: '90일 이내',
     typicalDiscount: '평균 할인율',
     nextLikelySale: '다음 예상 세일',
+    nextYear: '내년',
+    around: '경',
+    monthNames: ['1월', '2월', '3월', '4월', '5월', '6월', '7월', '8월', '9월', '10월', '11월', '12월'],
+    times: '회',
     historicalSales: '과거 세일 이력',
     noHistory: '세일 이력 없음',
     avgDuration: '평균 세일 기간',

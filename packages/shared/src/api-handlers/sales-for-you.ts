@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getDb, eq, and, inArray, desc, gt, sql } from '@adult-v/database';
 import * as schema from '@adult-v/database/schema';
 
-export const revalidate = 300;
-
 interface ForYouProduct {
   id: number;
   normalizedProductId: string;
@@ -61,7 +59,7 @@ export async function GET(request: NextRequest) {
           and(
             eq(schema.productSales.isActive, true),
             inArray(schema.performers.id, favoritePerformerIds),
-            gt(schema.productSales.endAt, new Date()),
+            sql`(${schema.productSales.endAt} IS NULL OR ${schema.productSales.endAt} > NOW())`,
             sql`${schema.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
           ),
         )
@@ -123,7 +121,7 @@ export async function GET(request: NextRequest) {
             and(
               eq(schema.productSales.isActive, true),
               inArray(schema.performers.id, recentPerformerIds),
-              gt(schema.productSales.endAt, new Date()),
+              sql`(${schema.productSales.endAt} IS NULL OR ${schema.productSales.endAt} > NOW())`,
               sql`${schema.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
             ),
           )
@@ -171,41 +169,54 @@ export async function GET(request: NextRequest) {
           and(
             eq(schema.productSales.isActive, true),
             gt(schema.productSales.discountPercent, 30),
-            gt(schema.productSales.endAt, new Date()),
+            sql`(${schema.productSales.endAt} IS NULL OR ${schema.productSales.endAt} > NOW())`,
             sql`${schema.productSales.fetchedAt} > NOW() - INTERVAL '14 days'`,
           ),
         )
         .orderBy(desc(schema.productSales.discountPercent))
         .limit(limit - products.length + 5);
 
-      for (const sale of trendingSales) {
-        if (!addedProductIds.has(sale.id) && products.length < limit) {
-          addedProductIds.add(sale.id);
+      // 重複除外して対象を絞り込み
+      const trendingCandidates = trendingSales
+        .filter((sale) => !addedProductIds.has(sale.id))
+        .slice(0, limit - products.length);
 
-          // 女優情報を取得
-          const performers = await db
-            .select({
-              id: schema.performers.id,
-              name: schema.performers.name,
-            })
-            .from(schema.productPerformers)
-            .innerJoin(schema.performers, eq(schema.productPerformers.performerId, schema.performers.id))
-            .where(eq(schema.productPerformers.productId, sale.id))
-            .limit(3);
+      // バッチで女優情報を取得（N+1回避）
+      const trendingProductIds = trendingCandidates.map((s) => s.id);
+      const allPerformers =
+        trendingProductIds.length > 0
+          ? await db
+              .select({
+                productId: schema.productPerformers.productId,
+                id: schema.performers.id,
+                name: schema.performers.name,
+              })
+              .from(schema.productPerformers)
+              .innerJoin(schema.performers, eq(schema.productPerformers.performerId, schema.performers.id))
+              .where(inArray(schema.productPerformers.productId, trendingProductIds))
+          : [];
 
-          products.push({
-            id: sale.id,
-            normalizedProductId: sale.normalizedProductId,
-            title: sale.title,
-            thumbnailUrl: sale.thumbnailUrl,
-            regularPrice: sale.regularPrice,
-            salePrice: sale.salePrice,
-            discountPercent: sale.discountPercent || 0,
-            matchReason: 'trending',
-            performers,
-            saleEndAt: sale.saleEndAt?.toISOString(),
-          });
-        }
+      const performersByProduct = new Map<number, Array<{ id: number; name: string }>>();
+      for (const p of allPerformers) {
+        const arr = performersByProduct.get(p.productId) || [];
+        if (arr.length < 3) arr.push({ id: p.id, name: p.name });
+        performersByProduct.set(p.productId, arr);
+      }
+
+      for (const sale of trendingCandidates) {
+        addedProductIds.add(sale.id);
+        products.push({
+          id: sale.id,
+          normalizedProductId: sale.normalizedProductId,
+          title: sale.title,
+          thumbnailUrl: sale.thumbnailUrl,
+          regularPrice: sale.regularPrice,
+          salePrice: sale.salePrice,
+          discountPercent: sale.discountPercent || 0,
+          matchReason: 'trending',
+          performers: performersByProduct.get(sale.id) || [],
+          saleEndAt: sale.saleEndAt?.toISOString(),
+        });
       }
     }
 
