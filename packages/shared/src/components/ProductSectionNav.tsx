@@ -9,11 +9,8 @@ interface ProductSectionNavProps {
   locale: string;
   hasSampleVideo: boolean;
   hasPriceComparison: boolean;
-  hasCostPerformance: boolean;
-  hasAiReview: boolean;
-  hasPerformerProducts: boolean;
-  hasSeriesProducts: boolean;
-  hasMakerProducts: boolean;
+  hasAnalysis: boolean;
+  hasRelatedProducts: boolean;
   hasAlsoViewed: boolean;
 }
 
@@ -21,11 +18,8 @@ export default function ProductSectionNav({
   locale,
   hasSampleVideo,
   hasPriceComparison,
-  hasCostPerformance,
-  hasAiReview,
-  hasPerformerProducts,
-  hasSeriesProducts,
-  hasMakerProducts,
+  hasAnalysis,
+  hasRelatedProducts,
   hasAlsoViewed,
 }: ProductSectionNavProps) {
   const { theme } = useSiteTheme();
@@ -41,29 +35,13 @@ export default function ProductSectionNav({
     sections.push({ id: 'price-comparison', label: nt.prices });
   }
 
-  if (hasCostPerformance) {
-    sections.push({ id: 'cost-performance', label: nt.value });
+  if (hasAnalysis) {
+    sections.push({ id: 'analysis', label: nt.aiReview });
   }
 
-  if (hasAiReview) {
-    sections.push({ id: 'ai-review', label: nt.aiReview });
+  if (hasRelatedProducts) {
+    sections.push({ id: 'related-products', label: nt.performer });
   }
-
-  sections.push({ id: 'scene-timeline', label: nt.scenes });
-
-  if (hasPerformerProducts) {
-    sections.push({ id: 'performer-products', label: nt.performer });
-  }
-
-  if (hasSeriesProducts) {
-    sections.push({ id: 'series-products', label: nt.series });
-  }
-
-  if (hasMakerProducts) {
-    sections.push({ id: 'maker-products', label: nt.maker });
-  }
-
-  sections.push({ id: 'similar-network', label: nt.similar });
 
   if (hasAlsoViewed) {
     sections.push({ id: 'also-viewed', label: nt.alsoViewed });

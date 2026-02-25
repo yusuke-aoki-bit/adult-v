@@ -13,24 +13,21 @@ const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPl
     </div>
   ),
 });
-import ProductDetailInfo from '@/components/ProductDetailInfo';
 import ProductActions from '@/components/ProductActions';
 import {
   ViewTracker,
-  CostPerformanceCard,
   PriceComparisonServer,
   FanzaCrossLink,
-  SocialShareButtons,
   productDetailTranslations,
   CopyButton,
-  SectionVisibility,
 } from '@adult-v/shared/components';
 import StickyCta from '@/components/StickyCta';
 import AffiliateClickTracker from '@/components/AffiliateClickTracker';
 import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';
+import ExpandableText from '@/components/ExpandableText';
 import AlsoViewedWrapper from '@/components/AlsoViewedWrapper';
-import UserContributionsWrapper from '@/components/UserContributionsWrapper';
-import SimilarProductMapWrapper from '@/components/SimilarProductMapWrapper';
+import RelatedProductsTabs from '@/components/RelatedProductsTabs';
+import ProductAnalysisTabs from '@/components/ProductAnalysisTabs';
 import ProductSectionNav from '@/components/ProductSectionNav';
 import {
   getCachedProductByIdOrCode,
@@ -90,14 +87,6 @@ function seededRandom(seed: number): number {
   const x = Math.sin(seed) * 10000;
   return x - Math.floor(x);
 }
-
-// Dynamic imports for heavy components (494 + 469 lines) to reduce initial bundle size
-const SceneTimeline = nextDynamic(() => import('@/components/SceneTimeline'), {
-  loading: () => <div className="theme-content h-32 animate-pulse rounded-lg" />,
-});
-const EnhancedAiReview = nextDynamic(() => import('@/components/EnhancedAiReview'), {
-  loading: () => <div className="theme-content h-48 animate-pulse rounded-lg" />,
-});
 
 interface PageProps {
   params: Promise<{ id: string; locale: string }>;
@@ -413,11 +402,10 @@ export default async function ProductDetailPage({ params }: PageProps) {
           locale={locale}
           hasSampleVideo={!!(product.sampleVideos && product.sampleVideos.length > 0)}
           hasPriceComparison={sourcesWithSales.length > 0}
-          hasCostPerformance={!!(product.price && product.duration && product.duration > 0)}
-          hasAiReview={!!product.aiReview}
-          hasPerformerProducts={performerOtherProducts.length > 0 && !!primaryPerformerId}
-          hasSeriesProducts={sameSeriesProducts.length > 0 && !!series}
-          hasMakerProducts={sameMakerProducts.length > 0 && !!maker}
+          hasAnalysis={true}
+          hasRelatedProducts={
+            performerOtherProducts.length > 0 || sameSeriesProducts.length > 0 || sameMakerProducts.length > 0
+          }
           hasAlsoViewed={true}
         />
 
@@ -436,6 +424,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <details
               id="sample-video"
               className="theme-content theme-border group mb-6 scroll-mt-20 rounded-lg border shadow-md"
+              open
             >
               <summary className="theme-accordion-hover flex cursor-pointer list-none items-center gap-2 rounded-lg p-4 transition-colors">
                 <svg className="theme-text-accent h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -519,19 +508,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <div className="inline-flex items-center gap-1">
                       <CopyButton text={product.title} label="タイトル" size="xs" />
                     </div>
-                    {sources
-                      ?.filter(
-                        (s: { originalProductId: string | null }) =>
-                          s.originalProductId && s.originalProductId !== displayProductCode,
-                      )
-                      .map((s: { aspName: string; originalProductId: string | null }, i: number) => (
-                        <span
-                          key={i}
-                          className="theme-accordion-bg theme-text-secondary inline-flex items-center rounded-md px-2 py-1 font-mono text-xs"
-                        >
-                          {s.aspName}: {s.originalProductId}
-                        </span>
-                      ))}
                   </div>
                   {/* レビュー統計サマリー */}
                   {product.rating && product.rating > 0 && (
@@ -543,30 +519,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <span className="text-2xl font-bold text-yellow-400">{product.rating.toFixed(1)}</span>
                       </div>
                       {product.reviewCount && product.reviewCount > 0 && (
-                        <div className="flex flex-col">
-                          <span className="theme-text-secondary text-sm">
-                            {product.reviewCount.toLocaleString()}件のレビュー
-                          </span>
-                          <div className="mt-1 flex gap-1">
-                            {[5, 4, 3, 2, 1].map((star) => (
-                              <div
-                                key={star}
-                                className={`h-2 w-2 rounded-full ${(product.rating ?? 0) >= star ? 'bg-yellow-400' : 'theme-accordion-bg'}`}
-                              />
-                            ))}
-                          </div>
-                        </div>
+                        <span className="theme-text-secondary text-sm">
+                          {product.reviewCount.toLocaleString()}件のレビュー
+                        </span>
                       )}
                     </div>
                   )}
-                  {/* SNSシェアボタン */}
-                  <div className="mt-3">
-                    <SocialShareButtons
-                      title={`${displayProductCode || product.id} ${product.title}`}
-                      productId={String(product.id)}
-                      compact
-                    />
-                  </div>
                 </div>
 
                 {product.performers && product.performers.length > 0 ? (
@@ -635,7 +593,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                 {product.description && (
                   <div>
                     <h2 className="theme-text mb-2 text-sm font-semibold">{t.description}</h2>
-                    <p className="theme-text-secondary whitespace-pre-wrap">{product.description}</p>
+                    <ExpandableText text={product.description} maxLines={3} className="theme-text-secondary" />
                   </div>
                 )}
 
@@ -647,7 +605,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     <div className="mb-2 flex items-center justify-between">
                       <h2 className="theme-text-muted text-sm font-semibold">{t.price}</h2>
                       {product.salePrice && product.discount && (
-                        <span className="inline-flex animate-pulse items-center rounded bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
+                        <span className="inline-flex items-center rounded bg-red-500 px-2 py-0.5 text-xs font-bold text-white">
                           {product.discount}% OFF
                         </span>
                       )}
@@ -715,7 +673,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         rel="noopener noreferrer sponsored"
                         className={`mt-4 flex w-full transform items-center justify-center gap-2 rounded-xl py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-[1.02] ${
                           product.salePrice
-                            ? 'animate-pulse bg-linear-to-r from-red-600 via-orange-500 to-red-600 shadow-red-500/30 hover:from-red-500 hover:via-orange-400 hover:to-red-500 hover:shadow-red-500/50'
+                            ? 'bg-linear-to-r from-red-600 via-orange-500 to-red-600 shadow-red-500/30 hover:from-red-500 hover:via-orange-400 hover:to-red-500 hover:shadow-red-500/50'
                             : 'bg-linear-to-r from-rose-600 to-rose-500 shadow-rose-500/25 hover:from-rose-500 hover:to-rose-400 hover:shadow-rose-500/40'
                         }`}
                       >
@@ -740,54 +698,27 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         </svg>
                       </a>
                     )}
-                    {/* 他のASPでも購入可能な場合のリンク */}
+                    {/* 複数ASPがある場合、価格比較セクションへの誘導 */}
                     {sourcesWithSales.length > 1 && (
-                      <div className="theme-border mt-3 border-t pt-3">
-                        <p className="theme-text-muted mb-2 text-xs">他{sourcesWithSales.length - 1}社でも購入可能</p>
-                        <div className="flex flex-wrap gap-1.5">
-                          {sourcesWithSales.slice(1, 4).map((source) => {
-                            // 有効なURLかチェック（http/httpsで始まるもののみ）
-                            const isValidUrl = source.affiliateUrl && source.affiliateUrl.startsWith('http');
-                            return (
-                              <a
-                                key={source.aspName}
-                                href={
-                                  isValidUrl
-                                    ? source.affiliateUrl
-                                    : `/${locale}/products/${source.originalProductId || ''}`
-                                }
-                                target={isValidUrl ? '_blank' : '_self'}
-                                rel={isValidUrl ? 'noopener noreferrer sponsored' : undefined}
-                                className="theme-accordion-bg theme-accordion-hover theme-text-secondary inline-flex items-center gap-1 rounded px-2 py-1 text-xs transition-colors"
-                              >
-                                <span>{source.aspName}</span>
-                                <span className="theme-text-muted">
-                                  ¥{(source.salePrice || source.regularPrice || 0).toLocaleString()}
-                                </span>
-                              </a>
-                            );
-                          })}
-                          {sourcesWithSales.length > 4 && (
-                            <a
-                              href="#price-comparison"
-                              className="inline-flex items-center gap-1 rounded bg-emerald-700 px-2 py-1 text-xs text-white transition-colors hover:bg-emerald-600"
-                            >
-                              <span>+{sourcesWithSales.length - 4}社</span>
-                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </a>
-                          )}
-                        </div>
-                      </div>
+                      <a
+                        href="#price-comparison"
+                        className="theme-text-accent mt-3 flex items-center justify-center gap-1 text-sm font-medium transition-opacity hover:opacity-80"
+                      >
+                        他{sourcesWithSales.length - 1}社の価格を比較
+                        <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </a>
                     )}
                   </div>
                 )}
 
-                {product.releaseDate && (
-                  <div>
-                    <h2 className="theme-text mb-2 text-sm font-semibold">{t.releaseDate}</h2>
-                    <p className="theme-text">{product.releaseDate}</p>
+                {/* インラインメタデータ行 */}
+                {(product.duration || product.releaseDate) && (
+                  <div className="theme-text-secondary flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+                    {product.duration && product.duration > 0 && <span>{Math.floor(product.duration / 60)}分</span>}
+                    {product.duration && product.releaseDate && <span className="theme-text-muted">·</span>}
+                    {product.releaseDate && <span>{product.releaseDate}</span>}
                   </div>
                 )}
 
@@ -882,455 +813,98 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* E-E-A-T強化: 詳細情報セクション */}
-          {sources.length > 0 && (
-            <div className="mt-8">
-              <ProductDetailInfo
-                duration={product.duration || null}
-                releaseDate={product.releaseDate || null}
-                sources={sources}
-                updatedAt={null}
-                performerCount={product.performers?.length || 0}
-                tagCount={product.tags?.length || 0}
+          {/* 価格比較セクション */}
+          {sourcesWithSales.length > 0 && (
+            <details
+              id="price-comparison"
+              className="mt-8 scroll-mt-20"
+              open={sourcesWithSales.length <= 2 ? true : undefined}
+            >
+              <summary className="theme-text-muted mb-2 cursor-pointer list-none text-sm font-semibold hover:text-white">
+                {locale === 'ja' ? '価格比較' : 'Price Comparison'} ({sourcesWithSales.length})
+              </summary>
+              <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
+            </details>
+          )}
+
+          {/* 分析セクション（AIレビュー、シーン、コスパ、投稿をタブで統合） */}
+          <div id="analysis" className="mt-8 scroll-mt-20">
+            <ProductAnalysisTabs
+              productId={productId}
+              locale={locale}
+              aiReview={product.aiReview}
+              rating={product.rating}
+              reviewCount={product.reviewCount}
+              aiReviewUpdatedAt={product.aiReviewUpdatedAt}
+              price={product.price}
+              salePrice={product.salePrice}
+              duration={product.duration}
+              actressAvgPricePerMin={actressAvgPricePerMin}
+              existingTags={genreTags.map((t) => t.name)}
+              existingPerformers={
+                product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])
+              }
+            />
+          </div>
+
+          {/* 関連作品（出演者/シリーズ/メーカーをタブで統合） */}
+          {(performerOtherProducts.length > 0 || sameSeriesProducts.length > 0 || sameMakerProducts.length > 0) && (
+            <div id="related-products" className="mt-8 scroll-mt-20">
+              <RelatedProductsTabs
+                locale={locale}
+                tabs={[
+                  ...(performerOtherProducts.length > 0 && primaryPerformerId && primaryPerformerName
+                    ? [
+                        {
+                          key: 'performer',
+                          label: tRelated('performerOtherWorks', { name: primaryPerformerName }),
+                          products: performerOtherProducts,
+                          viewAllHref: localizedHref(`/actress/${primaryPerformerId}`, locale),
+                          viewAllLabel: tRelated('viewAll'),
+                          viewMoreHref: localizedHref(`/actress/${primaryPerformerId}`, locale),
+                          viewMoreLabel: tRelated('viewMore'),
+                        },
+                      ]
+                    : []),
+                  ...(sameSeriesProducts.length > 0 && series
+                    ? [
+                        {
+                          key: 'series',
+                          label: tRelated('seriesWorks', { name: series.name }),
+                          products: sameSeriesProducts,
+                          viewAllHref: localizedHref(`/series/${series.id}`, locale),
+                          viewAllLabel: tRelated('viewAll'),
+                          viewMoreHref: localizedHref(`/series/${series.id}`, locale),
+                          viewMoreLabel: tRelated('viewMore'),
+                        },
+                      ]
+                    : []),
+                  ...(sameMakerProducts.length > 0 && maker
+                    ? [
+                        {
+                          key: 'maker',
+                          label: tRelated('makerOtherWorks', { name: maker.name }),
+                          products: sameMakerProducts,
+                          viewAllHref: localizedHref(`/makers/${maker.id}`, locale),
+                          viewAllLabel: tRelated('viewAll'),
+                          viewMoreHref: localizedHref(`/makers/${maker.id}`, locale),
+                          viewMoreLabel: tRelated('viewMore'),
+                        },
+                      ]
+                    : []),
+                ]}
               />
             </div>
           )}
 
-          {/* 価格比較セクション - 複数ASPがある場合は価格比較を表示 */}
-          {sourcesWithSales.length > 0 && (
-            <SectionVisibility sectionId="price-comparison" pageId="product" locale={locale}>
-              <div id="price-comparison" className="mt-8 scroll-mt-20">
-                <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
-              </div>
-            </SectionVisibility>
-          )}
-
-          {/* セール中の大型CTA（ページ中間） */}
-          {product.salePrice && product.affiliateUrl && (
-            <div className="mt-8 rounded-xl border border-red-500/30 bg-gradient-to-r from-red-900/50 via-orange-900/30 to-red-900/50 p-6">
-              <div className="mb-4 text-center">
-                <span className="animate-pulse text-3xl">🔥</span>
-                <h3 className="theme-text mt-2 text-xl font-bold">今なら{product.discount}%OFF！</h3>
-                <p className="mt-1 text-sm text-red-300">
-                  セール価格: ¥{product.salePrice.toLocaleString()}（通常¥{product.price?.toLocaleString()}）
-                </p>
-                {product.price && product.price > product.salePrice && (
-                  <p className="mt-1 flex items-center justify-center gap-1 text-sm font-bold text-green-400">
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    ¥{(product.price - product.salePrice).toLocaleString()}もお得に！
-                  </p>
-                )}
-              </div>
-              <a
-                href={product.affiliateUrl}
-                target="_blank"
-                rel="noopener noreferrer sponsored"
-                className="flex w-full transform items-center justify-center gap-3 rounded-xl bg-gradient-to-r from-red-600 via-orange-500 to-red-600 py-4 text-xl font-bold text-white shadow-lg shadow-red-600/30 transition-all hover:scale-[1.02] hover:from-red-500 hover:via-orange-400 hover:to-red-500"
-              >
-                <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-                今すぐ{product.providerLabel}でお得に購入
-                <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                  />
-                </svg>
-              </a>
-            </div>
-          )}
-
-          {/* コスパ分析セクション */}
-          {product.price && product.duration && product.duration > 0 && (
-            <SectionVisibility sectionId="cost-performance" pageId="product" locale={locale}>
-              <div id="cost-performance" className="mt-8 scroll-mt-20">
-                <CostPerformanceCard
-                  price={product.price}
-                  salePrice={product.salePrice}
-                  duration={product.duration}
-                  actressAvgPricePerMin={actressAvgPricePerMin ?? undefined}
-                  locale={locale}
-                />
-              </div>
-            </SectionVisibility>
-          )}
-
-          {/* AI分析レビューセクション */}
-          {product.aiReview && (
-            <SectionVisibility sectionId="ai-review" pageId="product" locale={locale}>
-              <div id="ai-review" className="mt-8 scroll-mt-20">
-                <EnhancedAiReview
-                  aiReview={product.aiReview}
-                  rating={product.rating}
-                  ratingCount={product.reviewCount}
-                  locale={locale}
-                  updatedAt={product.aiReviewUpdatedAt}
-                />
-              </div>
-            </SectionVisibility>
-          )}
-
-          {/* シーン情報セクション（ユーザー参加型） */}
-          <SectionVisibility sectionId="scene-timeline" pageId="product" locale={locale}>
-            <div id="scene-timeline" className="mt-8 scroll-mt-20">
-              <SceneTimeline productId={productId} totalDuration={product.duration || undefined} locale={locale} />
-            </div>
-          </SectionVisibility>
-
-          {/* この出演者の他作品セクション */}
-          {performerOtherProducts.length > 0 && primaryPerformerId && primaryPerformerName && (
-            <SectionVisibility sectionId="performer-products" pageId="product" locale={locale}>
-              <div id="performer-products" className="mt-8 scroll-mt-20">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="theme-section-icon-bg flex h-9 w-9 items-center justify-center rounded-lg">
-                    <svg className="theme-text-accent h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="theme-text min-w-0 flex-1 truncate text-lg font-bold">
-                    {tRelated('performerOtherWorks', { name: primaryPerformerName })}
-                  </h2>
-                  <Link
-                    href={localizedHref(`/actress/${primaryPerformerId}`, locale)}
-                    className="theme-text-accent inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-80"
-                  >
-                    {tRelated('viewAll')}
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-                <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
-                  {performerOtherProducts.map((p) => (
-                    <Link
-                      key={p.id}
-                      href={localizedHref(`/products/${p.id}`, locale)}
-                      className="group theme-content theme-border w-[140px] shrink-0 snap-start overflow-hidden rounded-lg border transition-all hover:ring-2 hover:ring-rose-500/50 sm:w-[160px]"
-                    >
-                      <div className="theme-accordion-bg relative" style={{ aspectRatio: '2/3' }}>
-                        {p.imageUrl ? (
-                          <img
-                            src={p.imageUrl}
-                            alt={p.title}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center">
-                            <span className="theme-text-muted text-xs">NO IMAGE</span>
-                          </div>
-                        )}
-                        {p.bestRating && parseFloat(p.bestRating) > 0 && (
-                          <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-sm">
-                            <svg className="h-2.5 w-2.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            {parseFloat(p.bestRating).toFixed(1)}
-                          </span>
-                        )}
-                        {p.minPrice != null && (
-                          <span
-                            className={`absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm ${p.hasActiveSale ? 'bg-red-600/90' : 'bg-black/60'}`}
-                          >
-                            {p.hasActiveSale && <span className="mr-0.5">SALE</span>}¥{p.minPrice.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="theme-text-secondary line-clamp-2 text-xs transition-colors group-hover:text-rose-300">
-                          {p.title}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                  {/* もっと見るカード */}
-                  <Link
-                    href={localizedHref(`/actress/${primaryPerformerId}`, locale)}
-                    className="group flex w-[140px] shrink-0 snap-start flex-col items-center justify-center overflow-hidden rounded-lg border border-rose-500/30 bg-linear-to-br from-rose-600/20 to-rose-800/20 transition-all hover:border-rose-500/50 hover:from-rose-600/30 hover:to-rose-800/30 sm:w-[160px]"
-                    style={{ aspectRatio: '2/3' }}
-                  >
-                    <svg
-                      className="mb-2 h-8 w-8 text-rose-400 transition-transform group-hover:scale-110"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium text-rose-400">{tRelated('viewMore')}</span>
-                  </Link>
-                </div>
-              </div>
-            </SectionVisibility>
-          )}
-
-          {/* 同じシリーズの作品セクション */}
-          {sameSeriesProducts.length > 0 && series && (
-            <SectionVisibility sectionId="series-products" pageId="product" locale={locale}>
-              <div id="series-products" className="mt-8 scroll-mt-20">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="theme-section-icon-bg flex h-9 w-9 items-center justify-center rounded-lg">
-                    <svg className="theme-text-accent h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="theme-text min-w-0 flex-1 truncate text-lg font-bold">
-                    {tRelated('seriesWorks', { name: series.name })}
-                  </h2>
-                  <Link
-                    href={localizedHref(`/series/${series.id}`, locale)}
-                    className="theme-text-accent inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-80"
-                  >
-                    {tRelated('viewAll')}
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-                <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
-                  {sameSeriesProducts.map((p) => (
-                    <Link
-                      key={p.id}
-                      href={localizedHref(`/products/${p.id}`, locale)}
-                      className="group theme-content theme-border w-[140px] shrink-0 snap-start overflow-hidden rounded-lg border transition-all hover:ring-2 hover:ring-purple-500/50 sm:w-[160px]"
-                    >
-                      <div className="theme-accordion-bg relative" style={{ aspectRatio: '2/3' }}>
-                        {p.imageUrl ? (
-                          <img
-                            src={p.imageUrl}
-                            alt={p.title || ''}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center">
-                            <span className="theme-text-muted text-xs">NO IMAGE</span>
-                          </div>
-                        )}
-                        {p.bestRating && parseFloat(p.bestRating) > 0 && (
-                          <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-sm">
-                            <svg className="h-2.5 w-2.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            {parseFloat(p.bestRating).toFixed(1)}
-                          </span>
-                        )}
-                        {p.minPrice != null && (
-                          <span
-                            className={`absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm ${p.hasActiveSale ? 'bg-red-600/90' : 'bg-black/60'}`}
-                          >
-                            {p.hasActiveSale && <span className="mr-0.5">SALE</span>}¥{p.minPrice.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="theme-text-secondary line-clamp-2 text-xs transition-colors group-hover:text-purple-300">
-                          {p.title}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                  {/* もっと見るカード */}
-                  <Link
-                    href={localizedHref(`/series/${series.id}`, locale)}
-                    className="group flex w-[140px] shrink-0 snap-start flex-col items-center justify-center overflow-hidden rounded-lg border border-purple-500/30 bg-linear-to-br from-purple-600/20 to-purple-800/20 transition-all hover:border-purple-500/50 hover:from-purple-600/30 hover:to-purple-800/30 sm:w-[160px]"
-                    style={{ aspectRatio: '2/3' }}
-                  >
-                    <svg
-                      className="mb-2 h-8 w-8 text-purple-400 transition-transform group-hover:scale-110"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium text-purple-400">{tRelated('viewMore')}</span>
-                  </Link>
-                </div>
-              </div>
-            </SectionVisibility>
-          )}
-
-          {/* 同じメーカー/レーベルの作品セクション */}
-          {sameMakerProducts.length > 0 && maker && (
-            <SectionVisibility sectionId="maker-products" pageId="product" locale={locale}>
-              <div id="maker-products" className="mt-8 scroll-mt-20">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="theme-section-icon-bg flex h-9 w-9 items-center justify-center rounded-lg">
-                    <svg className="theme-text-accent h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                      />
-                    </svg>
-                  </div>
-                  <h2 className="theme-text min-w-0 flex-1 truncate text-lg font-bold">
-                    {tRelated('makerOtherWorks', { name: maker.name })}
-                  </h2>
-                  <Link
-                    href={localizedHref(`/makers/${maker.id}`, locale)}
-                    className="theme-text-accent inline-flex shrink-0 items-center gap-1 px-3 py-1.5 text-sm font-medium transition-opacity hover:opacity-80"
-                  >
-                    {tRelated('viewAll')}
-                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </Link>
-                </div>
-                <div className="scrollbar-hide -mx-4 flex snap-x snap-mandatory gap-3 overflow-x-auto px-4 pb-3 sm:mx-0 sm:px-0">
-                  {sameMakerProducts.map((p) => (
-                    <Link
-                      key={p.id}
-                      href={localizedHref(`/products/${p.id}`, locale)}
-                      className="group theme-content theme-border w-[140px] shrink-0 snap-start overflow-hidden rounded-lg border transition-all hover:ring-2 hover:ring-amber-500/50 sm:w-[160px]"
-                    >
-                      <div className="theme-accordion-bg relative" style={{ aspectRatio: '2/3' }}>
-                        {p.imageUrl ? (
-                          <img
-                            src={p.imageUrl}
-                            alt={p.title || ''}
-                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                            loading="lazy"
-                          />
-                        ) : (
-                          <div className="flex h-full items-center justify-center">
-                            <span className="theme-text-muted text-xs">NO IMAGE</span>
-                          </div>
-                        )}
-                        {p.bestRating && parseFloat(p.bestRating) > 0 && (
-                          <span className="absolute top-1.5 right-1.5 flex items-center gap-0.5 rounded bg-black/60 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-sm">
-                            <svg className="h-2.5 w-2.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                            </svg>
-                            {parseFloat(p.bestRating).toFixed(1)}
-                          </span>
-                        )}
-                        {p.minPrice != null && (
-                          <span
-                            className={`absolute bottom-1.5 left-1.5 rounded px-1.5 py-0.5 text-[10px] font-medium text-white backdrop-blur-sm ${p.hasActiveSale ? 'bg-red-600/90' : 'bg-black/60'}`}
-                          >
-                            {p.hasActiveSale && <span className="mr-0.5">SALE</span>}¥{p.minPrice.toLocaleString()}
-                          </span>
-                        )}
-                      </div>
-                      <div className="p-2">
-                        <p className="theme-text-secondary line-clamp-2 text-xs transition-colors group-hover:text-amber-300">
-                          {p.title}
-                        </p>
-                      </div>
-                    </Link>
-                  ))}
-                  {/* もっと見るカード */}
-                  <Link
-                    href={localizedHref(`/makers/${maker.id}`, locale)}
-                    className="group flex w-[140px] shrink-0 snap-start flex-col items-center justify-center overflow-hidden rounded-lg border border-amber-500/30 bg-linear-to-br from-amber-600/20 to-amber-800/20 transition-all hover:border-amber-500/50 hover:from-amber-600/30 hover:to-amber-800/30 sm:w-[160px]"
-                    style={{ aspectRatio: '2/3' }}
-                  >
-                    <svg
-                      className="mb-2 h-8 w-8 text-amber-400 transition-transform group-hover:scale-110"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                      />
-                    </svg>
-                    <span className="text-sm font-medium text-amber-400">{tRelated('viewMore')}</span>
-                  </Link>
-                </div>
-              </div>
-            </SectionVisibility>
-          )}
-
-          {/* 類似作品ネットワーク */}
-          <SectionVisibility sectionId="similar-network" pageId="product" locale={locale}>
-            <div id="similar-network" className="mt-8 scroll-mt-20">
-              <Suspense fallback={<div className="theme-content h-64 animate-pulse rounded-lg" />}>
-                <SimilarProductMapWrapper productId={productId} locale={locale} />
-              </Suspense>
-            </div>
-          </SectionVisibility>
-
           {/* この作品を見た人はこちらも見ています */}
-          <SectionVisibility sectionId="also-viewed" pageId="product" locale={locale}>
-            <div id="also-viewed" className="mt-8 scroll-mt-20">
-              <Suspense fallback={<div className="theme-content h-48 animate-pulse rounded-lg" />}>
-                <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
-              </Suspense>
-            </div>
-          </SectionVisibility>
-
-          {/* ユーザー投稿セクション（レビュー、タグ提案、出演者提案） */}
-          <SectionVisibility sectionId="user-contributions" pageId="product" locale={locale}>
-            <div id="user-contributions" className="mt-8 scroll-mt-20">
-              <Suspense fallback={<div className="theme-content h-32 animate-pulse rounded-lg" />}>
-                <UserContributionsWrapper
-                  productId={productId}
-                  locale={locale}
-                  existingTags={genreTags.map((t) => t.name)}
-                  existingPerformers={
-                    product.performers?.map((p) => p.name) || (product.actressName ? [product.actressName] : [])
-                  }
-                />
-              </Suspense>
-            </div>
-          </SectionVisibility>
+          <div id="also-viewed" className="mt-8 scroll-mt-20">
+            <Suspense fallback={<div className="theme-content h-48 animate-pulse rounded-lg" />}>
+              <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
+            </Suspense>
+          </div>
         </div>
       </div>
-
-      {/* 関連カテゴリ（内部リンク強化 — 回遊率向上） */}
-      {genreTags.length > 0 && (
-        <nav aria-label="関連カテゴリ" className="mx-auto mt-8 max-w-5xl px-4">
-          <h2 className="theme-text-secondary mb-3 text-sm font-semibold">関連カテゴリ</h2>
-          <div className="flex flex-wrap gap-2">
-            {genreTags.map((tag) => (
-              <Link
-                key={tag.id}
-                href={localizedHref(`/tags/${tag.id}`, locale)}
-                className="theme-accordion-bg theme-text-secondary rounded-full border border-transparent px-3 py-1.5 text-sm transition-colors hover:border-fuchsia-500/40 hover:bg-fuchsia-600/20 hover:text-fuchsia-300"
-              >
-                {tag.name}
-              </Link>
-            ))}
-          </div>
-        </nav>
-      )}
 
       {/* アフィリエイトリンク全クリックトラッキング */}
       <AffiliateClickTracker />
