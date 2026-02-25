@@ -368,23 +368,23 @@ export default function DiscoverPage() {
   return (
     <div className="theme-body min-h-screen">
       <div id="discover" className="min-h-screen bg-gray-900">
-        <div className="container mx-auto px-4 py-6">
-          {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="mb-4 text-center text-xs text-gray-400">
-            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-            当ページには広告・アフィリエイトリンクが含まれています
+        <div className="container mx-auto px-4 py-3 sm:py-4">
+          {/* PR表記 */}
+          <p className="mb-2 text-center text-[10px] text-gray-400">
+            <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
+            広告・アフィリエイトリンク含む
           </p>
 
           {/* Header */}
-          <div className="mb-6 text-center">
-            <h1 className="flex items-center justify-center gap-2 text-2xl font-bold text-white sm:text-3xl">
-              <Sparkles className="h-6 w-6 text-yellow-400" />
+          <div className="mb-4 text-center">
+            <h1 className="flex items-center justify-center gap-2 text-xl font-bold text-white sm:text-2xl">
+              <Sparkles className="h-5 w-5 text-yellow-400" />
               {t.title}
             </h1>
-            <p className="mx-auto mt-1 max-w-md text-sm text-gray-400">{t.subtitle}</p>
+            <p className="mx-auto mt-0.5 max-w-md text-xs text-gray-400">{t.subtitle}</p>
 
             {/* Stats Bar */}
-            <div className="mt-4 flex items-center justify-center gap-3 text-sm">
+            <div className="mt-2 flex items-center justify-center gap-3 text-sm">
               <div className="flex items-center gap-1.5 text-rose-400">
                 <Heart className="h-4 w-4 fill-rose-400" />
                 <span className="font-medium">{likedCount}</span>
@@ -399,7 +399,7 @@ export default function DiscoverPage() {
             </div>
 
             {/* Action Buttons */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
               <button
                 onClick={handleUndo}
                 disabled={history.length === 0}
@@ -441,7 +441,7 @@ export default function DiscoverPage() {
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
               {[...Array(12)].map((_, i) => (
                 <div key={i} className="animate-pulse overflow-hidden rounded-xl bg-gray-800">
-                  <div className="aspect-[3/4] bg-gray-700" />
+                  <div className="aspect-3/4 bg-gray-700" />
                   <div className="p-3">
                     <div className="mb-2 h-4 rounded bg-gray-700" />
                     <div className="h-3 w-2/3 rounded bg-gray-700" />
@@ -476,7 +476,7 @@ export default function DiscoverPage() {
                   >
                     {/* Image */}
                     <Link href={localizedHref(`/products/${product.id}`, locale)}>
-                      <div className="relative aspect-[3/4] bg-gray-900">
+                      <div className="relative aspect-3/4 bg-gray-900">
                         <Image
                           src={product.imageUrl}
                           alt={product.title}
@@ -507,9 +507,7 @@ export default function DiscoverPage() {
 
                     {/* Info */}
                     <div className="p-3">
-                      <h3 className="mb-2 line-clamp-2 min-h-[2.5rem] text-sm font-medium text-white">
-                        {product.title}
-                      </h3>
+                      <h3 className="mb-2 line-clamp-2 min-h-10 text-sm font-medium text-white">{product.title}</h3>
 
                       {/* Meta */}
                       <div className="mb-2 flex flex-wrap gap-1 text-xs text-gray-400">

@@ -374,21 +374,18 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           hasOnSaleProducts={onSaleProducts.length > 0}
         />
 
-        <div className="container mx-auto px-4 py-8">
-          {/* Breadcrumb */}
-          <Breadcrumb
-            items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: actress.name }]}
-            className="mb-4"
-          />
-
-          {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="theme-text-muted mb-6 text-xs">
-            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-            当ページには広告・アフィリエイトリンクが含まれています
-          </p>
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          {/* Breadcrumb + PR */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Breadcrumb items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: actress.name }]} />
+            <span className="theme-text-muted text-[10px]">
+              <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
+              広告・アフィリエイトリンク含む
+            </span>
+          </div>
 
           {/* Header */}
-          <div id="profile" className="mb-6 sm:mb-8">
+          <div id="profile" className="mb-4 sm:mb-5">
             <div className="flex items-start gap-3 sm:gap-4">
               <ActressHeroImage
                 src={actress.heroImage || actress.thumbnail}
@@ -483,7 +480,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* 予算サマリー */}
           {budgetSummary && budgetSummary.totalCost > 0 && (
-            <div className="theme-card mb-8 rounded-lg p-4 sm:p-6">
+            <div className="theme-card mb-5 rounded-lg p-3 sm:p-4">
               <h2 className="theme-text-secondary mb-3 flex items-center gap-2 text-sm font-semibold">
                 <svg className="h-4 w-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -583,7 +580,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* AIレビュー表示 */}
           {actress.aiReview && (
             <SectionVisibility sectionId="ai-review" pageId="actress" locale={locale}>
-              <div id="ai-review" className="mb-8">
+              <div id="ai-review" className="mb-5">
                 <ActressAiReview
                   review={actress.aiReview}
                   updatedAt={actress.aiReviewUpdatedAt ?? ''}
@@ -595,13 +592,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           )}
 
           {/* AI生成のプロフィール */}
-          <div className="mb-8">
+          <div className="mb-5">
             <AiActressProfileWrapper actressId={actress.id} locale={locale} />
           </div>
 
           {/* クロスASP情報表示 */}
           {(aliases.length > 0 || productCountByAsp.length > 1) && (
-            <div className="mb-8">
+            <div className="mb-5">
               <CrossAspInfo
                 performerId={parseInt(actress.id)}
                 performerName={actress.name}
@@ -616,7 +613,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* キャリア分析セクション */}
           {careerAnalysis && (
             <SectionVisibility sectionId="career" pageId="actress" locale={locale}>
-              <div id="career" className="mb-8">
+              <div id="career" className="mb-5">
                 <ActressCareerTimeline career={careerAnalysis} actressName={actress.name} locale={locale} />
               </div>
             </SectionVisibility>
@@ -732,7 +729,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* 共演者マップ（インタラクティブ） */}
           <SectionVisibility sectionId="costar-network" pageId="actress" locale={locale}>
-            <div id="costar-network" className="mt-12 mb-8">
+            <div id="costar-network" className="mt-6 mb-5">
               <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-800" />}>
                 <PerformerRelationMap performerId={parseInt(actress.id)} locale={locale} />
               </Suspense>
@@ -741,7 +738,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
 
           {/* 類似女優マップ（ジャンル・メーカー・プロフィール複合スコア） */}
           <SectionVisibility sectionId="similar-network" pageId="actress" locale={locale}>
-            <div id="similar-network" className="mb-8">
+            <div id="similar-network" className="mb-5">
               <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-800" />}>
                 <SimilarPerformerMap performerId={parseInt(actress.id)} locale={locale} />
               </Suspense>

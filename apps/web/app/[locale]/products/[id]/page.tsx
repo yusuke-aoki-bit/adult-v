@@ -409,21 +409,21 @@ export default async function ProductDetailPage({ params }: PageProps) {
           hasAlsoViewed={true}
         />
 
-        <div className="container mx-auto px-4 py-8">
-          {/* パンくずリスト */}
-          <Breadcrumb items={breadcrumbItems} className="mb-4" />
-
-          {/* PR表記（景品表示法・ステマ規制対応） */}
-          <p className="theme-text-muted mb-6 text-xs">
-            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-            当ページには広告・アフィリエイトリンクが含まれています
-          </p>
+        <div className="container mx-auto px-4 py-4 sm:py-6">
+          {/* パンくず + PR */}
+          <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <Breadcrumb items={breadcrumbItems} />
+            <span className="theme-text-muted text-[10px]">
+              <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
+              広告・アフィリエイトリンク含む
+            </span>
+          </div>
 
           {/* サンプル動画セクション */}
           {product.sampleVideos && product.sampleVideos.length > 0 && (
             <details
               id="sample-video"
-              className="theme-content theme-border group mb-6 scroll-mt-20 rounded-lg border shadow-md"
+              className="theme-content theme-border group mb-4 scroll-mt-16 rounded-lg border shadow-md"
               open
             >
               <summary className="theme-accordion-hover flex cursor-pointer list-none items-center gap-2 rounded-lg p-4 transition-colors">
@@ -463,7 +463,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             id="product-info"
             className="theme-content theme-border scroll-mt-20 overflow-hidden rounded-lg border shadow-md"
           >
-            <div className="grid grid-cols-1 gap-8 p-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 p-4 sm:p-5 md:grid-cols-2">
               {/* Product Image Gallery */}
               <ProductImageGallery
                 mainImage={product.imageUrl ?? null}
@@ -478,7 +478,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   <div className="mb-2 flex items-start gap-3">
                     {/* SEO強化: H1に品番を含める（Google検索で品番検索時にヒット率向上） */}
                     {/* 正規化された品番を使用 */}
-                    <h1 className="theme-text flex-1 text-3xl font-bold">
+                    <h1 className="theme-text flex-1 text-xl font-bold sm:text-2xl">
                       {displayProductCode && <span className="text-rose-400">{displayProductCode}</span>}
                       {displayProductCode && ' '}
                       {product.title}
@@ -817,7 +817,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {sourcesWithSales.length > 0 && (
             <details
               id="price-comparison"
-              className="mt-8 scroll-mt-20"
+              className="mt-5 scroll-mt-16"
               open={sourcesWithSales.length <= 2 ? true : undefined}
             >
               <summary className="theme-text-muted mb-2 cursor-pointer list-none text-sm font-semibold hover:text-white">
@@ -828,7 +828,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           )}
 
           {/* 分析セクション（AIレビュー、シーン、コスパ、投稿をタブで統合） */}
-          <div id="analysis" className="mt-8 scroll-mt-20">
+          <div id="analysis" className="mt-5 scroll-mt-16">
             <ProductAnalysisTabs
               productId={productId}
               locale={locale}
@@ -849,7 +849,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
 
           {/* 関連作品（出演者/シリーズ/メーカーをタブで統合） */}
           {(performerOtherProducts.length > 0 || sameSeriesProducts.length > 0 || sameMakerProducts.length > 0) && (
-            <div id="related-products" className="mt-8 scroll-mt-20">
+            <div id="related-products" className="mt-5 scroll-mt-16">
               <RelatedProductsTabs
                 locale={locale}
                 tabs={[
@@ -898,7 +898,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           )}
 
           {/* この作品を見た人はこちらも見ています */}
-          <div id="also-viewed" className="mt-8 scroll-mt-20">
+          <div id="also-viewed" className="mt-5 scroll-mt-16">
             <Suspense fallback={<div className="theme-content h-48 animate-pulse rounded-lg" />}>
               <AlsoViewedWrapper productId={String(product.id)} locale={locale} />
             </Suspense>

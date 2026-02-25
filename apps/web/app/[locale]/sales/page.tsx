@@ -216,47 +216,47 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
         ]}
       />
 
-      <section className="py-4 md:py-6">
+      <section className="py-3 sm:py-4">
         <div className="container mx-auto px-4">
           <Breadcrumb
             items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: pt.sales }]}
-            className="mb-3"
+            className="mb-2"
           />
 
           {/* ヘッダー */}
-          <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="mb-4 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="mb-2 flex items-center gap-2 text-2xl font-bold text-white md:text-3xl">
-                <span className="text-3xl">🔥</span>
+              <h1 className="mb-1 flex items-center gap-2 text-xl font-bold text-white sm:text-2xl">
+                <span className="text-2xl">🔥</span>
                 {pt.onSaleVideos}
               </h1>
-              <p className="text-gray-400">{pt.itemsOnSale(totalCount.toLocaleString())}</p>
+              <p className="text-sm text-gray-400">{pt.itemsOnSale(totalCount.toLocaleString())}</p>
             </div>
             <SocialShareButtons title={pt.onSaleVideosTitle} compact hashtags={['セール', '割引']} />
           </div>
 
           {/* 統計情報 */}
-          <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
-            <div className="rounded-lg border border-orange-500/30 bg-linear-to-br from-orange-500/20 to-red-500/20 p-4 text-center">
-              <p className="text-2xl font-bold text-orange-400">{saleStats.totalSales.toLocaleString()}</p>
-              <p className="text-xs text-gray-400">{pt.onSale}</p>
+          <div className="mb-4 grid grid-cols-4 gap-2">
+            <div className="rounded-lg border border-orange-500/30 bg-linear-to-br from-orange-500/20 to-red-500/20 p-2.5 text-center">
+              <p className="text-lg font-bold text-orange-400 sm:text-xl">{saleStats.totalSales.toLocaleString()}</p>
+              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.onSale}</p>
             </div>
-            <div className="rounded-lg border border-pink-500/30 bg-linear-to-br from-pink-500/20 to-rose-500/20 p-4 text-center">
-              <p className="text-2xl font-bold text-pink-400">{maxDiscount}%</p>
-              <p className="text-xs text-gray-400">{pt.maxDiscount}</p>
+            <div className="rounded-lg border border-pink-500/30 bg-linear-to-br from-pink-500/20 to-rose-500/20 p-2.5 text-center">
+              <p className="text-lg font-bold text-pink-400 sm:text-xl">{maxDiscount}%</p>
+              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.maxDiscount}</p>
             </div>
-            <div className="rounded-lg border border-blue-500/30 bg-linear-to-br from-blue-500/20 to-cyan-500/20 p-4 text-center">
-              <p className="text-2xl font-bold text-blue-400">{avgDiscount}%</p>
-              <p className="text-xs text-gray-400">{pt.avgDiscount}</p>
+            <div className="rounded-lg border border-blue-500/30 bg-linear-to-br from-blue-500/20 to-cyan-500/20 p-2.5 text-center">
+              <p className="text-lg font-bold text-blue-400 sm:text-xl">{avgDiscount}%</p>
+              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.avgDiscount}</p>
             </div>
-            <div className="rounded-lg border border-green-500/30 bg-linear-to-br from-green-500/20 to-emerald-500/20 p-4 text-center">
-              <p className="text-2xl font-bold text-green-400">{Object.keys(aspCounts).length}</p>
-              <p className="text-xs text-gray-400">{pt.sites}</p>
+            <div className="rounded-lg border border-green-500/30 bg-linear-to-br from-green-500/20 to-emerald-500/20 p-2.5 text-center">
+              <p className="text-lg font-bold text-green-400 sm:text-xl">{Object.keys(aspCounts).length}</p>
+              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.sites}</p>
             </div>
           </div>
 
           {/* ASPフィルター */}
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-3 flex flex-wrap gap-2">
             <Link
               href={localizedHref('/sales', locale)}
               className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
@@ -283,7 +283,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           </div>
 
           {/* 割引率フィルター */}
-          <div className="mb-6 flex flex-wrap gap-2">
+          <div className="mb-3 flex flex-wrap gap-2">
             {[0, 30, 50, 70].map((discount) => (
               <Link
                 key={discount}
