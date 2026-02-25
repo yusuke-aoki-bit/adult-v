@@ -3,8 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Sparkles, Tag, TrendingUp, Clock, Newspaper, ExternalLink, Star } from 'lucide-react';
 import Link from 'next/link';
-import { ProductCardBase, ActressCardBase } from '@adult-v/shared/components';
+import Image from 'next/image';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { useRecentlyViewed } from '@adult-v/shared/hooks';
 
 // ===== Types =====
@@ -32,8 +33,7 @@ interface DiscoveryTabsProps {
 
 // ===== Constants =====
 
-const GRID_CLASSES = 'grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3';
-const SKELETON_CLASSES = 'animate-pulse bg-gray-700 rounded-lg aspect-[2/3]';
+const SCROLL_ROW = 'hide-scrollbar flex gap-3 overflow-x-auto pb-1';
 
 type TabId = 'recommendations' | 'sale' | 'weekly' | 'news' | 'recently-viewed';
 
@@ -123,10 +123,77 @@ function MoreLink({ href, label, locale }: { href: string; label: string; locale
   return (
     <Link
       href={url}
-      className="mt-3 flex w-full items-center justify-center gap-1 rounded-lg py-2 text-sm text-fuchsia-400 transition-colors hover:bg-gray-700/50 hover:text-fuchsia-300"
+      className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-xs text-fuchsia-400 transition-colors hover:bg-gray-700/50 hover:text-fuchsia-300"
     >
       {label}
-      <ExternalLink className="h-4 w-4" />
+      <ExternalLink className="h-3.5 w-3.5" />
+    </Link>
+  );
+}
+
+/** Compact circular avatar chip for actress display in scroll strips */
+function ActressChip({
+  id,
+  name,
+  imageUrl,
+  locale,
+}: {
+  id: number | string;
+  name: string;
+  imageUrl?: string | null;
+  locale: string;
+}) {
+  const src = normalizeImageUrl(imageUrl);
+  return (
+    <Link href={localizedHref(`/actress/${id}`, locale)} className="group flex shrink-0 flex-col items-center">
+      <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-transparent transition-all group-hover:ring-fuchsia-500 sm:h-14 sm:w-14">
+        {src ? (
+          <Image src={src} alt={name} fill className="object-cover" sizes="56px" quality={60} loading="lazy" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gray-700 text-xs text-gray-400">
+            {name[0]}
+          </div>
+        )}
+      </div>
+      <span className="mt-1 max-w-14 truncate text-center text-[10px] text-gray-300 transition-colors group-hover:text-fuchsia-400">
+        {name}
+      </span>
+    </Link>
+  );
+}
+
+/** Compact product thumbnail for scroll strips */
+function ProductChip({
+  id,
+  title,
+  imageUrl,
+  locale,
+  badge,
+}: {
+  id: number | string;
+  title: string;
+  imageUrl?: string | null;
+  locale: string;
+  badge?: string;
+}) {
+  const src = normalizeImageUrl(imageUrl);
+  return (
+    <Link href={localizedHref(`/product/${id}`, locale)} className="group relative shrink-0">
+      <div className="relative h-20 w-14 overflow-hidden rounded-lg bg-gray-700 sm:h-24 sm:w-[68px]">
+        {src ? (
+          <Image src={src} alt={title} fill className="object-cover" sizes="68px" quality={60} loading="lazy" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">?</div>
+        )}
+        {badge && (
+          <span className="absolute top-0.5 left-0.5 rounded bg-red-600 px-1 py-px text-[9px] font-bold text-white">
+            {badge}
+          </span>
+        )}
+      </div>
+      <p className="mt-0.5 max-w-14 truncate text-[10px] text-gray-400 transition-colors group-hover:text-fuchsia-400 sm:max-w-[68px]">
+        {title}
+      </p>
     </Link>
   );
 }
@@ -181,7 +248,7 @@ function RecentlyViewedTab({ locale, recentlyViewedData }: { locale: string; rec
   }, [historyLoading, recentlyViewed, hasFetched]);
 
   if (historyLoading || recentlyViewed.length === 0) {
-    return <p className="py-4 text-center text-sm text-gray-400">{t.noHistory}</p>;
+    return <p className="py-3 text-center text-xs text-gray-400">{t.noHistory}</p>;
   }
   if (loading) return <Skeletons />;
 
@@ -191,30 +258,25 @@ function RecentlyViewedTab({ locale, recentlyViewedData }: { locale: string; rec
       if (!actressMap.has(a.id)) actressMap.set(a.id, a);
     }),
   );
-  const actresses = Array.from(actressMap.values()).slice(0, 6);
+  const actresses = Array.from(actressMap.values()).slice(0, 8);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {actresses.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-blue-400">{t.recentActresses}</h4>
-          <div className={GRID_CLASSES}>
+          <h4 className="mb-1.5 text-[11px] font-semibold text-blue-400">{t.recentActresses}</h4>
+          <div className={SCROLL_ROW}>
             {actresses.map((a) => (
-              <ActressCardBase key={a.id} actress={{ id: String(a.id), name: a.name }} size="mini" theme="dark" />
+              <ActressChip key={a.id} id={a.id} name={a.name} locale={locale} />
             ))}
           </div>
         </div>
       )}
       <div>
-        <h4 className="mb-2 text-xs font-semibold text-gray-400">{t.recentProducts}</h4>
-        <div className={GRID_CLASSES}>
+        <h4 className="mb-1.5 text-[11px] font-semibold text-gray-400">{t.recentProducts}</h4>
+        <div className={SCROLL_ROW}>
           {products.map((p) => (
-            <ProductCardBase
-              key={p.id}
-              product={{ id: String(p.id), title: p.title, imageUrl: p.imageUrl ?? undefined, price: 0 }}
-              size="mini"
-              theme="dark"
-            />
+            <ProductChip key={p.id} id={p.id} title={p.title} imageUrl={p.imageUrl} locale={locale} />
           ))}
         </div>
       </div>
@@ -226,7 +288,7 @@ function RecentlyViewedTab({ locale, recentlyViewedData }: { locale: string; rec
 
 function SaleTab({ products, locale }: { products: SaleProduct[]; locale: string }) {
   const t = getTexts(locale);
-  if (products.length === 0) return <p className="py-4 text-center text-sm text-gray-400">{t.noSale}</p>;
+  if (products.length === 0) return <p className="py-3 text-center text-xs text-gray-400">{t.noSale}</p>;
 
   const actressMap = new Map<number, { id: number; name: string; profileImageUrl?: string | null }>();
   products.forEach((p) =>
@@ -235,44 +297,32 @@ function SaleTab({ products, locale }: { products: SaleProduct[]; locale: string
     }),
   );
   const all = Array.from(actressMap.values());
-  const actresses = [...all.filter((a) => a.profileImageUrl), ...all.filter((a) => !a.profileImageUrl)].slice(0, 6);
+  const actresses = [...all.filter((a) => a.profileImageUrl), ...all.filter((a) => !a.profileImageUrl)].slice(0, 8);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {actresses.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-red-400">{t.saleActresses}</h4>
-          <div className={GRID_CLASSES}>
+          <h4 className="mb-1.5 text-[11px] font-semibold text-red-400">{t.saleActresses}</h4>
+          <div className={SCROLL_ROW}>
             {actresses.map((a) => (
-              <ActressCardBase
-                key={a.id}
-                actress={{ id: String(a.id), name: a.name, heroImage: a.profileImageUrl ?? undefined }}
-                size="mini"
-                theme="dark"
-              />
+              <ActressChip key={a.id} id={a.id} name={a.name} imageUrl={a.profileImageUrl} locale={locale} />
             ))}
           </div>
         </div>
       )}
       <div>
-        <h4 className="mb-2 text-xs font-semibold text-gray-400">{t.saleProducts}</h4>
-        <div className={GRID_CLASSES}>
+        <h4 className="mb-1.5 text-[11px] font-semibold text-gray-400">{t.saleProducts}</h4>
+        <div className={SCROLL_ROW}>
           {products.slice(0, 8).map((p) => (
-            <div key={p.productId} className="relative">
-              <ProductCardBase
-                product={{
-                  id: String(p.productId),
-                  title: p.title,
-                  imageUrl: p.thumbnailUrl ?? undefined,
-                  price: p.salePrice,
-                }}
-                size="mini"
-                theme="dark"
-              />
-              <div className="absolute top-1 left-1 z-10 rounded bg-red-600 px-1 py-0.5 text-[10px] font-bold text-white">
-                -{p.discountPercent}%
-              </div>
-            </div>
+            <ProductChip
+              key={p.productId}
+              id={p.productId}
+              title={p.title}
+              imageUrl={p.thumbnailUrl}
+              locale={locale}
+              badge={`-${p.discountPercent}%`}
+            />
           ))}
         </div>
       </div>
@@ -314,7 +364,7 @@ function RecommendationsTab({
       if (res.ok) {
         const data = await res.json();
         setProducts(data.recommendations || []);
-        if (data.userProfile?.topPerformers) setActresses(data.userProfile.topPerformers.slice(0, 6));
+        if (data.userProfile?.topPerformers) setActresses(data.userProfile.topPerformers.slice(0, 8));
       }
     } catch (e) {
       console.error('[Recommendations]', e);
@@ -329,44 +379,28 @@ function RecommendationsTab({
   }, [historyLoading, recentlyViewed.length, fetchRecs]);
 
   if (historyLoading || recentlyViewed.length < 3) {
-    return <p className="py-4 text-center text-sm text-gray-400">{t.recommendHint}</p>;
+    return <p className="py-3 text-center text-xs text-gray-400">{t.recommendHint}</p>;
   }
   if (loading) return <Skeletons />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {actresses.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-purple-400">{t.recommendedActresses}</h4>
-          <div className={GRID_CLASSES}>
+          <h4 className="mb-1.5 text-[11px] font-semibold text-purple-400">{t.recommendedActresses}</h4>
+          <div className={SCROLL_ROW}>
             {actresses.map((a) => (
-              <ActressCardBase
-                key={a.id}
-                actress={{ id: String(a.id), name: a.name, thumbnail: a.thumbnailUrl ?? undefined }}
-                size="mini"
-                theme="dark"
-              />
+              <ActressChip key={a.id} id={a.id} name={a.name} imageUrl={a.thumbnailUrl} locale={locale} />
             ))}
           </div>
         </div>
       )}
       {products.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-gray-400">{t.recommendedProducts}</h4>
-          <div className={GRID_CLASSES}>
+          <h4 className="mb-1.5 text-[11px] font-semibold text-gray-400">{t.recommendedProducts}</h4>
+          <div className={SCROLL_ROW}>
             {products.map((p) => (
-              <ProductCardBase
-                key={p.id}
-                product={{
-                  id: String(p.id),
-                  title: p.title,
-                  imageUrl: p.imageUrl ?? undefined,
-                  releaseDate: p.releaseDate ?? undefined,
-                  price: 0,
-                }}
-                size="mini"
-                theme="dark"
-              />
+              <ProductChip key={p.id} id={p.id} title={p.title} imageUrl={p.imageUrl} locale={locale} />
             ))}
           </div>
         </div>
@@ -392,7 +426,7 @@ function WeeklyTab({ locale }: { locale: string }) {
         const res = await fetch('/api/weekly-highlights');
         if (res.ok) {
           const data = await res.json();
-          setActresses(data.trendingActresses?.slice(0, 6) || []);
+          setActresses(data.trendingActresses?.slice(0, 8) || []);
           setProducts([...(data.hotNewReleases?.slice(0, 4) || []), ...(data.rediscoveredClassics?.slice(0, 4) || [])]);
         }
       } catch (e) {
@@ -406,39 +440,23 @@ function WeeklyTab({ locale }: { locale: string }) {
   if (loading) return <Skeletons />;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {actresses.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-amber-400">{t.featuredActresses}</h4>
-          <div className={GRID_CLASSES}>
+          <h4 className="mb-1.5 text-[11px] font-semibold text-amber-400">{t.featuredActresses}</h4>
+          <div className={SCROLL_ROW}>
             {actresses.map((a) => (
-              <ActressCardBase
-                key={a.id}
-                actress={{ id: String(a.id), name: a.name, thumbnail: a.thumbnailUrl ?? undefined }}
-                size="mini"
-                theme="dark"
-              />
+              <ActressChip key={a.id} id={a.id} name={a.name} imageUrl={a.thumbnailUrl} locale={locale} />
             ))}
           </div>
         </div>
       )}
       {products.length > 0 && (
         <div>
-          <h4 className="mb-2 text-xs font-semibold text-gray-400">{t.featuredProducts}</h4>
-          <div className={GRID_CLASSES}>
+          <h4 className="mb-1.5 text-[11px] font-semibold text-gray-400">{t.featuredProducts}</h4>
+          <div className={SCROLL_ROW}>
             {products.map((p) => (
-              <ProductCardBase
-                key={p.id}
-                product={{
-                  id: String(p.id),
-                  title: p.title,
-                  imageUrl: p.imageUrl ?? undefined,
-                  releaseDate: p.releaseDate ?? undefined,
-                  price: 0,
-                }}
-                size="mini"
-                theme="dark"
-              />
+              <ProductChip key={p.id} id={p.id} title={p.title} imageUrl={p.imageUrl} locale={locale} />
             ))}
           </div>
         </div>
@@ -532,7 +550,7 @@ function NewsTab({ locale }: { locale: string }) {
             href={localizedHref(`/news/${article.slug}`, locale)}
             className={`block rounded-lg p-3 transition-colors ${
               article.featured
-                ? 'border border-yellow-600/30 bg-gradient-to-r from-gray-700/80 to-gray-700/40 hover:border-yellow-500/50'
+                ? 'border border-yellow-600/30 bg-linear-to-r from-gray-700/80 to-gray-700/40 hover:border-yellow-500/50'
                 : 'bg-gray-700/50 hover:bg-gray-700'
             }`}
           >
@@ -561,10 +579,17 @@ function NewsTab({ locale }: { locale: string }) {
 
 function Skeletons() {
   return (
-    <div className={GRID_CLASSES}>
-      {[...Array(8)].map((_, i) => (
-        <div key={i} className={SKELETON_CLASSES} />
-      ))}
+    <div className="space-y-3">
+      <div className={SCROLL_ROW}>
+        {[...Array(8)].map((_, i) => (
+          <div key={i} className="h-12 w-12 shrink-0 animate-pulse rounded-full bg-gray-700 sm:h-14 sm:w-14" />
+        ))}
+      </div>
+      <div className={SCROLL_ROW}>
+        {[...Array(6)].map((_, i) => (
+          <div key={i} className="h-20 w-14 shrink-0 animate-pulse rounded-lg bg-gray-700 sm:h-24 sm:w-[68px]" />
+        ))}
+      </div>
     </div>
   );
 }
@@ -591,9 +616,9 @@ export default function DiscoveryTabs({ locale, saleProducts }: DiscoveryTabsPro
   };
 
   return (
-    <section className="container mx-auto px-3 py-4 sm:px-4">
+    <section className="container mx-auto px-3 py-3 sm:px-4">
       {/* Tab Bar */}
-      <div className="hide-scrollbar mb-4 flex gap-1 overflow-x-auto border-b border-white/10 pb-px">
+      <div className="hide-scrollbar mb-3 flex gap-1 overflow-x-auto border-b border-white/10 pb-px">
         {TAB_DEFS.map((tab) => {
           const isActive = activeTab === tab.id;
           return (

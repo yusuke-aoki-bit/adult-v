@@ -422,16 +422,16 @@ export default async function Home({ params, searchParams }: PageProps) {
       {isTopPage && <DiscoveryTabs locale={locale} saleProducts={saleProductsForDisplay} />}
 
       {/* 女優一覧 */}
-      <section id="list" className="scroll-mt-4 py-3 sm:py-4 md:py-6">
+      <section id="list" className="scroll-mt-4 py-2 sm:py-3">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="mb-2 sm:mb-3">
+          <div className="mb-1.5 sm:mb-2">
             {isTopPage ? (
-              <h2 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h2>
+              <h2 className="theme-text mb-0.5 text-base font-bold sm:text-lg">{tCommon('actresses')}</h2>
             ) : (
-              <h1 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h1>
+              <h1 className="theme-text mb-0.5 text-lg font-bold sm:text-xl md:text-2xl">{tCommon('actresses')}</h1>
             )}
             {!isTopPage && (
-              <p className="theme-text-secondary text-sm sm:text-base">{t('actressCount', { count: totalCount })}</p>
+              <p className="theme-text-secondary text-xs sm:text-sm">{t('actressCount', { count: totalCount })}</p>
             )}
           </div>
 
@@ -472,7 +472,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
 
           {/* 並び順・表示件数 */}
-          <div className="mb-2 flex items-center justify-end gap-4 sm:mb-4">
+          <div className="mb-1.5 flex items-center justify-end gap-3 sm:mb-2">
             <PerPageDropdown perPage={perPage} basePath={localizedHref('/', locale)} />
             <SortDropdown sortBy={sortBy} theme="dark" />
           </div>
@@ -480,7 +480,8 @@ export default async function Home({ params, searchParams }: PageProps) {
           <PerformerGridWithComparison
             performers={actresses}
             locale={locale}
-            className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 md:gap-4 lg:grid-cols-5 xl:grid-cols-6"
+            size="compact"
+            className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 md:gap-3 lg:grid-cols-6 xl:grid-cols-8"
           />
 
           {/* ページネーション（下部） */}
