@@ -26,6 +26,7 @@ import {
   SectionVisibility,
 } from '@adult-v/shared/components';
 import StickyCta from '@/components/StickyCta';
+import AffiliateClickTracker from '@/components/AffiliateClickTracker';
 import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';
 import AlsoViewedWrapper from '@/components/AlsoViewedWrapper';
 import UserContributionsWrapper from '@/components/UserContributionsWrapper';
@@ -1330,6 +1331,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
           </div>
         </nav>
       )}
+
+      {/* アフィリエイトリンク全クリックトラッキング */}
+      <AffiliateClickTracker />
 
       {/* View tracking */}
       <ViewTracker

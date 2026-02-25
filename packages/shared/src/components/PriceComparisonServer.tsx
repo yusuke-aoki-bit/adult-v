@@ -145,6 +145,17 @@ export default function PriceComparisonServer({ sources, locale }: PriceComparis
               href={source.affiliateUrl}
               target="_blank"
               rel="noopener noreferrer sponsored"
+              onClick={() => {
+                if (typeof window !== 'undefined' && typeof window.gtag === 'function') {
+                  window.gtag('event', 'price_comparison_click', {
+                    provider: source.aspName,
+                    price: source.salePrice ?? source.regularPrice,
+                    is_sale: source.isOnSale,
+                    is_cheapest: isCheapest,
+                    position: index + 1,
+                  });
+                }
+              }}
               className={`group flex items-center gap-3 rounded-lg p-3 transition-all ${
                 isCheapest
                   ? 'border border-emerald-500/30 bg-emerald-900/30 hover:bg-emerald-900/50'
