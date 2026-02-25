@@ -363,11 +363,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
           locale={locale}
           hasSampleVideo={!!(product.sampleVideos && product.sampleVideos.length > 0)}
           hasPriceComparison={false}
-          hasCostPerformance={false}
-          hasAiReview={!!product.aiReview}
-          hasPerformerProducts={performerOtherProducts.length > 0 && !!primaryPerformerId}
-          hasSeriesProducts={sameSeriesProducts.length > 0 && !!series}
-          hasMakerProducts={sameMakerProducts.length > 0 && !!maker}
+          hasAnalysis={!!product.aiReview}
+          hasRelatedProducts={
+            (performerOtherProducts.length > 0 && !!primaryPerformerId) ||
+            (sameSeriesProducts.length > 0 && !!series) ||
+            (sameMakerProducts.length > 0 && !!maker)
+          }
           hasAlsoViewed={true}
         />
 
