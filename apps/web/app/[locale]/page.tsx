@@ -412,9 +412,13 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* サイトタイトル（トップページH1 → SEO用） */}
       {isTopPage && (
-        <div className="container mx-auto px-3 pt-4 sm:px-4">
-          <h1 className="theme-text text-lg font-bold sm:text-xl">{t('siteTitle')}</h1>
-          <p className="theme-text-secondary text-xs sm:text-sm">{t('actressCount', { count: totalCount })}</p>
+        <div className="container mx-auto px-3 pt-3 sm:px-4">
+          <h1 className="theme-text text-base font-bold sm:text-lg">
+            {t('siteTitle')}
+            <span className="theme-text-secondary ml-2 text-xs font-normal">
+              {t('actressCount', { count: totalCount })}
+            </span>
+          </h1>
         </div>
       )}
 
@@ -424,16 +428,12 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* 女優一覧 */}
       <section id="list" className="scroll-mt-4 py-2 sm:py-3">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="mb-1.5 sm:mb-2">
-            {isTopPage ? (
-              <h2 className="theme-text mb-0.5 text-base font-bold sm:text-lg">{tCommon('actresses')}</h2>
-            ) : (
+          {!isTopPage && (
+            <div className="mb-1.5 sm:mb-2">
               <h1 className="theme-text mb-0.5 text-lg font-bold sm:text-xl md:text-2xl">{tCommon('actresses')}</h1>
-            )}
-            {!isTopPage && (
               <p className="theme-text-secondary text-xs sm:text-sm">{t('actressCount', { count: totalCount })}</p>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* フィルター設定（頭文字検索 + タグフィルター） */}
           <ActressListFilter
@@ -471,8 +471,8 @@ export default async function Home({ params, searchParams }: PageProps) {
             }}
           />
 
-          {/* 並び順・表示件数 */}
-          <div className="mb-1.5 flex items-center justify-end gap-3 sm:mb-2">
+          {/* 並び順・表示件数 — フィルターの直後、グリッドの直前 */}
+          <div className="mb-1 flex items-center justify-end gap-2">
             <PerPageDropdown perPage={perPage} basePath={localizedHref('/', locale)} />
             <SortDropdown sortBy={sortBy} theme="dark" />
           </div>

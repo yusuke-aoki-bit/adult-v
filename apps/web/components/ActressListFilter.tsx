@@ -288,7 +288,7 @@ export default function ActressListFilter({
 
   return (
     <details
-      className="mb-4 rounded-lg border border-gray-700 bg-gray-800 sm:mb-8"
+      className="mb-2 rounded-lg border border-gray-700 bg-gray-800 sm:mb-3"
       open={hasActiveFilters || undefined}
       onToggle={(e) => setIsFilterOpen((e.target as HTMLDetailsElement).open)}
     >
