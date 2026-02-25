@@ -16,7 +16,6 @@ import {
   getUncategorizedProductsCount,
   SaleProduct,
   getTrendingActresses,
-  getProducts,
 } from '@/lib/db/queries';
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -129,35 +128,22 @@ const getCachedAspStats = unstable_cache(async () => getAspStats(), ['homepage-a
 // トップページ全データを一括キャッシュ（8クエリ→1キャッシュルックアップ）
 const getCachedTopPageData = unstable_cache(
   async (locale: string, perPage: number, isFanzaSite: boolean, includeAsps: string[]) => {
-    const [
-      allTags,
-      aspStatsResult,
-      actresses,
-      totalCount,
-      saleProducts,
-      uncategorizedCount,
-      trendingActresses,
-      fanzaProducts,
-    ] = await Promise.all([
-      getTags().catch(() => [] as Awaited<ReturnType<typeof getTags>>),
-      !isFanzaSite
-        ? getAspStats().catch(() => [] as Array<{ aspName: string; productCount: number; actressCount: number }>)
-        : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
-      getActresses({ limit: perPage, offset: 0, locale, includeAsps }).catch(
-        () => [] as Awaited<ReturnType<typeof getActresses>>,
-      ),
-      getActressesCount({ includeAsps }).catch(() => 0),
-      getSaleProducts({ limit: 8 }).catch(() => [] as SaleProduct[]),
-      getUncategorizedProductsCount().catch(() => 0),
-      (typeof getTrendingActresses === 'function' ? getTrendingActresses({ limit: 8 }) : Promise.resolve([])).catch(
-        () => [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>,
-      ),
-      !isFanzaSite
-        ? getProducts({ limit: 8, sortBy: 'releaseDateDesc', providers: ['FANZA'] }).catch(
-            () => [] as Awaited<ReturnType<typeof getProducts>>,
-          )
-        : Promise.resolve([] as Awaited<ReturnType<typeof getProducts>>),
-    ]);
+    const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses] =
+      await Promise.all([
+        getTags().catch(() => [] as Awaited<ReturnType<typeof getTags>>),
+        !isFanzaSite
+          ? getAspStats().catch(() => [] as Array<{ aspName: string; productCount: number; actressCount: number }>)
+          : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+        getActresses({ limit: perPage, offset: 0, locale, includeAsps }).catch(
+          () => [] as Awaited<ReturnType<typeof getActresses>>,
+        ),
+        getActressesCount({ includeAsps }).catch(() => 0),
+        getSaleProducts({ limit: 8 }).catch(() => [] as SaleProduct[]),
+        getUncategorizedProductsCount().catch(() => 0),
+        (typeof getTrendingActresses === 'function' ? getTrendingActresses({ limit: 8 }) : Promise.resolve([])).catch(
+          () => [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>,
+        ),
+      ]);
     return {
       allTags,
       aspStatsResult,
@@ -166,7 +152,6 @@ const getCachedTopPageData = unstable_cache(
       saleProducts,
       uncategorizedCount,
       trendingActresses,
-      fanzaProducts,
     };
   },
   ['homepage-top-data'],
@@ -326,7 +311,6 @@ export default async function Home({ params, searchParams }: PageProps) {
   let saleProducts: SaleProduct[];
   let uncategorizedCount: number;
   let trendingActresses: Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>;
-  let fanzaProducts: Awaited<ReturnType<typeof getProducts>>;
 
   if (isTopPage) {
     // トップページ: 全データを一括キャッシュ（8クエリ→1キャッシュルックアップ、300秒TTL）
@@ -338,47 +322,37 @@ export default async function Home({ params, searchParams }: PageProps) {
     saleProducts = cached.saleProducts;
     uncategorizedCount = cached.uncategorizedCount;
     trendingActresses = cached.trendingActresses;
-    fanzaProducts = cached.fanzaProducts;
   } else {
     // フィルター・ページネーション時: 個別クエリ（キャッシュ付き）
-    [
-      allTags,
-      aspStatsResult,
-      actresses,
-      totalCount,
-      saleProducts,
-      uncategorizedCount,
-      trendingActresses,
-      fanzaProducts,
-    ] = await Promise.all([
-      getCachedTags().catch((error) => {
-        console.error('Failed to fetch tags:', error);
-        return [] as Awaited<ReturnType<typeof getTags>>;
-      }),
-      !isFanzaSite
-        ? getCachedAspStats().catch((error) => {
-            console.error('Failed to fetch ASP stats:', error);
-            return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
-          })
-        : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
-      getActresses({
-        ...actressQueryOptions,
-        limit: perPage,
-        offset,
-        locale,
-      }).catch((error) => {
-        console.error('Failed to fetch actresses:', error);
-        return [] as Awaited<ReturnType<typeof getActresses>>;
-      }),
-      getActressesCount(actressQueryOptions).catch((error) => {
-        console.error('Failed to fetch actresses count:', error);
-        return 0;
-      }),
-      Promise.resolve([] as SaleProduct[]),
-      Promise.resolve(0),
-      Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
-      Promise.resolve([] as Awaited<ReturnType<typeof getProducts>>),
-    ]);
+    [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses] =
+      await Promise.all([
+        getCachedTags().catch((error) => {
+          console.error('Failed to fetch tags:', error);
+          return [] as Awaited<ReturnType<typeof getTags>>;
+        }),
+        !isFanzaSite
+          ? getCachedAspStats().catch((error) => {
+              console.error('Failed to fetch ASP stats:', error);
+              return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
+            })
+          : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+        getActresses({
+          ...actressQueryOptions,
+          limit: perPage,
+          offset,
+          locale,
+        }).catch((error) => {
+          console.error('Failed to fetch actresses:', error);
+          return [] as Awaited<ReturnType<typeof getActresses>>;
+        }),
+        getActressesCount(actressQueryOptions).catch((error) => {
+          console.error('Failed to fetch actresses count:', error);
+          return 0;
+        }),
+        Promise.resolve([] as SaleProduct[]),
+        Promise.resolve(0),
+        Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
+      ]);
   }
 
   const genreTags = allTags.filter((tag) => tag.category !== 'site');
@@ -584,20 +558,8 @@ export default async function Home({ params, searchParams }: PageProps) {
         </section>
       )}
 
-      {/* FANZA新作ピックアップ（FANZA専門サイトへの導線強化） */}
-      {!isFanzaSite && isTopPage && (
-        <FanzaNewReleasesSection
-          locale={locale}
-          products={fanzaProducts.map((p) => ({
-            id: p.id,
-            title: p.title,
-            imageUrl: p.imageUrl ?? null,
-            salePrice: p.salePrice,
-            price: p.price,
-            discount: p.discount,
-          }))}
-        />
-      )}
+      {/* FANZA専門サイトへの導線（f.adult-v.com経由、商品情報は表示しない） */}
+      {!isFanzaSite && isTopPage && <FanzaNewReleasesSection locale={locale} />}
     </div>
   );
 }
