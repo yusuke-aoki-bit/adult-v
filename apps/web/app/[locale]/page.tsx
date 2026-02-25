@@ -4,16 +4,15 @@ import Pagination from '@/components/Pagination';
 import PerPageDropdown from '@/components/PerPageDropdown';
 import PerformerGridWithComparison from '@/components/PerformerGridWithComparison';
 import ActressListFilter from '@/components/ActressListFilter';
-import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
-import TopPageSectionNav from '@/components/TopPageSectionNav';
-import HeroSection from '@/components/HeroSection';
+import CompactSaleStrip from '@/components/CompactSaleStrip';
+import CompactTrendingStrip from '@/components/CompactTrendingStrip';
+import DiscoveryTabs from '@/components/DiscoveryTabs';
 import {
   getActresses,
   getActressesCount,
   getTags,
   getAspStats,
   getSaleProducts,
-  getUncategorizedProductsCount,
   SaleProduct,
   getTrendingActresses,
 } from '@/lib/db/queries';
@@ -128,29 +127,26 @@ const getCachedAspStats = unstable_cache(async () => getAspStats(), ['homepage-a
 // トップページ全データを一括キャッシュ（8クエリ→1キャッシュルックアップ）
 const getCachedTopPageData = unstable_cache(
   async (locale: string, perPage: number, isFanzaSite: boolean, includeAsps: string[]) => {
-    const [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses] =
-      await Promise.all([
-        getTags().catch(() => [] as Awaited<ReturnType<typeof getTags>>),
-        !isFanzaSite
-          ? getAspStats().catch(() => [] as Array<{ aspName: string; productCount: number; actressCount: number }>)
-          : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
-        getActresses({ limit: perPage, offset: 0, locale, includeAsps }).catch(
-          () => [] as Awaited<ReturnType<typeof getActresses>>,
-        ),
-        getActressesCount({ includeAsps }).catch(() => 0),
-        getSaleProducts({ limit: 8 }).catch(() => [] as SaleProduct[]),
-        getUncategorizedProductsCount().catch(() => 0),
-        (typeof getTrendingActresses === 'function' ? getTrendingActresses({ limit: 8 }) : Promise.resolve([])).catch(
-          () => [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>,
-        ),
-      ]);
+    const [allTags, aspStatsResult, actresses, totalCount, saleProducts, trendingActresses] = await Promise.all([
+      getTags().catch(() => [] as Awaited<ReturnType<typeof getTags>>),
+      !isFanzaSite
+        ? getAspStats().catch(() => [] as Array<{ aspName: string; productCount: number; actressCount: number }>)
+        : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+      getActresses({ limit: perPage, offset: 0, locale, includeAsps }).catch(
+        () => [] as Awaited<ReturnType<typeof getActresses>>,
+      ),
+      getActressesCount({ includeAsps }).catch(() => 0),
+      getSaleProducts({ limit: 8 }).catch(() => [] as SaleProduct[]),
+      (typeof getTrendingActresses === 'function' ? getTrendingActresses({ limit: 8 }) : Promise.resolve([])).catch(
+        () => [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>,
+      ),
+    ]);
     return {
       allTags,
       aspStatsResult,
       actresses,
       totalCount,
       saleProducts,
-      uncategorizedCount,
       trendingActresses,
     };
   },
@@ -309,7 +305,6 @@ export default async function Home({ params, searchParams }: PageProps) {
   let actresses: Awaited<ReturnType<typeof getActresses>>;
   let totalCount: number;
   let saleProducts: SaleProduct[];
-  let uncategorizedCount: number;
   let trendingActresses: Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>;
 
   if (isTopPage) {
@@ -320,39 +315,36 @@ export default async function Home({ params, searchParams }: PageProps) {
     actresses = cached.actresses;
     totalCount = cached.totalCount;
     saleProducts = cached.saleProducts;
-    uncategorizedCount = cached.uncategorizedCount;
     trendingActresses = cached.trendingActresses;
   } else {
     // フィルター・ページネーション時: 個別クエリ（キャッシュ付き）
-    [allTags, aspStatsResult, actresses, totalCount, saleProducts, uncategorizedCount, trendingActresses] =
-      await Promise.all([
-        getCachedTags().catch((error) => {
-          console.error('Failed to fetch tags:', error);
-          return [] as Awaited<ReturnType<typeof getTags>>;
-        }),
-        !isFanzaSite
-          ? getCachedAspStats().catch((error) => {
-              console.error('Failed to fetch ASP stats:', error);
-              return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
-            })
-          : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
-        getActresses({
-          ...actressQueryOptions,
-          limit: perPage,
-          offset,
-          locale,
-        }).catch((error) => {
-          console.error('Failed to fetch actresses:', error);
-          return [] as Awaited<ReturnType<typeof getActresses>>;
-        }),
-        getActressesCount(actressQueryOptions).catch((error) => {
-          console.error('Failed to fetch actresses count:', error);
-          return 0;
-        }),
-        Promise.resolve([] as SaleProduct[]),
-        Promise.resolve(0),
-        Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
-      ]);
+    [allTags, aspStatsResult, actresses, totalCount, saleProducts, trendingActresses] = await Promise.all([
+      getCachedTags().catch((error) => {
+        console.error('Failed to fetch tags:', error);
+        return [] as Awaited<ReturnType<typeof getTags>>;
+      }),
+      !isFanzaSite
+        ? getCachedAspStats().catch((error) => {
+            console.error('Failed to fetch ASP stats:', error);
+            return [] as Array<{ aspName: string; productCount: number; actressCount: number }>;
+          })
+        : Promise.resolve([] as Array<{ aspName: string; productCount: number; actressCount: number }>),
+      getActresses({
+        ...actressQueryOptions,
+        limit: perPage,
+        offset,
+        locale,
+      }).catch((error) => {
+        console.error('Failed to fetch actresses:', error);
+        return [] as Awaited<ReturnType<typeof getActresses>>;
+      }),
+      getActressesCount(actressQueryOptions).catch((error) => {
+        console.error('Failed to fetch actresses count:', error);
+        return 0;
+      }),
+      Promise.resolve([] as SaleProduct[]),
+      Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
+    ]);
   }
 
   const genreTags = allTags.filter((tag) => tag.category !== 'site');
@@ -390,14 +382,14 @@ export default async function Home({ params, searchParams }: PageProps) {
     performers: p.performers,
   }));
 
-  // 共通セクション用の翻訳
-  const layoutTranslations = {
-    viewProductList: t('viewProductList'),
-    viewProductListDesc: t('viewProductListDesc'),
-    uncategorizedBadge: t('uncategorizedBadge'),
-    uncategorizedDescription: t('uncategorizedDescription'),
-    uncategorizedCount: t('uncategorizedCount', { count: uncategorizedCount }),
-  };
+  // CompactSaleStrip用のスカラー値を算出
+  const saleCount = saleProducts.length;
+  const maxDiscount = saleProducts.reduce((max, p) => Math.max(max, p.discountPercent), 0);
+  const nearestEndAt = saleProducts.reduce<string | null>((nearest, p) => {
+    if (!p.endAt) return nearest;
+    const iso = p.endAt.toISOString();
+    return !nearest || iso < nearest ? iso : nearest;
+  }, null);
 
   // LCP最適化: 最初の女優画像をpreload（コンパクトモードではthumbnail優先）
   const firstActressImageUrl =
@@ -410,35 +402,26 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
 
-      {/* ヒーローセクション（トップページのみ） */}
-      {isTopPage && (
-        <HeroSection
-          locale={locale}
-          saleProducts={saleProductsForDisplay}
-          trendingActresses={trendingActresses}
-          totalActressCount={totalCount > 0 ? totalCount : 38000}
-          totalProductCount={120000}
-        />
+      {/* コンパクトセールストリップ（トップページのみ） */}
+      {isTopPage && saleCount > 0 && (
+        <CompactSaleStrip saleCount={saleCount} maxDiscount={maxDiscount} nearestEndAt={nearestEndAt} locale={locale} />
       )}
 
-      {/* セクションナビゲーション */}
+      {/* トレンド女優ストリップ（トップページのみ） */}
+      {isTopPage && <CompactTrendingStrip trendingActresses={trendingActresses} locale={locale} />}
+
+      {/* サイトタイトル（トップページH1 → SEO用） */}
       {isTopPage && (
-        <TopPageSectionNav
-          locale={locale}
-          hasSaleProducts={saleProducts.length > 0}
-          hasRecentlyViewed={true}
-          hasRecommendations={true}
-        />
+        <div className="container mx-auto px-3 pt-4 sm:px-4">
+          <h1 className="theme-text text-lg font-bold sm:text-xl">{t('siteTitle')}</h1>
+          <p className="theme-text-secondary text-xs sm:text-sm">{t('actressCount', { count: totalCount })}</p>
+        </div>
       )}
 
-      {/* トップページ上部セクション（最近見た作品、レコメンド - セールはヒーローに移動） */}
-      {isTopPage && (
-        <section className="container mx-auto px-3 py-3 sm:px-4">
-          <TopPageUpperSections locale={locale} saleProducts={[]} pageId="home" />
-        </section>
-      )}
+      {/* ディスカバリータブ（トップページのみ） */}
+      {isTopPage && <DiscoveryTabs locale={locale} saleProducts={saleProductsForDisplay} />}
 
-      {/* 女優一覧（メインコンテンツを最優先で表示） */}
+      {/* 女優一覧 */}
       <section id="list" className="scroll-mt-4 py-3 sm:py-4 md:py-6">
         <div className="container mx-auto px-3 sm:px-4">
           <div className="mb-2 sm:mb-3">
@@ -447,7 +430,9 @@ export default async function Home({ params, searchParams }: PageProps) {
             ) : (
               <h1 className="theme-text mb-0.5 text-xl font-bold sm:text-2xl md:text-3xl">{tCommon('actresses')}</h1>
             )}
-            <p className="theme-text-secondary text-sm sm:text-base">{t('actressCount', { count: totalCount })}</p>
+            {!isTopPage && (
+              <p className="theme-text-secondary text-sm sm:text-base">{t('actressCount', { count: totalCount })}</p>
+            )}
           </div>
 
           {/* フィルター設定（頭文字検索 + タグフィルター） */}
@@ -492,28 +477,6 @@ export default async function Home({ params, searchParams }: PageProps) {
             <SortDropdown sortBy={sortBy} theme="dark" />
           </div>
 
-          {/* ページネーション（上部） */}
-          <Pagination
-            total={totalCount}
-            page={page}
-            perPage={perPage}
-            basePath={localizedHref('/', locale)}
-            position="top"
-            queryParams={{
-              ...(query ? { q: query } : {}),
-              ...(initialFilter ? { initial: initialFilter } : {}),
-              ...(sortBy !== 'recent' ? { sort: sortBy } : {}),
-              ...(includeTags.length > 0 ? { include: includeTags.join(',') } : {}),
-              ...(excludeTags.length > 0 ? { exclude: excludeTags.join(',') } : {}),
-              ...(userSetIncludeAsps.length > 0 ? { includeAsp: userSetIncludeAsps.join(',') } : {}),
-              ...(userSetExcludeAsps.length > 0 ? { excludeAsp: userSetExcludeAsps.join(',') } : {}),
-              ...(hasVideo ? { hasVideo: 'true' } : {}),
-              ...(hasImage ? { hasImage: 'true' } : {}),
-              ...(hasReview ? { hasReview: 'true' } : {}),
-              ...(perPage !== DEFAULT_PER_PAGE ? { perPage: String(perPage) } : {}),
-            }}
-          />
-
           <PerformerGridWithComparison
             performers={actresses}
             locale={locale}
@@ -543,20 +506,6 @@ export default async function Home({ params, searchParams }: PageProps) {
           />
         </div>
       </section>
-
-      {/* トップページ下部セクション（おすすめ、トレンド等） */}
-      {isTopPage && (
-        <section className="container mx-auto px-3 py-3 sm:px-4">
-          <TopPageLowerSections
-            locale={locale}
-            uncategorizedCount={uncategorizedCount}
-            isTopPage={isTopPage}
-            isFanzaSite={isFanzaSite}
-            translations={layoutTranslations}
-            pageId="home"
-          />
-        </section>
-      )}
 
       {/* FANZA専門サイトへの導線（f.adult-v.com経由、商品情報は表示しない） */}
       {!isFanzaSite && isTopPage && <FanzaNewReleasesSection locale={locale} />}
