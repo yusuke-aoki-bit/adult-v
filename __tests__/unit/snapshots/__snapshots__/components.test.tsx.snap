@@ -86,11 +86,11 @@ exports[`Component Snapshots > Pagination > matches snapshot for first page 1`] 
         </span>
       </div>
       <form
-        class="hidden items-center gap-1 sm:flex"
+        class="flex items-center gap-1"
       >
         <input
           aria-label="ページへ移動"
-          class="w-20 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          class="w-16 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none sm:w-20 border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
           max="10"
           min="1"
           placeholder="ページ番号"
@@ -98,7 +98,7 @@ exports[`Component Snapshots > Pagination > matches snapshot for first page 1`] 
           value=""
         />
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          class="rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed sm:px-3 bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
           disabled=""
           type="submit"
         >
@@ -196,11 +196,11 @@ exports[`Component Snapshots > Pagination > matches snapshot for last page 1`] =
         </span>
       </div>
       <form
-        class="hidden items-center gap-1 sm:flex"
+        class="flex items-center gap-1"
       >
         <input
           aria-label="ページへ移動"
-          class="w-20 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          class="w-16 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none sm:w-20 border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
           max="10"
           min="1"
           placeholder="ページ番号"
@@ -208,7 +208,7 @@ exports[`Component Snapshots > Pagination > matches snapshot for last page 1`] =
           value=""
         />
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          class="rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed sm:px-3 bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
           disabled=""
           type="submit"
         >
@@ -326,11 +326,11 @@ exports[`Component Snapshots > Pagination > matches snapshot for middle page 1`]
         </span>
       </div>
       <form
-        class="hidden items-center gap-1 sm:flex"
+        class="flex items-center gap-1"
       >
         <input
           aria-label="ページへ移動"
-          class="w-20 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          class="w-16 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none sm:w-20 border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
           max="10"
           min="1"
           placeholder="ページ番号"
@@ -338,7 +338,7 @@ exports[`Component Snapshots > Pagination > matches snapshot for middle page 1`]
           value=""
         />
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          class="rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed sm:px-3 bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
           disabled=""
           type="submit"
         >
@@ -466,11 +466,11 @@ exports[`Component Snapshots > Pagination > matches snapshot with many pages (sh
         </span>
       </div>
       <form
-        class="hidden items-center gap-1 sm:flex"
+        class="flex items-center gap-1"
       >
         <input
           aria-label="ページへ移動"
-          class="w-20 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          class="w-16 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none sm:w-20 border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
           max="50"
           min="1"
           placeholder="ページ番号"
@@ -478,7 +478,7 @@ exports[`Component Snapshots > Pagination > matches snapshot with many pages (sh
           value=""
         />
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          class="rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed sm:px-3 bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
           disabled=""
           type="submit"
         >
@@ -586,11 +586,11 @@ exports[`Component Snapshots > Pagination > matches snapshot with query params 1
         </span>
       </div>
       <form
-        class="hidden items-center gap-1 sm:flex"
+        class="flex items-center gap-1"
       >
         <input
           aria-label="ページへ移動"
-          class="w-20 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
+          class="w-16 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none sm:w-20 border-gray-300 text-gray-900 bg-white focus:ring-rose-500"
           max="10"
           min="1"
           placeholder="ページ番号"
@@ -598,7 +598,7 @@ exports[`Component Snapshots > Pagination > matches snapshot with query params 1
           value=""
         />
         <button
-          class="rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
+          class="rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed sm:px-3 bg-rose-500 text-white hover:bg-rose-600 disabled:bg-gray-200 disabled:text-gray-400"
           disabled=""
           type="submit"
         >
