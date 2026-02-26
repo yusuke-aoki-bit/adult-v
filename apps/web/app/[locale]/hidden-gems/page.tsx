@@ -80,8 +80,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
           p.id,
           p.title,
           p.default_thumbnail_url as "imageUrl",
-          p.rating,
-          p.review_count as "reviewCount",
+          p.best_rating as rating,
+          p.total_reviews as "reviewCount",
           COALESCE(pvc.view_count, 0)::int as "viewCount",
           p.release_date::text as "releaseDate",
           p.ai_short_description as "aiDescription",
@@ -100,10 +100,10 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         FROM products p
         LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
         CROSS JOIN avg_views av
-        WHERE p.rating >= 4.0
-          AND p.review_count >= 3
+        WHERE p.best_rating >= 4.0
+          AND p.total_reviews >= 3
           AND COALESCE(pvc.view_count, 0) < av.avg_view * 0.5
-        ORDER BY p.rating DESC, p.review_count DESC
+        ORDER BY p.best_rating DESC, p.total_reviews DESC
         LIMIT 10
       `);
     } else {
@@ -113,8 +113,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
           p.id,
           p.title,
           p.default_thumbnail_url as "imageUrl",
-          p.rating,
-          p.review_count as "reviewCount",
+          p.best_rating as rating,
+          p.total_reviews as "reviewCount",
           0::int as "viewCount",
           p.release_date::text as "releaseDate",
           p.ai_short_description as "aiDescription",
@@ -131,10 +131,10 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
             ARRAY[]::text[]
           ) as genres
         FROM products p
-        WHERE p.rating >= 4.0
-          AND p.review_count >= 3
-          AND p.review_count <= 10
-        ORDER BY p.rating DESC, p.review_count ASC
+        WHERE p.best_rating >= 4.0
+          AND p.total_reviews >= 3
+          AND p.total_reviews <= 10
+        ORDER BY p.best_rating DESC, p.total_reviews ASC
         LIMIT 10
       `);
     }
@@ -152,8 +152,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         p.id,
         p.title,
         p.default_thumbnail_url as "imageUrl",
-        p.rating,
-        p.review_count as "reviewCount",
+        p.best_rating as rating,
+        p.total_reviews as "reviewCount",
         COALESCE(pvc.view_count, 0)::int as "viewCount",
         p.release_date::text as "releaseDate",
         p.ai_short_description as "aiDescription",
@@ -171,10 +171,10 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         ) as genres
       FROM products p
       LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
-      WHERE p.rating >= 4.0
-        AND p.review_count >= 5
+      WHERE p.best_rating >= 4.0
+        AND p.total_reviews >= 5
         AND p.release_date < CURRENT_DATE - INTERVAL '1 year'
-      ORDER BY p.rating DESC, p.review_count DESC
+      ORDER BY p.best_rating DESC, p.total_reviews DESC
       LIMIT 10
     `);
     } else {
@@ -183,8 +183,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         p.id,
         p.title,
         p.default_thumbnail_url as "imageUrl",
-        p.rating,
-        p.review_count as "reviewCount",
+        p.best_rating as rating,
+        p.total_reviews as "reviewCount",
         0::int as "viewCount",
         p.release_date::text as "releaseDate",
         p.ai_short_description as "aiDescription",
@@ -201,10 +201,10 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
           ARRAY[]::text[]
         ) as genres
       FROM products p
-      WHERE p.rating >= 4.0
-        AND p.review_count >= 5
+      WHERE p.best_rating >= 4.0
+        AND p.total_reviews >= 5
         AND p.release_date < CURRENT_DATE - INTERVAL '1 year'
-      ORDER BY p.rating DESC, p.review_count DESC
+      ORDER BY p.best_rating DESC, p.total_reviews DESC
       LIMIT 10
     `);
     }
@@ -231,8 +231,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         p.id,
         p.title,
         p.default_thumbnail_url as "imageUrl",
-        p.rating,
-        p.review_count as "reviewCount",
+        p.best_rating as rating,
+        p.total_reviews as "reviewCount",
         COALESCE(pvc.view_count, 0)::int as "viewCount",
         p.release_date::text as "releaseDate",
         p.ai_short_description as "aiDescription",
@@ -251,9 +251,9 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       FROM products p
       INNER JOIN review_activity ra ON p.id = ra.product_id
       LEFT JOIN product_views_count pvc ON p.id = pvc.product_id
-      WHERE p.rating >= 3.5
+      WHERE p.best_rating >= 3.5
         AND p.release_date < CURRENT_DATE - INTERVAL '6 months'
-      ORDER BY ra.review_count DESC, p.rating DESC
+      ORDER BY ra.review_count DESC, p.best_rating DESC
       LIMIT 10
     `);
     } else {
@@ -271,8 +271,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         p.id,
         p.title,
         p.default_thumbnail_url as "imageUrl",
-        p.rating,
-        p.review_count as "reviewCount",
+        p.best_rating as rating,
+        p.total_reviews as "reviewCount",
         0::int as "viewCount",
         p.release_date::text as "releaseDate",
         p.ai_short_description as "aiDescription",
@@ -290,9 +290,9 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         ) as genres
       FROM products p
       INNER JOIN review_activity ra ON p.id = ra.product_id
-      WHERE p.rating >= 3.5
+      WHERE p.best_rating >= 3.5
         AND p.release_date < CURRENT_DATE - INTERVAL '6 months'
-      ORDER BY ra.review_count DESC, p.rating DESC
+      ORDER BY ra.review_count DESC, p.best_rating DESC
       LIMIT 10
     `);
     }
@@ -319,8 +319,8 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         p.id,
         p.title,
         p.default_thumbnail_url as "imageUrl",
-        p.rating,
-        p.review_count as "reviewCount",
+        p.best_rating as rating,
+        p.total_reviews as "reviewCount",
         COALESCE(rv.recent_count, 0)::int as "viewCount",
         p.release_date::text as "releaseDate",
         p.ai_short_description as "aiDescription",
@@ -340,7 +340,7 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       INNER JOIN recent_views rv ON p.id = rv.product_id
       LEFT JOIN older_views ov ON p.id = ov.product_id
       WHERE p.release_date < CURRENT_DATE - INTERVAL '3 months'
-        AND p.rating >= 3.5
+        AND p.best_rating >= 3.5
         AND COALESCE(rv.recent_count, 0) > COALESCE(ov.older_count, 0) * 2
       ORDER BY (COALESCE(rv.recent_count, 0) - COALESCE(ov.older_count, 0)) DESC
       LIMIT 10
@@ -353,7 +353,7 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
       statsResult = await db.execute(sql`
       SELECT
         COUNT(*)::int as total,
-        AVG(rating)::float as avg_rating,
+        AVG(best_rating)::float as avg_rating,
         AVG(COALESCE(sub.view_count, 0))::float as avg_views
       FROM products p
       LEFT JOIN (
@@ -361,16 +361,16 @@ async function getHiddenGemsData(locale: string): Promise<HiddenGemsData> {
         FROM product_views
         GROUP BY product_id
       ) sub ON p.id = sub.product_id
-      WHERE p.rating >= 4.0 AND p.review_count >= 3
+      WHERE p.best_rating >= 4.0 AND p.total_reviews >= 3
     `);
     } else {
       statsResult = await db.execute(sql`
       SELECT
         COUNT(*)::int as total,
-        AVG(rating)::float as avg_rating,
+        AVG(best_rating)::float as avg_rating,
         0::float as avg_views
       FROM products p
-      WHERE p.rating >= 4.0 AND p.review_count >= 3
+      WHERE p.best_rating >= 4.0 AND p.total_reviews >= 3
     `);
     }
 

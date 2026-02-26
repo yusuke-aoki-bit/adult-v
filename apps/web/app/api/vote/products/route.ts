@@ -15,7 +15,7 @@ function buildDateFilter(category: Category) {
     case 'trending':
       return sql`p.release_date >= CURRENT_DATE - INTERVAL '7 days'`;
     case 'classic':
-      return sql`p.release_date < CURRENT_DATE - INTERVAL '1 year' AND p.rating >= 4.0`;
+      return sql`p.release_date < CURRENT_DATE - INTERVAL '1 year' AND p.best_rating >= 4.0`;
   }
 }
 
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       LEFT JOIN product_votes pv ON p.id = pv.product_id
       LEFT JOIN user_votes uv ON p.id = uv.product_id
       WHERE ${dateFilter}
-      ORDER BY COALESCE(pv.vote_count, 0) DESC, p.rating DESC NULLS LAST
+      ORDER BY COALESCE(pv.vote_count, 0) DESC, p.best_rating DESC NULLS LAST
       LIMIT 20
     `);
 

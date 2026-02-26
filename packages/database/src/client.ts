@@ -45,7 +45,8 @@ function getDb() {
 
       const isDev = process.env['NODE_ENV'] !== 'production';
       // Cloud Run Jobs用の設定（長時間バッチ処理に最適化）
-      const isCloudRunJob = process.env['K_SERVICE'] !== undefined || process.env['CLOUD_RUN_JOB'] !== undefined;
+      // K_SERVICE はCloud Run Service/Jobの両方で設定されるため、Job専用の CLOUD_RUN_JOB のみチェック
+      const isCloudRunJob = process.env['CLOUD_RUN_JOB'] !== undefined;
 
       // SSL設定: Cloud SQL Proxy、sslmode=disable、プライベートIPの場合はSSL無効
       const shouldDisableSsl = isCloudSqlProxy || sslDisabled || isPrivateIp;
@@ -97,12 +98,18 @@ async function closeDb() {
 }
 
 // Graceful shutdown: プロセス終了時にDB接続をクリーンアップ
+// Cloud Run ServiceではSIGTERMがデプロイ時に送信されるが、
+// pool.end()を呼ぶとリクエスト処理中のクエリが失敗するため、
+// Cloud Run JobまたはローカルDev環境でのみ有効化
 if (typeof process !== 'undefined') {
-  const shutdown = () => {
-    closeDb().catch(() => {});
-  };
-  process.once('SIGTERM', shutdown);
-  process.once('SIGINT', shutdown);
+  const isCloudRunService = process.env['K_SERVICE'] !== undefined && !process.env['CLOUD_RUN_JOB'];
+  if (!isCloudRunService) {
+    const shutdown = () => {
+      closeDb().catch(() => {});
+    };
+    process.once('SIGTERM', shutdown);
+    process.once('SIGINT', shutdown);
+  }
 }
 
 export { getDb, closeDb };
