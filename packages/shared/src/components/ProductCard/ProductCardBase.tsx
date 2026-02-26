@@ -343,11 +343,13 @@ function ProductCardBase({
     return { diffHours, diffDays, isVeryUrgent, isUrgent, showBadge, showCountdown };
   }, [product.salePrice, product.saleEndAt, clientNow]);
 
-  // CTA click handler - memoized to avoid recreation on each render
+  // CTA click handler - non-blocking to avoid delaying navigation
   const handleCtaClick = useCallback(() => {
-    resolvedTrackCtaClick('ctaButtonText', product['id'], {
-      is_sale: !!product.salePrice,
-      provider: product.provider || '',
+    queueMicrotask(() => {
+      resolvedTrackCtaClick('ctaButtonText', product['id'], {
+        is_sale: !!product.salePrice,
+        provider: product.provider || '',
+      });
     });
   }, [resolvedTrackCtaClick, product['id'], product.salePrice, product.provider]);
 
@@ -358,7 +360,7 @@ function ProductCardBase({
 
     return (
       <div
-        className={`group relative ${resolvedTheme === 'dark' ? 'bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'bg-white'} overflow-hidden rounded-xl border ${resolvedTheme === 'dark' ? 'border-white/10' : 'border-gray-200'} transition-all duration-200 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'}`}
+        className={`group relative ${resolvedTheme === 'dark' ? 'bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'bg-white'} overflow-hidden rounded-xl border ${resolvedTheme === 'dark' ? 'border-white/10' : 'border-gray-200'} transition-shadow duration-150 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'} active:scale-[0.98]`}
       >
         <Link href={`/${locale}/products/${product['id']}`}>
           <div
@@ -371,7 +373,7 @@ function ProductCardBase({
                 alt={altText}
                 fill
                 sizes="(max-width: 640px) 15vw, (max-width: 1024px) 10vw, 6vw"
-                className={`object-cover transition-transform duration-200 group-hover:scale-[1.02] ${isUncensored ? 'blur-[1px]' : ''}`}
+                className={`object-cover ${isUncensored ? 'blur-[1px]' : ''}`}
                 placeholder="blur"
                 blurDataURL={BLUR_DATA_URL}
                 loading={priority ? 'eager' : 'lazy'}
@@ -405,7 +407,7 @@ function ProductCardBase({
               </div>
             )}
             {/* ホバー時CTA オーバーレイ */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-100 group-hover:opacity-100">
               <span
                 className={`rounded-lg px-3 py-1.5 text-[11px] font-bold text-white shadow-lg ${
                   showMiniCta
@@ -483,7 +485,7 @@ function ProductCardBase({
     return (
       <>
         <div
-          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-xl border ${themeConfig.cardBorder} hover:ring-1 ${themeConfig.cardHoverRing} group shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:shadow-fuchsia-500/10' : 'hover:shadow-pink-500/10'}`}
+          className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-xl border ${themeConfig.cardBorder} hover:ring-1 ${themeConfig.cardHoverRing} group shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-shadow duration-150 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:shadow-fuchsia-500/10' : 'hover:shadow-pink-500/10'} active:scale-[0.98]`}
         >
           <Link href={`/${locale}/products/${product['id']}`}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
@@ -491,7 +493,7 @@ function ProductCardBase({
                 src={imgSrc}
                 alt={altText}
                 fill
-                className={`object-cover transition-transform duration-300 group-hover:scale-105 ${isUncensored ? 'blur-[1px]' : ''}`}
+                className={`object-cover transition-transform duration-150 group-hover:scale-[1.02] ${isUncensored ? 'blur-[1px]' : ''}`}
                 sizes="(max-width: 640px) 25vw, (max-width: 1024px) 16vw, 10vw"
                 loading={priority ? 'eager' : 'lazy'}
                 priority={priority}
@@ -595,7 +597,7 @@ function ProductCardBase({
             <button
               type="button"
               onClick={handleVideoClick}
-              className="absolute top-0 left-0 z-20 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-br-lg bg-black/70 text-white transition-all hover:scale-105 hover:bg-black/90"
+              className="absolute top-0 left-0 z-20 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-br-lg bg-black/70 text-white transition-colors duration-100 hover:bg-black/90"
               style={{ marginLeft: product.salePrice ? '40px' : '0' }}
               aria-label={t('playSampleVideo')}
             >
@@ -647,7 +649,7 @@ function ProductCardBase({
                   card_size: 'compact',
                 });
               }}
-              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold text-white shadow-[0_-2px_8px_rgba(0,0,0,0.3)] transition-all duration-200 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold text-white shadow-[0_-2px_8px_rgba(0,0,0,0.3)] transition-colors duration-100 ${
                 product.salePrice
                   ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
                   : resolvedTheme === 'dark'
@@ -661,7 +663,7 @@ function ProductCardBase({
           ) : (
             <Link
               href={`/${locale}/products/${product['id']}`}
-              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold shadow-[0_-2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold shadow-[0_-2px_8px_rgba(0,0,0,0.2)] transition-colors duration-100 ${
                 resolvedTheme === 'dark'
                   ? 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 hover:text-white'
                   : 'bg-gray-100/90 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
@@ -707,7 +709,7 @@ function ProductCardBase({
   // Full mode
   return (
     <article
-      className={`group/card ${themeConfig.cardBg} flex flex-col overflow-hidden rounded-xl border shadow-[0_4px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] transition-all duration-200 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5' : ''} ${themeConfig.cardBorder}`}
+      className={`group/card ${themeConfig.cardBg} flex flex-col overflow-hidden rounded-xl border shadow-[0_4px_24px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)] transition-shadow duration-150 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5' : ''} ${themeConfig.cardBorder}`}
     >
       <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ height: '18rem' }}>
         <div className="group relative block h-full">
@@ -754,7 +756,7 @@ function ProductCardBase({
             src={imgSrc}
             alt={altText}
             fill
-            className={`object-cover transition-transform duration-200 group-hover:scale-[1.02] ${isUncensored ? 'blur-[1px]' : ''}`}
+            className={`object-cover transition-transform duration-150 group-hover:scale-[1.02] ${isUncensored ? 'blur-[1px]' : ''}`}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             loading={priority ? 'eager' : 'lazy'}
             placeholder="blur"
@@ -768,7 +770,7 @@ function ProductCardBase({
             <button
               type="button"
               onClick={handleVideoClick}
-              className="absolute top-0 left-0 z-20 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-br-xl bg-black/70 text-white transition-all hover:scale-105 hover:bg-black/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="absolute top-0 left-0 z-20 flex min-h-[48px] min-w-[48px] items-center justify-center rounded-br-xl bg-black/70 text-white transition-colors duration-100 hover:bg-black/90 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
               aria-label={t('playSampleVideo')}
             >
               <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -1109,7 +1111,7 @@ function ProductCardBase({
               return (
                 <Link
                   href={`/${locale}/products/${product['id']}`}
-                  className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-all active:scale-[0.98] ${
+                  className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors duration-100 active:scale-[0.98] ${
                     resolvedTheme === 'dark'
                       ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 hover:text-white'
                       : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900'
@@ -1160,7 +1162,7 @@ function ProductCardBase({
                 target="_blank"
                 rel="noopener noreferrer sponsored"
                 onClick={handleCtaClick}
-                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-all active:scale-[0.98] ${
+                className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors duration-100 active:scale-[0.98] ${
                   isSale
                     ? `bg-linear-to-r ${themeConfig.ctaSaleGradient} text-white ${themeConfig.ctaSaleGradientHover} shadow-lg shadow-red-500/25 hover:shadow-red-500/40`
                     : `bg-linear-to-r ${themeConfig.ctaGradient} text-white ${themeConfig.ctaGradientHover} shadow-lg shadow-fuchsia-500/25 hover:shadow-fuchsia-500/40`
