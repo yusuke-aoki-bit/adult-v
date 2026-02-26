@@ -236,7 +236,9 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
     try {
       const proxyInfo = getProxyInfo();
       if (proxyInfo.enabled) {
-        console.log(`[crawl-japanska] Proxy enabled: ${proxyInfo.url}`);
+        console.log(
+          `[crawl-japanska] Proxy: mode=${proxyInfo.mode}${proxyInfo.url ? ` url=${proxyInfo.url}` : ''}${proxyInfo.poolSize !== undefined ? ` pool=${proxyInfo.poolSize}` : ''}`,
+        );
       }
 
       const url = new URL(request['url']);
