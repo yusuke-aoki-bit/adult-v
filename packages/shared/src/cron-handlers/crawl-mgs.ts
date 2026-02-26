@@ -297,7 +297,7 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
             ON CONFLICT (source, product_id) DO UPDATE SET
               html_content = EXCLUDED.html_content,
               hash = EXCLUDED.hash,
-              fetched_at = NOW()
+              crawled_at = NOW()
           `);
           stats.rawDataSaved++;
 
@@ -387,7 +387,9 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
           await new Promise((r) => setTimeout(r, 1000));
         } catch (error) {
           stats.errors++;
-          console.error(`[crawl-mgs] Error processing URL:`, error);
+          const errMsg = error instanceof Error ? error.message : String(error);
+          const errCause = error instanceof Error && error.cause ? String(error.cause) : '';
+          console.error(`[crawl-mgs] Error processing URL: ${errMsg}${errCause ? ` | cause: ${errCause}` : ''}`);
         }
       }
 

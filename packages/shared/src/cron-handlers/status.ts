@@ -97,6 +97,31 @@ export function createStatusHandler(deps: StatusHandlerDeps) {
         WHERE fetched_at > NOW() - INTERVAL '24 hours'
       `);
 
+      // ASP別 最終更新時刻（product_sources）
+      const aspLastUpdated = await db.execute(sql`
+        SELECT
+          asp_name,
+          MAX(last_updated) as last_updated,
+          COUNT(*) as total_sources,
+          COUNT(CASE WHEN last_updated > NOW() - INTERVAL '24 hours' THEN 1 END) as updated_24h,
+          COUNT(CASE WHEN last_updated > NOW() - INTERVAL '7 days' THEN 1 END) as updated_7d
+        FROM product_sources
+        GROUP BY asp_name
+        ORDER BY last_updated DESC NULLS LAST
+      `);
+
+      // 最近のraw_html_dataクロール（MGS等スクレイピング系）
+      const recentRawHtmlCrawls = await db.execute(sql`
+        SELECT
+          source,
+          COUNT(*) as total,
+          MAX(crawled_at) as last_crawl,
+          COUNT(CASE WHEN crawled_at > NOW() - INTERVAL '24 hours' THEN 1 END) as crawled_24h
+        FROM raw_html_data
+        GROUP BY source
+        ORDER BY last_crawl DESC NULLS LAST
+      `);
+
       // ========== データ品質指標 ==========
 
       // 演者データの補充率
@@ -183,6 +208,8 @@ export function createStatusHandler(deps: StatusHandlerDeps) {
             b10f: recentB10fCrawls.rows,
             duga: recentDugaCrawls.rows[0],
             sokmil: recentSokmilCrawls.rows[0],
+            aspLastUpdated: aspLastUpdated.rows,
+            rawHtmlCrawls: recentRawHtmlCrawls.rows,
           },
           dataQuality: {
             performers: performerQuality.rows[0],

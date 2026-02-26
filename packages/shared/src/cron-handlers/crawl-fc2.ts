@@ -328,7 +328,7 @@ export function createCrawlFc2Handler(deps: CrawlFc2HandlerDeps) {
               INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
               VALUES ('FC2', ${product.articleId}, ${detailUrl}, ${product.rawHtml}, ${hash})
               ON CONFLICT (source, product_id) DO UPDATE SET
-                html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, fetched_at = NOW()
+                html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, crawled_at = NOW()
             `);
             stats.rawDataSaved++;
 

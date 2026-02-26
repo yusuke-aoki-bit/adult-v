@@ -252,7 +252,7 @@ export function createCrawlSokmilScrapeHandler(deps: CrawlSokmilScrapeHandlerDep
           await db.execute(sql`
             INSERT INTO raw_html_data (source, product_id, url, html_content, hash)
             VALUES ('Sokmil', ${product.itemId}, ${detailUrl}, ${product.rawHtml}, ${hash})
-            ON CONFLICT (source, product_id) DO UPDATE SET html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, fetched_at = NOW()
+            ON CONFLICT (source, product_id) DO UPDATE SET html_content = EXCLUDED.html_content, hash = EXCLUDED.hash, crawled_at = NOW()
           `);
           stats.rawDataSaved++;
 
