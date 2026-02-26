@@ -113,3 +113,6 @@ env:
   # SOKMIL API Key
   - variable: SOKMIL_API_KEY
     secret: sokmil-api-key
+  # Free proxy rotation for crawlers (Japanska, MGS, FC2, Sokmil)
+  - variable: FREE_PROXY_ENABLED
+    value: 'true'
