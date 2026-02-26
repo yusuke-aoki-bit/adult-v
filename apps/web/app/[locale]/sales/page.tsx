@@ -202,7 +202,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
   }));
 
   return (
-    <div className="theme-body min-h-screen">
+    <main className="theme-body min-h-screen">
       <JsonLD
         data={[
           generateBreadcrumbSchema(breadcrumbItems),
@@ -239,19 +239,19 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           <div className="mb-4 grid grid-cols-4 gap-2">
             <div className="rounded-lg border border-orange-500/30 bg-linear-to-br from-orange-500/20 to-red-500/20 p-2.5 text-center">
               <p className="text-lg font-bold text-orange-400 sm:text-xl">{saleStats.totalSales.toLocaleString()}</p>
-              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.onSale}</p>
+              <p className="text-[11px] text-gray-400 sm:text-xs">{pt.onSale}</p>
             </div>
-            <div className="rounded-lg border border-pink-500/30 bg-linear-to-br from-pink-500/20 to-rose-500/20 p-2.5 text-center">
+            <div className="rounded-lg border border-pink-500/30 bg-linear-to-br from-pink-500/20 to-fuchsia-500/20 p-2.5 text-center">
               <p className="text-lg font-bold text-pink-400 sm:text-xl">{maxDiscount}%</p>
-              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.maxDiscount}</p>
+              <p className="text-[11px] text-gray-400 sm:text-xs">{pt.maxDiscount}</p>
             </div>
             <div className="rounded-lg border border-blue-500/30 bg-linear-to-br from-blue-500/20 to-cyan-500/20 p-2.5 text-center">
               <p className="text-lg font-bold text-blue-400 sm:text-xl">{avgDiscount}%</p>
-              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.avgDiscount}</p>
+              <p className="text-[11px] text-gray-400 sm:text-xs">{pt.avgDiscount}</p>
             </div>
             <div className="rounded-lg border border-green-500/30 bg-linear-to-br from-green-500/20 to-emerald-500/20 p-2.5 text-center">
               <p className="text-lg font-bold text-green-400 sm:text-xl">{Object.keys(aspCounts).length}</p>
-              <p className="text-[10px] text-gray-400 sm:text-xs">{pt.sites}</p>
+              <p className="text-[11px] text-gray-400 sm:text-xs">{pt.sites}</p>
             </div>
           </div>
 
@@ -260,7 +260,9 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
             <Link
               href={localizedHref('/sales', locale)}
               className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
-                !aspFilter ? 'bg-rose-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                !aspFilter
+                  ? 'bg-fuchsia-600 text-white shadow-sm shadow-fuchsia-500/20'
+                  : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200'
               }`}
             >
               {pt.all} ({allSaleProducts.length})
@@ -273,8 +275,8 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
                   href={localizedHref(`/sales?asp=${asp.toLowerCase()}`, locale)}
                   className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
                     aspFilter?.toLowerCase() === asp.toLowerCase()
-                      ? 'bg-rose-500 text-white'
-                      : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      ? 'bg-fuchsia-600 text-white shadow-sm shadow-fuchsia-500/20'
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200'
                   }`}
                 >
                   {asp} ({count})
@@ -294,7 +296,9 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
                   locale,
                 )}
                 className={`rounded-full px-3 py-1.5 text-sm transition-colors ${
-                  minDiscount === discount ? 'bg-orange-500 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  minDiscount === discount
+                    ? 'bg-orange-500 text-white shadow-sm shadow-orange-500/20'
+                    : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-gray-200'
                 }`}
               >
                 {discount === 0 ? pt.discount : `${discount}%+`}
@@ -336,7 +340,7 @@ export default async function SalesPage({ params, searchParams }: PageProps) {
           </div>
         </div>
       </section>
-    </div>
+    </main>
   );
 }
 
@@ -361,7 +365,7 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
   const urgency = getUrgencyLevel(product.endAt);
 
   return (
-    <div className="group relative overflow-hidden rounded-lg bg-gray-800 transition-all hover:ring-2 hover:ring-rose-500">
+    <div className="group relative overflow-hidden rounded-xl bg-white/3 ring-1 ring-white/10 transition-all hover:ring-2 hover:ring-fuchsia-500/50">
       {/* 緊急セールバッジ（1時間以内） */}
       {urgency === 'critical' && (
         <div className="absolute top-0 right-0 left-0 z-20 animate-pulse bg-red-600 py-1 text-center text-xs font-bold text-white">
@@ -378,7 +382,7 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
 
       {/* ASPバッジ */}
       <div
-        className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} right-2 z-10 rounded bg-black/70 px-2 py-0.5 text-[10px] text-white`}
+        className={`absolute ${urgency === 'critical' ? 'top-8' : 'top-2'} right-2 z-10 rounded bg-black/70 px-2 py-0.5 text-[11px] text-white`}
       >
         {product.aspName}
       </div>
@@ -401,21 +405,21 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
       {/* 情報 */}
       <div className="p-3">
         <Link href={productUrl}>
-          <h3 className="mb-1.5 line-clamp-2 text-xs text-white transition-colors group-hover:text-rose-400">
+          <h3 className="mb-1.5 line-clamp-2 text-xs text-white transition-colors group-hover:text-fuchsia-400">
             {product.title}
           </h3>
         </Link>
 
         {/* 出演者 */}
         {product.performers.length > 0 && (
-          <p className="mb-1.5 truncate text-[10px] text-gray-400">
+          <p className="mb-1.5 truncate text-[11px] text-gray-400">
             {product.performers.map((p) => p.name).join(', ')}
           </p>
         )}
 
         {/* 価格 - 強調 */}
         <div className="mb-2 flex items-baseline gap-2">
-          <span className="text-base font-bold text-rose-400">¥{product.salePrice.toLocaleString()}</span>
+          <span className="text-base font-bold text-fuchsia-400">¥{product.salePrice.toLocaleString()}</span>
           <span className="text-xs text-gray-500 line-through">¥{product.regularPrice.toLocaleString()}</span>
         </div>
 
@@ -435,20 +439,30 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
           </p>
         )}
 
-        {/* 購入CTA - 大型化・常時表示 */}
-        {product.affiliateUrl && (
+        {/* 購入CTA - FANZA規約遵守 */}
+        {product.affiliateUrl && product.aspName.toLowerCase() !== 'fanza' ? (
           <a
             href={product.affiliateUrl}
             target="_blank"
             rel="noopener noreferrer sponsored"
-            className={`block w-full rounded-lg py-2.5 text-center text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl ${
+            className={`flex w-full items-center justify-center gap-1.5 rounded-lg py-2.5 text-center text-sm font-bold text-white shadow-lg transition-all hover:scale-[1.02] hover:shadow-xl active:scale-[0.98] ${
               urgency === 'critical'
                 ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
-                : 'bg-linear-to-r from-rose-500 to-pink-500 hover:from-rose-400 hover:to-pink-400'
+                : 'bg-linear-to-r from-fuchsia-600 to-purple-500 hover:from-fuchsia-500 hover:to-purple-400'
             }`}
           >
             {pt.buyNow(product.aspName)}
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </a>
+        ) : (
+          <Link
+            href={productUrl}
+            className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-gray-700 py-2.5 text-center text-sm font-bold text-gray-300 transition-colors hover:bg-gray-600 hover:text-white"
+          >
+            詳細を見る →
+          </Link>
         )}
       </div>
     </div>

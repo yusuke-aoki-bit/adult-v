@@ -174,7 +174,7 @@ export default async function PrivacyPage({ params }: PageProps) {
       <div className="container mx-auto max-w-4xl px-4">
         <h1 className="mb-8 text-3xl font-bold text-white">{t.title}</h1>
 
-        <div className="space-y-6 rounded-lg bg-gray-800 p-6 text-gray-300 md:p-8">
+        <div className="space-y-6 rounded-lg bg-white/5 p-6 text-gray-300 ring-1 ring-white/10 md:p-8">
           <section>
             <h2 className="mb-3 text-xl font-semibold text-white">{t.section1Title}</h2>
             <p className="leading-relaxed">{t.section1Text}</p>
@@ -195,7 +195,7 @@ export default async function PrivacyPage({ params }: PageProps) {
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-rose-400 underline hover:text-rose-300"
+                className="text-fuchsia-400 underline hover:text-fuchsia-300"
               >
                 {t.section3Link}
               </a>
@@ -221,7 +221,10 @@ export default async function PrivacyPage({ params }: PageProps) {
             <h2 className="mb-3 text-xl font-semibold text-white">{t.section7Title}</h2>
             <p className="leading-relaxed">{t.section7Text}</p>
             <p className="mt-2">
-              <a href="mailto:adult.vvvv@gmail.com" className="text-rose-400 transition-colors hover:text-rose-300">
+              <a
+                href="mailto:adult.vvvv@gmail.com"
+                className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
+              >
                 adult.vvvv@gmail.com
               </a>
             </p>

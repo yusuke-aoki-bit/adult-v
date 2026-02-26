@@ -62,6 +62,7 @@ export default function ActressListFilter({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const [openHiraganaGroup, setOpenHiraganaGroup] = useState<string | null>(null);
 
   // 現在のフィルター状態を取得
   const hasVideo = searchParams.get('hasVideo') === 'true';
@@ -159,23 +160,6 @@ export default function ActressListFilter({
     });
   };
 
-  // チェックボックス変更ハンドラー
-  const handleVideoChange = () => {
-    updateFilter('hasVideo', hasVideo ? null : 'true');
-  };
-
-  const handleImageChange = () => {
-    updateFilter('hasImage', hasImage ? null : 'true');
-  };
-
-  const handleSaleChange = () => {
-    updateFilter('onSale', onSale ? null : 'true');
-  };
-
-  const handleReviewChange = () => {
-    updateFilter('hasReview', hasReview ? null : 'true');
-  };
-
   const handleIncludeTagChange = (tagId: string) => {
     updateFilter('include', tagId, true, includeTags);
   };
@@ -252,11 +236,8 @@ export default function ActressListFilter({
     });
   };
 
+  // Quick filters (sale/video/image/review) are now inline chips — only count advanced filters
   const hasActiveFilters =
-    hasVideo ||
-    hasImage ||
-    onSale ||
-    hasReview ||
     includeTags.length > 0 ||
     excludeTags.length > 0 ||
     includeAsps.length > 0 ||
@@ -273,10 +254,6 @@ export default function ActressListFilter({
     excludeTags.length +
     includeAsps.length +
     excludeAsps.length +
-    (hasVideo ? 1 : 0) +
-    (hasImage ? 1 : 0) +
-    (onSale ? 1 : 0) +
-    (hasReview ? 1 : 0) +
     (initialFilter ? 1 : 0) +
     cupSizes.length +
     (heightMin || heightMax ? 1 : 0) +
@@ -329,10 +306,10 @@ export default function ActressListFilter({
             <div className="flex flex-wrap gap-1.5 sm:gap-1">
               {/* ひらがなグループ */}
               {Object.entries(HIRAGANA_GROUPS).map(([group, chars]) => (
-                <div key={group} className="group relative">
+                <div key={group} className="relative">
                   <button
                     type="button"
-                    onClick={() => handleInitialChange(chars[0]!)}
+                    onClick={() => setOpenHiraganaGroup((prev) => (prev === group ? null : group))}
                     className={`rounded px-2.5 py-1.5 text-sm font-medium transition-colors sm:px-2 sm:py-1 ${
                       chars.some((c) => initialFilter === c)
                         ? 'bg-fuchsia-600 text-white'
@@ -342,24 +319,29 @@ export default function ActressListFilter({
                     {group}
                   </button>
                   {/* ドロップダウン */}
-                  <div className="absolute top-full left-0 z-20 hidden pt-1 group-hover:block">
-                    <div className="flex gap-1 rounded border border-gray-600 bg-gray-800 p-1.5 shadow-lg">
-                      {chars.map((char) => (
-                        <button
-                          key={char}
-                          type="button"
-                          onClick={() => handleInitialChange(char)}
-                          className={`rounded px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors ${
-                            initialFilter === char
-                              ? 'bg-fuchsia-600 text-white'
-                              : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
-                          }`}
-                        >
-                          {char}
-                        </button>
-                      ))}
+                  {openHiraganaGroup === group && (
+                    <div className="absolute top-full left-0 z-20 pt-1">
+                      <div className="flex gap-1 rounded border border-gray-600 bg-gray-800 p-1.5 shadow-lg">
+                        {chars.map((char) => (
+                          <button
+                            key={char}
+                            type="button"
+                            onClick={() => {
+                              handleInitialChange(char);
+                              setOpenHiraganaGroup(null);
+                            }}
+                            className={`rounded px-2 py-1 text-sm font-medium whitespace-nowrap transition-colors ${
+                              initialFilter === char
+                                ? 'bg-fuchsia-600 text-white'
+                                : 'bg-gray-700 text-gray-200 hover:bg-gray-600'
+                            }`}
+                          >
+                            {char}
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
               {/* アルファベット */}
@@ -397,153 +379,6 @@ export default function ActressListFilter({
               )}
             </div>
           </div>
-
-          {/* サンプルコンテンツフィルター */}
-          <div>
-            <h3 className="mb-3 text-base font-semibold text-white sm:text-sm">{t.sampleContent}</h3>
-            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-              <label
-                className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors sm:min-h-0 sm:rounded sm:p-2 ${
-                  hasVideo
-                    ? 'border-fuchsia-500/50 bg-fuchsia-600/30 hover:bg-fuchsia-600/40'
-                    : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={hasVideo}
-                  onChange={handleVideoChange}
-                  className="h-5 w-5 rounded border-gray-500 text-fuchsia-600 focus:ring-fuchsia-500"
-                />
-                <svg
-                  className="h-6 w-6 shrink-0 text-fuchsia-500 sm:h-5 sm:w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                <span className="text-base text-gray-200 sm:text-sm">{t.sampleVideo}</span>
-              </label>
-              <label
-                className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors sm:min-h-0 sm:rounded sm:p-2 ${
-                  hasImage
-                    ? 'border-blue-500/50 bg-blue-600/30 hover:bg-blue-600/40'
-                    : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  checked={hasImage}
-                  onChange={handleImageChange}
-                  className="h-5 w-5 rounded border-gray-500 text-fuchsia-600 focus:ring-fuchsia-500"
-                />
-                <svg
-                  className="h-6 w-6 shrink-0 text-blue-500 sm:h-5 sm:w-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                <span className="text-base text-gray-200 sm:text-sm">{t.sampleImage}</span>
-              </label>
-            </div>
-          </div>
-
-          {/* セールフィルター */}
-          {t.saleFilter && (
-            <div>
-              <h3 className="mb-3 text-base font-semibold text-white sm:text-sm">{t.saleFilter}</h3>
-              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                <label
-                  className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors sm:min-h-0 sm:rounded sm:p-2 ${
-                    onSale
-                      ? 'border-red-500/50 bg-red-600/30 hover:opacity-80'
-                      : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={onSale}
-                    onChange={handleSaleChange}
-                    className="h-5 w-5 rounded border-gray-500 text-red-600 focus:ring-red-500"
-                  />
-                  <svg
-                    className={`h-6 w-6 sm:h-5 sm:w-5 ${onSale ? 'text-red-500' : 'text-gray-400'} shrink-0`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.879 16.121A3 3 0 1012.015 11L11 14H9c0 .768.293 1.536.879 2.121z"
-                    />
-                  </svg>
-                  <span className="text-base text-gray-200 sm:text-sm">{t.onSaleOnly}</span>
-                </label>
-              </div>
-            </div>
-          )}
-
-          {/* レビューフィルター */}
-          {t.reviewFilter && (
-            <div>
-              <h3 className="mb-3 text-base font-semibold text-white sm:text-sm">{t.reviewFilter}</h3>
-              <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
-                <label
-                  className={`flex min-h-[52px] cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors sm:min-h-0 sm:rounded sm:p-2 ${
-                    hasReview
-                      ? 'border-purple-500/50 bg-purple-600/30 hover:opacity-80'
-                      : 'border-gray-600 hover:bg-gray-700 active:bg-gray-600'
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={hasReview}
-                    onChange={handleReviewChange}
-                    className="h-5 w-5 rounded border-gray-500 text-purple-600 focus:ring-purple-500"
-                  />
-                  <svg
-                    className={`h-6 w-6 sm:h-5 sm:w-5 ${hasReview ? 'text-purple-500' : 'text-gray-400'} shrink-0`}
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <span className="text-base text-gray-200 sm:text-sm">{t.hasReviewOnly}</span>
-                </label>
-              </div>
-            </div>
-          )}
 
           {/* 女優特徴フィルター */}
           <div className="space-y-4">
@@ -648,11 +483,11 @@ export default function ActressListFilter({
               <p className="mb-2 text-sm font-medium text-gray-300 sm:text-xs">{t.debutYear || 'デビュー年'}</p>
               <div className="flex flex-wrap gap-1.5 sm:gap-1">
                 {[
-                  { label: '2024~', value: '2024-' },
-                  { label: '2020-2023', value: '2020-2023' },
-                  { label: '2015-2019', value: '2015-2019' },
-                  { label: '2010-2014', value: '2010-2014' },
-                  { label: '~2009', value: '-2009' },
+                  { label: '2025~', value: '2025-' },
+                  { label: '2022-2024', value: '2022-2024' },
+                  { label: '2018-2021', value: '2018-2021' },
+                  { label: '2012-2017', value: '2012-2017' },
+                  { label: '~2011', value: '-2011' },
                 ].map((option) => (
                   <button
                     key={option.value}

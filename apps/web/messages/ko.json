@@ -157,7 +157,8 @@
     "endsIn": "{days}일 남음",
     "endsTomorrow": "내일까지",
     "endsToday": "오늘까지!",
-    "yen": "¥"
+    "yen": "¥",
+    "buyNow": "구매"
   },
   "filter": {
     "genre": "장르",

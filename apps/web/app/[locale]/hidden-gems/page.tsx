@@ -531,7 +531,7 @@ export default async function HiddenGemsPage({ params }: { params: Promise<{ loc
           </div>
           <div className="mb-2 flex flex-wrap gap-1">
             {gem.genres.slice(0, 2).map((genre) => (
-              <span key={genre} className="rounded bg-gray-700/50 px-2 py-0.5 text-xs text-gray-300">
+              <span key={genre} className="rounded bg-white/5 px-2 py-0.5 text-xs text-gray-300">
                 {genre}
               </span>
             ))}
@@ -625,7 +625,7 @@ export default async function HiddenGemsPage({ params }: { params: Promise<{ loc
 
           <Section
             title={t.recentDiscoveries}
-            icon={<TrendingUp className="h-5 w-5 text-rose-400" />}
+            icon={<TrendingUp className="h-5 w-5 text-fuchsia-400" />}
             gems={data.recentDiscoveries}
           />
 

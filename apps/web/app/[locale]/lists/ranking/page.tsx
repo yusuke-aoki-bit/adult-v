@@ -318,7 +318,7 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
     return (
       <Link
         href={localizedHref(`/lists/${list.id}`, locale)}
-        className={`group theme-card overflow-hidden rounded-lg border transition-all hover:ring-2 hover:ring-rose-500/50 ${showRank ? getRankBg(list.rank) : 'border-gray-700/50'}`}
+        className={`group theme-card overflow-hidden rounded-lg border transition-all hover:ring-2 hover:ring-fuchsia-500/50 ${showRank ? getRankBg(list.rank) : 'border-gray-700/50'}`}
       >
         <div className="flex">
           {/* ランク */}
@@ -350,7 +350,7 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
 
           {/* コンテンツ */}
           <div className="min-w-0 flex-1 p-4">
-            <h3 className="theme-text mb-1 line-clamp-1 font-bold transition-colors group-hover:text-rose-400">
+            <h3 className="theme-text mb-1 line-clamp-1 font-bold transition-colors group-hover:text-fuchsia-400">
               {list.title}
             </h3>
             {list.description && <p className="theme-text-muted mb-2 line-clamp-1 text-sm">{list.description}</p>}
@@ -360,7 +360,7 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
                 {list.itemCount} {t.items}
               </span>
               <span className="flex items-center gap-1">
-                <Heart className="h-3 w-3 text-rose-400" />
+                <Heart className="h-3 w-3 text-fuchsia-400" />
                 {list.likeCount}
               </span>
               <span className="flex items-center gap-1">
@@ -402,7 +402,7 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
 
           {/* ヘッダー */}
           <div className="mb-8 text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-pink-600 px-4 py-2 text-white">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 to-pink-600 px-4 py-2 text-white">
               <Star className="h-5 w-5" />
               <span className="font-bold">LIST RANKINGS</span>
             </div>
@@ -423,7 +423,7 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
               <div className="theme-text-muted text-sm">{t.totalItems}</div>
             </div>
             <div className="theme-card rounded-lg p-6 text-center">
-              <Heart className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+              <Heart className="mx-auto mb-2 h-8 w-8 text-fuchsia-400" />
               <div className="theme-text text-3xl font-bold">{data.stats.totalLikes}</div>
               <div className="theme-text-muted text-sm">{t.totalLikes}</div>
             </div>

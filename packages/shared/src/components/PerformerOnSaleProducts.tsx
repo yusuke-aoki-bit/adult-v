@@ -15,6 +15,8 @@ interface OnSaleProduct {
   salePrice: number;
   saleEndAt: string;
   discountPercent: number;
+  affiliateUrl?: string | null;
+  aspName?: string | null;
 }
 
 interface PerformerOnSaleProductsProps {
@@ -30,7 +32,10 @@ interface PerformerOnSaleProductsProps {
     endsTomorrow: string;
     endsToday: string;
     yen: string;
+    buyNow?: string;
   };
+  /** Hide FANZA purchase links (for terms compliance on adult-v) */
+  hideFanzaPurchaseLinks?: boolean;
 }
 
 const PLACEHOLDER_IMAGE = 'https://placehold.co/300x200/1f2937/ffffff?text=No+Image';
@@ -61,6 +66,7 @@ export default function PerformerOnSaleProducts({
   locale,
   theme: themeProp,
   translations,
+  hideFanzaPurchaseLinks,
 }: PerformerOnSaleProductsProps) {
   const { theme: contextTheme } = useSiteTheme();
   const theme = themeProp ?? contextTheme;
@@ -96,69 +102,87 @@ export default function PerformerOnSaleProducts({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         {products.map((product) => {
           const timeRemaining = getTimeRemaining(product.saleEndAt, translations);
+          const showBuyButton =
+            product.affiliateUrl && !(hideFanzaPurchaseLinks && product.aspName?.toLowerCase() === 'fanza');
           return (
-            <Link
+            <div
               key={product['id']}
-              href={`/${locale}/products/${product['id']}`}
-              className={`group block overflow-hidden rounded-lg transition-all ${
+              className={`group overflow-hidden rounded-lg transition-all ${
                 isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-white hover:shadow-md'
               }`}
             >
-              {/* サムネイル */}
-              <div className="relative aspect-video">
-                <Image
-                  src={normalizeImageUrl(product.imageUrl)}
-                  alt={product['title']}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
-                  sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                  loading="lazy"
-                />
-                {/* 割引率バッジ */}
-                {product.discountPercent > 0 && (
-                  <div className="absolute top-2 left-2 rounded bg-red-500 px-2 py-1 text-sm font-bold text-white">
-                    {product.discountPercent}% {translations.off}
-                  </div>
-                )}
-                {/* 残り時間バッジ */}
-                <div
-                  className={`absolute right-2 bottom-2 rounded px-2 py-1 text-xs ${
-                    timeRemaining.isUrgent
-                      ? 'animate-pulse bg-red-500 text-white'
-                      : isDark
-                        ? 'bg-black/70 text-gray-200'
-                        : 'bg-white/90 text-gray-700'
-                  }`}
-                >
-                  {timeRemaining.text}
-                </div>
-              </div>
-
-              {/* 情報 */}
-              <div className="p-3">
-                <h3
-                  className={`line-clamp-2 text-sm font-medium transition-colors ${
-                    isDark ? 'text-white group-hover:text-red-400' : 'text-gray-900 group-hover:text-red-600'
-                  }`}
-                >
-                  {product['title']}
-                </h3>
-
-                {/* 価格 */}
-                <div className="mt-2 flex items-baseline gap-2">
-                  <span className={`text-lg font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
-                    {translations.yen}
-                    {product.salePrice.toLocaleString()}
-                  </span>
-                  {product['originalPrice'] && (
-                    <span className={`text-sm line-through ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
-                      {translations.yen}
-                      {product['originalPrice'].toLocaleString()}
-                    </span>
+              <Link href={`/${locale}/products/${product['id']}`} className="block">
+                {/* サムネイル */}
+                <div className="relative aspect-video">
+                  <Image
+                    src={normalizeImageUrl(product.imageUrl)}
+                    alt={product['title']}
+                    fill
+                    className="object-cover transition-transform group-hover:scale-105"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                    loading="lazy"
+                  />
+                  {/* 割引率バッジ */}
+                  {product.discountPercent > 0 && (
+                    <div className="absolute top-2 left-2 rounded bg-red-500 px-2 py-1 text-sm font-bold text-white">
+                      {product.discountPercent}% {translations.off}
+                    </div>
                   )}
+                  {/* 残り時間バッジ */}
+                  <div
+                    className={`absolute right-2 bottom-2 rounded px-2 py-1 text-xs ${
+                      timeRemaining.isUrgent
+                        ? 'animate-pulse bg-red-500 text-white'
+                        : isDark
+                          ? 'bg-black/70 text-gray-200'
+                          : 'bg-white/90 text-gray-700'
+                    }`}
+                  >
+                    {timeRemaining.text}
+                  </div>
                 </div>
-              </div>
-            </Link>
+
+                {/* 情報 */}
+                <div className="p-3">
+                  <h3
+                    className={`line-clamp-2 text-sm font-medium transition-colors ${
+                      isDark ? 'text-white group-hover:text-red-400' : 'text-gray-900 group-hover:text-red-600'
+                    }`}
+                  >
+                    {product['title']}
+                  </h3>
+
+                  {/* 価格 */}
+                  <div className="mt-2 flex items-baseline gap-2">
+                    <span className={`text-lg font-bold ${isDark ? 'text-red-400' : 'text-red-600'}`}>
+                      {translations.yen}
+                      {product.salePrice.toLocaleString()}
+                    </span>
+                    {product['originalPrice'] && (
+                      <span className={`text-sm line-through ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>
+                        {translations.yen}
+                        {product['originalPrice'].toLocaleString()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </Link>
+              {/* 購入ボタン（Link外に配置 - nested <a>回避） */}
+              {showBuyButton && (
+                <div className="px-3 pb-3">
+                  <a
+                    href={product.affiliateUrl!}
+                    target="_blank"
+                    rel="noopener noreferrer sponsored"
+                    className={`block w-full rounded-md py-1.5 text-center text-xs font-bold text-white transition-opacity hover:opacity-90 ${
+                      isDark ? 'bg-linear-to-r from-orange-500 to-red-500' : 'bg-linear-to-r from-pink-500 to-rose-500'
+                    }`}
+                  >
+                    {translations.buyNow || '購入'} &rarr;
+                  </a>
+                </div>
+              )}
+            </div>
           );
         })}
       </div>

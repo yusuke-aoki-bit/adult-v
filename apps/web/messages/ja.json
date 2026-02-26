@@ -157,7 +157,8 @@
     "endsIn": "残り{days}日",
     "endsTomorrow": "明日まで",
     "endsToday": "今日まで！",
-    "yen": "¥"
+    "yen": "¥",
+    "buyNow": "購入"
   },
   "filter": {
     "genre": "ジャンル",

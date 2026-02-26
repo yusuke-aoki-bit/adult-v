@@ -48,8 +48,6 @@ function detectCtaLocation(link: HTMLAnchorElement): string {
   if (link.closest('[class*="border-red-500"]')) return 'sale_urgency_cta';
   // 他社購入リンク（小さなピルボタン）
   if (link.closest('[class*="border-t"]')?.querySelector('[class*="text-xs"]')) return 'alt_provider';
-  // FanzaCrossLink
-  if (link.href.includes('f.adult-v.com')) return 'fanza_crosslink';
   return 'other';
 }
 
@@ -69,6 +67,5 @@ function extractProvider(url: string): string {
   if (url.includes('b10f.jp')) return 'B10F';
   if (url.includes('japanska.com')) return 'JAPANSKA';
   if (url.includes('clear-tv.com')) return 'DTI';
-  if (url.includes('f.adult-v.com')) return 'FANZA_CROSS';
   return 'unknown';
 }

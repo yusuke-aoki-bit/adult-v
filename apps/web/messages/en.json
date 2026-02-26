@@ -157,7 +157,8 @@
     "endsIn": "{days} days left",
     "endsTomorrow": "Ends tomorrow",
     "endsToday": "Ends today!",
-    "yen": "¥"
+    "yen": "¥",
+    "buyNow": "Buy Now"
   },
   "filter": {
     "genre": "Genre",

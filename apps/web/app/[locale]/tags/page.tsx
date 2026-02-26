@@ -167,12 +167,12 @@ export default async function TagsRankingPage({ params }: PageProps) {
                           >
                             {index + 1}
                           </span>
-                          <span className="flex-1 font-medium text-white transition-colors group-hover:text-rose-400">
+                          <span className="flex-1 font-medium text-white transition-colors group-hover:text-fuchsia-400">
                             {tag.name}
                           </span>
                           <span className="text-sm text-gray-400">{tag.count.toLocaleString()}作品</span>
                           <svg
-                            className="h-4 w-4 text-gray-500 transition-colors group-hover:text-rose-400"
+                            className="h-4 w-4 text-gray-500 transition-colors group-hover:text-fuchsia-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -205,7 +205,7 @@ export default async function TagsRankingPage({ params }: PageProps) {
             </Link>
             <Link
               href={localizedHref('/products', locale)}
-              className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-white transition-colors hover:bg-rose-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-fuchsia-600 px-4 py-2 text-white transition-colors hover:bg-fuchsia-500"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

@@ -199,6 +199,8 @@ export interface PerformerOnSaleProduct {
   salePrice: number;
   saleEndAt: string;
   discountPercent: number;
+  affiliateUrl: string | null;
+  aspName: string | null;
 }
 
 // Note: DI型でanyを使用するのは意図的 - Drizzle ORMの具象型はアプリ固有のため
@@ -1361,7 +1363,9 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
           psl.regular_price as "originalPrice",
           psl.sale_price as "salePrice",
           psl.end_at as "saleEndAt",
-          COALESCE(psl.discount_percent, 0) as "discountPercent"
+          COALESCE(psl.discount_percent, 0) as "discountPercent",
+          ps.affiliate_url as "affiliateUrl",
+          ps.asp_name as "aspName"
         FROM products p
         INNER JOIN product_performers pp ON p.id = pp.product_id
         INNER JOIN product_sources ps ON p.id = ps.product_id
@@ -1384,6 +1388,8 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         salePrice: number | string;
         saleEndAt: string;
         discountPercent: number | string;
+        affiliateUrl: string | null;
+        aspName: string | null;
       }
 
       return (onSaleProducts.rows as OnSaleProductRow[]).map((row) => ({
@@ -1396,6 +1402,8 @@ export function createRecommendationsQueries(deps: RecommendationsDeps) {
         salePrice: Number(row.salePrice),
         saleEndAt: row.saleEndAt,
         discountPercent: Number(row.discountPercent),
+        affiliateUrl: row.affiliateUrl,
+        aspName: row.aspName,
       }));
     } catch (error) {
       return logDbErrorAndReturn(error, [], 'getPerformerOnSaleProducts');

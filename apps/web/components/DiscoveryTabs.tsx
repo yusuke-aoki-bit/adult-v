@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { Sparkles, Tag, TrendingUp, Clock, Newspaper, ExternalLink, Star } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { ChevronRight, Star } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { localizedHref } from '@adult-v/shared/i18n';
@@ -35,22 +35,6 @@ interface DiscoveryTabsProps {
 
 const SCROLL_ROW = 'hide-scrollbar flex gap-3 overflow-x-auto pb-1';
 
-type TabId = 'recommendations' | 'sale' | 'weekly' | 'news' | 'recently-viewed';
-
-interface TabDef {
-  id: TabId;
-  icon: React.ReactNode;
-  labelKey: string;
-}
-
-const TAB_DEFS: TabDef[] = [
-  { id: 'recommendations', icon: <Sparkles className="h-4 w-4" />, labelKey: 'recommendations' },
-  { id: 'sale', icon: <Tag className="h-4 w-4" />, labelKey: 'sale' },
-  { id: 'weekly', icon: <TrendingUp className="h-4 w-4" />, labelKey: 'weekly' },
-  { id: 'news', icon: <Newspaper className="h-4 w-4" />, labelKey: 'news' },
-  { id: 'recently-viewed', icon: <Clock className="h-4 w-4" />, labelKey: 'recentlyViewed' },
-];
-
 // ===== Translations =====
 
 const tabTexts = {
@@ -76,6 +60,8 @@ const tabTexts = {
     moreNewReleases: '新作をもっと見る',
     allNews: 'ニュース一覧を見る',
     saleCta: '全セール商品を見る',
+    buyNow: '購入',
+    details: '詳細',
     catNew: '新着',
     catSales: 'セール',
     catAnalysis: '分析',
@@ -104,6 +90,8 @@ const tabTexts = {
     moreNewReleases: 'More new releases',
     allNews: 'All news',
     saleCta: 'View all sales',
+    buyNow: 'Buy',
+    details: 'Details',
     catNew: 'New',
     catSales: 'Sale',
     catAnalysis: 'Analysis',
@@ -126,7 +114,7 @@ function MoreLink({ href, label, locale }: { href: string; label: string; locale
       className="mt-2 flex w-full items-center justify-center gap-1 rounded-lg py-1.5 text-xs text-fuchsia-400 transition-colors hover:bg-gray-700/50 hover:text-fuchsia-300"
     >
       {label}
-      <ExternalLink className="h-3.5 w-3.5" />
+      <ChevronRight className="h-3.5 w-3.5" />
     </Link>
   );
 }
@@ -155,7 +143,7 @@ function ActressChip({
           </div>
         )}
       </div>
-      <span className="mt-1 max-w-14 truncate text-center text-[10px] text-gray-300 transition-colors group-hover:text-fuchsia-400">
+      <span className="mt-1 max-w-14 truncate text-center text-[11px] text-gray-300 transition-colors group-hover:text-fuchsia-400">
         {name}
       </span>
     </Link>
@@ -178,12 +166,12 @@ function ProductChip({
 }) {
   const src = normalizeImageUrl(imageUrl);
   return (
-    <Link href={localizedHref(`/product/${id}`, locale)} className="group relative shrink-0">
+    <Link href={localizedHref(`/products/${id}`, locale)} className="group relative shrink-0">
       <div className="relative h-20 w-14 overflow-hidden rounded-lg bg-gray-700 sm:h-24 sm:w-[68px]">
         {src ? (
           <Image src={src} alt={title} fill className="object-cover" sizes="68px" quality={60} loading="lazy" />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-[10px] text-gray-500">?</div>
+          <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">?</div>
         )}
         {badge && (
           <span className="absolute top-0.5 left-0.5 rounded bg-red-600 px-1 py-px text-[9px] font-bold text-white">
@@ -191,7 +179,7 @@ function ProductChip({
           </span>
         )}
       </div>
-      <p className="mt-0.5 max-w-14 truncate text-[10px] text-gray-400 transition-colors group-hover:text-fuchsia-400 sm:max-w-[68px]">
+      <p className="mt-0.5 max-w-14 truncate text-[11px] text-gray-400 transition-colors group-hover:text-fuchsia-400 sm:max-w-[68px]">
         {title}
       </p>
     </Link>
@@ -284,6 +272,63 @@ function RecentlyViewedTab({ locale, recentlyViewedData }: { locale: string; rec
   );
 }
 
+// ----- Sale Product Card (with direct affiliate buy button) -----
+
+function SaleProductCard({ product, locale }: { product: SaleProduct; locale: string }) {
+  const t = getTexts(locale);
+  const src = normalizeImageUrl(product.thumbnailUrl);
+  // FANZA compliance: hide purchase links for FANZA products on adult-v
+  const isFanza = product.aspName?.toLowerCase() === 'fanza';
+  const hasAffiliate = !!product.affiliateUrl && !isFanza;
+
+  return (
+    <div className="w-28 shrink-0 sm:w-32">
+      <Link href={localizedHref(`/products/${product.productId}`, locale)} className="group relative block">
+        <div className="relative aspect-3/4 overflow-hidden rounded-lg bg-gray-700">
+          {src ? (
+            <Image
+              src={src}
+              alt={product.title}
+              fill
+              className="object-cover transition-transform duration-200 group-hover:scale-105"
+              sizes="128px"
+              quality={60}
+              loading="lazy"
+            />
+          ) : (
+            <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">?</div>
+          )}
+          <span className="absolute top-0.5 left-0.5 rounded-md bg-linear-to-r from-red-600 to-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
+            -{product.discountPercent}%
+          </span>
+        </div>
+      </Link>
+      <p className="mt-1 line-clamp-1 text-[11px] font-medium text-gray-300">{product.title}</p>
+      <div className="mt-0.5 flex items-baseline gap-1">
+        <span className="text-xs font-bold text-red-400">¥{product.salePrice.toLocaleString()}</span>
+        <span className="text-[9px] text-gray-500 line-through">¥{product.regularPrice.toLocaleString()}</span>
+      </div>
+      {hasAffiliate ? (
+        <a
+          href={product.affiliateUrl!}
+          target="_blank"
+          rel="noopener noreferrer sponsored"
+          className="mt-1.5 block w-full rounded-md bg-linear-to-r from-red-600 to-orange-500 py-1.5 text-center text-[10px] font-bold text-white shadow-sm transition-all hover:from-red-500 hover:to-orange-400"
+        >
+          {t.buyNow} &rarr;
+        </a>
+      ) : (
+        <Link
+          href={localizedHref(`/products/${product.productId}`, locale)}
+          className="mt-1.5 block w-full rounded-md bg-gray-700 py-1.5 text-center text-[10px] font-bold text-gray-300 transition-colors hover:bg-gray-600 hover:text-white"
+        >
+          {t.details} &rarr;
+        </Link>
+      )}
+    </div>
+  );
+}
+
 // ----- Sale -----
 
 function SaleTab({ products, locale }: { products: SaleProduct[]; locale: string }) {
@@ -315,14 +360,7 @@ function SaleTab({ products, locale }: { products: SaleProduct[]; locale: string
         <h4 className="mb-1.5 text-[11px] font-semibold text-gray-400">{t.saleProducts}</h4>
         <div className={SCROLL_ROW}>
           {products.slice(0, 8).map((p) => (
-            <ProductChip
-              key={p.productId}
-              id={p.productId}
-              title={p.title}
-              imageUrl={p.thumbnailUrl}
-              locale={locale}
-              badge={`-${p.discountPercent}%`}
-            />
+            <SaleProductCard key={p.productId} product={p} locale={locale} />
           ))}
         </div>
       </div>
@@ -594,68 +632,133 @@ function Skeletons() {
   );
 }
 
+// ===== Lazy Loading =====
+
+/** Defers rendering until the element is near the viewport */
+function LazySection({ children }: { children: React.ReactNode }) {
+  const [visible, setVisible] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          setVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '300px' },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  return <div ref={ref}>{visible ? children : <Skeletons />}</div>;
+}
+
 // ===== Main Component =====
 
 export default function DiscoveryTabs({ locale, saleProducts }: DiscoveryTabsProps) {
-  const t = getTexts(locale);
-  const [activeTab, setActiveTab] = useState<TabId>('recommendations');
-  const [visited, setVisited] = useState<Set<TabId>>(new Set(['recommendations']));
   const recentlyViewedData = useRecentlyViewed();
+  const hasHistory = !recentlyViewedData.isLoading && recentlyViewedData.items.length > 0;
+  const hasEnoughForRecs = !recentlyViewedData.isLoading && recentlyViewedData.items.length >= 3;
 
-  const labelMap: Record<string, string> = {
-    recommendations: t.recommendations,
-    sale: t.sale,
-    weekly: t.weekly,
-    news: t.news,
-    recentlyViewed: t.recentlyViewed,
-  };
-
-  const handleTabClick = (id: TabId) => {
-    setActiveTab(id);
-    setVisited((prev) => new Set(prev).add(id));
-  };
+  const sectionLabels =
+    locale === 'en'
+      ? { sale: 'Sale', weekly: 'This Week', news: 'News', forYou: 'For You', recent: 'Recent' }
+      : { sale: 'セール', weekly: '今週の注目', news: 'ニュース', forYou: 'おすすめ', recent: '最近見た' };
 
   return (
-    <section className="container mx-auto px-3 py-3 sm:px-4">
-      {/* Tab Bar */}
-      <div className="hide-scrollbar mb-3 flex gap-1 overflow-x-auto border-b border-white/10 pb-px">
-        {TAB_DEFS.map((tab) => {
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => handleTabClick(tab.id)}
-              className={`flex shrink-0 items-center gap-1.5 border-b-2 px-3 py-2 text-sm font-medium transition-colors ${
-                isActive
-                  ? 'border-fuchsia-500 text-fuchsia-400'
-                  : 'border-transparent text-gray-400 hover:border-gray-600 hover:text-gray-300'
-              }`}
-            >
-              {tab.icon}
-              {labelMap[tab.labelKey]}
-            </button>
-          );
-        })}
-      </div>
+    <div className="container mx-auto mt-4 space-y-1 px-3 sm:px-4">
+      {/* Sale Products — immediate render (data from props) */}
+      {saleProducts.length > 0 && (
+        <section className="rounded-xl bg-white/3 p-3 ring-1 ring-white/5 sm:p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold text-red-400">
+            <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+              <path
+                fillRule="evenodd"
+                d="M5 2a2 2 0 00-2 2v14l3.5-2 3.5 2 3.5-2 3.5 2V4a2 2 0 00-2-2H5zm2.5 3a1.5 1.5 0 100 3 1.5 1.5 0 000-3zm6.207.293a1 1 0 00-1.414 0l-6 6a1 1 0 101.414 1.414l6-6a1 1 0 000-1.414zM12.5 10a1.5 1.5 0 100 3 1.5 1.5 0 000-3z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {sectionLabels.sale}
+          </h3>
+          <SaleTab products={saleProducts} locale={locale} />
+        </section>
+      )}
 
-      {/* Tab Panels — preserve mounted state for visited tabs */}
-      {TAB_DEFS.map((tab) => (
-        <div key={tab.id} className={activeTab === tab.id ? '' : 'hidden'}>
-          {visited.has(tab.id) && (
-            <>
-              {tab.id === 'recommendations' && (
-                <RecommendationsTab locale={locale} recentlyViewedData={recentlyViewedData} />
-              )}
-              {tab.id === 'sale' && <SaleTab products={saleProducts} locale={locale} />}
-              {tab.id === 'weekly' && <WeeklyTab locale={locale} />}
-              {tab.id === 'news' && <NewsTab locale={locale} />}
-              {tab.id === 'recently-viewed' && (
-                <RecentlyViewedTab locale={locale} recentlyViewedData={recentlyViewedData} />
-              )}
-            </>
-          )}
-        </div>
-      ))}
-    </section>
+      {/* Weekly Highlights — lazy loaded on scroll */}
+      <section className="rounded-xl bg-white/3 p-3 ring-1 ring-white/5 sm:p-4">
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold text-amber-400">
+          <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+          </svg>
+          {sectionLabels.weekly}
+        </h3>
+        <LazySection>
+          <WeeklyTab locale={locale} />
+        </LazySection>
+      </section>
+
+      {/* News — lazy loaded on scroll */}
+      <section className="rounded-xl bg-white/3 p-3 ring-1 ring-white/5 sm:p-4">
+        <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold text-blue-400">
+          <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"
+            />
+          </svg>
+          {sectionLabels.news}
+        </h3>
+        <LazySection>
+          <NewsTab locale={locale} />
+        </LazySection>
+      </section>
+
+      {/* Recommendations — only for returning users with 3+ history */}
+      {hasEnoughForRecs && (
+        <section className="rounded-xl bg-white/3 p-3 ring-1 ring-white/5 sm:p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold text-purple-400">
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+              />
+            </svg>
+            {sectionLabels.forYou}
+          </h3>
+          <LazySection>
+            <RecommendationsTab locale={locale} recentlyViewedData={recentlyViewedData} />
+          </LazySection>
+        </section>
+      )}
+
+      {/* Recently Viewed — only for returning users */}
+      {hasHistory && (
+        <section className="rounded-xl bg-white/3 p-3 ring-1 ring-white/5 sm:p-4">
+          <h3 className="mb-2 flex items-center gap-1.5 text-xs font-bold text-gray-400">
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            {sectionLabels.recent}
+          </h3>
+          <LazySection>
+            <RecentlyViewedTab locale={locale} recentlyViewedData={recentlyViewedData} />
+          </LazySection>
+        </section>
+      )}
+    </div>
   );
 }

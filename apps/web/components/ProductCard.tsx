@@ -14,7 +14,7 @@ import { useSiteTheme } from '@/lib/contexts/SiteContext';
 
 // Initialize theme for dark mode (Adult Viewer Lab)
 import { setThemeConfig } from '@adult-v/shared/lib/theme';
-setThemeConfig({ mode: 'dark', primaryColor: 'rose' });
+setThemeConfig({ mode: 'dark', primaryColor: 'fuchsia' });
 
 interface ProductCardProps {
   product: Product;

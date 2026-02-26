@@ -32,7 +32,7 @@ function AgeVerificationContent() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-gray-800 p-8 shadow-xl">
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-gray-900/95 p-8 shadow-xl backdrop-blur-xl">
         <div className="mb-8 text-center">
           <h1 className="mb-4 text-3xl font-bold text-white">年齢確認</h1>
           <p className="text-sm leading-relaxed text-gray-300">
@@ -46,7 +46,7 @@ function AgeVerificationContent() {
           <button
             onClick={() => handleVerify(true)}
             disabled={isVerifying}
-            className="w-full rounded-lg bg-rose-600 px-4 py-3 font-medium text-white transition-colors hover:bg-rose-700 disabled:cursor-not-allowed disabled:bg-rose-800"
+            className="w-full rounded-lg bg-fuchsia-600 px-4 py-3 font-medium text-white transition-colors hover:bg-fuchsia-700 disabled:cursor-not-allowed disabled:bg-fuchsia-800"
           >
             {isVerifying ? '確認中...' : '18歳以上です'}
           </button>
@@ -54,7 +54,7 @@ function AgeVerificationContent() {
           <button
             onClick={() => handleVerify(false)}
             disabled={isVerifying}
-            className="w-full rounded-lg bg-gray-700 px-4 py-3 font-medium text-gray-200 transition-colors hover:bg-gray-600 disabled:cursor-not-allowed disabled:bg-gray-800"
+            className="w-full rounded-lg bg-white/5 px-4 py-3 font-medium text-gray-200 ring-1 ring-white/10 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             18歳未満です
           </button>
@@ -73,7 +73,7 @@ export default function AgeVerification() {
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-gray-900 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-gray-800 p-8 shadow-xl">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-gray-900/95 p-8 shadow-xl backdrop-blur-xl">
             <div className="mb-8 text-center">
               <h1 className="mb-4 text-3xl font-bold text-white">年齢確認</h1>
               <p className="text-sm leading-relaxed text-gray-300">読み込み中...</p>

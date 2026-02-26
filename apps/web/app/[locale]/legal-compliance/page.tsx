@@ -28,7 +28,7 @@ export default function LegalCompliancePage() {
         <h1 className="mb-2 text-3xl font-bold text-white">法的コンプライアンス</h1>
         <p className="mb-8 text-gray-400">Legal Compliance Report</p>
 
-        <div className="space-y-8 rounded-lg bg-gray-800 p-6 text-gray-300 md:p-8">
+        <div className="space-y-8 rounded-lg bg-white/5 p-6 text-gray-300 ring-1 ring-white/10 md:p-8">
           {/* 概要 */}
           <section>
             <h2 className="mb-3 text-xl font-semibold text-white">概要</h2>
@@ -74,7 +74,7 @@ export default function LegalCompliancePage() {
                       href="https://affiliate.dmm.com/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       DMM アフィリエイト公式サイト
                     </a>
@@ -118,7 +118,7 @@ export default function LegalCompliancePage() {
                       href="https://www.duga.jp/affiliate/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       DUGA アフィリエイト公式
                     </a>
@@ -128,7 +128,7 @@ export default function LegalCompliancePage() {
                       href="https://adabizu.com/duga-affiliate/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       DUGAアフィリエイトの始め方（参考）
                     </a>
@@ -171,7 +171,7 @@ export default function LegalCompliancePage() {
                       href="https://www.mgstage.com/affiliate_exp/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       MGS アフィリエイト公式
                     </a>
@@ -181,7 +181,7 @@ export default function LegalCompliancePage() {
                       href="https://exad.jp/contents.php?c=chlucvkisdn"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       MGSアフィリエイトの始め方（参考）
                     </a>
@@ -234,7 +234,7 @@ export default function LegalCompliancePage() {
                       href="https://www.dti.ne.jp/partner/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       DTI CASH 公式サイト
                     </a>
@@ -244,7 +244,7 @@ export default function LegalCompliancePage() {
                       href="https://afifree.net/affiliate-dti/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       DTI CASHとは？（参考）
                     </a>
@@ -292,7 +292,7 @@ export default function LegalCompliancePage() {
                       href="https://it-bengosi.com/blog/scraping/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       スクレイピングの法律問題（弁護士解説）
                     </a>
@@ -302,7 +302,7 @@ export default function LegalCompliancePage() {
                       href="https://topcourt-law.com/internet_security/scraping-illegal"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       スクレイピングは違法？3つの法律問題（トップコート国際法律事務所）
                     </a>
@@ -312,7 +312,7 @@ export default function LegalCompliancePage() {
                       href="https://elaws.e-gov.go.jp/document?lawid=345AC0000000048"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-rose-400 transition-colors hover:text-rose-300"
+                      className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                     >
                       著作権法（e-Gov法令検索）
                     </a>
@@ -413,7 +413,10 @@ export default function LegalCompliancePage() {
               本ページの内容に関するお問い合わせ、著作権に関するご連絡は以下までお願いいたします。
             </p>
             <p>
-              <a href="mailto:adult.vvvv@gmail.com" className="text-rose-400 transition-colors hover:text-rose-300">
+              <a
+                href="mailto:adult.vvvv@gmail.com"
+                className="text-fuchsia-400 transition-colors hover:text-fuchsia-300"
+              >
                 adult.vvvv@gmail.com
               </a>
             </p>

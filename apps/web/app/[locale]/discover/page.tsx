@@ -366,11 +366,11 @@ export default function DiscoverPage() {
   };
 
   return (
-    <div className="theme-body min-h-screen">
+    <main className="theme-body min-h-screen">
       <div id="discover" className="min-h-screen bg-gray-900">
         <div className="container mx-auto px-4 py-3 sm:py-4">
           {/* PR表記 */}
-          <p className="mb-2 text-center text-[10px] text-gray-400">
+          <p className="mb-2 text-center text-[11px] text-gray-400">
             <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
             広告・アフィリエイトリンク含む
           </p>
@@ -385,8 +385,8 @@ export default function DiscoverPage() {
 
             {/* Stats Bar */}
             <div className="mt-2 flex items-center justify-center gap-3 text-sm">
-              <div className="flex items-center gap-1.5 text-rose-400">
-                <Heart className="h-4 w-4 fill-rose-400" />
+              <div className="flex items-center gap-1.5 text-fuchsia-400">
+                <Heart className="h-4 w-4 fill-fuchsia-400" />
                 <span className="font-medium">{likedCount}</span>
                 <span className="text-gray-500">{t.likedCount}</span>
               </div>
@@ -403,23 +403,23 @@ export default function DiscoverPage() {
               <button
                 onClick={handleUndo}
                 disabled={history.length === 0}
-                className="flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-sm text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <Undo2 className="h-4 w-4" />
                 {t.undo}
               </button>
               <button
                 onClick={() => setShowFilters(true)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 ${Object.keys(filters).length > 0 ? 'bg-rose-900/50 text-rose-300' : 'bg-gray-800 text-gray-300'} rounded-lg text-sm transition-colors hover:bg-gray-700`}
+                className={`flex items-center gap-1.5 px-3 py-1.5 ${Object.keys(filters).length > 0 ? 'bg-fuchsia-900/50 text-fuchsia-300' : 'bg-gray-800 text-gray-300'} rounded-lg text-sm transition-colors hover:bg-gray-700`}
               >
                 <Filter className="h-4 w-4" />
                 {t.filters}
-                {Object.keys(filters).length > 0 && <span className="h-2 w-2 rounded-full bg-rose-400" />}
+                {Object.keys(filters).length > 0 && <span className="h-2 w-2 rounded-full bg-fuchsia-400" />}
               </button>
               <button
                 onClick={() => setShowHistory(true)}
                 disabled={history.length === 0}
-                className="flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-sm text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <List className="h-4 w-4" />
                 {t.history}
@@ -427,7 +427,7 @@ export default function DiscoverPage() {
               {(likedCount > 0 || passedCount > 0) && (
                 <button
                   onClick={handleReset}
-                  className="flex items-center gap-1.5 rounded-lg bg-gray-800 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-gray-700"
+                  className="flex items-center gap-1.5 rounded-lg bg-white/5 px-3 py-1.5 text-sm text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                 >
                   <RefreshCw className="h-4 w-4" />
                   {t.reset}
@@ -440,22 +440,22 @@ export default function DiscoverPage() {
           {isLoading ? (
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4 xl:grid-cols-6">
               {[...Array(12)].map((_, i) => (
-                <div key={i} className="animate-pulse overflow-hidden rounded-xl bg-gray-800">
-                  <div className="aspect-3/4 bg-gray-700" />
+                <div key={i} className="animate-pulse overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/5">
+                  <div className="aspect-3/4 bg-white/5" />
                   <div className="p-3">
-                    <div className="mb-2 h-4 rounded bg-gray-700" />
-                    <div className="h-3 w-2/3 rounded bg-gray-700" />
+                    <div className="mb-2 h-4 rounded bg-white/10" />
+                    <div className="h-3 w-2/3 rounded bg-white/10" />
                   </div>
                 </div>
               ))}
             </div>
           ) : products.length === 0 ? (
-            <div className="mx-auto max-w-md rounded-2xl bg-gray-800 p-8 text-center">
+            <div className="mx-auto max-w-md rounded-2xl bg-white/5 p-8 text-center ring-1 ring-white/10">
               <Sparkles className="mx-auto h-12 w-12 text-gray-600" />
               <p className="mt-4 text-gray-400">{t.noMore}</p>
               <button
                 onClick={handleReset}
-                className="mt-4 rounded-lg bg-rose-600 px-6 py-2 text-white transition-colors hover:bg-rose-500"
+                className="mt-4 rounded-lg bg-fuchsia-600 px-6 py-2 text-white transition-colors hover:bg-fuchsia-500"
               >
                 {t.tryAgain}
               </button>
@@ -466,7 +466,7 @@ export default function DiscoverPage() {
                 {products.map((product) => (
                   <div
                     key={product.id}
-                    className={`overflow-hidden rounded-xl bg-gray-800 shadow-lg transition-all duration-300 ${
+                    className={`overflow-hidden rounded-xl bg-white/5 shadow-lg ring-1 ring-white/10 transition-all duration-300 ${
                       actionFeedback[product.id] === 'like'
                         ? 'translate-x-8 scale-95 rotate-3 opacity-0'
                         : actionFeedback[product.id] === 'pass'
@@ -489,7 +489,7 @@ export default function DiscoverPage() {
                         {actionFeedback[product.id] && (
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                             {actionFeedback[product.id] === 'like' ? (
-                              <Heart className="h-12 w-12 fill-rose-500 text-rose-500" />
+                              <Heart className="h-12 w-12 fill-fuchsia-500 text-fuchsia-500" />
                             ) : (
                               <X className="h-12 w-12 text-gray-400" />
                             )}
@@ -498,7 +498,7 @@ export default function DiscoverPage() {
 
                         {/* Price Badge */}
                         {product.price && (
-                          <div className="absolute top-2 right-2 rounded bg-black/70 px-2 py-0.5 text-xs font-medium text-emerald-400">
+                          <div className="absolute top-2 right-2 rounded-md bg-black/70 px-2 py-0.5 text-xs font-bold text-white backdrop-blur-sm">
                             ¥{product.price.toLocaleString()}
                           </div>
                         )}
@@ -512,14 +512,14 @@ export default function DiscoverPage() {
                       {/* Meta */}
                       <div className="mb-2 flex flex-wrap gap-1 text-xs text-gray-400">
                         {product.performers.length > 0 && (
-                          <span className="flex max-w-full items-center gap-0.5 truncate rounded bg-gray-700/50 px-1.5 py-0.5">
+                          <span className="flex max-w-full items-center gap-0.5 truncate rounded bg-white/5 px-1.5 py-0.5">
                             <User className="h-3 w-3 shrink-0" />
                             <span className="truncate">{product.performers[0]}</span>
                             {product.performers.length > 1 && <span>+{product.performers.length - 1}</span>}
                           </span>
                         )}
                         {product.duration && (
-                          <span className="flex items-center gap-0.5 rounded bg-gray-700/50 px-1.5 py-0.5">
+                          <span className="flex items-center gap-0.5 rounded bg-white/5 px-1.5 py-0.5">
                             <Play className="h-3 w-3" />
                             {product.duration}
                             {t.duration}
@@ -531,7 +531,10 @@ export default function DiscoverPage() {
                       {product.genres && product.genres.length > 0 && (
                         <div className="mb-3 flex flex-wrap gap-1">
                           {product.genres.slice(0, 2).map((genre) => (
-                            <span key={genre} className="rounded bg-rose-900/30 px-1.5 py-0.5 text-xs text-rose-300">
+                            <span
+                              key={genre}
+                              className="rounded bg-fuchsia-900/30 px-1.5 py-0.5 text-xs text-fuchsia-300"
+                            >
                               {genre}
                             </span>
                           ))}
@@ -541,44 +544,44 @@ export default function DiscoverPage() {
                         </div>
                       )}
 
-                      {/* Action Buttons */}
-                      <div className="flex gap-2">
+                      {/* Primary CTA: Buy Now (affiliate revenue) */}
+                      {product.affiliateUrl && (
+                        <a
+                          href={product.affiliateUrl}
+                          target="_blank"
+                          rel="noopener noreferrer sponsored"
+                          className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg bg-linear-to-r from-fuchsia-600 to-purple-500 py-2.5 text-sm font-bold text-white shadow-md shadow-fuchsia-500/20 transition-all hover:from-fuchsia-500 hover:to-purple-400 hover:shadow-fuchsia-500/30 active:scale-[0.98]"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          {t.buyNow}
+                        </a>
+                      )}
+
+                      {/* Secondary Actions: Like/Pass + Details */}
+                      <div className="flex gap-1.5">
                         <button
                           onClick={() => handlePass(product)}
                           disabled={!!actionFeedback[product.id]}
-                          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-gray-700 py-2 text-sm text-gray-300 transition-colors hover:bg-gray-600 disabled:opacity-50"
+                          aria-label={t.pass}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-white/5 text-gray-400 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-gray-200 disabled:opacity-50"
                         >
                           <X className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => handleLike(product)}
-                          disabled={!!actionFeedback[product.id]}
-                          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-rose-600 py-2 text-sm text-white transition-colors hover:bg-rose-500 disabled:opacity-50"
-                        >
-                          <Heart className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      {/* Secondary Actions */}
-                      <div className="mt-2 flex gap-1">
                         <Link
                           href={localizedHref(`/products/${product.id}`, locale)}
-                          className="flex flex-1 items-center justify-center gap-1 rounded border border-gray-600 py-1.5 text-xs text-gray-400 transition-colors hover:bg-gray-700"
+                          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-white/5 py-2 text-xs font-medium text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/10 hover:text-white"
                         >
                           <Eye className="h-3 w-3" />
                           {t.viewDetails}
                         </Link>
-                        {product.affiliateUrl && (
-                          <a
-                            href={product.affiliateUrl}
-                            target="_blank"
-                            rel="noopener noreferrer sponsored"
-                            className="flex flex-1 items-center justify-center gap-1 rounded border border-emerald-600 py-1.5 text-xs text-emerald-400 transition-colors hover:bg-emerald-900/30"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                            {t.buyNow}
-                          </a>
-                        )}
+                        <button
+                          onClick={() => handleLike(product)}
+                          disabled={!!actionFeedback[product.id]}
+                          aria-label={t.interested}
+                          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-fuchsia-600/80 text-white transition-colors hover:bg-fuchsia-500 disabled:opacity-50"
+                        >
+                          <Heart className="h-4 w-4" />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -589,7 +592,7 @@ export default function DiscoverPage() {
               <div className="mt-8 flex justify-center gap-4">
                 <button
                   onClick={handleLoadMore}
-                  className="flex items-center gap-2 rounded-xl bg-rose-600 px-6 py-3 font-medium text-white transition-colors hover:bg-rose-500"
+                  className="flex items-center gap-2 rounded-xl bg-fuchsia-600 px-6 py-3 font-medium text-white transition-colors hover:bg-fuchsia-500"
                 >
                   <RefreshCw className="h-5 w-5" />
                   {t.shuffleMore}
@@ -602,8 +605,14 @@ export default function DiscoverPage() {
 
       {/* Filter Modal */}
       {showFilters && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center">
-          <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-gray-800 p-6 sm:rounded-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center"
+          onClick={() => setShowFilters(false)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-white/10 bg-gray-900/95 p-6 backdrop-blur-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-6 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-bold text-white">
                 <Settings2 className="h-5 w-5" />
@@ -642,8 +651,8 @@ export default function DiscoverPage() {
                     }
                     className={`rounded-lg px-3 py-2 text-sm transition-colors ${
                       getDurationValue() === option.value
-                        ? 'bg-rose-600 text-white'
-                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                        ? 'bg-fuchsia-600 text-white'
+                        : 'bg-white/5 text-gray-300 hover:bg-white/10'
                     }`}
                   >
                     {option.label}
@@ -669,7 +678,7 @@ export default function DiscoverPage() {
                       return newFilters;
                     })
                   }
-                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-rose-600 focus:ring-rose-600"
+                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-fuchsia-600 focus:ring-fuchsia-600"
                 />
                 <span className="flex items-center gap-1.5 text-sm text-gray-300">
                   <User className="h-4 w-4" />
@@ -700,7 +709,7 @@ export default function DiscoverPage() {
                       return newFilters;
                     });
                   }}
-                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-rose-600 focus:ring-rose-600"
+                  className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-fuchsia-600 focus:ring-fuchsia-600"
                 />
                 <span className="flex items-center gap-1.5 text-sm text-gray-300">
                   <Calendar className="h-4 w-4" />
@@ -713,13 +722,13 @@ export default function DiscoverPage() {
             <div className="flex gap-3">
               <button
                 onClick={handleClearFilters}
-                className="flex-1 rounded-xl bg-gray-700 py-3 text-gray-300 transition-colors hover:bg-gray-600"
+                className="flex-1 rounded-xl bg-white/5 py-3 text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-white/10"
               >
                 {t.clearFilters}
               </button>
               <button
                 onClick={handleApplyFilters}
-                className="flex-1 rounded-xl bg-rose-600 py-3 font-medium text-white transition-colors hover:bg-rose-500"
+                className="flex-1 rounded-xl bg-fuchsia-600 py-3 font-medium text-white transition-colors hover:bg-fuchsia-500"
               >
                 {t.applyFilters}
               </button>
@@ -730,8 +739,14 @@ export default function DiscoverPage() {
 
       {/* History Modal */}
       {showHistory && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center">
-          <div className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-gray-800 p-6 sm:rounded-2xl">
+        <div
+          className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 sm:items-center"
+          onClick={() => setShowHistory(false)}
+        >
+          <div
+            className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-white/10 bg-gray-900/95 p-6 backdrop-blur-xl sm:rounded-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="mb-6 flex items-center justify-between">
               <h3 className="flex items-center gap-2 text-lg font-bold text-white">
                 <List className="h-5 w-5" />
@@ -749,8 +764,8 @@ export default function DiscoverPage() {
                 {/* Liked Products */}
                 {history.filter((h) => h.action === 'like').length > 0 && (
                   <div>
-                    <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-rose-400">
-                      <Heart className="h-4 w-4 fill-rose-400" />
+                    <h4 className="mb-2 flex items-center gap-1 text-sm font-medium text-fuchsia-400">
+                      <Heart className="h-4 w-4 fill-fuchsia-400" />
                       {t.likedProducts} ({history.filter((h) => h.action === 'like').length})
                     </h4>
                     <div className="space-y-2">
@@ -830,6 +845,6 @@ export default function DiscoverPage() {
           </div>
         </div>
       )}
-    </div>
+    </main>
   );
 }

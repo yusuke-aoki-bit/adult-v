@@ -215,7 +215,7 @@ const ProductDetailInfo = memo(function ProductDetailInfo({
           </h3>
           <div className="space-y-2">
             {sources
-              // apps/webではFANZAソースを除外（FANZAはFanzaCrossLink経由で表示）
+              // apps/webではFANZAソースを除外（規約準拠）
               .filter((source) => source.aspName !== 'FANZA')
               .map((source) => {
                 const providerId = ASP_TO_PROVIDER_ID[source.aspName.toLowerCase()];

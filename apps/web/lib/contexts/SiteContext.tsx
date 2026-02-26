@@ -73,12 +73,12 @@ export function useSiteStyles() {
   if (mode === 'fanza') {
     return {
       // FANZA風ピンク系カラー
-      primaryGradient: 'from-pink-600 to-rose-500',
+      primaryGradient: 'from-pink-600 to-fuchsia-500',
       primaryText: 'text-pink-600',
       primaryBg: 'bg-pink-600',
       primaryHover: 'hover:bg-pink-700',
-      accentGradient: 'from-rose-500 to-red-500',
-      headerBg: 'bg-linear-to-r from-pink-700 to-rose-600',
+      accentGradient: 'from-fuchsia-500 to-red-500',
+      headerBg: 'bg-linear-to-r from-pink-700 to-fuchsia-600',
       linkColor: 'text-pink-600 hover:text-pink-800',
     };
   }

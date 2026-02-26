@@ -49,9 +49,9 @@ export const siteConfigs: Record<SiteMode, SiteConfig> = {
     brandText: 'Adult-V',
     seoTitle: 'Adult-V - 厳選アダルト動画レビュー',
     seoDescription: 'DUGA、SOKMIL、MGS、FANZAなど主要ASPの作品をまとめてレビュー。女優別・ジャンル別で探せます。',
-    crossLinkEnabled: true,
-    crossLinkSite: 'fanza',
-    crossLinkUrl: 'https://www.f.adult-v.com',
+    crossLinkEnabled: false,
+    crossLinkSite: null,
+    crossLinkUrl: null,
   },
   fanza: {
     mode: 'fanza',

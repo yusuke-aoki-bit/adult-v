@@ -13,12 +13,12 @@ import { localizedHref } from '@adult-v/shared/i18n';
 
 // Dynamic imports for heavy components to reduce initial bundle size
 const BudgetTracker = dynamic(() => import('@/components/BudgetTracker'), {
-  loading: () => <div className="h-32 animate-pulse rounded-lg bg-gray-800 p-4" />,
+  loading: () => <div className="h-32 animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10" />,
   ssr: false,
 });
 // MakerAnalysis (283 lines)
 const MakerAnalysis = dynamic(() => import('@/components/MakerAnalysis'), {
-  loading: () => <div className="h-48 animate-pulse rounded-lg bg-gray-800 p-4" />,
+  loading: () => <div className="h-48 animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10" />,
   ssr: false,
 });
 
@@ -44,19 +44,19 @@ export default function ProfilePage() {
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-              <Dna className="h-6 w-6 text-rose-500" />
+              <Dna className="h-6 w-6 text-fuchsia-500" />
               {t.title}
             </h1>
             <p className="mt-1 text-gray-400">{t.subtitle}</p>
           </div>
 
-          <div className="rounded-lg bg-gray-800 p-8 text-center">
+          <div className="rounded-lg bg-white/5 p-8 text-center ring-1 ring-white/10">
             <Film className="mx-auto mb-4 h-16 w-16 text-gray-600" />
             <h2 className="mb-2 text-xl font-bold text-white">{t.noData}</h2>
             <p className="mb-6 text-gray-400">{t.noDataDesc}</p>
             <Link
               href={localizedHref('/products', locale)}
-              className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-6 py-3 text-white transition-colors hover:bg-rose-700"
+              className="inline-flex items-center gap-2 rounded-lg bg-fuchsia-600 px-6 py-3 text-white transition-colors hover:bg-fuchsia-700"
             >
               {t.startViewing}
               <ChevronRight className="h-4 w-4" />
@@ -73,7 +73,7 @@ export default function ProfilePage() {
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-            <Dna className="h-6 w-6 text-rose-500" />
+            <Dna className="h-6 w-6 text-fuchsia-500" />
             {t.title}
           </h1>
           <p className="mt-1 text-gray-400">{t.subtitle}</p>
@@ -84,9 +84,9 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* レーダーチャート */}
-          <div className="rounded-lg bg-gray-800 p-6 lg:col-span-2">
+          <div className="rounded-lg bg-white/5 p-6 ring-1 ring-white/10 lg:col-span-2">
             <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-white">
-              <TrendingUp className="h-5 w-5 text-rose-500" />
+              <TrendingUp className="h-5 w-5 text-fuchsia-500" />
               {t.yourPreference}
             </h2>
 
@@ -115,15 +115,15 @@ export default function ProfilePage() {
                     <div className="space-y-2">
                       {analysis.topPreferences.map((pref, index) => (
                         <div key={pref.category} className="flex items-center gap-3">
-                          <span className="w-6 text-lg font-bold text-rose-400">{index + 1}</span>
+                          <span className="w-6 text-lg font-bold text-fuchsia-400">{index + 1}</span>
                           <div className="flex-1">
                             <div className="mb-1 flex items-center justify-between">
                               <span className="font-medium text-white">{pref.label}</span>
-                              <span className="text-sm text-rose-400">{pref.score}%</span>
+                              <span className="text-sm text-fuchsia-400">{pref.score}%</span>
                             </div>
                             <div className="h-1.5 overflow-hidden rounded-full bg-gray-700">
                               <div
-                                className="h-full rounded-full bg-linear-to-r from-rose-600 to-rose-400"
+                                className="h-full rounded-full bg-linear-to-r from-fuchsia-600 to-fuchsia-400"
                                 style={{ width: `${pref.score}%` }}
                               />
                             </div>
@@ -153,7 +153,7 @@ export default function ProfilePage() {
 
             {/* おすすめキーワード */}
             {analysis.recommendedKeywords.length > 0 && (
-              <div className="rounded-lg bg-gray-800 p-4">
+              <div className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
                 <h3 className="mb-3 flex items-center gap-2 text-sm font-medium text-gray-400">
                   <Star className="h-4 w-4 text-yellow-400" />
                   {t.recommendedKeywords}
@@ -163,7 +163,7 @@ export default function ProfilePage() {
                     <Link
                       key={keyword}
                       href={localizedHref(`/products?q=${encodeURIComponent(keyword)}`, locale)}
-                      className="flex items-center gap-1 rounded-full bg-gray-700 px-3 py-1.5 text-sm text-gray-300 transition-colors hover:bg-rose-600 hover:text-white"
+                      className="flex items-center gap-1 rounded-full bg-white/5 px-3 py-1.5 text-sm text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-fuchsia-600 hover:text-white hover:ring-fuchsia-500/30"
                     >
                       <Search className="h-3 w-3" />
                       {keyword}
@@ -176,30 +176,30 @@ export default function ProfilePage() {
             {/* 視聴日記リンク */}
             <Link
               href={localizedHref('/diary', locale)}
-              className="hover:bg-gray-750 group block rounded-lg bg-gray-800 p-4 transition-colors"
+              className="hover:bg-gray-750 group block rounded-lg bg-white/5 p-4 ring-1 ring-white/10 transition-colors"
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <BookOpen className="h-5 w-5 text-rose-500" />
+                  <BookOpen className="h-5 w-5 text-fuchsia-500" />
                   <div>
                     <span className="font-medium text-white">{t.viewDiary}</span>
                     <p className="text-sm text-gray-400">{entries.length} entries</p>
                   </div>
                 </div>
-                <ChevronRight className="h-5 w-5 text-gray-500 transition-colors group-hover:text-rose-400" />
+                <ChevronRight className="h-5 w-5 text-gray-500 transition-colors group-hover:text-fuchsia-400" />
               </div>
             </Link>
 
             {/* 最近の視聴 */}
             {entries.length > 0 && (
-              <div className="rounded-lg bg-gray-800 p-4">
+              <div className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
                 <h3 className="mb-3 text-sm font-medium text-gray-400">Recent Views</h3>
                 <div className="space-y-2">
                   {entries.slice(0, 5).map((entry) => (
                     <Link
                       key={entry.id}
                       href={localizedHref(`/products/${entry.productId}`, locale)}
-                      className="block truncate text-sm text-gray-300 transition-colors hover:text-rose-400"
+                      className="block truncate text-sm text-gray-300 transition-colors hover:text-fuchsia-400"
                     >
                       {entry.title}
                     </Link>
@@ -222,10 +222,10 @@ function ProfileSkeleton() {
         <div className="h-5 w-64 animate-pulse rounded bg-gray-700" />
       </div>
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        <div className="h-96 animate-pulse rounded-lg bg-gray-800 p-6 lg:col-span-2" />
+        <div className="h-96 animate-pulse rounded-lg bg-white/5 p-6 ring-1 ring-white/10 lg:col-span-2" />
         <div className="space-y-4">
-          <div className="h-32 animate-pulse rounded-lg bg-gray-800 p-4" />
-          <div className="h-24 animate-pulse rounded-lg bg-gray-800 p-4" />
+          <div className="h-32 animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10" />
+          <div className="h-24 animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10" />
         </div>
       </div>
     </div>

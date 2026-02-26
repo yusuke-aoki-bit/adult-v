@@ -354,7 +354,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           <div className="mt-8 border-t border-gray-800 pt-6 sm:mt-12 sm:pt-8">
             <Link
               href={localizedHref('/', locale)}
-              className="group flex items-center justify-between rounded-lg border border-gray-700 bg-gray-800 p-4 transition-colors hover:border-rose-600 hover:bg-gray-700"
+              className="group flex items-center justify-between rounded-lg border border-white/10 bg-white/5 p-4 transition-colors hover:border-fuchsia-600 hover:bg-white/10"
             >
               <div className="flex items-center gap-3">
                 <span className="text-2xl">👩</span>
@@ -364,7 +364,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
                 </div>
               </div>
               <svg
-                className="h-5 w-5 text-gray-400 transition-colors group-hover:text-rose-500"
+                className="h-5 w-5 text-gray-400 transition-colors group-hover:text-fuchsia-500"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"

@@ -157,7 +157,8 @@
     "endsIn": "剩餘{days}天",
     "endsTomorrow": "明天截止",
     "endsToday": "今天截止！",
-    "yen": "¥"
+    "yen": "¥",
+    "buyNow": "購買"
   },
   "filter": {
     "genre": "類型",

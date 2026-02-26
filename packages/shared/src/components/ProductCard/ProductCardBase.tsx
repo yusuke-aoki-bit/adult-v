@@ -405,17 +405,21 @@ function ProductCardBase({
               </div>
             )}
             {/* ホバー時CTA オーバーレイ */}
-            {showMiniCta && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <span
-                  className={`rounded-md px-2 py-1 text-[10px] font-bold text-white ${
-                    product.salePrice ? 'bg-red-500' : 'bg-fuchsia-500'
-                  }`}
-                >
-                  {product.salePrice ? t('viewSale') : t('viewDetails')}
-                </span>
-              </div>
-            )}
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+              <span
+                className={`rounded-lg px-3 py-1.5 text-[11px] font-bold text-white shadow-lg ${
+                  showMiniCta
+                    ? product.salePrice
+                      ? 'bg-linear-to-r from-red-600 to-orange-500'
+                      : 'bg-linear-to-r from-fuchsia-600 to-purple-500'
+                    : resolvedTheme === 'dark'
+                      ? 'bg-gray-700'
+                      : 'bg-gray-600'
+                }`}
+              >
+                {showMiniCta ? (product.salePrice ? t('viewSale') : t('viewDetails')) : t('viewDetails')}
+              </span>
+            </div>
           </div>
           <div className="p-2">
             <p
@@ -431,7 +435,7 @@ function ProductCardBase({
           </div>
         </Link>
         {/* 購入CTA（miniモード）- 常時表示でクリック率向上 */}
-        {showMiniCta && (
+        {showMiniCta ? (
           <a
             href={miniAffiliateUrl}
             target="_blank"
@@ -444,13 +448,28 @@ function ProductCardBase({
                 card_size: 'mini',
               });
             }}
-            className={`absolute right-0 bottom-0 left-0 py-1 text-center text-[9px] font-bold text-white transition-colors duration-200 ${
-              product.salePrice ? 'bg-red-500 hover:bg-red-400' : 'bg-fuchsia-500 hover:bg-fuchsia-400'
+            className={`absolute right-0 bottom-0 left-0 py-1.5 text-center text-[10px] font-bold text-white transition-colors duration-200 ${
+              product.salePrice
+                ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
+                : resolvedTheme === 'dark'
+                  ? 'bg-linear-to-r from-fuchsia-600 to-purple-500 hover:from-fuchsia-500 hover:to-purple-400'
+                  : 'bg-linear-to-r from-pink-500 to-rose-400 hover:from-pink-400 hover:to-rose-300'
             }`}
           >
-            {product.salePrice ? 'SALE ' : ''}
+            {product.salePrice ? `${product['discount'] || ''}%OFF ` : ''}
             {product.providerLabel} →
           </a>
+        ) : (
+          <Link
+            href={`/${locale}/products/${product['id']}`}
+            className={`absolute right-0 bottom-0 left-0 py-1.5 text-center text-[10px] font-bold transition-colors duration-200 ${
+              resolvedTheme === 'dark'
+                ? 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 hover:text-white'
+                : 'bg-gray-100/90 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+            }`}
+          >
+            {t('viewDetails')} →
+          </Link>
         )}
       </div>
     );
@@ -536,17 +555,22 @@ function ProductCardBase({
                 <div className="mt-1 flex items-center gap-1">
                   {product.salePrice ? (
                     <>
-                      <span className={`text-[10px] font-bold ${themeConfig.salePriceColor}`}>
+                      <span className={`text-[11px] font-bold ${themeConfig.salePriceColor}`}>
                         {resolvedFormatPrice(product.salePrice, product.currency)}
                       </span>
                       {product['price'] > 0 && (
-                        <span className={`text-[9px] ${themeConfig.textMuted} line-through`}>
+                        <span className={`text-[10px] ${themeConfig.textMuted} line-through`}>
                           {resolvedFormatPrice(product['price'], product.currency)}
+                        </span>
+                      )}
+                      {product['discount'] && product['discount'] >= 20 && (
+                        <span className="rounded bg-red-600/80 px-1 py-px text-[9px] font-bold text-white">
+                          -{product['discount']}%
                         </span>
                       )}
                     </>
                   ) : (
-                    <span className={`text-[10px] font-medium ${themeConfig.textSecondary}`}>
+                    <span className={`text-[11px] font-medium ${themeConfig.textSecondary}`}>
                       {resolvedFormatPrice(product['price'], product.currency)}
                     </span>
                   )}
@@ -610,7 +634,7 @@ function ProductCardBase({
           )}
 
           {/* 購入CTA（compactモード）- 常時表示でクリック率向上 */}
-          {showCompactCta && (
+          {showCompactCta ? (
             <a
               href={compactAffiliateUrl}
               target="_blank"
@@ -623,17 +647,28 @@ function ProductCardBase({
                   card_size: 'compact',
                 });
               }}
-              className={`absolute right-0 bottom-0 left-0 z-30 py-1.5 text-center text-[10px] font-bold text-white transition-colors duration-200 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold text-white shadow-[0_-2px_8px_rgba(0,0,0,0.3)] transition-all duration-200 ${
                 product.salePrice
-                  ? 'bg-red-500 hover:bg-red-400'
+                  ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
                   : resolvedTheme === 'dark'
-                    ? 'bg-fuchsia-500 hover:bg-fuchsia-400'
-                    : 'bg-pink-500 hover:bg-pink-400'
+                    ? 'bg-linear-to-r from-fuchsia-600 to-purple-500 hover:from-fuchsia-500 hover:to-purple-400'
+                    : 'bg-linear-to-r from-pink-500 to-rose-400 hover:from-pink-400 hover:to-rose-300'
               }`}
             >
               {product.salePrice ? `${product['discount'] || ''}%OFF ` : ''}
               {product.providerLabel}で見る →
             </a>
+          ) : (
+            <Link
+              href={`/${locale}/products/${product['id']}`}
+              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold shadow-[0_-2px_8px_rgba(0,0,0,0.2)] transition-all duration-200 ${
+                resolvedTheme === 'dark'
+                  ? 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 hover:text-white'
+                  : 'bg-gray-100/90 text-gray-600 hover:bg-gray-200 hover:text-gray-900'
+              }`}
+            >
+              {t('viewDetails')} →
+            </Link>
           )}
         </div>
 
@@ -1067,8 +1102,32 @@ function ProductCardBase({
 
           {(() => {
             const affiliateUrl = getAffiliateUrl(product['affiliateUrl'], affiliateUrlOptions);
-            if (!affiliateUrl) return null;
-            if (hideFanzaPurchaseLinks && product.provider === 'fanza') return null;
+            const isFanzaHidden = hideFanzaPurchaseLinks && product.provider === 'fanza';
+
+            if (!affiliateUrl || isFanzaHidden) {
+              // Fallback: detail page CTA when affiliate link unavailable or hidden
+              return (
+                <Link
+                  href={`/${locale}/products/${product['id']}`}
+                  className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-all active:scale-[0.98] ${
+                    resolvedTheme === 'dark'
+                      ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 hover:text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 hover:text-gray-900'
+                  }`}
+                >
+                  <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                  <span>{t('viewDetails')} →</span>
+                </Link>
+              );
+            }
+
             const isSale = !!product.salePrice;
 
             const ctaVariant = resolvedGetVariant('ctaButtonText');
@@ -1128,12 +1187,14 @@ function ProductCardBase({
               <div className="flex flex-wrap items-center gap-1">
                 {product.alternativeSources.slice(0, 2).map((source, idx) => {
                   const isFanza = source.aspName.toUpperCase() === 'FANZA';
+                  // FANZA compliance: hide external FANZA links when hideFanzaPurchaseLinks is true
+                  if (isFanza && hideFanzaPurchaseLinks) return null;
                   const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
                   return (
                     <a
                       key={idx}
                       href={href}
-                      {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                      {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer sponsored' } : {})}
                       className={`rounded px-2 py-0.5 text-[10px] ${themeConfig.tagBg} ${themeConfig.tagText} flex items-center gap-1 transition-opacity hover:opacity-80`}
                     >
                       <span className="font-medium">{source.aspName}</span>
@@ -1155,12 +1216,13 @@ function ProductCardBase({
                         <div className="flex flex-wrap gap-1">
                           {product.alternativeSources.slice(2).map((source, idx) => {
                             const isFanza = source.aspName.toUpperCase() === 'FANZA';
+                            if (isFanza && hideFanzaPurchaseLinks) return null;
                             const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
                             return (
                               <a
                                 key={idx}
                                 href={href}
-                                {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                                {...(isFanza ? { target: '_blank', rel: 'noopener noreferrer sponsored' } : {})}
                                 className={`rounded px-2 py-1 text-[10px] ${themeConfig.tagBg} ${themeConfig.tagText} flex items-center gap-1 transition-opacity hover:opacity-80`}
                               >
                                 <span className="font-medium">{source.aspName}</span>

@@ -331,7 +331,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
     return (
       <Link
         href={localizedHref(`/actress/${performer.id}`, locale)}
-        className="group theme-card overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-rose-500/50"
+        className="group theme-card overflow-hidden rounded-lg transition-all hover:ring-2 hover:ring-fuchsia-500/50"
       >
         <div className="relative">
           <div className="aspect-[3/4] overflow-hidden bg-gray-700">
@@ -347,7 +347,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
             )}
           </div>
           {rank && (
-            <div className="absolute top-2 left-2 rounded bg-gradient-to-r from-rose-600 to-purple-600 px-2 py-1 text-sm font-bold text-white">
+            <div className="absolute top-2 left-2 rounded bg-gradient-to-r from-fuchsia-600 to-purple-600 px-2 py-1 text-sm font-bold text-white">
               #{rank}
             </div>
           )}
@@ -356,7 +356,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
           </div>
         </div>
         <div className="p-4">
-          <h3 className="theme-text mb-2 font-bold transition-colors group-hover:text-rose-400">{performer.name}</h3>
+          <h3 className="theme-text mb-2 font-bold transition-colors group-hover:text-fuchsia-400">{performer.name}</h3>
           <div className="theme-text-muted mb-2 flex items-center gap-2 text-sm">
             <Film className="h-4 w-4" />
             <span>
@@ -372,7 +372,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
           {performer.tags.length > 0 && (
             <div className="flex flex-wrap gap-1">
               {performer.tags.slice(0, 3).map((tag) => (
-                <span key={tag} className="rounded bg-gray-700/50 px-2 py-0.5 text-xs text-gray-300">
+                <span key={tag} className="rounded bg-white/5 px-2 py-0.5 text-xs text-gray-300">
                   {tag}
                 </span>
               ))}
@@ -407,7 +407,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
 
           {/* ヘッダー */}
           <div className="mb-8 text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-purple-600 px-4 py-2 text-white">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 to-purple-600 px-4 py-2 text-white">
               <Sparkles className="h-5 w-5" />
               <span className="font-bold">NEW FACES</span>
             </div>
@@ -418,7 +418,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
           {/* 統計カード */}
           <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="theme-card rounded-lg p-6 text-center">
-              <Users className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+              <Users className="mx-auto mb-2 h-8 w-8 text-fuchsia-400" />
               <div className="theme-text text-3xl font-bold">{data.totalRookies}</div>
               <div className="theme-text-muted text-sm">{t.totalRookies}</div>
             </div>
@@ -434,7 +434,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
               </div>
               <div className="flex flex-wrap gap-2">
                 {data.topGenres.slice(0, 5).map((genre) => (
-                  <span key={genre.name} className="rounded bg-gray-700/50 px-2 py-1 text-xs text-gray-300">
+                  <span key={genre.name} className="rounded bg-white/5 px-2 py-1 text-xs text-gray-300">
                     {genre.name}
                   </span>
                 ))}
@@ -509,7 +509,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
                         <Link
                           key={performer.id}
                           href={localizedHref(`/actress/${performer.id}`, locale)}
-                          className="inline-flex items-center gap-2 rounded-lg bg-gray-800/50 px-4 py-2 transition-colors hover:bg-gray-700/50"
+                          className="inline-flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                         >
                           {performer.imageUrl ? (
                             <img

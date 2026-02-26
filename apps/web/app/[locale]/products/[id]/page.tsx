@@ -14,13 +14,7 @@ const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPl
   ),
 });
 import ProductActions from '@/components/ProductActions';
-import {
-  ViewTracker,
-  PriceComparisonServer,
-  FanzaCrossLink,
-  productDetailTranslations,
-  CopyButton,
-} from '@adult-v/shared/components';
+import { ViewTracker, PriceComparisonServer, productDetailTranslations, CopyButton } from '@adult-v/shared/components';
 import StickyCta from '@/components/StickyCta';
 import AffiliateClickTracker from '@/components/AffiliateClickTracker';
 import AiProductDescriptionWrapper from '@/components/AiProductDescriptionWrapper';
@@ -386,6 +380,33 @@ export default async function ProductDetailPage({ params }: PageProps) {
         )
       : null;
 
+  // StickyCta用の最適ソースを決定（FANZA商品は代替ASPを使用）
+  const stickyCtaSource = (() => {
+    if (product.affiliateUrl && product.provider !== 'fanza') {
+      return {
+        affiliateUrl: product.affiliateUrl,
+        providerLabel: product.providerLabel || '',
+        price: product.regularPrice || product.price,
+        salePrice: product.salePrice,
+        discount: product.discount,
+        saleEndAt: product.saleEndAt,
+      };
+    }
+    // FANZA商品: 最安の非FANZAソースを使用
+    const altSource = sourcesWithSales.find((s) => s.affiliateUrl && s.aspName.toLowerCase() !== 'fanza');
+    if (altSource) {
+      return {
+        affiliateUrl: altSource.affiliateUrl,
+        providerLabel: altSource.aspName,
+        price: altSource.regularPrice ?? undefined,
+        salePrice: altSource.salePrice ?? undefined,
+        discount: altSource.discountPercent ?? undefined,
+        saleEndAt: altSource.saleEndAt ? altSource.saleEndAt.toISOString() : null,
+      };
+    }
+    return null;
+  })();
+
   return (
     <>
       <JsonLD data={productSchema} />
@@ -396,7 +417,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
       {howToSchema && <JsonLD data={howToSchema} />}
       {aggregateOfferSchema && <JsonLD data={aggregateOfferSchema} />}
 
-      <div className="theme-body min-h-screen">
+      <main className="theme-body min-h-screen">
         {/* セクションナビゲーション */}
         <ProductSectionNav
           locale={locale}
@@ -413,7 +434,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
           {/* パンくず + PR */}
           <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
             <Breadcrumb items={breadcrumbItems} />
-            <span className="theme-text-muted text-[10px]">
+            <span className="theme-text-muted text-[11px]">
               <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
               広告・アフィリエイトリンク含む
             </span>
@@ -479,7 +500,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     {/* SEO強化: H1に品番を含める（Google検索で品番検索時にヒット率向上） */}
                     {/* 正規化された品番を使用 */}
                     <h1 className="theme-text flex-1 text-xl font-bold sm:text-2xl">
-                      {displayProductCode && <span className="text-rose-400">{displayProductCode}</span>}
+                      {displayProductCode && <span className="text-fuchsia-400">{displayProductCode}</span>}
                       {displayProductCode && ' '}
                       {product.title}
                     </h1>
@@ -500,7 +521,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   {/* 正規化された品番を使用 */}
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <div className="inline-flex items-center gap-1">
-                      <span className="inline-flex items-center rounded-md border border-rose-700 bg-rose-900/50 px-3 py-1 font-mono text-sm text-rose-200">
+                      <span className="inline-flex items-center rounded-md border border-fuchsia-700 bg-fuchsia-900/50 px-3 py-1 font-mono text-sm text-fuchsia-200">
                         {displayProductCode || product.id}
                       </span>
                       <CopyButton text={displayProductCode || String(product.id)} label="品番" iconOnly size="xs" />
@@ -546,7 +567,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <div key={performer.id} className="inline-flex items-center gap-1">
                           <Link
                             href={localizedHref(`/actress/${performer.id}`, locale)}
-                            className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-rose-500"
+                            className="inline-flex items-center gap-1.5 rounded-full bg-fuchsia-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-fuchsia-500"
                           >
                             <span>{performer.name}</span>
                             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -575,7 +596,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                       {product.actressId ? (
                         <Link
                           href={localizedHref(`/actress/${product.actressId}`, locale)}
-                          className="inline-flex items-center gap-1.5 rounded-full bg-rose-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-rose-500"
+                          className="inline-flex items-center gap-1.5 rounded-full bg-fuchsia-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-fuchsia-500"
                         >
                           <span>{product.actressName}</span>
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,40 +662,30 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <span className="theme-text-muted text-sm">({product.discount}% OFF)</span>
                       </div>
                     )}
-                    {product.saleEndAt &&
-                      product.salePrice &&
-                      (() => {
-                        const remaining = new Date(product.saleEndAt).getTime() - Date.now();
-                        if (remaining <= 0) return null;
-                        const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const urgencyClass =
-                          days < 3 ? 'text-red-400 font-bold' : days < 7 ? 'text-amber-400' : 'theme-text-muted';
-                        return (
-                          <p className={`mt-2 flex items-center gap-1.5 text-sm ${urgencyClass}`}>
-                            <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                              />
-                            </svg>
-                            セール終了まで: {days > 0 ? `${days}日 ` : ''}
-                            {hours}時間
-                          </p>
-                        );
-                      })()}
-                    {/* ファーストビューCTA - 目立つ購入ボタン（全ASP対応） */}
-                    {product.affiliateUrl && (
+                    {product.saleEndAt && product.salePrice && (
+                      <p className="mt-2 flex items-center gap-1.5 text-sm text-amber-400">
+                        <svg className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        セール終了:{' '}
+                        {new Date(product.saleEndAt).toLocaleDateString('ja-JP', { month: 'long', day: 'numeric' })}
+                      </p>
+                    )}
+                    {/* ファーストビューCTA - FANZA規約遵守: stickyCtaSourceを使用 */}
+                    {stickyCtaSource && (
                       <a
-                        href={product.affiliateUrl}
+                        href={stickyCtaSource.affiliateUrl}
                         target="_blank"
                         rel="noopener noreferrer sponsored"
-                        className={`mt-4 flex w-full transform items-center justify-center gap-2 rounded-xl py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-[1.02] ${
-                          product.salePrice
+                        className={`mt-4 flex w-full transform items-center justify-center gap-2 rounded-xl py-4 text-lg font-bold text-white shadow-lg transition-all hover:scale-[1.02] active:scale-[0.98] ${
+                          stickyCtaSource.salePrice
                             ? 'bg-linear-to-r from-red-600 via-orange-500 to-red-600 shadow-red-500/30 hover:from-red-500 hover:via-orange-400 hover:to-red-500 hover:shadow-red-500/50'
-                            : 'bg-linear-to-r from-rose-600 to-rose-500 shadow-rose-500/25 hover:from-rose-500 hover:to-rose-400 hover:shadow-rose-500/40'
+                            : 'bg-linear-to-r from-fuchsia-600 to-purple-500 shadow-fuchsia-500/25 hover:from-fuchsia-500 hover:to-purple-400 hover:shadow-fuchsia-500/40'
                         }`}
                       >
                         <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -682,18 +693,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                           />
                         </svg>
-                        {product.salePrice
-                          ? `🔥 今すぐ${product.providerLabel}で購入`
-                          : `${product.providerLabel}で購入`}
-                        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        {stickyCtaSource.salePrice
+                          ? `今すぐ${stickyCtaSource.providerLabel}で購入`
+                          : `${stickyCtaSource.providerLabel}で購入`}
+                        <svg className="h-4 w-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3"
                           />
                         </svg>
                       </a>
@@ -702,10 +713,18 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     {sourcesWithSales.length > 1 && (
                       <a
                         href="#price-comparison"
-                        className="theme-text-accent mt-3 flex items-center justify-center gap-1 text-sm font-medium transition-opacity hover:opacity-80"
+                        className="mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-white/5 py-2 text-sm font-medium text-fuchsia-400 ring-1 ring-white/10 transition-all hover:bg-white/10 hover:text-fuchsia-300"
                       >
-                        他{sourcesWithSales.length - 1}社の価格を比較
                         <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        {sourcesWithSales.length}社で価格比較
+                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </a>
@@ -730,7 +749,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         <Link
                           key={tag.id}
                           href={localizedHref(`/tags/${tag.id}`, locale)}
-                          className="theme-accordion-bg theme-text-secondary inline-flex items-center gap-1 rounded-full border border-transparent px-3 py-1 text-sm transition-colors hover:border-rose-500/40 hover:bg-rose-600/30 hover:text-rose-300"
+                          className="group theme-accordion-bg theme-text-secondary inline-flex items-center gap-1 rounded-full border border-transparent px-3 py-1 text-sm transition-colors hover:border-fuchsia-500/40 hover:bg-fuchsia-600/30 hover:text-fuchsia-300"
                         >
                           {tag.name}
                           <svg
@@ -765,7 +784,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         </h2>
                         <Link
                           href={localizedHref(`/series/${series.id}`, locale)}
-                          className="inline-flex items-center gap-1.5 text-sm font-medium text-rose-400 transition-colors hover:text-rose-300"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                         >
                           {series.name}
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -789,7 +808,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                         </h2>
                         <Link
                           href={localizedHref(`/makers/${maker.id}`, locale)}
-                          className="inline-flex items-center gap-1.5 text-sm font-medium text-rose-400 transition-colors hover:text-rose-300"
+                          className="inline-flex items-center gap-1.5 text-sm font-medium text-fuchsia-400 transition-colors hover:text-fuchsia-300"
                         >
                           {maker.name}
                           <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -800,31 +819,30 @@ export default async function ProductDetailPage({ params }: PageProps) {
                     )}
                   </div>
                 )}
-
-                {/* FANZAで見る（apps/fanza経由、直リンクは規約違反） */}
-                {sources.find((s) => s.aspName?.toUpperCase() === 'FANZA') && (
-                  <FanzaCrossLink
-                    productId={product.normalizedProductId || product.id}
-                    locale={locale}
-                    className="mt-4"
-                  />
-                )}
               </div>
             </div>
           </div>
 
-          {/* 価格比較セクション */}
+          {/* 価格比較セクション - 常時展開（購入導線を最大化） */}
           {sourcesWithSales.length > 0 && (
-            <details
-              id="price-comparison"
-              className="mt-5 scroll-mt-16"
-              open={sourcesWithSales.length <= 2 ? true : undefined}
-            >
-              <summary className="theme-text-muted mb-2 cursor-pointer list-none text-sm font-semibold hover:text-white">
-                {locale === 'ja' ? '価格比較' : 'Price Comparison'} ({sourcesWithSales.length})
-              </summary>
+            <div id="price-comparison" className="mt-5 scroll-mt-16">
+              <h2 className="mb-3 flex items-center gap-2 text-sm font-semibold text-white">
+                <svg className="h-4 w-4 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                  />
+                </svg>
+                {locale === 'ja' ? '価格比較' : 'Price Comparison'}
+                <span className="rounded-full bg-fuchsia-600/30 px-2 py-0.5 text-[10px] font-bold text-fuchsia-300">
+                  {sourcesWithSales.length}
+                  {locale === 'ja' ? '社' : ''}
+                </span>
+              </h2>
               <PriceComparisonServer sources={sourcesWithSales} locale={locale} />
-            </details>
+            </div>
           )}
 
           {/* 分析セクション（AIレビュー、シーン、コスパ、投稿をタブで統合） */}
@@ -904,7 +922,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             </Suspense>
           </div>
         </div>
-      </div>
+      </main>
 
       {/* アフィリエイトリンク全クリックトラッキング */}
       <AffiliateClickTracker />
@@ -920,16 +938,16 @@ export default async function ProductDetailPage({ params }: PageProps) {
         }}
       />
 
-      {/* Mobile Sticky CTA - FANZA以外の商品のみ */}
-      {product.affiliateUrl && product.provider !== 'fanza' && (
+      {/* Mobile Sticky CTA - 全商品対応（FANZAは代替ASPのURLを使用） */}
+      {stickyCtaSource && (
         <StickyCta
-          affiliateUrl={product.affiliateUrl}
-          providerLabel={product.providerLabel || ''}
-          price={product.regularPrice || product.price}
-          salePrice={product.salePrice}
-          discount={product.discount}
+          affiliateUrl={stickyCtaSource.affiliateUrl}
+          providerLabel={stickyCtaSource.providerLabel}
+          price={stickyCtaSource.price}
+          salePrice={stickyCtaSource.salePrice}
+          discount={stickyCtaSource.discount}
           currency="JPY"
-          saleEndAt={product.saleEndAt}
+          saleEndAt={stickyCtaSource.saleEndAt}
         />
       )}
     </>

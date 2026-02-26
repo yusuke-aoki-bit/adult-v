@@ -152,7 +152,9 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
             <Link
               href={localizedHref('/categories', locale)}
               className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                !selectedCategory ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                !selectedCategory
+                  ? 'bg-fuchsia-600 text-white'
+                  : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
               }`}
             >
               {t('allCategories')}
@@ -162,7 +164,9 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                 key={cat}
                 href={localizedHref(`/categories?category=${cat}`, locale)}
                 className={`rounded-full px-4 py-2 text-sm font-medium transition-colors ${
-                  selectedCategory === cat ? 'bg-rose-600 text-white' : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                  selectedCategory === cat
+                    ? 'bg-fuchsia-600 text-white'
+                    : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
                 }`}
               >
                 {categoryLabels[cat]}
@@ -179,9 +183,9 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                 <Link
                   key={tag.id}
                   href={localizedHref(`/products?include=${tag.id}`, locale)}
-                  className="group rounded-lg bg-gray-800 p-4 transition-colors hover:bg-gray-700"
+                  className="group rounded-lg bg-white/5 p-4 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                 >
-                  <h3 className="mb-1 font-medium text-white transition-colors group-hover:text-rose-400">
+                  <h3 className="mb-1 font-medium text-white transition-colors group-hover:text-fuchsia-400">
                     {tag.name}
                   </h3>
                   <p className="text-sm text-gray-400">{t('productCount', { count: tag.count })}</p>
@@ -201,7 +205,7 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                       <h2 className="text-xl font-bold text-white">{categoryLabels[cat]}</h2>
                       <Link
                         href={localizedHref(`/categories?category=${cat}`, locale)}
-                        className="text-sm text-rose-400 hover:text-rose-300"
+                        className="text-sm text-fuchsia-400 hover:text-fuchsia-300"
                       >
                         {t('viewProducts')} →
                       </Link>
@@ -211,9 +215,9 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
                         <Link
                           key={tag.id}
                           href={localizedHref(`/products?include=${tag.id}`, locale)}
-                          className="group rounded-lg bg-gray-800 p-3 transition-colors hover:bg-gray-700"
+                          className="group rounded-lg bg-white/5 p-3 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                         >
-                          <h3 className="truncate text-sm font-medium text-white transition-colors group-hover:text-rose-400">
+                          <h3 className="truncate text-sm font-medium text-white transition-colors group-hover:text-fuchsia-400">
                             {tag.name}
                           </h3>
                           <p className="text-xs text-gray-400">{t('productCount', { count: tag.count })}</p>

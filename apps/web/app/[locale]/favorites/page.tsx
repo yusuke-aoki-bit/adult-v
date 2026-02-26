@@ -141,11 +141,11 @@ function FavoritesSkeleton() {
       {/* Grid skeleton */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
         {Array.from({ length: 12 }).map((_, i) => (
-          <div key={i} className="animate-pulse overflow-hidden rounded-lg bg-gray-800">
-            <div className="aspect-3/4 bg-gray-700" />
+          <div key={i} className="animate-pulse overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/5">
+            <div className="aspect-3/4 bg-white/5" />
             <div className="space-y-2 p-3">
-              <div className="h-4 w-full rounded bg-gray-700" />
-              <div className="h-3 w-20 rounded bg-gray-700" />
+              <div className="h-4 w-full rounded bg-white/10" />
+              <div className="h-3 w-20 rounded bg-white/10" />
             </div>
           </div>
         ))}
@@ -220,7 +220,7 @@ export default function FavoritesPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white">
-            <Heart className="h-8 w-8 fill-current text-rose-600" />
+            <Heart className="h-8 w-8 fill-current text-fuchsia-600" />
             {t.title}
           </h1>
           <p className="text-gray-400">{t.itemCount.replace('{count}', String(favorites.length))}</p>
@@ -267,7 +267,9 @@ export default function FavoritesPage() {
           <button
             onClick={() => setActiveTab('all')}
             className={`rounded-lg px-4 py-2 font-medium transition-colors ${
-              activeTab === 'all' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              activeTab === 'all'
+                ? 'bg-fuchsia-600 text-white'
+                : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
             }`}
           >
             {t.all} ({favorites.length})
@@ -275,7 +277,9 @@ export default function FavoritesPage() {
           <button
             onClick={() => setActiveTab('product')}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-              activeTab === 'product' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              activeTab === 'product'
+                ? 'bg-fuchsia-600 text-white'
+                : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
             }`}
           >
             <Film className="h-4 w-4" />
@@ -284,7 +288,9 @@ export default function FavoritesPage() {
           <button
             onClick={() => setActiveTab('actress')}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-              activeTab === 'actress' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              activeTab === 'actress'
+                ? 'bg-fuchsia-600 text-white'
+                : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
             }`}
           >
             <User className="h-4 w-4" />
@@ -298,7 +304,9 @@ export default function FavoritesPage() {
               <button
                 onClick={toggleSelectionMode}
                 className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-                  isSelectionMode ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  isSelectionMode
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
                 }`}
               >
                 <CheckSquare className="h-4 w-4" />
@@ -310,7 +318,7 @@ export default function FavoritesPage() {
             {favorites.length > 0 && !isSelectionMode && (
               <button
                 onClick={() => setShowClearConfirm(true)}
-                className="flex items-center gap-2 rounded-lg bg-gray-800 px-4 py-2 font-medium text-gray-300 transition-colors hover:bg-red-900 hover:text-white"
+                className="flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2 font-medium text-gray-300 ring-1 ring-white/10 transition-colors hover:bg-red-900/50 hover:text-white hover:ring-red-500/30"
               >
                 <Trash2 className="h-4 w-4" />
                 {t.clearAll}
@@ -322,13 +330,13 @@ export default function FavoritesPage() {
         {/* Clear confirmation dialog */}
         {showClearConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <div className="w-full max-w-md rounded-lg bg-gray-800 p-6">
+            <div className="w-full max-w-md rounded-lg border border-white/10 bg-gray-900/95 p-6 backdrop-blur-xl">
               <h3 className="mb-4 text-xl font-bold text-white">{t.confirmTitle}</h3>
               <p className="mb-6 text-gray-400">{t.confirmMessage}</p>
               <div className="flex justify-end gap-3">
                 <button
                   onClick={() => setShowClearConfirm(false)}
-                  className="rounded-lg bg-gray-700 px-4 py-2 text-white transition-colors hover:bg-gray-600"
+                  className="rounded-lg bg-white/5 px-4 py-2 text-white ring-1 ring-white/10 transition-colors hover:bg-white/10"
                 >
                   {t.cancel}
                 </button>
@@ -368,7 +376,7 @@ export default function FavoritesPage() {
                   onToggle={() => toggleItem(itemKey)}
                   theme="dark"
                 >
-                  <div className="group relative overflow-hidden rounded-lg bg-gray-800 transition-all hover:ring-2 hover:ring-rose-600">
+                  <div className="group relative overflow-hidden rounded-lg bg-white/5 ring-1 ring-white/10 transition-all hover:ring-2 hover:ring-fuchsia-600">
                     <Link href={href}>
                       {/* Thumbnail */}
                       <div className="relative aspect-3/4 bg-gray-700">

@@ -231,7 +231,7 @@ export default function VotePage() {
               className={`flex items-center gap-2 rounded-lg px-4 py-3 font-medium whitespace-nowrap transition-all ${
                 activeCategory === category.id
                   ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
               }`}
             >
               <CategoryIcon icon={category.icon} />
@@ -294,7 +294,7 @@ export default function VotePage() {
                   <div className="min-w-0 flex-1 p-4">
                     <Link
                       href={`/${locale}/products/${product.id}`}
-                      className="theme-text mb-1 line-clamp-2 font-bold transition-colors hover:text-rose-400"
+                      className="theme-text mb-1 line-clamp-2 font-bold transition-colors hover:text-fuchsia-400"
                     >
                       {product.title}
                     </Link>

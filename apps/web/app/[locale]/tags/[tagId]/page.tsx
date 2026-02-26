@@ -276,7 +276,7 @@ export default async function TagPage({ params, searchParams }: PageProps) {
           <div className="mt-8 border-t border-gray-700 pt-6">
             <Link
               href={localizedHref('/categories', locale)}
-              className="inline-flex items-center gap-2 text-rose-400 transition-colors hover:text-rose-300"
+              className="inline-flex items-center gap-2 text-fuchsia-400 transition-colors hover:text-fuchsia-300"
             >
               <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />

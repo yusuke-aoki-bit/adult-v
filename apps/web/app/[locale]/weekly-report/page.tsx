@@ -389,7 +389,7 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
           {/* サマリーカード */}
           <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
             <div className="theme-card rounded-lg p-6 text-center">
-              <Film className="mx-auto mb-2 h-8 w-8 text-rose-400" />
+              <Film className="mx-auto mb-2 h-8 w-8 text-fuchsia-400" />
               <div className="theme-text text-3xl font-bold">{data.totalReleases}</div>
               <div className="theme-text-muted text-sm">{t.totalReleases}</div>
               <div className={`mt-1 text-sm ${releaseChange >= 0 ? 'text-green-400' : 'text-red-400'}`}>
@@ -438,7 +438,7 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
                   <Link
                     key={tag.id}
                     href={localizedHref(`/products?tags=${tag.id}`, locale)}
-                    className="flex items-center justify-between rounded-lg bg-gray-800/50 p-3 transition-colors hover:bg-gray-700/50"
+                    className="flex items-center justify-between rounded-lg bg-white/5 p-3 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-gray-500">#{i + 1}</span>
@@ -467,7 +467,7 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
                   <Link
                     key={performer.id}
                     href={localizedHref(`/actress/${performer.id}`, locale)}
-                    className="flex items-center justify-between rounded-lg bg-gray-800/50 p-3 transition-colors hover:bg-gray-700/50"
+                    className="flex items-center justify-between rounded-lg bg-white/5 p-3 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                   >
                     <div className="flex items-center gap-3">
                       <span className="text-lg font-bold text-gray-500">#{i + 1}</span>
@@ -508,7 +508,7 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
                         <div className="flex h-full w-full items-center justify-center text-gray-500">No Image</div>
                       )}
                     </div>
-                    <h3 className="theme-text line-clamp-2 text-sm transition-colors group-hover:text-rose-400">
+                    <h3 className="theme-text line-clamp-2 text-sm transition-colors group-hover:text-fuchsia-400">
                       {product.title}
                     </h3>
                     {product.rating && (
@@ -535,7 +535,7 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
                   <Link
                     key={performer.id}
                     href={localizedHref(`/actress/${performer.id}`, locale)}
-                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-rose-600 to-purple-600 px-4 py-2 text-white transition-colors hover:from-rose-500 hover:to-purple-500"
+                    className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-fuchsia-600 to-purple-600 px-4 py-2 text-white transition-colors hover:from-fuchsia-500 hover:to-purple-500"
                   >
                     <span>{performer.name}</span>
                     <span className="text-xs opacity-80">

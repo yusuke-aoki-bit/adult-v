@@ -309,9 +309,9 @@ export default function Pagination({
           )}
         </div>
 
-        {/* 直接ページ入力 */}
+        {/* 直接ページ入力 — モバイル対応 */}
         {totalPages >= 5 && (
-          <form onSubmit={handlePageInputSubmit} className="hidden items-center gap-1 sm:flex">
+          <form onSubmit={handlePageInputSubmit} className="flex items-center gap-1">
             <input
               type="number"
               min={1}
@@ -319,13 +319,13 @@ export default function Pagination({
               value={inputPage}
               onChange={handleInputChange}
               placeholder={t.inputPlaceholder}
-              className={`w-20 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none ${styles.input}`}
+              className={`w-16 rounded-md border px-2 py-1.5 text-center text-sm focus:border-transparent focus:ring-2 focus:outline-none sm:w-20 ${styles.input}`}
               aria-label={t.goToPage}
             />
             <button
               type="submit"
               disabled={!inputPage || parseInt(inputPage) < 1 || parseInt(inputPage) > totalPages}
-              className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed ${styles.submitButton}`}
+              className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition-colors disabled:cursor-not-allowed sm:px-3 ${styles.submitButton}`}
             >
               {t.go}
             </button>

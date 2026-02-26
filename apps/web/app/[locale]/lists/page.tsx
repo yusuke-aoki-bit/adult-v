@@ -296,7 +296,7 @@ export default function ListsPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white">
-            <List className="h-8 w-8 text-rose-500" />
+            <List className="h-8 w-8 text-fuchsia-500" />
             {t.title}
           </h1>
           <p className="text-gray-400">{t.description}</p>
@@ -308,7 +308,9 @@ export default function ListsPage() {
             <button
               onClick={() => setActiveTab('public')}
               className={`rounded-lg px-4 py-2 font-medium transition-colors ${
-                activeTab === 'public' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                activeTab === 'public'
+                  ? 'bg-fuchsia-600 text-white'
+                  : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
               }`}
             >
               {t.publicLists}
@@ -317,7 +319,9 @@ export default function ListsPage() {
               <button
                 onClick={() => setActiveTab('my')}
                 className={`rounded-lg px-4 py-2 font-medium transition-colors ${
-                  activeTab === 'my' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                  activeTab === 'my'
+                    ? 'bg-fuchsia-600 text-white'
+                    : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
                 }`}
               >
                 {t.myLists} ({myLists.length})
@@ -328,7 +332,7 @@ export default function ListsPage() {
           {userId ? (
             <button
               onClick={() => setShowCreateModal(true)}
-              className="flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 font-medium text-white transition-colors hover:bg-rose-700"
+              className="flex items-center gap-2 rounded-lg bg-fuchsia-600 px-4 py-2 font-medium text-white transition-colors hover:bg-fuchsia-700"
             >
               <Plus className="h-4 w-4" />
               {t.createList}

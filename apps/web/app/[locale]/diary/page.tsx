@@ -150,7 +150,7 @@ function DiarySkeleton() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-4 lg:col-span-2">
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="animate-pulse rounded-lg bg-gray-800 p-4">
+            <div key={i} className="animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
               <div className="flex gap-4">
                 <div className="h-28 w-20 rounded bg-gray-700" />
                 <div className="flex-1 space-y-2">
@@ -163,8 +163,8 @@ function DiarySkeleton() {
           ))}
         </div>
         <div className="space-y-4">
-          <div className="h-64 animate-pulse rounded-lg bg-gray-800 p-4" />
-          <div className="h-48 animate-pulse rounded-lg bg-gray-800 p-4" />
+          <div className="h-64 animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10" />
+          <div className="h-48 animate-pulse rounded-lg bg-white/5 p-4 ring-1 ring-white/10" />
         </div>
       </div>
     </div>
@@ -182,7 +182,7 @@ function MonthlyTrendChart({ data, max }: { data: Array<{ month: string; count: 
         return (
           <div key={item.month} className="flex flex-1 flex-col items-center">
             <div
-              className="w-full rounded-t bg-rose-600 transition-all"
+              className="w-full rounded-t bg-fuchsia-600 transition-all"
               style={{ height: `${Math.max(height, 4)}%` }}
               title={`${item.count}`}
             />
@@ -226,7 +226,7 @@ function DiaryEntryCard({
   const dateLocale = locale === 'ko' ? 'ko-KR' : locale === 'zh' ? 'zh-CN' : locale === 'en' ? 'en-US' : 'ja-JP';
 
   return (
-    <div className="hover:bg-gray-750 group rounded-lg bg-gray-800 p-4 transition-colors">
+    <div className="hover:bg-gray-750 group rounded-lg bg-white/5 p-4 ring-1 ring-white/10 transition-colors">
       <div className="flex gap-4">
         {/* サムネイル */}
         <Link href={localizedHref(`/products/${entry.productId}`, locale)} className="shrink-0">
@@ -238,7 +238,9 @@ function DiaryEntryCard({
         {/* 情報 */}
         <div className="min-w-0 flex-1">
           <Link href={localizedHref(`/products/${entry.productId}`, locale)}>
-            <h3 className="line-clamp-2 font-medium text-white transition-colors hover:text-rose-400">{entry.title}</h3>
+            <h3 className="line-clamp-2 font-medium text-white transition-colors hover:text-fuchsia-400">
+              {entry.title}
+            </h3>
           </Link>
 
           {entry.performerName && (
@@ -284,12 +286,12 @@ function DiaryEntryCard({
       {/* 削除確認ダイアログ */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-sm rounded-lg bg-gray-800 p-6">
+          <div className="w-full max-w-sm rounded-lg border border-white/10 bg-gray-900/95 p-6 backdrop-blur-xl">
             <p className="mb-4 text-white">{t.confirmDelete}</p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="rounded-lg bg-gray-700 px-4 py-2 text-white hover:bg-gray-600"
+                className="rounded-lg bg-white/5 px-4 py-2 text-white ring-1 ring-white/10 hover:bg-white/10"
               >
                 {t.cancel}
               </button>
@@ -350,7 +352,7 @@ export default function DiaryPage() {
         {/* ヘッダー */}
         <div className="mb-8">
           <h1 className="mb-2 flex items-center gap-3 text-3xl font-bold text-white">
-            <BookOpen className="h-8 w-8 text-rose-600" />
+            <BookOpen className="h-8 w-8 text-fuchsia-600" />
             {t.title}
           </h1>
           <p className="text-gray-400">{t.subtitle}</p>
@@ -361,7 +363,9 @@ export default function DiaryPage() {
           <button
             onClick={() => setActiveTab('history')}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-              activeTab === 'history' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              activeTab === 'history'
+                ? 'bg-fuchsia-600 text-white'
+                : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
             }`}
           >
             <Film className="h-4 w-4" />
@@ -370,7 +374,9 @@ export default function DiaryPage() {
           <button
             onClick={() => setActiveTab('stats')}
             className={`flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-colors ${
-              activeTab === 'stats' ? 'bg-rose-600 text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              activeTab === 'stats'
+                ? 'bg-fuchsia-600 text-white'
+                : 'bg-white/5 text-gray-300 ring-1 ring-white/10 hover:bg-white/10'
             }`}
           >
             <BarChart3 className="h-4 w-4" />
@@ -401,9 +407,9 @@ export default function DiaryPage() {
               <UserPreferenceProfileWrapper locale={locale} />
 
               {/* 概要カード */}
-              <div className="rounded-lg bg-gray-800 p-4">
+              <div className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
                 <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
-                  <TrendingUp className="h-4 w-4 text-rose-600" />
+                  <TrendingUp className="h-4 w-4 text-fuchsia-600" />
                   {t.yearStats} {selectedYear}
                 </h3>
 
@@ -430,9 +436,9 @@ export default function DiaryPage() {
               </div>
 
               {/* 月別トレンド */}
-              <div className="rounded-lg bg-gray-800 p-4">
+              <div className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
                 <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
-                  <BarChart3 className="h-4 w-4 text-rose-600" />
+                  <BarChart3 className="h-4 w-4 text-fuchsia-600" />
                   {t.monthlyTrend}
                 </h3>
                 <MonthlyTrendChart data={yearStats.monthlyTrend} max={maxMonthlyCount} />
@@ -440,9 +446,9 @@ export default function DiaryPage() {
 
               {/* よく見た女優 */}
               {yearStats.topPerformers.length > 0 && (
-                <div className="rounded-lg bg-gray-800 p-4">
+                <div className="rounded-lg bg-white/5 p-4 ring-1 ring-white/10">
                   <h3 className="mb-3 flex items-center gap-2 font-medium text-white">
-                    <User className="h-4 w-4 text-rose-600" />
+                    <User className="h-4 w-4 text-fuchsia-600" />
                     {t.topPerformers}
                   </h3>
                   <div className="space-y-2">
@@ -470,7 +476,7 @@ export default function DiaryPage() {
               <button
                 onClick={() => setSelectedYear((y) => y - 1)}
                 disabled={!availableYears.includes(selectedYear - 1) && selectedYear <= Math.min(...availableYears)}
-                className="rounded-lg bg-gray-800 p-2 text-gray-300 hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-white/5 p-2 text-gray-300 ring-1 ring-white/10 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronLeft className="h-5 w-5" />
               </button>
@@ -478,7 +484,7 @@ export default function DiaryPage() {
               <button
                 onClick={() => setSelectedYear((y) => y + 1)}
                 disabled={selectedYear >= new Date().getFullYear()}
-                className="rounded-lg bg-gray-800 p-2 text-gray-300 hover:bg-gray-700 disabled:cursor-not-allowed disabled:opacity-50"
+                className="rounded-lg bg-white/5 p-2 text-gray-300 ring-1 ring-white/10 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <ChevronRight className="h-5 w-5" />
               </button>
@@ -486,32 +492,32 @@ export default function DiaryPage() {
 
             {/* 統計カード */}
             <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              <div className="rounded-lg bg-gray-800 p-6 text-center">
-                <Film className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+              <div className="rounded-lg bg-white/5 p-6 text-center ring-1 ring-white/10">
+                <Film className="mx-auto mb-2 h-8 w-8 text-fuchsia-600" />
                 <div className="text-3xl font-bold text-white">{yearStats.totalCount}</div>
                 <div className="text-sm text-gray-400">{t.totalViewed}</div>
               </div>
-              <div className="rounded-lg bg-gray-800 p-6 text-center">
-                <Clock className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+              <div className="rounded-lg bg-white/5 p-6 text-center ring-1 ring-white/10">
+                <Clock className="mx-auto mb-2 h-8 w-8 text-fuchsia-600" />
                 <div className="text-3xl font-bold text-white">{formatDuration(yearStats.totalDuration)}</div>
                 <div className="text-sm text-gray-400">{t.totalTime}</div>
               </div>
-              <div className="rounded-lg bg-gray-800 p-6 text-center">
-                <Star className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+              <div className="rounded-lg bg-white/5 p-6 text-center ring-1 ring-white/10">
+                <Star className="mx-auto mb-2 h-8 w-8 text-fuchsia-600" />
                 <div className="text-3xl font-bold text-white">
                   {yearStats.averageRating > 0 ? yearStats.averageRating.toFixed(1) : '-'}
                 </div>
                 <div className="text-sm text-gray-400">{t.avgRating}</div>
               </div>
-              <div className="rounded-lg bg-gray-800 p-6 text-center">
-                <TrendingUp className="mx-auto mb-2 h-8 w-8 text-rose-600" />
+              <div className="rounded-lg bg-white/5 p-6 text-center ring-1 ring-white/10">
+                <TrendingUp className="mx-auto mb-2 h-8 w-8 text-fuchsia-600" />
                 <div className="text-3xl font-bold text-white">{Math.round((yearStats.totalCount / 12) * 10) / 10}</div>
                 <div className="text-sm text-gray-400">{t.works}/月</div>
               </div>
             </div>
 
             {/* 月別トレンド（大きめ） */}
-            <div className="rounded-lg bg-gray-800 p-6">
+            <div className="rounded-lg bg-white/5 p-6 ring-1 ring-white/10">
               <h3 className="mb-6 font-medium text-white">{t.monthlyTrend}</h3>
               <div className="h-48">
                 <MonthlyTrendChart data={yearStats.monthlyTrend} max={maxMonthlyCount} />
@@ -521,9 +527,9 @@ export default function DiaryPage() {
             {/* ランキング */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               {/* よく見た女優 */}
-              <div className="rounded-lg bg-gray-800 p-6">
+              <div className="rounded-lg bg-white/5 p-6 ring-1 ring-white/10">
                 <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
-                  <User className="h-5 w-5 text-rose-600" />
+                  <User className="h-5 w-5 text-fuchsia-600" />
                   {t.topPerformers}
                 </h3>
                 {yearStats.topPerformers.length > 0 ? (
@@ -557,9 +563,9 @@ export default function DiaryPage() {
               </div>
 
               {/* よく見たジャンル */}
-              <div className="rounded-lg bg-gray-800 p-6">
+              <div className="rounded-lg bg-white/5 p-6 ring-1 ring-white/10">
                 <h3 className="mb-4 flex items-center gap-2 font-medium text-white">
-                  <Film className="h-5 w-5 text-rose-600" />
+                  <Film className="h-5 w-5 text-fuchsia-600" />
                   {t.topTags}
                 </h3>
                 {yearStats.topTags.length > 0 ? (

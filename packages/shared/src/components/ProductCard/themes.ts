@@ -114,11 +114,11 @@ export const themes: Record<ProductCardTheme, ThemeConfig> = {
     urgencyBadgeBg: 'bg-red-600',
     urgencyBadgeText: 'text-white',
 
-    // CTA button — fuchsia glow
-    ctaGradient: 'from-fuchsia-500 to-fuchsia-500',
-    ctaGradientHover: 'hover:from-fuchsia-400 hover:to-fuchsia-400',
-    ctaSaleGradient: 'from-red-500 to-red-500',
-    ctaSaleGradientHover: 'hover:from-red-400 hover:to-red-400',
+    // CTA button — vivid gradients for high-contrast CTAs
+    ctaGradient: 'from-fuchsia-600 to-purple-500',
+    ctaGradientHover: 'hover:from-fuchsia-500 hover:to-purple-400',
+    ctaSaleGradient: 'from-red-600 to-orange-500',
+    ctaSaleGradientHover: 'hover:from-red-500 hover:to-orange-400',
 
     // Ranking badge
     rankingDefaultBg: 'bg-white/8',

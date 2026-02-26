@@ -4,7 +4,6 @@ import ProductCard from '@/components/ProductCard';
 import {
   ActressHeroImage,
   Pagination,
-  FanzaSiteLink,
   CrossAspInfo,
   ActressAiReview,
   PerformerTopProducts,
@@ -285,21 +284,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   // aiReviewがオブジェクト型の場合は空文字列を使用
   const aiReviewText = typeof actress.aiReview === 'string' ? actress.aiReview : '';
   // exactOptionalPropertyTypes対応: undefinedを含むプロパティは条件付きで追加
-  // sameAs: FANZA専門サイトのURLを生成（クロスプラットフォーム連携）
-  const sameAsUrls: string[] = [];
-  if (productCountByAsp.some((asp) => asp.aspName.toUpperCase() === 'FANZA')) {
-    sameAsUrls.push(`https://www.f.adult-v.com/actress/${actress.id}`);
-  }
-
   const personSchemaOptions: { workCount: number; aliases: string[]; debutYear?: number; sameAs?: string[] } = {
     workCount: total,
     aliases: nonPrimaryAliases.map((a) => a.aliasName),
   };
   if (careerAnalysis?.debutYear != null) {
     personSchemaOptions.debutYear = careerAnalysis.debutYear;
-  }
-  if (sameAsUrls.length > 0) {
-    personSchemaOptions.sameAs = sameAsUrls;
   }
 
   const personSchema = generatePersonSchema(
@@ -364,7 +354,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
       {worksSchema && <JsonLD data={worksSchema} />}
       <JsonLD data={faqSchema} />
 
-      <div className="theme-body min-h-screen">
+      <main className="theme-body min-h-screen">
         {/* セクションナビゲーション */}
         <ActressSectionNav
           locale={locale}
@@ -378,7 +368,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* Breadcrumb + PR */}
           <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
             <Breadcrumb items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: actress.name }]} />
-            <span className="theme-text-muted text-[10px]">
+            <span className="theme-text-muted text-[11px]">
               <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
               広告・アフィリエイトリンク含む
             </span>
@@ -429,17 +419,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   return (
                     <span
                       key={asp.aspName}
-                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold whitespace-nowrap text-white sm:text-xs"
+                      className="rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap text-white sm:text-xs"
                       style={{ background: `linear-gradient(to right, ${colors.from}, ${colors.to})` }}
                     >
                       {meta?.label || asp.aspName}: {asp.count}
                     </span>
                   );
                 })}
-                {/* FANZAサイトへのクロスリンク */}
-                {productCountByAsp.some((asp) => asp.aspName.toUpperCase() === 'FANZA') && (
-                  <FanzaSiteLink path={`/actress/${actress.id}`} locale={locale} label={t('viewOnFanzaSite')} compact />
-                )}
               </div>
             )}
             {/* 人気ジャンルリンク（回遊促進） */}
@@ -449,7 +435,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   <Link
                     key={tag.id}
                     href={localizedHref(`/tags/${tag.id}`, locale)}
-                    className="inline-flex items-center gap-1 rounded-full border border-gray-600/50 bg-gray-700/80 px-2 py-0.5 text-[10px] text-gray-300 transition-colors hover:border-rose-500/50 hover:bg-rose-600/30 hover:text-rose-300 sm:text-xs"
+                    className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[11px] text-gray-300 transition-colors hover:border-fuchsia-500/50 hover:bg-fuchsia-600/30 hover:text-fuchsia-300 sm:text-xs"
                   >
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path
@@ -464,11 +450,6 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 ))}
               </div>
             )}
-            {/* ソートドロップダウン・表示件数 */}
-            <div className="mt-3 flex items-center justify-end gap-4">
-              <PerPageDropdown perPage={perPage} basePath={basePath} />
-              <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
-            </div>
           </div>
 
           {/* 卒業/引退アラート */}
@@ -499,7 +480,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                       : '全作品購入サマリー'}
               </h2>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                <div className="rounded-lg bg-white/5 p-3 text-center ring-1 ring-white/10">
                   <p className="mb-1 text-xs text-gray-400">
                     {locale === 'en'
                       ? 'Total Cost'
@@ -512,7 +493,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   <p className="text-lg font-bold text-emerald-400 sm:text-xl">
                     ¥{budgetSummary.totalCost.toLocaleString()}
                   </p>
-                  <p className="mt-0.5 text-[10px] text-gray-500">
+                  <p className="mt-0.5 text-[11px] text-gray-500">
                     {budgetSummary.pricedProducts}/{budgetSummary.totalProducts}
                     {locale === 'en'
                       ? ' priced'
@@ -523,7 +504,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                           : '作品'}
                   </p>
                 </div>
-                <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                <div className="rounded-lg bg-white/5 p-3 text-center ring-1 ring-white/10">
                   <p className="mb-1 text-xs text-gray-400">
                     {locale === 'en'
                       ? 'Avg Price'
@@ -534,12 +515,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                           : '平均単価'}
                   </p>
                   <p className="theme-text text-lg font-bold sm:text-xl">¥{budgetSummary.avgPrice.toLocaleString()}</p>
-                  <p className="mt-0.5 text-[10px] text-gray-500">
+                  <p className="mt-0.5 text-[11px] text-gray-500">
                     ¥{budgetSummary.minPrice.toLocaleString()} ~ ¥{budgetSummary.maxPrice.toLocaleString()}
                   </p>
                 </div>
                 {budgetSummary.onSaleCount > 0 && (
-                  <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                  <div className="rounded-lg bg-white/5 p-3 text-center ring-1 ring-white/10">
                     <p className="mb-1 text-xs text-gray-400">
                       {locale === 'en'
                         ? 'On Sale'
@@ -549,7 +530,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                             ? '세일 중'
                             : 'セール中'}
                     </p>
-                    <p className="text-lg font-bold text-rose-400 sm:text-xl">
+                    <p className="text-lg font-bold text-fuchsia-400 sm:text-xl">
                       {budgetSummary.onSaleCount}
                       <span className="ml-0.5 text-sm">
                         {locale === 'en' ? 'items' : locale === 'zh' ? '件' : locale === 'ko' ? '건' : '作品'}
@@ -558,7 +539,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   </div>
                 )}
                 {budgetSummary.totalSavings > 0 && (
-                  <div className="rounded-lg bg-gray-800/50 p-3 text-center">
+                  <div className="rounded-lg bg-white/5 p-3 text-center ring-1 ring-white/10">
                     <p className="mb-1 text-xs text-gray-400">
                       {locale === 'en'
                         ? 'Savings'
@@ -605,7 +586,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                 aliases={aliases}
                 aspCounts={productCountByAsp}
                 locale={locale}
-                fanzaSiteUrl="https://www.f.adult-v.com"
+                hideFanzaLink
               />
             </div>
           )}
@@ -650,6 +631,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   performerName={actress.name}
                   locale={locale}
                   theme="dark"
+                  hideFanzaPurchaseLinks={true}
                   translations={{
                     title: tOnSale('title', { name: actress.name }),
                     description: tOnSale('description'),
@@ -658,6 +640,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                     endsTomorrow: tOnSale('endsTomorrow'),
                     endsToday: tOnSale('endsToday'),
                     yen: tOnSale('yen'),
+                    buyNow: tOnSale('buyNow'),
                   }}
                 />
               </div>
@@ -685,6 +668,12 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
                   multi: tf('multi'),
                 }}
               />
+
+              {/* ソートドロップダウン・表示件数 */}
+              <div className="mb-2 flex items-center justify-end gap-4">
+                <PerPageDropdown perPage={perPage} basePath={basePath} />
+                <ProductSortDropdown sortBy={sortBy} basePath={basePath} />
+              </div>
 
               {/* Product List */}
               {total > 0 ? (
@@ -730,7 +719,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* 共演者マップ（インタラクティブ） */}
           <SectionVisibility sectionId="costar-network" pageId="actress" locale={locale}>
             <div id="costar-network" className="mt-6 mb-5">
-              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-800" />}>
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-white/5" />}>
                 <PerformerRelationMap performerId={parseInt(actress.id)} locale={locale} />
               </Suspense>
             </div>
@@ -739,13 +728,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
           {/* 類似女優マップ（ジャンル・メーカー・プロフィール複合スコア） */}
           <SectionVisibility sectionId="similar-network" pageId="actress" locale={locale}>
             <div id="similar-network" className="mb-5">
-              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-gray-800" />}>
+              <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-white/5" />}>
                 <SimilarPerformerMap performerId={parseInt(actress.id)} locale={locale} />
               </Suspense>
             </div>
           </SectionVisibility>
         </div>
-      </div>
+      </main>
     </>
   );
 }
