@@ -10,6 +10,7 @@ import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
 import { createSaleHelperQueries } from '../db-queries/sale-helper';
+import { proxyFetch } from '../lib/proxy-fetch';
 
 interface CrawlStats {
   totalFetched: number;
@@ -44,13 +45,7 @@ const FC2_AFFUID = process.env['FC2_AFFUID'] || 'TVRFNU5USTJOVEE9';
 const FETCH_TIMEOUT = 15_000;
 
 async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
+  return proxyFetch(url, { ...init, timeout: FETCH_TIMEOUT });
 }
 
 function generateAffiliateUrl(articleId: string): string {

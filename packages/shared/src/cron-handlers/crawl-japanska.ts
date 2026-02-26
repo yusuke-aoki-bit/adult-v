@@ -9,6 +9,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
+import { proxyFetch, getProxyInfo } from '../lib/proxy-fetch';
 
 interface CrawlStats {
   totalFetched: number;
@@ -49,9 +50,7 @@ function isHomePage(html: string): boolean {
 }
 
 function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
-  return fetch(url, { ...options, signal: controller.signal }).finally(() => clearTimeout(timeoutId));
+  return proxyFetch(url, { ...options, timeout: timeoutMs });
 }
 
 /** リストページにアクセスしてtermid cookieを取得 */
@@ -235,6 +234,11 @@ export function createCrawlJapanskaHandler(deps: CrawlJapanskaHandlerDeps) {
     };
 
     try {
+      const proxyInfo = getProxyInfo();
+      if (proxyInfo.enabled) {
+        console.log(`[crawl-japanska] Proxy enabled: ${proxyInfo.url}`);
+      }
+
       const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '50');
 
