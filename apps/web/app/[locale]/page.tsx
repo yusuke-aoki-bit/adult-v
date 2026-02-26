@@ -10,6 +10,7 @@ import ActressListFilter from '@/components/ActressListFilter';
 import CompactSaleStrip from '@/components/CompactSaleStrip';
 import CompactTrendingStrip from '@/components/CompactTrendingStrip';
 import DiscoveryTabs from '@/components/DiscoveryTabs';
+import ViewToggleTabs from '@/components/ViewToggleTabs';
 import {
   getActresses,
   getActressesCount,
@@ -24,6 +25,7 @@ import {
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { unstable_cache } from 'next/cache';
@@ -180,8 +182,17 @@ export default async function Home({ params, searchParams }: PageProps) {
   const perPageParam = Number(searchParamsData['perPage']);
   const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
 
-  // ビュー切り替え: actresses (デフォルト) / products
-  const view = searchParamsData['view'] === 'products' ? 'products' : 'actresses';
+  // ビュー切り替え: URLパラメータ優先、なければcookieの記憶を使用
+  const cookieStore = await cookies();
+  const preferredView = cookieStore.get('preferred_view')?.value;
+  const view =
+    searchParamsData['view'] === 'products'
+      ? 'products'
+      : searchParamsData['view'] === 'actresses'
+        ? 'actresses'
+        : preferredView === 'products'
+          ? 'products'
+          : 'actresses';
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([getServerAspFilter(), isServerFanzaSite()]);
@@ -537,53 +548,15 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* サイトタイトル + ビュー切り替えタブ */}
       <div className="container mx-auto px-3 pt-3 sm:px-4">
-        {isTopPage && <h1 className="theme-text mb-1.5 text-base font-bold sm:text-lg">{t('siteTitle')}</h1>}
-        <div className="mb-2 flex items-center border-b border-white/10">
-          <Link
-            href={localizedHref('/', locale)}
-            scroll={false}
-            className={`relative inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors ${
-              view === 'actresses'
-                ? 'text-fuchsia-400 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-fuchsia-400'
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-              />
-            </svg>
-            {viewLabels.actresses}
-            <span className={`text-[10px] font-normal ${view === 'actresses' ? 'text-gray-500' : 'text-gray-600'}`}>
-              {view === 'actresses' ? totalCount.toLocaleString() : ''}
-            </span>
-          </Link>
-          <Link
-            href={`${localizedHref('/', locale)}?view=products`}
-            scroll={false}
-            className={`relative inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors ${
-              view === 'products'
-                ? 'text-fuchsia-400 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-fuchsia-400'
-                : 'text-gray-500 hover:text-gray-300'
-            }`}
-          >
-            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"
-              />
-            </svg>
-            {viewLabels.products}
-            <span className={`text-[10px] font-normal ${view === 'products' ? 'text-gray-500' : 'text-gray-600'}`}>
-              {view === 'products' ? totalCount.toLocaleString() : ''}
-            </span>
-          </Link>
-        </div>
+        {isHomepage && <h1 className="theme-text mb-1.5 text-base font-bold sm:text-lg">{t('siteTitle')}</h1>}
+        <ViewToggleTabs
+          view={view}
+          actressHref={localizedHref('/', locale)}
+          productHref={`${localizedHref('/', locale)}?view=products`}
+          actressLabel={viewLabels.actresses}
+          productLabel={viewLabels.products}
+          totalCount={totalCount}
+        />
       </div>
 
       {/* メインコンテンツ */}
