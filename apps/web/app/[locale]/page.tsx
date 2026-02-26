@@ -269,8 +269,9 @@ export default async function Home({ params, searchParams }: PageProps) {
   // ユーザーがURLで明示的に選択したASPフィルターを判定（serverAspFilterの自動適用とは別）
   const userSetIncludeAsps = urlIncludeAsps; // ユーザーが明示的に選択したもの
   const userSetExcludeAsps = excludeAsps;
-  const isTopPage =
-    view === 'actresses' &&
+
+  // ホームページ判定（フィルター・検索なし、1ページ目）— ビューに依存しない
+  const isHomepage =
     !query &&
     !initialFilter &&
     includeTags.length === 0 &&
@@ -287,9 +288,11 @@ export default async function Home({ params, searchParams }: PageProps) {
     bloodTypes.length === 0 &&
     !debutYear &&
     !minWorks &&
-    actressSortBy === 'recent' &&
     page === 1 &&
     perPage === DEFAULT_PER_PAGE;
+
+  // TOPページ判定（女優ビュー + ホームページ + デフォルトソート → 一括キャッシュ用）
+  const isTopPage = isHomepage && view === 'actresses' && actressSortBy === 'recent';
 
   // 共通のクエリオプション（exactOptionalPropertyTypes対応）
   const actressQueryOptions = {
@@ -345,7 +348,7 @@ export default async function Home({ params, searchParams }: PageProps) {
     saleProducts = cached.saleProducts;
     trendingActresses = cached.trendingActresses;
   } else if (view === 'products') {
-    // 作品ビュー: 作品リストを取得
+    // 作品ビュー: 作品リストを取得（ホームページならセール・トレンドも取得）
     [allTags, aspStatsResult, products, totalCount, saleProducts, trendingActresses] = await Promise.all([
       getCachedTags().catch(() => [] as Awaited<ReturnType<typeof getTags>>),
       !isFanzaSite
@@ -365,8 +368,16 @@ export default async function Home({ params, searchParams }: PageProps) {
         console.error('Failed to fetch products count:', error);
         return 0;
       }),
-      Promise.resolve([] as SaleProduct[]),
-      Promise.resolve([] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>),
+      isHomepage
+        ? getSaleProducts({ limit: 8 }).catch(() => [] as SaleProduct[])
+        : Promise.resolve([] as SaleProduct[]),
+      isHomepage
+        ? (typeof getTrendingActresses === 'function' ? getTrendingActresses({ limit: 8 }) : Promise.resolve([])).catch(
+            () => [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>,
+          )
+        : Promise.resolve(
+            [] as Array<{ id: number; name: string; thumbnailUrl: string | null; releaseCount?: number }>,
+          ),
     ]);
     actresses = [];
   } else {
@@ -502,8 +513,8 @@ export default async function Home({ params, searchParams }: PageProps) {
       {/* FAQスキーマ（トップページのみ） */}
       {faqSchema && <JsonLD data={faqSchema} />}
 
-      {/* コンパクトセールストリップ（トップページのみ） */}
-      {isTopPage && saleCount > 0 && (
+      {/* コンパクトセールストリップ（ホームページのみ） */}
+      {isHomepage && saleCount > 0 && (
         <CompactSaleStrip
           saleCount={saleCount}
           maxDiscount={maxDiscount}
@@ -521,8 +532,8 @@ export default async function Home({ params, searchParams }: PageProps) {
         />
       )}
 
-      {/* トレンド女優ストリップ（トップページのみ） */}
-      {isTopPage && <CompactTrendingStrip trendingActresses={trendingActresses} locale={locale} />}
+      {/* トレンド女優ストリップ（ホームページのみ） */}
+      {isHomepage && <CompactTrendingStrip trendingActresses={trendingActresses} locale={locale} />}
 
       {/* サイトタイトル + ビュー切り替えタブ */}
       <div className="container mx-auto px-3 pt-3 sm:px-4">
@@ -530,6 +541,7 @@ export default async function Home({ params, searchParams }: PageProps) {
         <div className="mb-2 flex items-center border-b border-white/10">
           <Link
             href={localizedHref('/', locale)}
+            scroll={false}
             className={`relative inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors ${
               view === 'actresses'
                 ? 'text-fuchsia-400 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-fuchsia-400'
@@ -551,6 +563,7 @@ export default async function Home({ params, searchParams }: PageProps) {
           </Link>
           <Link
             href={`${localizedHref('/', locale)}?view=products`}
+            scroll={false}
             className={`relative inline-flex items-center gap-1.5 px-4 py-2.5 text-sm font-semibold transition-colors ${
               view === 'products'
                 ? 'text-fuchsia-400 after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-fuchsia-400'
@@ -735,8 +748,8 @@ export default async function Home({ params, searchParams }: PageProps) {
         </div>
       </section>
 
-      {/* ディスカバリーセクション（女優ビュートップページのみ） */}
-      {isTopPage && <DiscoveryTabs locale={locale} saleProducts={saleProductsForDisplay} />}
+      {/* ディスカバリーセクション（ホームページのみ） */}
+      {isHomepage && <DiscoveryTabs locale={locale} saleProducts={saleProductsForDisplay} />}
     </main>
   );
 }
