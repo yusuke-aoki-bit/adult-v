@@ -311,9 +311,9 @@ export function createCrawlMgsHandler(deps: CrawlMgsHandlerDeps) {
             )
             ON CONFLICT (normalized_product_id) DO UPDATE SET
               title = EXCLUDED.title,
-              description = EXCLUDED.description,
-              release_date = EXCLUDED.release_date,
-              default_thumbnail_url = EXCLUDED.default_thumbnail_url,
+              description = COALESCE(EXCLUDED.description, products.description),
+              release_date = COALESCE(EXCLUDED.release_date, products.release_date),
+              default_thumbnail_url = COALESCE(EXCLUDED.default_thumbnail_url, products.default_thumbnail_url),
               updated_at = NOW()
             RETURNING id, (xmax = 0) AS is_new
           `);

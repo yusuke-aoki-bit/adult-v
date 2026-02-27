@@ -53,9 +53,19 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
       const url = new URL(request['url']);
       const limit = parseInt(url.searchParams.get('limit') || '500');
       const source = url.searchParams.get('source') || null;
+      const reprocess = url.searchParams.get('reprocess') === 'true';
 
       let query;
-      if (source) {
+      if (source && reprocess) {
+        // 再処理: 処理済みエントリも含める
+        query = sql`
+          SELECT id, source, product_id, html_content, url
+          FROM raw_html_data
+          WHERE source = ${source}
+          ORDER BY crawled_at DESC
+          LIMIT ${limit}
+        `;
+      } else if (source) {
         query = sql`
           SELECT id, source, product_id, html_content, url
           FROM raw_html_data
@@ -89,7 +99,7 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
           let description = '';
           let releaseDate: string | null = null;
           const duration: number | null = null;
-          const thumbnailUrl: string | null = null;
+          let thumbnailUrl: string | null = null;
           let sampleVideoUrl: string | null = null;
           const performerNames: string[] = [];
           const price: number | null = null;
@@ -189,6 +199,14 @@ export function createProcessRawDataHandler(deps: ProcessRawDataHandlerDeps) {
 
           if (!title) {
             title = row.product_id;
+          }
+
+          // 汎用 og:image フォールバック（まだサムネイルが未取得の場合）
+          if (!thumbnailUrl) {
+            const ogImage = $('meta[property="og:image"]').attr('content');
+            if (ogImage && ogImage.startsWith('http')) {
+              thumbnailUrl = ogImage;
+            }
           }
 
           const sourcePrefix = row['source'].toLowerCase().replace(/[^a-z0-9]/g, '');
