@@ -36,7 +36,7 @@ export interface PerformerStructuredData {
  * Generate JSON-LD for a product/video
  */
 export function generateProductJsonLd(product: ProductStructuredData, locale: string = 'ja'): string {
-  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
   const productUrl = `${baseUrl}${localizedHref(`/products/${product['id']}`, locale)}`;
 
   // Find the lowest price from all sources
@@ -56,7 +56,7 @@ export function generateProductJsonLd(product: ProductStructuredData, locale: st
     actor: product.performers.map((performer) => ({
       '@type': 'Person',
       name: performer['name'],
-      url: `${baseUrl}${localizedHref(`/performers/${performer['id']}`, locale)}`,
+      url: `${baseUrl}${localizedHref(`/actress/${performer['id']}`, locale)}`,
     })),
     // Tags as keywords
     keywords: product.tags.map((tag) => tag['name']).join(', '),
@@ -111,8 +111,8 @@ export function generateProductJsonLd(product: ProductStructuredData, locale: st
  * Generate JSON-LD for a performer/actress
  */
 export function generatePerformerJsonLd(performer: PerformerStructuredData, locale: string = 'ja'): string {
-  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
-  const performerUrl = `${baseUrl}${localizedHref(`/performers/${performer['id']}`, locale)}`;
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+  const performerUrl = `${baseUrl}${localizedHref(`/actress/${performer['id']}`, locale)}`;
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -153,7 +153,7 @@ export function generatePerformerJsonLd(performer: PerformerStructuredData, loca
  * Generate JSON-LD for a list page (e.g., homepage, category page)
  */
 export function generateListPageJsonLd(title: string, description: string, locale: string = 'ja'): string {
-  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -170,12 +170,12 @@ export function generateListPageJsonLd(title: string, description: string, local
  * Generate JSON-LD for organization
  */
 export function generateOrganizationJsonLd(locale: string = 'ja'): string {
-  const baseUrl = process.env['NEXT_PUBLIC_BASE_URL'] || 'https://miraikakaku.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'Miraikakaku',
+    name: 'Adult Viewer Lab',
     url: `${baseUrl}${localizedHref('/', locale)}`,
     logo: `${baseUrl}/logo.png`,
     sameAs: [

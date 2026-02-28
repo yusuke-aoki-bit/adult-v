@@ -126,15 +126,21 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const productPath = `/products/${product.id}`;
     const canonicalUrl = `${baseUrl}${productPath}`;
 
+    const baseMeta = generateBaseMetadata(
+      seoTitle,
+      optimizedDescription,
+      product.imageUrl,
+      localizedHref(`/products/${product.id}`, locale),
+      undefined,
+      locale,
+    );
+
     return {
-      ...generateBaseMetadata(
-        seoTitle,
-        optimizedDescription,
-        product.imageUrl,
-        localizedHref(`/products/${product.id}`, locale),
-        undefined,
-        locale,
-      ),
+      ...baseMeta,
+      openGraph: {
+        ...baseMeta.openGraph,
+        type: 'video.movie',
+      },
       alternates: {
         canonical: canonicalUrl,
         languages: {

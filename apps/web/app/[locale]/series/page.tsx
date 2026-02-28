@@ -76,6 +76,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
         ja: `${baseUrl}/series`,
         en: `${baseUrl}/series?hl=en`,
         zh: `${baseUrl}/series?hl=zh`,
+        'zh-TW': `${baseUrl}/series?hl=zh-TW`,
         ko: `${baseUrl}/series?hl=ko`,
         'x-default': `${baseUrl}/series`,
       },

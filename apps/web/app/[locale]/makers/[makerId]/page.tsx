@@ -129,6 +129,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
           ja: `${baseUrl}/makers/${makerId}`,
           en: `${baseUrl}/makers/${makerId}?hl=en`,
           zh: `${baseUrl}/makers/${makerId}?hl=zh`,
+          'zh-TW': `${baseUrl}/makers/${makerId}?hl=zh-TW`,
           ko: `${baseUrl}/makers/${makerId}?hl=ko`,
           'x-default': `${baseUrl}/makers/${makerId}`,
         },

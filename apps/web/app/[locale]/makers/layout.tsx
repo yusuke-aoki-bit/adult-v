@@ -39,6 +39,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       ja: `${baseUrl}/makers`,
       en: `${baseUrl}/makers?hl=en`,
       zh: `${baseUrl}/makers?hl=zh`,
+      'zh-TW': `${baseUrl}/makers?hl=zh-TW`,
       ko: `${baseUrl}/makers?hl=ko`,
       'x-default': `${baseUrl}/makers`,
     },

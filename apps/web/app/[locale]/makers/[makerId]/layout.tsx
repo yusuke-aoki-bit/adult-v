@@ -115,6 +115,7 @@ export async function generateMetadata({
       ja: `${baseUrl}${makerPath}`,
       en: `${baseUrl}${makerPath}?hl=en`,
       zh: `${baseUrl}${makerPath}?hl=zh`,
+      'zh-TW': `${baseUrl}${makerPath}?hl=zh-TW`,
       ko: `${baseUrl}${makerPath}?hl=ko`,
       'x-default': `${baseUrl}${makerPath}`,
     },
