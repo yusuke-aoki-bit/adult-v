@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
+import { crawlerFetch } from '../lib/crawler-fetch';
 import type { DbExecutor } from '../db-queries/types';
 import { createSaleHelperQueries } from '../db-queries/sale-helper';
 import type { SokmilApiClient } from '../providers/sokmil-client';
@@ -44,14 +45,8 @@ const FETCH_HEADERS: Record<string, string> = {
   Accept: 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
 };
 
-async function fetchWithTimeout(url: string, headers?: Record<string, string>): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-  try {
-    return await fetch(url, { headers: { ...FETCH_HEADERS, ...headers }, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
+function fetchWithTimeout(url: string, headers?: Record<string, string>): Promise<Response> {
+  return crawlerFetch(url, { headers: { ...FETCH_HEADERS, ...headers }, timeout: FETCH_TIMEOUT });
 }
 
 async function delay(ms: number): Promise<void> {

@@ -10,20 +10,15 @@ import { sql } from 'drizzle-orm';
 import * as cheerio from 'cheerio';
 import pLimit from 'p-limit';
 import type { DbExecutor } from '../db-queries/types';
+import { crawlerFetch } from '../lib/crawler-fetch';
 
 // 並列処理の同時実行数
 const CONCURRENCY = 5;
 
 const FETCH_TIMEOUT = 15_000;
 
-async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
+function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  return crawlerFetch(url, { ...init, timeout: FETCH_TIMEOUT });
 }
 
 interface BackfillStats {

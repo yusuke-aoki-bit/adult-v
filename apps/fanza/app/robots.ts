@@ -88,16 +88,16 @@ export default function robots(): MetadataRoute.Robots {
         userAgent: ['AhrefsBot', 'SemrushBot', 'MJ12bot', 'DotBot'],
         disallow: '/',
       },
-      // AI/LLM crawler rules - allow crawling for training data
+      // AI/LLM crawler rules - allow crawling with rate limit
       {
         userAgent: ['GPTBot', 'ChatGPT-User', 'Google-Extended', 'Anthropic-AI', 'Claude-Web'],
         allow: '/',
-        disallow: ['/api/', '/admin/', '/private/', '/age-verification'],
-        crawlDelay: 2,
+        disallow: ['/api/', '/admin/', '/private/', '/age-verification', '/*?*'],
+        crawlDelay: 5,
       },
-      // Block other aggressive AI scrapers
+      // Block aggressive AI scrapers
       {
-        userAgent: ['CCBot', 'FacebookBot', 'Bytespider'],
+        userAgent: ['CCBot', 'FacebookBot', 'Bytespider', 'PerplexityBot', 'Applebot-Extended'],
         disallow: '/',
       },
     ],

@@ -9,6 +9,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
+import { crawlerFetch } from '../lib/crawler-fetch';
 
 interface CrawlStats {
   totalFetched: number;
@@ -129,14 +130,8 @@ const AFFILIATE_ID = '39614';
 
 const FETCH_TIMEOUT = 15_000;
 
-async function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT);
-  try {
-    return await fetch(url, { ...init, signal: controller.signal });
-  } finally {
-    clearTimeout(timeout);
-  }
+function fetchWithTimeout(url: string, init?: RequestInit): Promise<Response> {
+  return crawlerFetch(url, { ...init, timeout: FETCH_TIMEOUT });
 }
 
 function generateAffiliateUrl(originalUrl: string): string {

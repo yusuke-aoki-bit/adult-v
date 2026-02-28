@@ -10,6 +10,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
+import { crawlerFetch } from '../lib/crawler-fetch';
 
 interface CrawlStats {
   totalFetched: number;
@@ -49,7 +50,7 @@ function generateAffiliateUrl(providerId: string, movieId: string): string {
 /** トップページから商品IDリストを抽出 */
 async function fetchProductIds(): Promise<string[]> {
   try {
-    const response = await fetch('https://www.heydouga.com/', {
+    const response = await crawlerFetch('https://www.heydouga.com/', {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
         'Accept-Language': 'ja,en-US;q=0.9,en;q=0.8',

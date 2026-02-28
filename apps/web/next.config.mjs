@@ -111,6 +111,10 @@ const securityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
+    minimumCacheTTL: 86400,
+    formats: ['image/webp', 'image/avif'],
+    deviceSizes: [375, 425, 768, 1024, 1280, 1536],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

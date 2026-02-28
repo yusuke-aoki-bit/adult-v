@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getDailyReleases } from '../db-queries';
+import { CACHE } from './constants/cache';
 
 export const revalidate = 3600; // 1時間キャッシュ
 
@@ -19,7 +20,7 @@ export async function GET(request: NextRequest) {
       { data },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400',
+          'Cache-Control': CACHE.ONE_HOUR,
         },
       },
     );
@@ -29,7 +30,7 @@ export async function GET(request: NextRequest) {
       { data: [], fallback: true },
       {
         headers: {
-          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300',
+          'Cache-Control': CACHE.ONE_MIN,
         },
       },
     );

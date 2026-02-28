@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCalendarDetailData } from '../db-queries';
+import { CACHE } from './constants/cache';
 
 export const revalidate = 300; // 5分キャッシュ
 
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(data, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
+        'Cache-Control': CACHE.FIVE_MIN,
       },
     });
   } catch (error) {
