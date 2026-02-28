@@ -36,8 +36,8 @@ function toProduct(sp: SeriesProduct): Product {
   };
 }
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ seriesId: string; locale: string }>;
@@ -205,7 +205,10 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
 
   let tNav, seriesInfo;
   try {
-    [tNav, seriesInfo] = await Promise.all([getTranslations('nav'), getSeriesInfo(parseInt(seriesId))]);
+    [tNav, seriesInfo] = await Promise.all([
+      getTranslations({ locale, namespace: 'nav' }),
+      getSeriesInfo(parseInt(seriesId)),
+    ]);
   } catch (error) {
     console.error(`[series-detail] Error loading series ${seriesId}:`, error);
     notFound();

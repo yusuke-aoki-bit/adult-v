@@ -88,9 +88,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-// データキャッシュはunstable_cacheで個別管理（300秒TTL）
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 // キャッシュ付きクエリ（DB負荷軽減のため300秒TTL）
 const getCachedAspStats = unstable_cache(

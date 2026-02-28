@@ -25,7 +25,6 @@ import {
 import { generateBaseMetadata, generateFAQSchema, getHomepageFAQs } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { Metadata } from 'next';
-import { cookies } from 'next/headers';
 import { getServerAspFilter, isServerFanzaSite } from '@/lib/server/site-mode';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { unstable_cache } from 'next/cache';
@@ -118,9 +117,8 @@ export async function generateMetadata({
   return { ...metadata, alternates };
 }
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-// データキャッシュはunstable_cacheで個別管理（300秒TTL）
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 // キャッシュ付きクエリ（5xxエラー削減のためDB負荷を軽減）
 // データキャッシュ: 900秒TTL（ページは毎回dynamic renderだがデータはキャッシュ）
@@ -182,17 +180,8 @@ export default async function Home({ params, searchParams }: PageProps) {
   const perPageParam = Number(searchParamsData['perPage']);
   const perPage = VALID_PER_PAGE.includes(perPageParam) ? perPageParam : DEFAULT_PER_PAGE;
 
-  // ビュー切り替え: URLパラメータ優先、なければcookieの記憶を使用
-  const cookieStore = await cookies();
-  const preferredView = cookieStore.get('preferred_view')?.value;
-  const view =
-    searchParamsData['view'] === 'products'
-      ? 'products'
-      : searchParamsData['view'] === 'actresses'
-        ? 'actresses'
-        : preferredView === 'products'
-          ? 'products'
-          : 'actresses';
+  // ビュー切り替え: URLパラメータで決定（cookieはクライアント側ViewToggleTabsで処理）
+  const view = searchParamsData['view'] === 'products' ? 'products' : 'actresses';
 
   // FANZAサイトかどうかを判定
   const [serverAspFilter, isFanzaSite] = await Promise.all([getServerAspFilter(), isServerFanzaSite()]);

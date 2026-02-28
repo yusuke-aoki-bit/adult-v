@@ -58,8 +58,8 @@ import Link from 'next/link';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 /**
  * 配列をシャッフル（Fisher-Yates algorithm）
@@ -159,9 +159,9 @@ export default async function ProductDetailPage({ params }: PageProps) {
   let tNav, tCommon, tRelated, product;
   try {
     [tNav, tCommon, tRelated, product] = await Promise.all([
-      getTranslations('nav'),
-      getTranslations('common'),
-      getTranslations('relatedProducts'),
+      getTranslations({ locale, namespace: 'nav' }),
+      getTranslations({ locale, namespace: 'common' }),
+      getTranslations({ locale, namespace: 'relatedProducts' }),
       getCachedProductByIdOrCode(id, locale),
     ]);
   } catch (error) {

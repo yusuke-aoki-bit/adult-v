@@ -9,8 +9,8 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Star, Eye, EyeOff, Gem, TrendingUp, MessageCircle, Sparkles, ThumbsUp } from 'lucide-react';
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface HiddenGem {
   id: number;
@@ -472,7 +472,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function HiddenGemsPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  const tNav = await getTranslations('nav');
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
   const t = translations[locale as keyof typeof translations] || translations.ja;
 
   const data = await getHiddenGemsData(locale);

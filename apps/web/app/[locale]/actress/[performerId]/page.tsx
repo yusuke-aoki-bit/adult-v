@@ -50,8 +50,8 @@ import PerPageDropdown from '@/components/PerPageDropdown';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ performerId: string; locale: string }>;
@@ -78,7 +78,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     const actress = await getCachedActressById(performerId, locale);
     if (!actress) return {};
 
-    const t = await getTranslations('actress');
+    const t = await getTranslations({ locale, namespace: 'actress' });
     const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
     // フィルター・ページネーションがある場合はnoindex
@@ -187,11 +187,11 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
   let t, tf, tNav, tTopProducts, tOnSale, actress;
   try {
     [t, tf, tNav, tTopProducts, tOnSale, actress] = await Promise.all([
-      getTranslations('actress'),
-      getTranslations('filter'),
-      getTranslations('nav'),
-      getTranslations('performerTopProducts'),
-      getTranslations('performerOnSale'),
+      getTranslations({ locale, namespace: 'actress' }),
+      getTranslations({ locale, namespace: 'filter' }),
+      getTranslations({ locale, namespace: 'nav' }),
+      getTranslations({ locale, namespace: 'performerTopProducts' }),
+      getTranslations({ locale, namespace: 'performerOnSale' }),
       getCachedActressById(performerId, locale),
     ]);
   } catch (error) {

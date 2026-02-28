@@ -11,8 +11,8 @@ import Breadcrumb from '@/components/Breadcrumb';
 import { Metadata } from 'next';
 import { getTranslations } from 'next-intl/server';
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ makerId: string; locale: string }>;
@@ -148,7 +148,10 @@ export default async function MakerDetailPage({ params }: PageProps) {
 
   let tNav, maker;
   try {
-    [tNav, maker] = await Promise.all([getTranslations('nav'), getMakerById(makerIdNum, locale)]);
+    [tNav, maker] = await Promise.all([
+      getTranslations({ locale, namespace: 'nav' }),
+      getMakerById(makerIdNum, locale),
+    ]);
   } catch (error) {
     console.error(`[maker-detail] Error loading maker ${makerId}:`, error);
     notFound();

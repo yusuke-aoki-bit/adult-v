@@ -15,8 +15,8 @@ import {
 } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 const pageTexts = {
   ja: {

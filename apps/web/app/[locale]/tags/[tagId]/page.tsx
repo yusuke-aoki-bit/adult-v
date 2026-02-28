@@ -17,8 +17,8 @@ import {
 } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface PageProps {
   params: Promise<{ tagId: string; locale: string }>;
@@ -107,8 +107,8 @@ export default async function TagPage({ params, searchParams }: PageProps) {
   try {
     [tag, t, tCommon, tNav] = await Promise.all([
       getTagById(tagIdNum),
-      getTranslations('categories'),
-      getTranslations('common'),
+      getTranslations({ locale, namespace: 'categories' }),
+      getTranslations({ locale, namespace: 'common' }),
       getTranslations({ locale, namespace: 'nav' }),
     ]);
   } catch (error) {

@@ -67,8 +67,8 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   }
 }
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 // DB query cache (600秒)
 const getCachedNews = unstable_cache(

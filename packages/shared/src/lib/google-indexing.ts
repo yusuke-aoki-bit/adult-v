@@ -24,24 +24,29 @@ export interface IndexingResult {
 
 /**
  * サービスアカウント認証クライアントを取得
+ * GOOGLE_SERVICE_ACCOUNT_KEY (JSON文字列) または GOOGLE_SERVICE_ACCOUNT_KEY_FILE (ファイルパス) に対応
  */
 async function getAuthClient() {
-  const keyFilePath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE;
+  let keyData: { client_email: string; private_key: string };
 
-  if (!keyFilePath) {
-    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY_FILE が設定されていません');
+  const keyJson = process.env['GOOGLE_SERVICE_ACCOUNT_KEY'];
+  const keyFilePath = process.env['GOOGLE_SERVICE_ACCOUNT_KEY_FILE'];
+
+  if (keyJson) {
+    keyData = JSON.parse(keyJson);
+  } else if (keyFilePath) {
+    const fullPath = path.resolve(keyFilePath);
+    if (!fs.existsSync(fullPath)) {
+      throw new Error(`サービスアカウントキーファイルが見つかりません: ${fullPath}`);
+    }
+    keyData = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
+  } else {
+    throw new Error('GOOGLE_SERVICE_ACCOUNT_KEY または GOOGLE_SERVICE_ACCOUNT_KEY_FILE が設定されていません');
   }
-
-  const fullPath = path.resolve(keyFilePath);
-  if (!fs.existsSync(fullPath)) {
-    throw new Error(`サービスアカウントキーファイルが見つかりません: ${fullPath}`);
-  }
-
-  const keyFile = JSON.parse(fs.readFileSync(fullPath, 'utf8'));
 
   const auth = new google.auth.JWT({
-    email: keyFile.client_email,
-    key: keyFile.private_key,
+    email: keyData.client_email,
+    key: keyData.private_key,
     scopes: SCOPES,
   });
 
@@ -121,6 +126,7 @@ export async function indexNewPerformers(performerSlugs: string[], siteUrl: stri
  * インデックス登録の設定確認
  */
 export function checkIndexingApiConfig(): boolean {
-  const keyFile = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_FILE;
+  if (process.env['GOOGLE_SERVICE_ACCOUNT_KEY']) return true;
+  const keyFile = process.env['GOOGLE_SERVICE_ACCOUNT_KEY_FILE'];
   return !!keyFile && fs.existsSync(path.resolve(keyFile));
 }

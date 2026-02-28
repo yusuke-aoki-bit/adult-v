@@ -9,8 +9,8 @@ import { localizedHref } from '@adult-v/shared/i18n';
 import { JsonLD } from '@/components/JsonLD';
 import { unstable_cache } from 'next/cache';
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 // DB query cache (1800秒)
 const getCachedPopularSeries = unstable_cache(
@@ -85,7 +85,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function SeriesListPage({ params }: PageProps) {
   const { locale } = await params;
-  const tNav = await getTranslations('nav');
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
   const t = translations[locale as keyof typeof translations] || translations['ja'];
 
   const series = await getCachedPopularSeries(50);

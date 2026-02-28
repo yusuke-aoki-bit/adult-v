@@ -50,8 +50,8 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  // Fetch messages for the locale
-  const messages = await getMessages();
+  // Fetch messages for the locale (locale明示でheaders()呼出回避 → ISR有効化)
+  const messages = await getMessages({ locale });
 
   // cookies()を除去: AgeVerificationがクライアント側でnon-httpOnly cookieを読み取る
   // これにより全子ページでISR/SSGが有効になり、TTFB大幅改善

@@ -15,8 +15,8 @@ import { getPopularTags } from '@/lib/db/queries';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { unstable_cache } from 'next/cache';
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 // DB query cache (3600秒)
 const getCachedPopularTags = unstable_cache(
@@ -35,7 +35,7 @@ interface PageProps {
 export async function generateMetadata({ params, searchParams }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const resolvedSearchParams = await searchParams;
-  const t = await getTranslations('categories');
+  const t = await getTranslations({ locale, namespace: 'categories' });
   const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
 
   // カテゴリフィルターがある場合はnoindex（重複ページ対策）
@@ -79,8 +79,8 @@ export default async function CategoriesPage({ params, searchParams }: PageProps
   const { locale } = await params;
   const resolvedSearchParams = await searchParams;
   const selectedCategory = resolvedSearchParams.category;
-  const t = await getTranslations('categories');
-  const tCommon = await getTranslations('common');
+  const t = await getTranslations({ locale, namespace: 'categories' });
+  const tCommon = await getTranslations({ locale, namespace: 'common' });
   const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   // 人気タグを取得（exactOptionalPropertyTypes対応）

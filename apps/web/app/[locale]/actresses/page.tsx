@@ -15,8 +15,8 @@ import Pagination from '@/components/Pagination';
 import ActressFilterBar from '@/components/ActressFilterBar';
 import { unstable_cache } from 'next/cache';
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface PerformerItem {
   id: number;
@@ -235,7 +235,7 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
   const { page: pageStr, sort = 'popular', q, debutYear, minWorks, initial } = await searchParams;
   const page = Math.max(1, Math.min(parseInt(pageStr || '1', 10), 500));
   const t = translations[locale as keyof typeof translations] || translations.ja;
-  const tNav = await getTranslations('nav');
+  const tNav = await getTranslations({ locale, namespace: 'nav' });
 
   const filters: FilterOptions = {
     query: q,

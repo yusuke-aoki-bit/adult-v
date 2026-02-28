@@ -159,6 +159,11 @@ const nextConfig = {
         source: '/:locale(ja|en|zh|ko)',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=120, stale-while-revalidate=600' }],
       },
+      // SEO: 全ページにX-Robots-Tagを明示（Googlebotへのインデックス許可シグナル）
+      {
+        source: '/:path*',
+        headers: [{ key: 'X-Robots-Tag', value: 'index, follow' }],
+      },
     ];
   },
   async rewrites() {

@@ -50,8 +50,8 @@ export async function generateMetadata({
   }
 }
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 /**
  * Markdown風のテキストをHTMLに簡易変換
