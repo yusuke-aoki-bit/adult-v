@@ -185,15 +185,6 @@ importers:
       postcss:
         specifier: ^8.4.49
         version: 8.5.6
-      puppeteer:
-        specifier: ^23.0.0
-        version: 23.11.1(typescript@5.9.3)
-      puppeteer-extra:
-        specifier: ^3.3.6
-        version: 3.3.6(puppeteer-core@23.11.1)(puppeteer@23.11.1(typescript@5.9.3))
-      puppeteer-extra-plugin-stealth:
-        specifier: ^2.11.2
-        version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@23.11.1)(puppeteer@23.11.1(typescript@5.9.3)))
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -294,15 +285,6 @@ importers:
       postcss:
         specifier: ^8.4.49
         version: 8.5.6
-      puppeteer:
-        specifier: ^23.0.0
-        version: 23.11.1(typescript@5.9.3)
-      puppeteer-extra:
-        specifier: ^3.3.6
-        version: 3.3.6(puppeteer-core@23.11.1)(puppeteer@23.11.1(typescript@5.9.3))
-      puppeteer-extra-plugin-stealth:
-        specifier: ^2.11.2
-        version: 2.11.2(puppeteer-extra@3.3.6(puppeteer-core@23.11.1)(puppeteer@23.11.1(typescript@5.9.3)))
       react:
         specifier: 19.2.3
         version: 19.2.3
@@ -3582,6 +3564,7 @@ packages:
   basic-ftp@5.0.5:
     resolution: {integrity: sha512-4Bcg1P8xhUuqcii/S0Z9wiHIrQVPMermM1any+MX5GeGD7faD3/msQUDGLol9wOcz4/jbg/WJnGqoJF6LiBdtg==}
     engines: {node: '>=10.0.0'}
+    deprecated: Security vulnerability fixed in 5.2.0, please upgrade
 
   better-path-resolve@1.0.0:
     resolution: {integrity: sha512-pbnl5XzGBdrFU/wT4jqmJVPn2B6UHPBOhzMQkY/SPUPB6QtUXtmBHBIwCbXJol93mOpGMnQyP/+BB19q04xj7g==}
