@@ -34,6 +34,8 @@ const themeConfig = {
     lowestBadge: 'px-3 py-1 bg-fuchsia-500 text-white text-xs font-semibold rounded-full',
     outOfStockBadge: 'px-3 py-1 bg-gray-500 text-white text-xs font-semibold rounded-full',
     buyButtonActive: 'bg-gray-100 hover:bg-white text-gray-900',
+    buyButtonBest:
+      'bg-gradient-to-r from-fuchsia-600 to-purple-500 hover:from-fuchsia-500 hover:to-purple-400 text-white shadow-lg shadow-fuchsia-500/25',
     buyButtonDisabled: 'bg-gray-600 cursor-not-allowed text-gray-400',
     disclaimer: 'text-xs text-gray-400 mt-4',
   },
@@ -49,6 +51,8 @@ const themeConfig = {
     lowestBadge: 'px-3 py-1 bg-rose-600 text-white text-xs font-semibold rounded-full',
     outOfStockBadge: 'px-3 py-1 bg-gray-400 text-white text-xs font-semibold rounded-full',
     buyButtonActive: 'bg-gray-900 hover:bg-gray-800 text-white',
+    buyButtonBest:
+      'bg-gradient-to-r from-rose-600 to-pink-500 hover:from-rose-500 hover:to-pink-400 text-white shadow-lg shadow-rose-500/25',
     buyButtonDisabled: 'bg-gray-400 cursor-not-allowed text-white',
     disclaimer: 'text-xs text-gray-500 mt-4',
   },
@@ -192,8 +196,12 @@ function PriceComparison({ productId, theme: themeProp }: PriceComparisonProps) 
               href={normalizeAffiliateUrl(option.affiliateUrl)}
               target="_blank"
               rel="noopener noreferrer sponsored"
-              className={`inline-flex items-center gap-2 rounded-lg px-6 py-2 font-semibold ${
-                option.inStock ? colors.buyButtonActive : colors.buyButtonDisabled
+              className={`inline-flex items-center gap-2 rounded-lg px-6 py-3 font-semibold transition-all ${
+                !option.inStock
+                  ? colors.buyButtonDisabled
+                  : option.price > 0 && option.price === lowestPrice
+                    ? colors.buyButtonBest
+                    : colors.buyButtonActive
               }`}
               onClick={(e) => {
                 if (!option.inStock) {

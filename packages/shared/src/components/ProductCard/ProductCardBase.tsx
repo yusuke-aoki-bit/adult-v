@@ -649,7 +649,7 @@ function ProductCardBase({
                   card_size: 'compact',
                 });
               }}
-              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold text-white shadow-[0_-2px_8px_rgba(0,0,0,0.3)] transition-colors duration-100 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-2.5 text-center text-xs font-bold text-white shadow-[0_-2px_8px_rgba(0,0,0,0.3)] transition-colors duration-100 ${
                 product.salePrice
                   ? 'bg-linear-to-r from-red-600 to-orange-500 hover:from-red-500 hover:to-orange-400'
                   : resolvedTheme === 'dark'
@@ -663,7 +663,7 @@ function ProductCardBase({
           ) : (
             <Link
               href={`/${locale}/products/${product['id']}`}
-              className={`absolute right-0 bottom-0 left-0 z-30 py-2 text-center text-[11px] font-bold shadow-[0_-2px_8px_rgba(0,0,0,0.2)] transition-colors duration-100 ${
+              className={`absolute right-0 bottom-0 left-0 z-30 py-2.5 text-center text-xs font-bold shadow-[0_-2px_8px_rgba(0,0,0,0.2)] transition-colors duration-100 ${
                 resolvedTheme === 'dark'
                   ? 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 hover:text-white'
                   : 'bg-gray-100/90 text-gray-600 hover:bg-gray-200 hover:text-gray-900'

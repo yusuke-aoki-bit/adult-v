@@ -232,6 +232,8 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
 
   /**
    * 期限切れのセールを一括で非アクティブに
+   * 1. end_atが設定済みで期限切れのもの
+   * 2. end_atがNULLで7日以上更新されていないもの（DUGA/SOKMIL等）
    */
   async function deactivateExpiredSales(): Promise<number> {
     const db = getDb();
@@ -240,8 +242,11 @@ export function createSaleHelperQueries(deps: SaleHelperDeps): SaleHelperQueries
       UPDATE product_sales
       SET is_active = FALSE, updated_at = NOW()
       WHERE is_active = TRUE
-      AND end_at IS NOT NULL
-      AND end_at < NOW()
+      AND (
+        (end_at IS NOT NULL AND end_at < NOW())
+        OR
+        (end_at IS NULL AND updated_at < NOW() - INTERVAL '7 days')
+      )
       RETURNING id
     `);
 

@@ -13,7 +13,7 @@ import type { DbExecutor } from '../db-queries/types';
 import { crawlerFetch } from '../lib/crawler-fetch';
 
 // 並列処理の同時実行数
-const CONCURRENCY = 5;
+const CONCURRENCY = 20;
 
 const FETCH_TIMEOUT = 15_000;
 
@@ -258,7 +258,7 @@ export function createBackfillImagesHandler(deps: BackfillImagesHandlerDeps) {
 
     try {
       const url = new URL(request['url']);
-      const queryLimit = parseInt(url.searchParams.get('limit') || '50');
+      const queryLimit = parseInt(url.searchParams.get('limit') || '200');
       const aspFilter = url.searchParams.get('asp')?.toUpperCase();
 
       console.log(`[backfill-images] Starting: limit=${queryLimit}, asp=${aspFilter || 'all'}`);

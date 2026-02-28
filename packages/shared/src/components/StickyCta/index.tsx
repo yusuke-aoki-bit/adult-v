@@ -87,9 +87,9 @@ const getThemeStyles = (theme: ThemeMode, isOnSale: boolean) => {
  */
 // デフォルトの緊急度閾値
 const DEFAULT_URGENCY_THRESHOLDS: Required<UrgencyThresholds> = {
-  criticalHours: 6,
-  urgentHours: 24,
-  soonDays: 2,
+  criticalHours: 12,
+  urgentHours: 48,
+  soonDays: 3,
 };
 
 export function StickyCtaBase({
