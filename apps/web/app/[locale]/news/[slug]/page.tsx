@@ -2,8 +2,9 @@ import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTranslations } from 'next-intl/server';
 import { getNewsBySlug } from '@/lib/db/news-queries';
-import { generateBaseMetadata } from '@/lib/seo';
+import { generateBaseMetadata, generateBreadcrumbSchema } from '@/lib/seo';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { ArrowLeft, Clock, Eye } from 'lucide-react';
 
@@ -130,8 +131,42 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ loc
 
   const htmlContent = renderMarkdownContent(article.content);
 
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+
+  const articleSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    headline: sanitizeNewsTitle(article.title),
+    description: article.excerpt || sanitizeNewsTitle(article.title),
+    datePublished: new Date(article.published_at).toISOString(),
+    dateModified: new Date(article.updated_at).toISOString(),
+    url: `${baseUrl}/news/${slug}`,
+    ...(article.image_url ? { image: article.image_url } : {}),
+    author: {
+      '@type': 'Organization',
+      name: 'Adult Viewer Lab',
+      url: baseUrl,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Adult Viewer Lab',
+      url: baseUrl,
+    },
+    mainEntityOfPage: {
+      '@type': 'WebPage',
+      '@id': `${baseUrl}/news/${slug}`,
+    },
+  };
+
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: tNav('home'), url: localizedHref('/', locale) },
+    { name: t('title'), url: localizedHref('/news', locale) },
+    { name: sanitizeNewsTitle(article.title), url: localizedHref(`/news/${slug}`, locale) },
+  ]);
+
   return (
     <div className="theme-body min-h-screen">
+      <JsonLD data={[articleSchema, breadcrumbSchema]} />
       <div className="mx-auto max-w-3xl px-4 py-8">
         <Breadcrumb
           items={[

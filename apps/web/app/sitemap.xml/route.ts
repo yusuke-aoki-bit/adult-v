@@ -22,6 +22,7 @@ export async function GET() {
     `${BASE_URL}/sitemap-tags.xml`,
     `${BASE_URL}/sitemap-series.xml`,
     `${BASE_URL}/sitemap-makers.xml`,
+    `${BASE_URL}/sitemap-news.xml`,
     `${BASE_URL}/sitemap-videos.xml`,
   ];
 

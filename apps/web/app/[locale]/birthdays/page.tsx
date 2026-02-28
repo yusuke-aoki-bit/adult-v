@@ -5,8 +5,8 @@ import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Cake, Calendar, Gift, Star, ChevronRight } from 'lucide-react';
 
-// force-dynamic: next-intlのgetTranslationsがheaders()を内部呼出しするためISR不可
-export const dynamic = 'force-dynamic';
+// ISR: getTranslations未使用 → パブリックキャッシュ有効
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ locale: string }>;

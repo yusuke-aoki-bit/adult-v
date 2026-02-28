@@ -12,8 +12,8 @@ import { getAspStats, getPopularTags } from '@/lib/db/queries';
 import { isServerFanzaSite } from '@/lib/server/site-mode';
 import { unstable_cache } from 'next/cache';
 
-// getTranslationsがheaders()を呼ぶためISR(revalidate)は無効 → force-dynamic
-export const dynamic = 'force-dynamic';
+// ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
+export const revalidate = 60;
 
 // DB query cache (300秒)
 const getCachedCalendarData = unstable_cache(
