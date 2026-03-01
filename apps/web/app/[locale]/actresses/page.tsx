@@ -298,6 +298,15 @@ export default async function ActressesPage({ params, searchParams }: PageProps)
           <p className="theme-text-muted">
             {t.subtitle} ({total.toLocaleString()})
           </p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-500 sm:text-sm">
+            {locale === 'en'
+              ? `Browse ${total.toLocaleString()} AV actresses. Search by name, filter by debut year, and sort by popularity or number of works. Each actress page includes full filmography, career analysis, price comparison across DUGA, MGS, and other platforms.`
+              : locale === 'zh'
+                ? `收录${total.toLocaleString()}名AV女优。可按名称搜索、按出道年份筛选、按人气或作品数排序。每位女优页面包含完整作品列表、职业分析、DUGA・MGS等多平台价格比较。`
+                : locale === 'ko'
+                  ? `${total.toLocaleString()}명의 AV여배우를 수록. 이름 검색, 데뷔 연도 필터, 인기순/작품수 정렬 가능. 각 여배우 페이지에서 전체 필모그래피, 커리어 분석, DUGA・MGS 등 멀티 플랫폼 가격 비교를 확인할 수 있습니다.`
+                  : `${total.toLocaleString()}名のAV女優を掲載。名前検索・デビュー年フィルター・人気順/作品数順ソートに対応。各女優ページでは全作品一覧・キャリア分析・DUGA・MGS等の複数配信サイト横断価格比較が可能です。`}
+          </p>
         </div>
 
         {/* Search and Sort */}

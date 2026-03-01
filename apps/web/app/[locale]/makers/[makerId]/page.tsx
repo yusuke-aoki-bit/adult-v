@@ -230,6 +230,15 @@ export default async function MakerDetailPage({ params }: PageProps) {
                     </span>
                   )}
                 </div>
+                <p className="mt-2 text-xs leading-relaxed text-gray-500 sm:text-sm">
+                  {locale === 'en'
+                    ? `${maker.name} - ${maker.productCount.toLocaleString()} titles available. Browse all releases with free sample videos and price comparison across DUGA, MGS, and more.`
+                    : locale === 'zh'
+                      ? `${maker.name} - 共${maker.productCount.toLocaleString()}部作品。提供免费样片、多平台价格比较。`
+                      : locale === 'ko'
+                        ? `${maker.name} - ${maker.productCount.toLocaleString()}편. 무료 샘플 영상, 멀티 플랫폼 가격 비교를 제공합니다.`
+                        : `${maker.name}の作品${maker.productCount.toLocaleString()}本を掲載。無料サンプル動画・DUGA・MGS等の複数配信サイト横断価格比較に対応。`}
+                </p>
               </div>
             </div>
           </div>

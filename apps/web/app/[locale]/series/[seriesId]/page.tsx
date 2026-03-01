@@ -290,6 +290,15 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
               <div className="flex-1">
                 <h1 className="theme-text text-2xl font-bold sm:text-3xl">{name}</h1>
                 <p className="theme-text-muted mt-1 text-lg">{t.completionGuide}</p>
+                <p className="mt-1 text-xs leading-relaxed text-gray-500 sm:text-sm">
+                  {locale === 'en'
+                    ? `${name} series - ${seriesInfo.totalProducts} titles. Browse all volumes with free sample videos and cross-platform price comparison.`
+                    : locale === 'zh'
+                      ? `${name}系列 - 共${seriesInfo.totalProducts}部作品。提供免费样片、多平台价格比较。`
+                      : locale === 'ko'
+                        ? `${name} 시리즈 - ${seriesInfo.totalProducts}편. 무료 샘플 영상, 멀티 플랫폼 가격 비교를 제공합니다.`
+                        : `${name}シリーズ全${seriesInfo.totalProducts}作品を掲載。無料サンプル動画・価格比較・配信サイト横断検索に対応。`}
+                </p>
               </div>
             </div>
 

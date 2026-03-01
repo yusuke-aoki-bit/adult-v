@@ -624,6 +624,19 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   </div>
                 )}
 
+                {/* SEO: サーバーレンダリングされる作品概要テキスト（Googlebot向け） */}
+                <div className="text-sm leading-relaxed text-gray-400">
+                  <p>
+                    {locale === 'en'
+                      ? `${displayProductCode ? `[${displayProductCode}] ` : ''}${product.title}${product.actressName ? ` starring ${product.actressName}` : ''}.${product.duration ? ` Runtime: ${product.duration} minutes.` : ''}${product.releaseDate ? ` Released: ${new Date(product.releaseDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}.` : ''}${product.providerLabel ? ` Available on ${product.providerLabel}.` : ''}${product.tags && product.tags.length > 0 ? ` Genres: ${product.tags.slice(0, 5).join(', ')}.` : ''}`
+                      : locale === 'zh'
+                        ? `${displayProductCode ? `[${displayProductCode}] ` : ''}${product.title}${product.actressName ? `，${product.actressName}出演` : ''}。${product.duration ? `时长${product.duration}分钟。` : ''}${product.releaseDate ? `发行日期：${new Date(product.releaseDate).toLocaleDateString('zh-CN')}。` : ''}${product.providerLabel ? `可在${product.providerLabel}观看。` : ''}${product.tags && product.tags.length > 0 ? `类型：${product.tags.slice(0, 5).join('、')}。` : ''}`
+                        : locale === 'ko'
+                          ? `${displayProductCode ? `[${displayProductCode}] ` : ''}${product.title}${product.actressName ? ` ${product.actressName} 출연` : ''}.${product.duration ? ` ${product.duration}분.` : ''}${product.releaseDate ? ` 출시일: ${new Date(product.releaseDate).toLocaleDateString('ko-KR')}.` : ''}${product.providerLabel ? ` ${product.providerLabel}에서 시청 가능.` : ''}${product.tags && product.tags.length > 0 ? ` 장르: ${product.tags.slice(0, 5).join(', ')}.` : ''}`
+                          : `${displayProductCode ? `【${displayProductCode}】` : ''}${product.title}${product.actressName ? `は${product.actressName}出演` : ''}の作品です。${product.duration ? `収録時間${product.duration}分。` : ''}${product.releaseDate ? `${new Date(product.releaseDate).toLocaleDateString('ja-JP', { year: 'numeric', month: 'long', day: 'numeric' })}発売。` : ''}${product.providerLabel ? `${product.providerLabel}にて配信中。` : ''}${product.tags && product.tags.length > 0 ? `ジャンル：${product.tags.slice(0, 5).join('・')}。` : ''}`}
+                  </p>
+                </div>
+
                 {/* AI生成の作品紹介 */}
                 <AiProductDescriptionWrapper productId={String(product.id)} locale={locale} />
 

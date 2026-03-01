@@ -386,7 +386,18 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="theme-text truncate text-xl font-bold sm:text-2xl">{actress.name}</h1>
+                  <h1 className="theme-text truncate text-xl font-bold sm:text-2xl">
+                    {actress.name}
+                    <span className="ml-2 text-base font-normal text-gray-400 sm:text-lg">
+                      {locale === 'en'
+                        ? `- AV Actress | ${total} Videos`
+                        : locale === 'zh'
+                          ? `- AV女优 | 共${total}部作品`
+                          : locale === 'ko'
+                            ? `- AV여배우 | ${total}편`
+                            : `- AV女優 | 全${total}作品`}
+                    </span>
+                  </h1>
                   <ActressFavoriteButton
                     id={actress.id}
                     name={actress.name}
@@ -451,6 +462,56 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               </div>
             )}
           </div>
+
+          {/* SEO: サーバーレンダリングされるプロフィールテキスト（Googlebot向け） */}
+          <section className="theme-card mb-5 rounded-lg p-4">
+            <h2 className="theme-text mb-2 text-sm font-semibold">
+              {locale === 'en'
+                ? `About ${actress.name}`
+                : locale === 'zh'
+                  ? `关于${actress.name}`
+                  : locale === 'ko'
+                    ? `${actress.name} 소개`
+                    : `${actress.name}について`}
+            </h2>
+            <p className="text-sm leading-relaxed text-gray-400">
+              {locale === 'en'
+                ? `${actress.name} is a Japanese AV actress${careerAnalysis?.debutYear ? ` who debuted in ${careerAnalysis.debutYear}` : ''}. She has appeared in ${total} titles${productCountByAsp.length > 0 ? ` available on ${productCountByAsp.map((a) => a.aspName).join(', ')}` : ''}.${
+                    genreTags.length > 0
+                      ? ` Her popular genres include ${genreTags
+                          .slice(0, 5)
+                          .map((t) => t.name)
+                          .join(', ')}.`
+                      : ''
+                  }${nonPrimaryAliases.length > 0 ? ` Also known as: ${nonPrimaryAliases.map((a) => a.aliasName).join(', ')}.` : ''}`
+                : locale === 'zh'
+                  ? `${actress.name}是日本AV女优${careerAnalysis?.debutYear ? `，${careerAnalysis.debutYear}年出道` : ''}。共出演${total}部作品${productCountByAsp.length > 0 ? `，可在${productCountByAsp.map((a) => a.aspName).join('、')}等平台观看` : ''}。${
+                      genreTags.length > 0
+                        ? `擅长类型：${genreTags
+                            .slice(0, 5)
+                            .map((t) => t.name)
+                            .join('、')}。`
+                        : ''
+                    }${nonPrimaryAliases.length > 0 ? `别名：${nonPrimaryAliases.map((a) => a.aliasName).join('、')}。` : ''}`
+                  : locale === 'ko'
+                    ? `${actress.name}은(는) 일본 AV여배우${careerAnalysis?.debutYear ? `로 ${careerAnalysis.debutYear}년에 데뷔` : ''}했습니다. 총 ${total}편의 작품에 출연${productCountByAsp.length > 0 ? `하였으며 ${productCountByAsp.map((a) => a.aspName).join(', ')}에서 시청 가능` : ''}합니다.${
+                        genreTags.length > 0
+                          ? ` 인기 장르: ${genreTags
+                              .slice(0, 5)
+                              .map((t) => t.name)
+                              .join(', ')}.`
+                          : ''
+                      }${nonPrimaryAliases.length > 0 ? ` 다른 이름: ${nonPrimaryAliases.map((a) => a.aliasName).join(', ')}.` : ''}`
+                    : `${actress.name}はAV女優${careerAnalysis?.debutYear ? `で、${careerAnalysis.debutYear}年にデビュー` : ''}。出演作品は全${total}本${productCountByAsp.length > 0 ? `で、${productCountByAsp.map((a) => a.aspName).join('・')}等で視聴可能` : ''}です。${
+                        genreTags.length > 0
+                          ? `人気ジャンル：${genreTags
+                              .slice(0, 5)
+                              .map((t) => t.name)
+                              .join('・')}。`
+                          : ''
+                      }${nonPrimaryAliases.length > 0 ? `別名義：${nonPrimaryAliases.map((a) => a.aliasName).join('・')}。` : ''}${careerAnalysis && !careerAnalysis.isActive ? `${careerAnalysis.latestYear || ''}年頃に活動を終了しています。` : ''}`}
+            </p>
+          </section>
 
           {/* 卒業/引退アラート */}
           {careerAnalysis && (

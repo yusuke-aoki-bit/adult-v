@@ -288,6 +288,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
             <p className="text-sm text-gray-300 sm:text-base">
               {t('description', { count: totalCount.toLocaleString() })}
             </p>
+            {!query && <p className="mt-1 text-xs leading-relaxed text-gray-500 sm:text-sm">{t('metaDescription')}</p>}
           </div>
 
           {/* AI検索拡張（検索クエリがある場合のみ） */}

@@ -225,6 +225,15 @@ export default async function TagPage({ params, searchParams }: PageProps) {
                   </span>
                 )}
               </p>
+              <p className="mt-1 text-xs leading-relaxed text-gray-500 sm:text-sm">
+                {locale === 'en'
+                  ? `Browse ${totalCount.toLocaleString()} ${tagName} videos. Find the best ${tagName} titles with free sample videos, sale prices, and cross-platform price comparison on DUGA, MGS, and more.`
+                  : locale === 'zh'
+                    ? `共${totalCount.toLocaleString()}部${tagName}作品。提供免费样片、特惠价格，支持DUGA・MGS等多平台价格比较。`
+                    : locale === 'ko'
+                      ? `${tagName} 동영상 ${totalCount.toLocaleString()}편. 무료 샘플, 할인 가격, DUGA・MGS 등 멀티 플랫폼 가격 비교를 제공합니다.`
+                      : `${tagName}ジャンルのAV動画${totalCount.toLocaleString()}本を掲載。無料サンプル動画付きで、DUGA・MGS・カリビアンコム等の複数配信サイトから最安値を横断比較できます。`}
+              </p>
             </div>
             <SocialShareButtons title={`${tagName}の動画一覧`} compact hashtags={[tagName.replace(/\s/g, '')]} />
           </div>
