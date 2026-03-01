@@ -155,10 +155,28 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
       },
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      {
-        source: '/:locale(ja|en|zh|ko)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=120, stale-while-revalidate=600' }],
-      },
+      // SEO重要ページ: パブリックキャッシュ + CDNキャッシュヘッダー
+      // Firebase App Hostingアダプタが private に上書きする場合のフォールバック
+      ...[
+        '/:locale(ja|en|zh|zh-TW|ko)',
+        '/:locale(ja|en|zh|zh-TW|ko)/actress/:id*',
+        '/:locale(ja|en|zh|zh-TW|ko)/actresses',
+        '/:locale(ja|en|zh|zh-TW|ko)/products',
+        '/:locale(ja|en|zh|zh-TW|ko)/products/:id*',
+        '/:locale(ja|en|zh|zh-TW|ko)/tags/:id*',
+        '/:locale(ja|en|zh|zh-TW|ko)/series/:id*',
+        '/:locale(ja|en|zh|zh-TW|ko)/makers/:id*',
+        '/:locale(ja|en|zh|zh-TW|ko)/sales',
+        '/:locale(ja|en|zh|zh-TW|ko)/categories',
+        '/:locale(ja|en|zh|zh-TW|ko)/news',
+        '/:locale(ja|en|zh|zh-TW|ko)/news/:slug*',
+      ].map((source) => ({
+        source,
+        headers: [
+          { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=600' },
+          { key: 'CDN-Cache-Control', value: 'public, max-age=60, stale-while-revalidate=600' },
+        ],
+      })),
       // SEO: 全ページにX-Robots-Tagを明示（Googlebotへのインデックス許可シグナル）
       {
         source: '/:path*',
