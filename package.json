@@ -84,7 +84,7 @@
     "@vitejs/plugin-react": "^5.1.2",
     "cross-env": "^10.1.0",
     "eslint": "^9.0.0",
-    "eslint-config-next": "^15.0.0",
+    "eslint-config-next": "^16.1.6",
     "eslint-plugin-drizzle": "^0.2.3",
     "husky": "^9.1.7",
     "jsdom": "^27.3.0",
