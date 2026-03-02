@@ -28,21 +28,19 @@ export async function POST(request: NextRequest) {
 
     const db = getDb();
 
-    // 1. 人気女優TOP100のURL生成
+    // 1. 人気女優TOP100のURL生成（release_countはperformersテーブルに直接存在）
     const topActresses = await db.execute(sql`
-      SELECT p.id
-      FROM performers p
-      LEFT JOIN performer_metrics pm ON pm.performer_id = p.id
-      WHERE pm.release_count > 5
-      ORDER BY pm.release_count DESC NULLS LAST
+      SELECT id
+      FROM performers
+      WHERE release_count > 5
+      ORDER BY release_count DESC NULLS LAST
       LIMIT 100
     `);
 
-    // 2. 最新・人気商品TOP100のURL生成
+    // 2. 最新・人気商品TOP100のURL生成（レビュー数+新着順）
     const topProducts = await db.execute(sql`
       SELECT id FROM products
-      WHERE status = 'active'
-      ORDER BY view_count DESC NULLS LAST
+      ORDER BY total_reviews DESC NULLS LAST, release_date DESC NULLS LAST
       LIMIT 100
     `);
 
