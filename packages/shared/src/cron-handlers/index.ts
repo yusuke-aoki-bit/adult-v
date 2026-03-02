@@ -72,3 +72,6 @@ export { createClassifyPerformersAiHandler } from './classify-performers-ai';
 
 // IndexNow notification handler
 export { createIndexNowNotifyHandler } from './indexnow-notify';
+
+// Google Indexing API submit handler
+export { createGoogleIndexingSubmitHandler } from './google-indexing-submit';

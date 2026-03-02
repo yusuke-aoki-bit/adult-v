@@ -54,6 +54,7 @@ import {
   createDataQualityReportHandler,
   createIndexNowNotifyHandler,
   createCrawlSalesHandler,
+  createGoogleIndexingSubmitHandler,
 } from '../cron-handlers';
 
 // Common dependency groups
@@ -123,6 +124,11 @@ export const cronRevalidatePOST = _revalidate;
 const _indexNowNotify = createIndexNowNotifyHandler({ ...auth, getDb });
 export const cronIndexNowNotifyGET = _indexNowNotify.GET;
 export const cronIndexNowNotifyPOST = _indexNowNotify.POST;
+
+// --- Google Indexing API submit (GET + POST) ---
+const _googleIndexingSubmit = createGoogleIndexingSubmitHandler({ ...auth, getDb });
+export const cronGoogleIndexingSubmitGET = _googleIndexingSubmit.GET;
+export const cronGoogleIndexingSubmitPOST = _googleIndexingSubmit.POST;
 
 // --- Re-export special handlers from separate files ---
 export { cronRunMigration } from './run-migration';

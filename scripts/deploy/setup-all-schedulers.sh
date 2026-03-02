@@ -317,6 +317,13 @@ setup_post_scheduler "indexnow-notify-scheduler" \
   "IndexNow 自動通知（4時間ごと）" \
   120
 
+# Google Indexing API送信（毎日6:00 - 1日200件制限）
+setup_post_scheduler "google-indexing-submit-scheduler" \
+  "0 6 * * *" \
+  "google-indexing-submit" \
+  "Google Indexing API 自動送信（毎日）" \
+  120
+
 # ニュース自動生成（毎日0:30）
 setup_get_scheduler "generate-news-scheduler" \
   "30 0 * * *" \
