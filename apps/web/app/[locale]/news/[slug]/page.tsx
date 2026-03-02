@@ -135,7 +135,7 @@ export default async function NewsDetailPage({ params }: { params: Promise<{ loc
 
   const articleSchema = {
     '@context': 'https://schema.org',
-    '@type': 'Article',
+    '@type': 'NewsArticle',
     headline: sanitizeNewsTitle(article.title),
     description: article.excerpt || sanitizeNewsTitle(article.title),
     datePublished: new Date(article.published_at).toISOString(),

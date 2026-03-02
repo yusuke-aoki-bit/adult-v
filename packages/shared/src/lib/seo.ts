@@ -640,7 +640,7 @@ export function generateWebSiteSchema(locale: string = 'ja') {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${siteUrl}/${locale}/products?q={search_term_string}`,
+        urlTemplate: `${siteUrl}/products?q={search_term_string}`,
       },
       'query-input': 'required name=search_term_string',
     },
@@ -699,9 +699,13 @@ export function generatePersonSchema(
     schema['knowsAbout'] = `${options['workCount']}作品以上に出演`;
   }
 
-  // デビュー年がある場合
+  // デビュー年がある場合（additionalPropertyで表現 — birthDateは実際の生年月日用）
   if (options?.['debutYear']) {
-    schema['birthDate'] = `${options['debutYear']}`;
+    schema['additionalProperty'] = {
+      '@type': 'PropertyValue',
+      name: 'debutYear',
+      value: `${options['debutYear']}`,
+    };
   }
 
   // sameAs（他プラットフォームのプロフィールURL）
