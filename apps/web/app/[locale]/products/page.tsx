@@ -73,11 +73,11 @@ export async function generateMetadata({
   };
 
   // 検索・フィルター・6ページ目以降はnoindex（重複コンテンツ防止）
-  // 1-5ページ目とソート結果は許可（ユーザー検索経路を確保）
+  // noindex時はhreflang除去（canonicalのみ残す）
   if (hasQuery || hasFilters || hasDeepPagination) {
     return {
       ...metadata,
-      alternates,
+      alternates: { canonical: alternates.canonical },
       robots: {
         index: false,
         follow: true,

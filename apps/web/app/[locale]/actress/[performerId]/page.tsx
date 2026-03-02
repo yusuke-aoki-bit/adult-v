@@ -166,10 +166,11 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     };
 
     // フィルター/ページネーション時はnoindex（重複コンテンツ防止）
+    // noindex時はhreflang除去（canonicalのみ残す）
     if (hasFilters || hasPageParam) {
       return {
         ...metadata,
-        alternates,
+        alternates: { canonical: alternates.canonical },
         robots: { index: false, follow: true },
       };
     }

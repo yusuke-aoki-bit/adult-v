@@ -24,7 +24,7 @@ function getHreflangLinks(path: string): string {
 }
 
 /**
- * タグページのサイトマップ（ジャンル・メーカー・シリーズ）
+ * タグページのサイトマップ（ジャンル系タグのみ — メーカー/シリーズは専用サイトマップ）
  */
 export async function GET() {
   if (!process.env['DATABASE_URL']) {
@@ -51,41 +51,10 @@ export async function GET() {
       .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
       .limit(2000);
 
-    // メーカータグ（上位500件）
-    const makerTags = await db
-      .select({
-        id: tags.id,
-        category: tags.category,
-        lastUpdated: sql<string>`MAX(${products.updatedAt})`.as('last_updated'),
-      })
-      .from(tags)
-      .leftJoin(productTags, eq(tags.id, productTags.tagId))
-      .leftJoin(products, eq(productTags.productId, products.id))
-      .where(eq(tags.category, 'maker'))
-      .groupBy(tags.id, tags.category)
-      .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
-      .limit(500);
-
-    // シリーズタグ（上位1000件）
-    const seriesTags = await db
-      .select({
-        id: tags.id,
-        category: tags.category,
-        lastUpdated: sql<string>`MAX(${products.updatedAt})`.as('last_updated'),
-      })
-      .from(tags)
-      .leftJoin(productTags, eq(tags.id, productTags.tagId))
-      .leftJoin(products, eq(productTags.productId, products.id))
-      .where(eq(tags.category, 'series'))
-      .groupBy(tags.id, tags.category)
-      .orderBy(desc(sql`COUNT(DISTINCT ${productTags.productId})`))
-      .limit(1000);
-
-    // カテゴリ別にURLパスを生成
+    // メーカー・シリーズは専用サイトマップ(sitemap-makers.xml, sitemap-series.xml)があるため除外
+    // ジャンル系タグのみURLパスを生成
     const allUrls = [
       ...allGenreTags.map((tag) => ({ path: `/tags/${tag.id}`, priority: '0.6', lastUpdated: tag.lastUpdated })),
-      ...makerTags.map((tag) => ({ path: `/makers/${tag.id}`, priority: '0.6', lastUpdated: tag.lastUpdated })),
-      ...seriesTags.map((tag) => ({ path: `/series/${tag.id}`, priority: '0.6', lastUpdated: tag.lastUpdated })),
     ];
 
     const xml = `<?xml version="1.0" encoding="UTF-8"?>
