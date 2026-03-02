@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useSearchParams, useParams, useRouter } from 'next/navigation';
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { getThemeMode, getPrimaryColor } from '../lib/theme';
 import { useReducedMotion } from '../lib/hooks/useReducedMotion';
 import { getTranslation, paginationTranslations } from '../lib/translations';
@@ -32,6 +32,13 @@ export default function Pagination({
   const totalPages = Math.ceil(total / perPage);
   const [inputPage, setInputPage] = useState('');
   const prefersReducedMotion = useReducedMotion();
+  const focusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (focusTimerRef.current) clearTimeout(focusTimerRef.current);
+    };
+  }, []);
 
   const mode = getThemeMode();
   const primaryColor = getPrimaryColor();
@@ -101,7 +108,7 @@ export default function Pagination({
       behavior: prefersReducedMotion ? 'auto' : 'smooth',
     });
 
-    setTimeout(
+    focusTimerRef.current = setTimeout(
       () => {
         const mainContent = document.getElementById('main-content');
         if (mainContent) {
