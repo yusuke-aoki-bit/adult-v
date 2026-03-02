@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
       failed,
       results: results.map((r) =>
         r.status === 'fulfilled'
-          ? { url: r.value.url, ok: r.value.ok, status: r.value.status }
+          ? { url: r.value.url, ok: r.value.ok, status: r.value.status, data: r.value.data }
           : { url: 'unknown', ok: false, error: String(r.reason) },
       ),
     });
