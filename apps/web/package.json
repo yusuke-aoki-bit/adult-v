@@ -17,7 +17,7 @@
     "@google/generative-ai": "^0.21.0",
     "@sentry/nextjs": "^10.32.1",
     "@tailwindcss/postcss": "^4.0.0",
-    "@types/node": "^22",
+    "@types/node": "^25",
     "@types/pg": "^8.15.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
