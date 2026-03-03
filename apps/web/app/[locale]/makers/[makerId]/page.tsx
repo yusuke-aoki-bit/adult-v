@@ -3,7 +3,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Building2, Tag, Users, Film, Star, TrendingUp, Calendar } from 'lucide-react';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { HomeSectionManager } from '@adult-v/shared/components';
+import { HomeSectionManager, prNoticeTranslations } from '@adult-v/shared/components';
 import { getMakerById } from '@/lib/db/queries';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -194,7 +194,7 @@ export default async function MakerDetailPage({ params }: PageProps) {
           {/* PR表記（景品表示法・ステマ規制対応） */}
           <p className="theme-text-muted mb-6 text-xs">
             <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-            当ページには広告・アフィリエイトリンクが含まれています
+            {prNoticeTranslations[locale as keyof typeof prNoticeTranslations] || prNoticeTranslations.ja}
           </p>
 
           {/* Header */}

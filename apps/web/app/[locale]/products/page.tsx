@@ -283,7 +283,7 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
 
           <div className="mb-2 sm:mb-3">
             <h1 className="mb-0.5 text-xl font-bold text-white sm:text-2xl md:text-3xl">
-              {query ? `「${query}」の検索結果` : t('title')}
+              {query ? t('searchResultsFor', { query }) : t('title')}
             </h1>
             <p className="text-sm text-gray-300 sm:text-base">
               {t('description', { count: totalCount.toLocaleString() })}
@@ -321,6 +321,18 @@ export default async function ProductsPage({ params, searchParams }: PageProps) 
           {products.length === 0 ? (
             <div className="py-16 text-center">
               <p className="text-lg text-gray-400">{t('noProducts')}</p>
+              {(query ||
+                searchParamsData['include'] ||
+                searchParamsData['onSale'] ||
+                searchParamsData['hasVideo'] ||
+                searchParamsData['includeAsp']) && (
+                <Link
+                  href={localizedHref('/products', locale)}
+                  className="mt-4 inline-block rounded-lg bg-fuchsia-600 px-6 py-2 text-sm font-medium text-white transition-colors hover:bg-fuchsia-700"
+                >
+                  {t('clearFilters')}
+                </Link>
+              )}
             </div>
           ) : (
             <>

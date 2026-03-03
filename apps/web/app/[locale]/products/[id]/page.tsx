@@ -9,7 +9,10 @@ import Breadcrumb, { type BreadcrumbItem } from '@/components/Breadcrumb';
 const ProductVideoPlayer = nextDynamic(() => import('@/components/ProductVideoPlayer'), {
   loading: () => (
     <div className="theme-accordion-bg theme-text-muted flex h-48 animate-pulse items-center justify-center rounded-lg">
-      Loading video...
+      <svg className="h-8 w-8 animate-spin opacity-50" fill="none" viewBox="0 0 24 24">
+        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
     </div>
   ),
 });
@@ -442,7 +445,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <Breadcrumb items={breadcrumbItems} />
             <span className="theme-text-muted text-[11px]">
               <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
-              広告・アフィリエイトリンク含む
+              {t.prDisclosure}
             </span>
           </div>
 
@@ -451,7 +454,6 @@ export default async function ProductDetailPage({ params }: PageProps) {
             <details
               id="sample-video"
               className="theme-content theme-border group mb-4 scroll-mt-16 rounded-lg border shadow-md"
-              open
             >
               <summary className="theme-accordion-hover flex cursor-pointer list-none items-center gap-2 rounded-lg p-4 transition-colors">
                 <svg className="theme-text-accent h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -469,7 +471,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
                   />
                 </svg>
                 <span className="theme-text flex-1 text-lg font-semibold">
-                  サンプル動画 ({product.sampleVideos.length}本)
+                  {t.sampleVideos} ({product.sampleVideos.length})
                 </span>
                 <svg
                   className="theme-text-muted h-5 w-5 transition-transform group-open:rotate-180"

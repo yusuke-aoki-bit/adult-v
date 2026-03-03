@@ -45,22 +45,22 @@ export interface ThemeConfig {
 export const darkTheme: ThemeConfig = {
   recentlyViewed: {
     iconColorClass: 'text-blue-400',
-    bgClass: 'bg-white/3 border border-white/8',
+    bgClass: 'bg-white/5 border border-white/8',
     deleteButtonBgClass: 'bg-black/60',
   },
   forYouRecommendations: {
     iconColorClass: 'text-purple-400',
-    bgClass: 'bg-white/3 border border-white/8',
+    bgClass: 'bg-white/5 border border-white/8',
     subtitleClass: 'text-gray-400',
   },
   salesSection: {
     iconColorClass: 'text-red-400',
-    bgClass: 'bg-white/3 border border-white/8',
+    bgClass: 'bg-white/5 border border-white/8',
     linkColorClass: 'text-fuchsia-400 hover:text-fuchsia-300',
   },
   weeklyHighlights: {
     containerClass:
-      'bg-white/3 rounded-xl p-4 sm:p-6 border border-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
+      'bg-white/5 rounded-xl p-4 sm:p-6 border border-white/8 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]',
     iconBgClass: 'bg-amber-500/20',
     iconColorClass: 'text-amber-400',
     titleClass: 'text-white',

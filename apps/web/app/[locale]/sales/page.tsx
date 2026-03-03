@@ -365,7 +365,7 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
   const urgency = getUrgencyLevel(product.endAt);
 
   return (
-    <div className="group relative overflow-hidden rounded-xl bg-white/3 ring-1 ring-white/10 transition-all hover:ring-2 hover:ring-fuchsia-500/50">
+    <div className="group relative overflow-hidden rounded-xl bg-white/5 ring-1 ring-white/10 transition-all hover:ring-2 hover:ring-fuchsia-500/50">
       {/* 緊急セールバッジ（1時間以内） */}
       {urgency === 'critical' && (
         <div className="absolute top-0 right-0 left-0 z-20 animate-pulse bg-red-600 py-1 text-center text-xs font-bold text-white">

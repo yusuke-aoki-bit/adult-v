@@ -257,6 +257,8 @@ export const productDetailTranslations = {
     productId: '作品ID',
     makerId: 'メーカー品番',
     performers: '出演者',
+    loadingVideo: '動画を読み込み中...',
+    prDisclosure: '広告・アフィリエイトリンク含む',
   },
   en: {
     description: 'Description',
@@ -269,6 +271,8 @@ export const productDetailTranslations = {
     productId: 'Product ID',
     makerId: 'Maker ID',
     performers: 'Performers',
+    loadingVideo: 'Loading video...',
+    prDisclosure: 'Contains ads & affiliate links',
   },
   zh: {
     description: '描述',
@@ -281,6 +285,8 @@ export const productDetailTranslations = {
     productId: '作品ID',
     makerId: '制造商编号',
     performers: '出演者',
+    loadingVideo: '加载视频中...',
+    prDisclosure: '包含广告和联盟链接',
   },
   'zh-TW': {
     description: '描述',
@@ -293,6 +299,8 @@ export const productDetailTranslations = {
     productId: '作品ID',
     makerId: '製造商編號',
     performers: '演出者',
+    loadingVideo: '載入影片中...',
+    prDisclosure: '包含廣告與聯盟連結',
   },
   ko: {
     description: '설명',
@@ -305,5 +313,16 @@ export const productDetailTranslations = {
     productId: '작품ID',
     makerId: '메이커 번호',
     performers: '출연자',
+    loadingVideo: '동영상 로딩 중...',
+    prDisclosure: '광고·제휴 링크 포함',
   },
+} as const;
+
+/** Shared PR notice translations (page-level disclosure) */
+export const prNoticeTranslations = {
+  ja: '当ページには広告・アフィリエイトリンクが含まれています',
+  en: 'This page contains ads and affiliate links',
+  zh: '本页面包含广告和联盟链接',
+  'zh-TW': '本頁面包含廣告與聯盟連結',
+  ko: '이 페이지에는 광고 및 제휴 링크가 포함되어 있습니다',
 } as const;

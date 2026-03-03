@@ -11,7 +11,7 @@ import { Library, Clock, Film, Star, User, Trophy, Wallet, ShoppingCart } from '
 import SeriesProgressTracker from '@/components/SeriesProgressTracker';
 import { Product } from '@/types/product';
 import { localizedHref } from '@adult-v/shared/i18n';
-import { HomeSectionManager } from '@adult-v/shared/components';
+import { HomeSectionManager, prNoticeTranslations } from '@adult-v/shared/components';
 
 /**
  * SeriesProductをProduct型に変換（ProductCard用）
@@ -278,7 +278,7 @@ export default async function SeriesDetailPage({ params, searchParams }: PagePro
           {/* PR表記（景品表示法・ステマ規制対応） */}
           <p className="theme-text-muted mb-6 text-xs">
             <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-            当ページには広告・アフィリエイトリンクが含まれています
+            {prNoticeTranslations[locale as keyof typeof prNoticeTranslations] || prNoticeTranslations.ja}
           </p>
 
           {/* ヘッダー */}

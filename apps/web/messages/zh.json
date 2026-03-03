@@ -112,6 +112,8 @@
     "metaDescription": "搜索DUGA、MGS、DTI等所有流媒体网站的作品。",
     "description": "共有{count}件作品",
     "noProducts": "未找到作品",
+    "searchResultsFor": "\"{query}\"的搜索结果",
+    "clearFilters": "清除筛选",
     "viewActressListDesc": "按女优浏览作品",
     "loading": "加载中...",
     "loadMore": "加载更多 {count} 件",

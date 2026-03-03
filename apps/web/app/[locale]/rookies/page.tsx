@@ -5,6 +5,7 @@ import { JsonLD } from '@/components/JsonLD';
 import Breadcrumb from '@/components/Breadcrumb';
 import { getTranslations } from 'next-intl/server';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { prNoticeTranslations } from '@adult-v/shared/components';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import { Star, Calendar, Film, TrendingUp, Award, Sparkles, Users } from 'lucide-react';
@@ -402,7 +403,7 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
           {/* PR表記 */}
           <p className="theme-text-muted mb-6 text-xs">
             <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-            当ページには広告・アフィリエイトリンクが含まれています
+            {prNoticeTranslations[locale as keyof typeof prNoticeTranslations] || prNoticeTranslations.ja}
           </p>
 
           {/* ヘッダー */}

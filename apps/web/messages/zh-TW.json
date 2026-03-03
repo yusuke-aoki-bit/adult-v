@@ -112,6 +112,8 @@
     "metaDescription": "搜尋DUGA、MGS、DTI等所有串流媒體網站的作品。",
     "description": "共有{count}件作品",
     "noProducts": "未找到作品",
+    "searchResultsFor": "\"{query}\"的搜尋結果",
+    "clearFilters": "清除篩選",
     "viewActressListDesc": "依女優瀏覽作品",
     "loading": "載入中...",
     "loadMore": "載入更多 {count} 件",

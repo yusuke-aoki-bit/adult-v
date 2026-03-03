@@ -84,6 +84,7 @@ export {
   darkTheme,
   lightTheme,
   productDetailTranslations,
+  prNoticeTranslations,
   getTranslation,
 } from './sections';
 export type { SectionTheme, ThemeConfig, Locale } from './sections';

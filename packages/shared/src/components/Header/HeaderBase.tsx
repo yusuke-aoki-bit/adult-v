@@ -594,17 +594,35 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
           </nav>
 
-          {/* モバイルメニューボタン - 48x48pxタッチターゲット確保 */}
-          <button
-            ref={menuButtonRef}
-            className="-mr-2 flex min-h-[48px] min-w-[48px] items-center justify-center p-2 md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label={isMobileMenuOpen ? t.closeMenu : t.menu}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-menu"
-          >
-            <MenuIcon isOpen={isMobileMenuOpen} />
-          </button>
+          {/* モバイル検索 + メニューボタン */}
+          <div className="flex items-center md:hidden">
+            <button
+              className="flex min-h-[48px] min-w-[48px] items-center justify-center p-2"
+              onClick={() => {
+                setIsMobileMenuOpen(true);
+              }}
+              aria-label={t.search}
+            >
+              <svg className="theme-text h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+            <button
+              ref={menuButtonRef}
+              className="-mr-2 flex min-h-[48px] min-w-[48px] items-center justify-center p-2"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? t.closeMenu : t.menu}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
+            >
+              <MenuIcon isOpen={isMobileMenuOpen} />
+            </button>
+          </div>
         </div>
 
         {/* モバイルメニュー（検索バー・ナビ・ASP統計を格納） */}
@@ -622,11 +640,11 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
 
             {/* コンテンツ */}
-            <div className="theme-nav" role="list">
+            <div className="theme-nav">
               <p className="theme-text-muted px-1 py-1 text-xs font-semibold tracking-wider uppercase">
                 {t.menuBrowse}
               </p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0" role="list">
                 <Link
                   href={localizedHref('/', locale)}
                   className="theme-nav-actresses flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
@@ -721,9 +739,9 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
 
             {/* ツール */}
-            <div className="theme-nav theme-border border-t pt-2" role="list">
+            <div className="theme-nav theme-border border-t pt-2">
               <p className="theme-text-muted px-1 py-1 text-xs font-semibold tracking-wider uppercase">{t.menuTools}</p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0" role="list">
                 <Link
                   href={localizedHref('/statistics', locale)}
                   className="theme-nav-statistics flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
@@ -755,11 +773,11 @@ export const HeaderBase = memo(function HeaderBase({
             </div>
 
             {/* コミュニティ */}
-            <div className="theme-nav theme-border border-t pt-2" role="list">
+            <div className="theme-nav theme-border border-t pt-2">
               <p className="theme-text-muted px-1 py-1 text-xs font-semibold tracking-wider uppercase">
                 {t.menuCommunity}
               </p>
-              <div className="grid grid-cols-2 gap-x-4 gap-y-0">
+              <div className="grid grid-cols-2 gap-x-4 gap-y-0" role="list">
                 <Link
                   href={localizedHref('/lists', locale)}
                   className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"

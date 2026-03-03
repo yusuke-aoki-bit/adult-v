@@ -50,6 +50,7 @@ const translations = {
     participants: '参加者数',
     error: 'エラーが発生しました',
     viewProduct: '作品詳細を見る',
+    prNotice: '当ページには広告・アフィリエイトリンクが含まれています',
   },
   en: {
     title: 'Product Ranking Vote',
@@ -76,6 +77,88 @@ const translations = {
     participants: 'Participants',
     error: 'An error occurred',
     viewProduct: 'View Product',
+    prNotice: 'This page contains ads and affiliate links',
+  },
+  zh: {
+    title: '作品排名投票',
+    subtitle: '你的一票决定排名',
+    categories: {
+      best: '本月最佳作品',
+      trending: '本周热门作品',
+      classic: '名人堂经典',
+    },
+    categoryDesc: {
+      best: '为本月发布的作品投票',
+      trending: '为本周热门作品投票',
+      classic: '为经典作品投票',
+    },
+    votes: '票',
+    vote: '投票',
+    voted: '已投票',
+    loginToVote: '登录后投票',
+    loading: '加载中...',
+    noProducts: '暂无可投票作品',
+    ranking: '排名',
+    yourVotes: '你的投票',
+    totalVotes: '总投票数',
+    participants: '参与人数',
+    error: '发生错误',
+    viewProduct: '查看作品',
+    prNotice: '本页面包含广告和联盟链接',
+  },
+  'zh-TW': {
+    title: '作品排名投票',
+    subtitle: '你的一票決定排名',
+    categories: {
+      best: '本月最佳作品',
+      trending: '本週熱門作品',
+      classic: '名人堂經典',
+    },
+    categoryDesc: {
+      best: '為本月發布的作品投票',
+      trending: '為本週熱門作品投票',
+      classic: '為經典作品投票',
+    },
+    votes: '票',
+    vote: '投票',
+    voted: '已投票',
+    loginToVote: '登入後投票',
+    loading: '載入中...',
+    noProducts: '暫無可投票作品',
+    ranking: '排名',
+    yourVotes: '你的投票',
+    totalVotes: '總投票數',
+    participants: '參與人數',
+    error: '發生錯誤',
+    viewProduct: '查看作品',
+    prNotice: '本頁面包含廣告與聯盟連結',
+  },
+  ko: {
+    title: '작품 랭킹 투표',
+    subtitle: '당신의 한 표가 랭킹을 결정합니다',
+    categories: {
+      best: '이달의 베스트 작품',
+      trending: '이번 주 화제작',
+      classic: '명예의 전당',
+    },
+    categoryDesc: {
+      best: '이번 달 출시 작품에 투표',
+      trending: '이번 주 화제 작품에 투표',
+      classic: '시대를 초월한 명작에 투표',
+    },
+    votes: '표',
+    vote: '투표',
+    voted: '투표 완료',
+    loginToVote: '로그인하여 투표',
+    loading: '로딩 중...',
+    noProducts: '투표 가능한 작품이 없습니다',
+    ranking: '랭킹',
+    yourVotes: '내 투표',
+    totalVotes: '총 투표수',
+    participants: '참가자 수',
+    error: '오류가 발생했습니다',
+    viewProduct: '작품 상세 보기',
+    prNotice: '이 페이지에는 광고 및 제휴 링크가 포함되어 있습니다',
   },
 };
 
@@ -197,7 +280,7 @@ export default function VotePage() {
         {/* PR表記 */}
         <p className="theme-text-muted mb-6 text-xs">
           <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-          当ページには広告・アフィリエイトリンクが含まれています
+          {t.prNotice}
         </p>
 
         {/* ヘッダー */}

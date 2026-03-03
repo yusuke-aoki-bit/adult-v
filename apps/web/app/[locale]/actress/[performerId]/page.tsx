@@ -49,6 +49,7 @@ import ActressSectionNav from '@/components/ActressSectionNav';
 import PerPageDropdown from '@/components/PerPageDropdown';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { prNoticeTranslations } from '@adult-v/shared/components';
 
 // ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
 export const revalidate = 60;
@@ -371,7 +372,7 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
             <Breadcrumb items={[{ label: tNav('home'), href: localizedHref('/', locale) }, { label: actress.name }]} />
             <span className="theme-text-muted text-[11px]">
               <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
-              広告・アフィリエイトリンク含む
+              {prNoticeTranslations[locale as keyof typeof prNoticeTranslations] || prNoticeTranslations.ja}
             </span>
           </div>
 
@@ -381,13 +382,13 @@ export default async function ActressDetailPage({ params, searchParams }: PagePr
               <ActressHeroImage
                 src={actress.heroImage || actress.thumbnail}
                 alt={actress.name}
-                size={64}
-                className="h-14 w-14 shrink-0 sm:h-16 sm:w-16"
+                size={96}
+                className="h-20 w-20 shrink-0 sm:h-24 sm:w-24"
                 priority
               />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="theme-text truncate text-xl font-bold sm:text-2xl">
+                  <h1 className="theme-text text-xl font-bold sm:text-2xl">
                     {actress.name}
                     <span className="ml-2 text-base font-normal text-gray-400 sm:text-lg">
                       {locale === 'en'

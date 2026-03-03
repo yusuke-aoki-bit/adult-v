@@ -31,8 +31,9 @@ export const darkFilterTheme: FilterThemeConfig = {
       'flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-gray-800/50 rounded-lg border-l-4 border-fuchsia-500 transition-all',
     labelClass: 'text-xs text-gray-300 font-medium',
     chipClass:
-      'inline-flex items-center gap-1 bg-fuchsia-600/80 hover:bg-fuchsia-700 text-white text-xs px-2 py-1 rounded-full transition-colors group',
-    clearAllClass: 'text-xs text-gray-400 hover:text-white underline transition-colors ml-1',
+      'inline-flex items-center gap-1 bg-fuchsia-600/80 hover:bg-fuchsia-700 text-white text-xs px-3 py-2 min-h-[44px] rounded-full transition-colors group',
+    clearAllClass:
+      'text-xs text-gray-400 hover:text-white underline transition-colors ml-1 min-h-[44px] inline-flex items-center',
   },
 };
 
@@ -47,8 +48,9 @@ export const lightFilterTheme: FilterThemeConfig = {
       'flex flex-wrap items-center gap-2 py-2 px-3 mb-2 bg-pink-50 rounded-lg border-l-4 border-pink-500 transition-all',
     labelClass: 'text-xs text-gray-600 font-medium',
     chipClass:
-      'inline-flex items-center gap-1 bg-pink-500 hover:bg-pink-600 text-white text-xs px-2 py-1 rounded-full transition-colors group',
-    clearAllClass: 'text-xs text-gray-500 hover:text-gray-700 underline transition-colors ml-1',
+      'inline-flex items-center gap-1 bg-pink-500 hover:bg-pink-600 text-white text-xs px-3 py-2 min-h-[44px] rounded-full transition-colors group',
+    clearAllClass:
+      'text-xs text-gray-500 hover:text-gray-700 underline transition-colors ml-1 min-h-[44px] inline-flex items-center',
   },
 };
 

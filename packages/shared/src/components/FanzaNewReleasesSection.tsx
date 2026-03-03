@@ -25,7 +25,7 @@ export function FanzaNewReleasesSection({ locale = 'ja', className = '' }: Fanza
           href={fanzaSiteUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="group block overflow-hidden rounded-xl border border-white/10 bg-white/3 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all hover:bg-white/5 hover:ring-1 hover:ring-fuchsia-400/20 sm:p-6"
+          className="group block overflow-hidden rounded-xl border border-white/10 bg-white/5 p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-all hover:bg-white/8 hover:ring-1 hover:ring-fuchsia-400/20 sm:p-6"
         >
           <div className="flex items-center gap-3 sm:gap-4">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-fuchsia-500 sm:h-12 sm:w-12">

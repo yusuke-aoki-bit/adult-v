@@ -538,9 +538,9 @@ export default async function Home({ params, searchParams }: PageProps) {
 
       {/* サイトタイトル + ビュー切り替えタブ */}
       <div className="container mx-auto px-3 pt-3 sm:px-4">
-        {isHomepage && <h1 className="theme-text mb-1.5 text-base font-bold sm:text-lg">{t('siteTitle')}</h1>}
+        {isHomepage && <h1 className="theme-text mb-1.5 text-lg font-bold sm:text-xl">{t('siteTitle')}</h1>}
         {isHomepage && (
-          <p className="mb-2 text-xs leading-relaxed text-gray-500 sm:text-sm">
+          <p className="mb-2 text-xs leading-relaxed text-gray-300 sm:text-sm">
             {t('description', { count: String(totalCount) })}
           </p>
         )}

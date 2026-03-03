@@ -360,7 +360,7 @@ function ProductCardBase({
 
     return (
       <div
-        className={`group relative ${resolvedTheme === 'dark' ? 'bg-white/3 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'bg-white'} overflow-hidden rounded-xl border ${resolvedTheme === 'dark' ? 'border-white/10' : 'border-gray-200'} transition-shadow duration-150 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'} active:scale-[0.98]`}
+        className={`group relative ${resolvedTheme === 'dark' ? 'bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'bg-white'} overflow-hidden rounded-xl border ${resolvedTheme === 'dark' ? 'border-white/10' : 'border-gray-200'} transition-shadow duration-150 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/8 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'} active:scale-[0.98]`}
       >
         <Link href={`/${locale}/products/${product['id']}`}>
           <div

@@ -84,6 +84,7 @@ const translations = {
     noHistory: '履歴がありません',
     loadMore: 'もっと見る',
     shuffleMore: 'シャッフルして次へ',
+    prDisclosure: '広告・アフィリエイトリンク含む',
   },
   en: {
     title: 'Discover Mode',
@@ -117,6 +118,7 @@ const translations = {
     noHistory: 'No history',
     loadMore: 'Load More',
     shuffleMore: 'Shuffle & Next',
+    prDisclosure: 'Contains ads & affiliate links',
   },
   zh: {
     title: '发现模式',
@@ -150,6 +152,7 @@ const translations = {
     noHistory: '暂无历史',
     loadMore: '加载更多',
     shuffleMore: '随机切换',
+    prDisclosure: '包含广告和联盟链接',
   },
   ko: {
     title: '발견 모드',
@@ -183,6 +186,7 @@ const translations = {
     noHistory: '기록 없음',
     loadMore: '더 보기',
     shuffleMore: '셔플 후 다음',
+    prDisclosure: '광고·제휴 링크 포함',
   },
 } as const;
 
@@ -372,7 +376,7 @@ export default function DiscoverPage() {
           {/* PR表記 */}
           <p className="mb-2 text-center text-[11px] text-gray-400">
             <span className="mr-1 rounded bg-yellow-900/30 px-1 py-px font-bold text-yellow-400">PR</span>
-            広告・アフィリエイトリンク含む
+            {t.prDisclosure}
           </p>
 
           {/* Header */}

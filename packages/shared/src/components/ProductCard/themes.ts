@@ -76,7 +76,7 @@ export interface ThemeConfig {
 export const themes: Record<ProductCardTheme, ThemeConfig> = {
   dark: {
     // Card container — グラスモーフィズム
-    cardBg: 'bg-white/3',
+    cardBg: 'bg-white/5',
     cardBorder: 'border-white/10',
     cardHoverRing: 'hover:ring-fuchsia-400/20',
 

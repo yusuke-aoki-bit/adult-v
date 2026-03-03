@@ -15,6 +15,7 @@ export {
   salesTranslations,
   weeklyHighlightsTranslations,
   productDetailTranslations,
+  prNoticeTranslations,
   getTranslation,
 } from '../../lib/translations';
 export type { Locale } from '../../lib/translations';

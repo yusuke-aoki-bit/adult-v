@@ -82,7 +82,7 @@ export function UnifiedSearchBar({
 }: UnifiedSearchBarProps) {
   const router = useRouter();
   const [query, setQuery] = useState('');
-  const [mode, setMode] = useState<SearchMode>('product');
+  const [mode, setMode] = useState<SearchMode>('actress');
   const [isSearching, setIsSearching] = useState(false);
   const [showModeSelector, setShowModeSelector] = useState(false);
   const [showShortcutHint, setShowShortcutHint] = useState(true);
