@@ -9,7 +9,7 @@ import { sql } from 'drizzle-orm';
 import { createHash } from 'crypto';
 import type { DbExecutor } from '../db-queries/types';
 import { batchUpsertPerformers, batchInsertProductPerformers } from '../utils/batch-db';
-import { proxyFetch, getProxyInfo } from '../lib/proxy-fetch';
+import { proxyFetchWithRetry, getProxyInfo } from '../lib/proxy-fetch';
 
 interface CrawlStats {
   totalFetched: number;
@@ -50,7 +50,7 @@ function isHomePage(html: string): boolean {
 }
 
 function fetchWithTimeout(url: string, options: RequestInit = {}, timeoutMs = 15000): Promise<Response> {
-  return proxyFetch(url, { ...options, timeout: timeoutMs });
+  return proxyFetchWithRetry(url, { ...options, timeout: timeoutMs }, 3, 2000);
 }
 
 /** リストページにアクセスしてtermid cookieを取得 */

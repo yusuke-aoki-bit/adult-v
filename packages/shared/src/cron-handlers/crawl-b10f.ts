@@ -38,12 +38,18 @@ async function downloadCsv(): Promise<string> {
   const AFFILIATE_ID = '12556';
   const url = `https://b10f.jp/csv_home.php?all=1&atype=${AFFILIATE_ID}&nosep=1`;
 
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
-  }
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 60_000); // 60秒タイムアウト
 
-  return await response['text']();
+  try {
+    const response = await fetch(url, { signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response['status']}: ${response.statusText}`);
+    }
+    return await response['text']();
+  } finally {
+    clearTimeout(timeoutId);
+  }
 }
 
 function parseCsv(csv: string): B10fProduct[] {

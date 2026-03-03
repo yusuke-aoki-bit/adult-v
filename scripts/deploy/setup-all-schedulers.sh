@@ -191,11 +191,11 @@ setup_get_scheduler "crawl-japanska-scheduler" \
   "crawl-japanska?limit=200" \
   "Japanska クローラー（12h間隔）"
 
-# b10f: 12時間間隔
+# b10f: 深夜1回（日中は競合で503になりやすいため）
 setup_get_scheduler "crawl-b10f-scheduler" \
-  "0 11,23 * * *" \
+  "0 23 * * *" \
   "crawl-b10f" \
-  "b10f クローラー（12h間隔）"
+  "b10f クローラー（毎日23時）"
 
 # FANZA: 4時間間隔・limit倍増
 setup_get_scheduler "crawl-fanza-scheduler" \
