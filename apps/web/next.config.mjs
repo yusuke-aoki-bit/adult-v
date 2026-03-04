@@ -156,20 +156,26 @@ const nextConfig = {
       },
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
       // SEO重要ページ: パブリックキャッシュ + CDNキャッシュヘッダー
-      // Firebase App Hostingアダプタが private に上書きする場合のフォールバック
+      // localePrefix:'never' のため、実際のURLにはロケールプレフィックスなし
+      // middlewareが内部で /ja/ 等にリライトするが、公開URLは / 直下
       ...[
-        '/:locale(ja|en|zh|zh-TW|ko)',
-        '/:locale(ja|en|zh|zh-TW|ko)/actress/:id*',
-        '/:locale(ja|en|zh|zh-TW|ko)/actresses',
-        '/:locale(ja|en|zh|zh-TW|ko)/products',
-        '/:locale(ja|en|zh|zh-TW|ko)/products/:id*',
-        '/:locale(ja|en|zh|zh-TW|ko)/tags/:id*',
-        '/:locale(ja|en|zh|zh-TW|ko)/series/:id*',
-        '/:locale(ja|en|zh|zh-TW|ko)/makers/:id*',
-        '/:locale(ja|en|zh|zh-TW|ko)/sales',
-        '/:locale(ja|en|zh|zh-TW|ko)/categories',
-        '/:locale(ja|en|zh|zh-TW|ko)/news',
-        '/:locale(ja|en|zh|zh-TW|ko)/news/:slug*',
+        '/',
+        '/actress/:id*',
+        '/actresses',
+        '/products',
+        '/products/:id*',
+        '/tags/:id*',
+        '/series/:id*',
+        '/makers/:id*',
+        '/sales',
+        '/categories',
+        '/news',
+        '/news/:slug*',
+        '/rookies',
+        '/weekly-report',
+        '/hidden-gems',
+        '/reviewers',
+        '/birthdays',
       ].map((source) => ({
         source,
         headers: [

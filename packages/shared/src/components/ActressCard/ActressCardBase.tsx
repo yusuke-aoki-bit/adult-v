@@ -329,7 +329,7 @@ function ActressCardBaseComponent({
                   return (
                     <span
                       key={service}
-                      className="rounded px-1 py-0.5 text-[9px] font-semibold text-white sm:px-1.5 sm:text-[10px]"
+                      className="rounded px-1 py-0.5 text-[10px] font-semibold text-white sm:px-1.5 sm:text-xs"
                       style={gradientStyle}
                     >
                       {meta.label}
@@ -337,7 +337,7 @@ function ActressCardBaseComponent({
                   );
                 })}
                 {displayServices.length > 3 && (
-                  <span className="theme-text-muted text-[9px] sm:text-[10px]">+{displayServices.length - 3}</span>
+                  <span className="theme-text-muted text-[10px] sm:text-xs">+{displayServices.length - 3}</span>
                 )}
               </div>
             )}

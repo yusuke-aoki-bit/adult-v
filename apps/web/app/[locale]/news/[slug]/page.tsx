@@ -54,11 +54,17 @@ export async function generateMetadata({
 // ISR: locale明示でheaders()回避済み → パブリックキャッシュ有効
 export const revalidate = 60;
 
+/** Escape HTML entities to prevent XSS from DB content */
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 /**
  * Markdown風のテキストをHTMLに簡易変換
+ * 先にHTMLエスケープしてからMarkdown変換を行う
  */
 function renderMarkdownContent(content: string): string {
-  return content
+  return escapeHtml(content)
     .replace(/^### (.+)$/gm, '<h3 class="text-lg font-semibold text-white mt-6 mb-2">$1</h3>')
     .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-8 mb-3">$1</h2>')
     .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')

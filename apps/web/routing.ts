@@ -11,4 +11,8 @@ export const routing = defineRouting({
   localePrefix: 'never',
   // 言語検出を無効化（?hl=パラメータまたはクッキーで明示的に指定）
   localeDetection: false,
+  // Set-Cookieヘッダーを無効化 → Cache-Control: private を防止
+  // Set-Cookieがあると Next.js が private, no-store を強制しCDNキャッシュ不可になる
+  // 言語切り替えは proxy.ts の ?hl= ハンドラーで手動管理
+  localeCookie: false,
 });

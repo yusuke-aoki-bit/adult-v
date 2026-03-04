@@ -129,7 +129,7 @@ export default function PerformerTopProducts({
                 />
                 {/* セール中バッジ */}
                 {product.salePrice && product.saleEndAt && (
-                  <div className="absolute top-0 right-0 rounded-bl bg-red-500 px-1 py-0.5 text-[9px] font-bold text-white">
+                  <div className="absolute top-0 right-0 rounded-bl bg-red-500 px-1 py-0.5 text-[10px] font-bold text-white">
                     {translations.onSale}
                   </div>
                 )}

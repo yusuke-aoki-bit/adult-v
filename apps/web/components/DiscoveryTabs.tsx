@@ -174,7 +174,7 @@ function ProductChip({
           <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">?</div>
         )}
         {badge && (
-          <span className="absolute top-0.5 left-0.5 rounded bg-red-600 px-1 py-px text-[9px] font-bold text-white">
+          <span className="absolute top-0.5 left-0.5 rounded bg-red-600 px-1 py-px text-[10px] font-bold text-white">
             {badge}
           </span>
         )}
@@ -298,7 +298,7 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
           ) : (
             <div className="flex h-full w-full items-center justify-center text-xs text-gray-500">?</div>
           )}
-          <span className="absolute top-0.5 left-0.5 rounded-md bg-linear-to-r from-red-600 to-orange-500 px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
+          <span className="absolute top-0.5 left-0.5 rounded-md bg-linear-to-r from-red-600 to-orange-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm">
             -{product.discountPercent}%
           </span>
         </div>
@@ -306,7 +306,7 @@ function SaleProductCard({ product, locale }: { product: SaleProduct; locale: st
       <p className="mt-1 line-clamp-1 text-[11px] font-medium text-gray-300">{product.title}</p>
       <div className="mt-0.5 flex items-baseline gap-1">
         <span className="text-xs font-bold text-red-400">¥{product.salePrice.toLocaleString()}</span>
-        <span className="text-[9px] text-gray-500 line-through">¥{product.regularPrice.toLocaleString()}</span>
+        <span className="text-[10px] text-gray-500 line-through">¥{product.regularPrice.toLocaleString()}</span>
       </div>
       {hasAffiliate ? (
         <a

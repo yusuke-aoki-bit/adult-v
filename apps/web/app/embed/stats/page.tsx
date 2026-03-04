@@ -179,7 +179,7 @@ export default async function EmbedStatsPage({ searchParams }: WidgetProps) {
   const limit = Math.min(parseInt(params.limit || '5', 10), 10);
 
   return (
-    <html>
+    <html lang="ja">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

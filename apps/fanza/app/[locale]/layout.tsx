@@ -1,5 +1,5 @@
 import { NextIntlClientProvider } from 'next-intl';
-import { getMessages } from 'next-intl/server';
+import { getMessages, setRequestLocale } from 'next-intl/server';
 import { notFound } from 'next/navigation';
 import { Suspense } from 'react';
 import { locales } from '@/i18n';
@@ -50,8 +50,11 @@ export default async function LocaleLayout({
     notFound();
   }
 
-  // Fetch messages for the locale
-  const messages = await getMessages();
+  // next-intl: ロケールをリクエストキャッシュに設定
+  setRequestLocale(locale);
+
+  // Fetch messages for the locale (locale明示でheaders()呼出回避 → ISR有効化)
+  const messages = await getMessages({ locale });
 
   // cookies()を除去: AgeVerificationがクライアント側でnon-httpOnly cookieを読み取る
   // これにより全子ページでISR/SSGが有効になり、TTFB大幅改善
@@ -63,8 +66,12 @@ export default async function LocaleLayout({
   const webSiteSchema = generateWebSiteSchema(locale);
   const organizationSchema = generateOrganizationSchema(locale);
 
+  // NextIntlClientProviderの全propsを明示的に渡す
+  // 未指定のpropsはgetConfig()→headers()を内部で呼びISRを無効化するため
+  const now = new Date();
+
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Tokyo" now={now} formats={{}}>
       <SiteProvider mode={siteMode}>
         <SiteThemeProvider theme="light" primaryColor="pink">
           <FavoritesProvider>

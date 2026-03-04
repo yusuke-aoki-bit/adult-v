@@ -36,7 +36,7 @@ function ProductRow({ product, locale }: { product: RelatedProduct; locale: stri
     >
       <div className="h-[72px] w-12 shrink-0 overflow-hidden rounded">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt="" className="h-full w-full object-cover" loading="lazy" />
+          <img src={product.imageUrl} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
         ) : (
           <div className="theme-accordion-bg flex h-full items-center justify-center">
             <span className="theme-text-muted text-[8px]">N/A</span>

@@ -430,7 +430,7 @@ function ProductCardBase({
               {product['title']}
             </p>
             <span
-              className={`mt-0.5 block text-[9px] ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'} truncate`}
+              className={`mt-0.5 block text-[10px] ${resolvedTheme === 'dark' ? 'text-gray-500' : 'text-gray-400'} truncate`}
             >
               {product.normalizedProductId || product['id']}
             </span>
@@ -566,7 +566,7 @@ function ProductCardBase({
                         </span>
                       )}
                       {product['discount'] && product['discount'] >= 20 && (
-                        <span className="rounded bg-red-600/80 px-1 py-px text-[9px] font-bold text-white">
+                        <span className="rounded bg-red-600/80 px-1 py-px text-[10px] font-bold text-white">
                           -{product['discount']}%
                         </span>
                       )}

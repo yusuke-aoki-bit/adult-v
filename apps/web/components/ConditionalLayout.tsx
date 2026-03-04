@@ -57,7 +57,9 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
       <Suspense fallback={<HeaderSkeleton />}>
         <Header />
       </Suspense>
-      <main className="flex-1">{children}</main>
+      <main id="main-content" className="flex-1">
+        {children}
+      </main>
       <Suspense fallback={<FooterSkeleton />}>
         <Footer />
       </Suspense>

@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { useState, useCallback, useMemo, useRef, TouchEvent } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect, TouchEvent } from 'react';
 import { ChevronLeft, ChevronRight, ZoomIn } from 'lucide-react';
 import { isDtiUncensoredSite, getFullSizeImageUrl } from '@adult-v/shared/lib/image-utils';
 import { normalizeImageUrl } from '@adult-v/shared/lib/image-utils';
@@ -33,8 +33,16 @@ export default function ProductImageGallery({
   // スワイプ用の状態
   const touchStartX = useRef<number | null>(null);
   const touchEndX = useRef<number | null>(null);
+  const transitionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [swipeOffset, setSwipeOffset] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+
+  // クリーンアップ: アンマウント時にタイマーを解除
+  useEffect(() => {
+    return () => {
+      if (transitionTimer.current) clearTimeout(transitionTimer.current);
+    };
+  }, []);
 
   // 無修正サイトかどうかをチェック（ブラーを適用するため）
   const isUncensored = isDtiUncensoredSite(mainImage || '');
@@ -114,7 +122,7 @@ export default function ProductImageGallery({
     touchStartX.current = null;
     touchEndX.current = null;
 
-    setTimeout(() => setIsTransitioning(false), 300);
+    transitionTimer.current = setTimeout(() => setIsTransitioning(false), 300);
   }, [hasMultipleImages, goToPrevious, goToNext]);
 
   return (

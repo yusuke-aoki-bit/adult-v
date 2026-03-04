@@ -1,70 +1,21 @@
 import Link from 'next/link';
-import { headers } from 'next/headers';
 
-const translations: Record<
-  string,
-  { notFound: string; goHome: string; orCheck: string; products: string; actresses: string }
-> = {
-  ja: {
-    notFound: 'ページが見つかりません',
-    goHome: 'ホームに戻る',
-    orCheck: 'または以下をチェック',
-    products: '作品一覧',
-    actresses: '女優一覧',
-  },
-  en: {
-    notFound: 'Page Not Found',
-    goHome: 'Go Home',
-    orCheck: 'Or check these out',
-    products: 'Products',
-    actresses: 'Actresses',
-  },
-  zh: {
-    notFound: '页面未找到',
-    goHome: '返回首页',
-    orCheck: '或查看以下内容',
-    products: '作品列表',
-    actresses: '女优列表',
-  },
-  'zh-TW': {
-    notFound: '頁面未找到',
-    goHome: '返回首頁',
-    orCheck: '或查看以下內容',
-    products: '作品列表',
-    actresses: '女優列表',
-  },
-  ko: {
-    notFound: '페이지를 찾을 수 없습니다',
-    goHome: '홈으로 돌아가기',
-    orCheck: '또는 아래를 확인하세요',
-    products: '작품 목록',
-    actresses: '배우 목록',
-  },
+// headers()を呼ぶと全ページがforce-dynamicになるためデフォルト言語を使用
+// 404ページはSEO的に重要でなく、多くのユーザーはデフォルト言語(ja)で問題ない
+const t = {
+  notFound: 'ページが見つかりません',
+  goHome: 'ホームに戻る',
+  orCheck: 'または以下をチェック',
+  products: '作品一覧',
+  actresses: '女優一覧',
 };
 
-function detectLocale(acceptLanguage: string | null): string {
-  if (!acceptLanguage) return 'ja';
-  const supported = ['ja', 'en', 'zh-TW', 'zh', 'ko'];
-  for (const lang of acceptLanguage.split(',')) {
-    const code = lang.split(';')[0]!.trim().toLowerCase();
-    if (code.startsWith('zh-tw') || code.startsWith('zh-hant')) return 'zh-TW';
-    if (code.startsWith('zh')) return 'zh';
-    const match = supported.find((s) => code.startsWith(s.toLowerCase()));
-    if (match) return match;
-  }
-  return 'ja';
-}
+const quickLinks = [
+  { href: '/products', label: t.products },
+  { href: '/actresses', label: t.actresses },
+];
 
-export default async function RootNotFound() {
-  const headerStore = await headers();
-  const locale = detectLocale(headerStore.get('accept-language'));
-  const t = translations[locale] ?? translations['ja']!;
-
-  const quickLinks = [
-    { href: '/products', label: t.products },
-    { href: '/actresses', label: t.actresses },
-  ];
-
+export default function RootNotFound() {
   return (
     <div
       style={{
