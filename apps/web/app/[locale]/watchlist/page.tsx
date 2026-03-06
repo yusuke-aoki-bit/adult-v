@@ -2,6 +2,7 @@
 
 import { useState, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useWatchLater } from '@adult-v/shared/hooks';
 
 const watchlistTexts = {
@@ -181,7 +182,14 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
                       onClick={() => handleProductClick(item.productId)}
                     >
                       {item.thumbnail ? (
-                        <img src={item.thumbnail} alt={item.title} className="aspect-3/4 w-full rounded object-cover" />
+                        <Image
+                          src={item.thumbnail}
+                          alt={item.title}
+                          width={96}
+                          height={128}
+                          className="aspect-3/4 w-full rounded object-cover"
+                          sizes="(min-width: 640px) 96px, 80px"
+                        />
                       ) : (
                         <div className="flex aspect-3/4 w-full items-center justify-center rounded bg-gray-700">
                           <svg className="h-8 w-8 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">

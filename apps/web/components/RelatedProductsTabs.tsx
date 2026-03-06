@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 
@@ -34,9 +35,9 @@ function ProductRow({ product, locale }: { product: RelatedProduct; locale: stri
       href={localizedHref(`/products/${product.id}`, locale)}
       className="group flex items-center gap-3 rounded-lg px-2 py-1.5 transition-colors hover:bg-white/5"
     >
-      <div className="h-[72px] w-12 shrink-0 overflow-hidden rounded">
+      <div className="relative h-[72px] w-12 shrink-0 overflow-hidden rounded">
         {product.imageUrl ? (
-          <img src={product.imageUrl} alt={product.title} className="h-full w-full object-cover" loading="lazy" />
+          <Image src={product.imageUrl} alt={product.title} fill className="object-cover" sizes="48px" />
         ) : (
           <div className="theme-accordion-bg flex h-full items-center justify-center">
             <span className="theme-text-muted text-[8px]">N/A</span>

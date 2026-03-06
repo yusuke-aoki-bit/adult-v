@@ -1,6 +1,8 @@
 import { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
-import { generateBaseMetadata } from '@/lib/seo';
+import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema } from '@/lib/seo';
+import { JsonLD } from '@/components/JsonLD';
+import { localizedHref } from '@adult-v/shared/i18n';
 import MakersPageClient from './MakersPageClient';
 
 export const revalidate = 60;
@@ -38,5 +40,21 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 export default async function MakersPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
   setRequestLocale(locale);
-  return <MakersPageClient />;
+  const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
+  const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+
+  return (
+    <>
+      <JsonLD
+        data={[
+          generateBreadcrumbSchema([
+            { name: 'Home', url: BASE_URL },
+            { name: mt.title, url: `${BASE_URL}${localizedHref('/makers', locale)}` },
+          ]),
+          generateCollectionPageSchema(mt.title, mt.description, `${BASE_URL}/makers`, locale),
+        ]}
+      />
+      <MakersPageClient />
+    </>
+  );
 }

@@ -5,7 +5,8 @@ import { sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Trophy, Star, TrendingUp, Calendar, Users, ChevronRight } from 'lucide-react';
-import { generateBaseMetadata } from '@/lib/seo';
+import { generateBaseMetadata, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
+import { JsonLD } from '@/components/JsonLD';
 
 // ISR: getTranslations未使用 → パブリックキャッシュ有効
 export const revalidate = 60;
@@ -266,183 +267,201 @@ export default async function YearBestPage({ params }: Props) {
   // 利用可能な年のリストを生成
   const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i);
 
+  const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: 'Home', url: BASE_URL },
+    { name: `Best of ${year}`, url: `${BASE_URL}/best/${year}` },
+  ]);
+  const itemListSchema = generateItemListSchema(
+    bestProducts.slice(0, 20).map((p) => ({
+      name: p.title,
+      url: `${BASE_URL}${localizedHref(`/products/${p.normalized_product_id || p.id}`, locale)}`,
+    })),
+    `Best of ${year}`,
+  );
+
   return (
-    <main className="theme-body min-h-screen py-8">
-      <div className="container mx-auto max-w-6xl px-4">
-        {/* PR表記 */}
-        <p className="mb-4 text-center text-xs text-gray-400">
-          <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
-          {t.prNotice}
-        </p>
+    <>
+      <JsonLD data={[breadcrumbSchema, itemListSchema]} />
+      <main className="theme-body min-h-screen py-8">
+        <div className="container mx-auto max-w-6xl px-4">
+          {/* PR表記 */}
+          <p className="mb-4 text-center text-xs text-gray-400">
+            <span className="mr-1.5 rounded bg-yellow-900/30 px-1.5 py-0.5 font-bold text-yellow-400">PR</span>
+            {t.prNotice}
+          </p>
 
-        {/* ヘッダー */}
-        <div className="mb-8 text-center">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/20 px-4 py-2">
-            <Trophy className="h-5 w-5 text-yellow-400" />
-            <span className="text-2xl font-bold text-yellow-300">{year}</span>
+          {/* ヘッダー */}
+          <div className="mb-8 text-center">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-yellow-500/30 bg-yellow-500/20 px-4 py-2">
+              <Trophy className="h-5 w-5 text-yellow-400" />
+              <span className="text-2xl font-bold text-yellow-300">{year}</span>
+            </div>
+            <h1 className="theme-text mb-2 text-3xl font-bold">
+              {year}
+              {t.title}
+            </h1>
+            <p className="theme-text-muted">{t.subtitle}</p>
           </div>
-          <h1 className="theme-text mb-2 text-3xl font-bold">
-            {year}
-            {t.title}
-          </h1>
-          <p className="theme-text-muted">{t.subtitle}</p>
-        </div>
 
-        {/* 年選択 */}
-        <div className="mb-8">
-          <h2 className="theme-text-muted mb-2 text-sm font-medium">{t.otherYears}</h2>
-          <div className="flex flex-wrap gap-2">
-            {availableYears.map((y) => (
-              <Link
-                key={y}
-                href={localizedHref(`/best/${y}`, locale)}
-                className={`rounded-lg px-3 py-1 text-sm transition-colors ${
-                  y === year ? 'bg-yellow-500 font-bold text-black' : 'theme-card hover:bg-gray-700'
-                }`}
-              >
-                {y}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid gap-8 lg:grid-cols-4">
-          {/* メインランキング */}
-          <div className="lg:col-span-3">
-            <div className="space-y-4">
-              {bestProducts.map((product, idx) => (
+          {/* 年選択 */}
+          <div className="mb-8">
+            <h2 className="theme-text-muted mb-2 text-sm font-medium">{t.otherYears}</h2>
+            <div className="flex flex-wrap gap-2">
+              {availableYears.map((y) => (
                 <Link
-                  key={product.id}
-                  href={localizedHref(`/products/${product.normalized_product_id}`, locale)}
-                  className="theme-card group flex gap-4 rounded-xl p-4 transition-all hover:ring-2 hover:ring-yellow-500/30"
+                  key={y}
+                  href={localizedHref(`/best/${y}`, locale)}
+                  className={`rounded-lg px-3 py-1 text-sm transition-colors ${
+                    y === year ? 'bg-yellow-500 font-bold text-black' : 'theme-card hover:bg-gray-700'
+                  }`}
                 >
-                  {/* ランク */}
-                  <div className="flex w-12 flex-shrink-0 flex-col items-center justify-center">
-                    <span
-                      className={`text-2xl font-bold ${
-                        idx < 3 ? 'text-yellow-400' : idx < 10 ? 'text-gray-300' : 'text-gray-500'
-                      }`}
-                    >
-                      {idx + 1}
-                    </span>
-                    <span className="text-xs text-gray-500">{t.rank}</span>
-                  </div>
-
-                  {/* サムネイル */}
-                  <div className="aspect-video w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800">
-                    {product.default_thumbnail_url ? (
-                      <img
-                        src={product.default_thumbnail_url}
-                        alt={product.title}
-                        className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
-                    )}
-                  </div>
-
-                  {/* 情報 */}
-                  <div className="min-w-0 flex-1">
-                    <h3 className="theme-text line-clamp-2 font-medium transition-colors group-hover:text-yellow-400">
-                      {product.title}
-                    </h3>
-
-                    {/* 出演者 */}
-                    {product.performers && product.performers.length > 0 && (
-                      <p className="mt-1 truncate text-sm text-pink-400">
-                        {product.performers.map((p) => p.name).join(', ')}
-                      </p>
-                    )}
-
-                    {/* メタ情報 */}
-                    <div className="theme-text-muted mt-2 flex items-center gap-4 text-xs">
-                      {product.avg_rating > 0 && (
-                        <span className="flex items-center gap-1">
-                          <Star className="h-3 w-3 text-yellow-400" />
-                          {Number(product.avg_rating).toFixed(1)}
-                        </span>
-                      )}
-                      {product.review_count > 0 && (
-                        <span>
-                          {product.review_count} {t.reviews}
-                        </span>
-                      )}
-                      {product.release_date && (
-                        <span className="flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {product.release_date}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <ChevronRight className="h-5 w-5 flex-shrink-0 self-center text-gray-500" />
+                  {y}
                 </Link>
               ))}
             </div>
           </div>
 
-          {/* サイドバー */}
-          <div className="space-y-6">
-            {/* 人気女優 */}
-            <div className="theme-card rounded-xl p-4">
-              <h2 className="theme-text mb-4 flex items-center gap-2 font-bold">
-                <Users className="h-5 w-5 text-pink-400" />
-                {t.topActresses}
-              </h2>
-              <div className="space-y-2">
-                {topActresses.map((actress, idx) => (
+          <div className="grid gap-8 lg:grid-cols-4">
+            {/* メインランキング */}
+            <div className="lg:col-span-3">
+              <div className="space-y-4">
+                {bestProducts.map((product, idx) => (
                   <Link
-                    key={actress.id}
-                    href={localizedHref(`/actress/${actress.id}`, locale)}
-                    className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-700/50"
+                    key={product.id}
+                    href={localizedHref(`/products/${product.normalized_product_id}`, locale)}
+                    className="theme-card group flex gap-4 rounded-xl p-4 transition-all hover:ring-2 hover:ring-yellow-500/30"
                   >
-                    <span
-                      className={`w-5 text-center text-sm font-bold ${idx < 3 ? 'text-yellow-400' : 'text-gray-500'}`}
-                    >
-                      {idx + 1}
-                    </span>
-                    <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gray-800">
-                      {actress.profile_image_url ? (
+                    {/* ランク */}
+                    <div className="flex w-12 flex-shrink-0 flex-col items-center justify-center">
+                      <span
+                        className={`text-2xl font-bold ${
+                          idx < 3 ? 'text-yellow-400' : idx < 10 ? 'text-gray-300' : 'text-gray-500'
+                        }`}
+                      >
+                        {idx + 1}
+                      </span>
+                      <span className="text-xs text-gray-500">{t.rank}</span>
+                    </div>
+
+                    {/* サムネイル */}
+                    <div className="aspect-video w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800">
+                      {product.default_thumbnail_url ? (
                         <img
-                          src={actress.profile_image_url}
-                          alt={actress.name}
-                          className="h-full w-full object-cover"
+                          src={product.default_thumbnail_url}
+                          alt={product.title}
+                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
                           loading="lazy"
                         />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-xs text-gray-600">N/A</div>
+                        <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
                       )}
                     </div>
-                    <span className="theme-text flex-1 truncate text-sm">{actress.name}</span>
-                    <span className="text-xs text-gray-500">{actress.product_count}</span>
+
+                    {/* 情報 */}
+                    <div className="min-w-0 flex-1">
+                      <h3 className="theme-text line-clamp-2 font-medium transition-colors group-hover:text-yellow-400">
+                        {product.title}
+                      </h3>
+
+                      {/* 出演者 */}
+                      {product.performers && product.performers.length > 0 && (
+                        <p className="mt-1 truncate text-sm text-pink-400">
+                          {product.performers.map((p) => p.name).join(', ')}
+                        </p>
+                      )}
+
+                      {/* メタ情報 */}
+                      <div className="theme-text-muted mt-2 flex items-center gap-4 text-xs">
+                        {product.avg_rating > 0 && (
+                          <span className="flex items-center gap-1">
+                            <Star className="h-3 w-3 text-yellow-400" />
+                            {Number(product.avg_rating).toFixed(1)}
+                          </span>
+                        )}
+                        {product.review_count > 0 && (
+                          <span>
+                            {product.review_count} {t.reviews}
+                          </span>
+                        )}
+                        {product.release_date && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {product.release_date}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    <ChevronRight className="h-5 w-5 flex-shrink-0 self-center text-gray-500" />
                   </Link>
                 ))}
               </div>
             </div>
 
-            {/* 人気ジャンル */}
-            <div className="theme-card rounded-xl p-4">
-              <h2 className="theme-text mb-4 flex items-center gap-2 font-bold">
-                <TrendingUp className="h-5 w-5 text-green-400" />
-                {t.topGenres}
-              </h2>
-              <div className="flex flex-wrap gap-2">
-                {topGenres.map((genre) => (
-                  <Link
-                    key={genre.id}
-                    href={localizedHref(`/products?include=${genre.id}`, locale)}
-                    className="rounded-full bg-gray-700 px-3 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-600"
-                  >
-                    {genre.name} ({genre.product_count})
-                  </Link>
-                ))}
+            {/* サイドバー */}
+            <div className="space-y-6">
+              {/* 人気女優 */}
+              <div className="theme-card rounded-xl p-4">
+                <h2 className="theme-text mb-4 flex items-center gap-2 font-bold">
+                  <Users className="h-5 w-5 text-pink-400" />
+                  {t.topActresses}
+                </h2>
+                <div className="space-y-2">
+                  {topActresses.map((actress, idx) => (
+                    <Link
+                      key={actress.id}
+                      href={localizedHref(`/actress/${actress.id}`, locale)}
+                      className="flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-700/50"
+                    >
+                      <span
+                        className={`w-5 text-center text-sm font-bold ${idx < 3 ? 'text-yellow-400' : 'text-gray-500'}`}
+                      >
+                        {idx + 1}
+                      </span>
+                      <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gray-800">
+                        {actress.profile_image_url ? (
+                          <img
+                            src={actress.profile_image_url}
+                            alt={actress.name}
+                            className="h-full w-full object-cover"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center text-xs text-gray-600">
+                            N/A
+                          </div>
+                        )}
+                      </div>
+                      <span className="theme-text flex-1 truncate text-sm">{actress.name}</span>
+                      <span className="text-xs text-gray-500">{actress.product_count}</span>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              {/* 人気ジャンル */}
+              <div className="theme-card rounded-xl p-4">
+                <h2 className="theme-text mb-4 flex items-center gap-2 font-bold">
+                  <TrendingUp className="h-5 w-5 text-green-400" />
+                  {t.topGenres}
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {topGenres.map((genre) => (
+                    <Link
+                      key={genre.id}
+                      href={localizedHref(`/products?include=${genre.id}`, locale)}
+                      className="rounded-full bg-gray-700 px-3 py-1 text-xs text-gray-300 transition-colors hover:bg-gray-600"
+                    >
+                      {genre.name} ({genre.product_count})
+                    </Link>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }
