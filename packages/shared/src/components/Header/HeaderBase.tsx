@@ -499,6 +499,13 @@ export const HeaderBase = memo(function HeaderBase({
                   >
                     {t.rookies}
                   </Link>
+                  <Link
+                    href={localizedHref('/birthdays', locale)}
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.birthdays}
+                  </Link>
                   <div className="theme-border my-1 border-t" />
                   <Link
                     href={localizedHref('/sales', locale)}
@@ -507,6 +514,13 @@ export const HeaderBase = memo(function HeaderBase({
                   >
                     <span className="text-lg">🔥</span>
                     {t.sales}
+                  </Link>
+                  <Link
+                    href={localizedHref('/sale-calendar', locale)}
+                    className="theme-dropdown-item flex items-center gap-2 px-3 py-2 text-sm hover:bg-white/10"
+                    onClick={handleDropdownClose}
+                  >
+                    {t.saleCalendar}
                   </Link>
                 </>
               )}
@@ -725,6 +739,14 @@ export const HeaderBase = memo(function HeaderBase({
                       <span className="ml-6">{t.rookies}</span>
                     </Link>
                     <Link
+                      href={localizedHref('/birthdays', locale)}
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.birthdays}</span>
+                    </Link>
+                    <Link
                       href={localizedHref('/sales', locale)}
                       className="col-span-2 flex min-h-[44px] items-center py-2.5 text-sm font-bold text-orange-400 transition-colors"
                       onClick={handleMobileMenuClose}
@@ -732,6 +754,14 @@ export const HeaderBase = memo(function HeaderBase({
                     >
                       <span className="mr-2 text-lg">🔥</span>
                       {t.onSaleProducts}
+                    </Link>
+                    <Link
+                      href={localizedHref('/sale-calendar', locale)}
+                      className="theme-nav-link flex min-h-[44px] items-center py-2.5 text-sm transition-colors"
+                      onClick={handleMobileMenuClose}
+                      role="listitem"
+                    >
+                      <span className="ml-6">{t.saleCalendar}</span>
                     </Link>
                   </>
                 )}

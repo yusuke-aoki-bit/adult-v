@@ -138,7 +138,23 @@ const nextConfig = {
   transpilePackages: ['@adult-v/shared'],
   async headers() {
     return [
-      { source: '/:path*', headers: securityHeaders },
+      {
+        source: '/:path*',
+        headers: [
+          ...securityHeaders,
+          // HTTP Link preconnect: HTMLパース前にCDN接続を開始
+          {
+            key: 'Link',
+            value: [
+              '<https://pics.dmm.co.jp>; rel=preconnect; crossorigin',
+              '<https://awsimgsrc.dmm.co.jp>; rel=preconnect; crossorigin',
+              '<https://pic.duga.jp>; rel=preconnect; crossorigin',
+              '<https://image.mgstage.com>; rel=preconnect; crossorigin',
+              '<https://img.sokmil.com>; rel=preconnect; crossorigin',
+            ].join(', '),
+          },
+        ],
+      },
       {
         source: '/api/:path*',
         headers: [
@@ -179,8 +195,12 @@ const nextConfig = {
         '/hidden-gems',
         '/reviewers',
         '/birthdays',
+        '/calendar',
+        '/daily-pick',
+        '/discover',
         '/lists',
         '/lists/:id*',
+        '/lists/ranking',
         '/sale-calendar',
         '/best/:year*',
       ].map((source) => ({
