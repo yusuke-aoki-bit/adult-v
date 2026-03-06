@@ -4,6 +4,7 @@ import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
+import Image from 'next/image';
 import { Trophy, Star, TrendingUp, Calendar, Users, ChevronRight } from 'lucide-react';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateItemListSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -345,13 +346,14 @@ export default async function YearBestPage({ params }: Props) {
                     </div>
 
                     {/* サムネイル */}
-                    <div className="aspect-video w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800">
+                    <div className="relative aspect-video w-32 flex-shrink-0 overflow-hidden rounded-lg bg-gray-800">
                       {product.default_thumbnail_url ? (
-                        <img
+                        <Image
                           src={product.default_thumbnail_url}
                           alt={product.title}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                          loading="lazy"
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                          sizes="128px"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
@@ -419,13 +421,14 @@ export default async function YearBestPage({ params }: Props) {
                       >
                         {idx + 1}
                       </span>
-                      <div className="h-8 w-8 flex-shrink-0 overflow-hidden rounded-full bg-gray-800">
+                      <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-full bg-gray-800">
                         {actress.profile_image_url ? (
-                          <img
+                          <Image
                             src={actress.profile_image_url}
                             alt={actress.name}
-                            className="h-full w-full object-cover"
-                            loading="lazy"
+                            fill
+                            className="object-cover"
+                            sizes="32px"
                           />
                         ) : (
                           <div className="flex h-full w-full items-center justify-center text-xs text-gray-600">
