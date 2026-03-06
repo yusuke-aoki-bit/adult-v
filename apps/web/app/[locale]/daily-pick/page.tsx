@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import Image from 'next/image';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Sparkles, Calendar, TrendingUp, Star, Clock, ExternalLink } from 'lucide-react';
@@ -506,10 +507,12 @@ export default async function DailyPickPage({ params }: Props) {
                 {/* サムネイル */}
                 <div className="relative aspect-video md:aspect-auto md:w-1/2">
                   {todayPick.default_thumbnail_url ? (
-                    <img
+                    <Image
                       src={todayPick.default_thumbnail_url}
                       alt={todayPick.title}
-                      className="h-full w-full object-cover"
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 100vw, 50vw"
                     />
                   ) : (
                     <div className="flex h-full min-h-[200px] w-full items-center justify-center bg-gray-800 text-gray-600">
@@ -626,11 +629,12 @@ export default async function DailyPickPage({ params }: Props) {
                 >
                   <div className="relative aspect-video bg-gray-800">
                     {pick.default_thumbnail_url ? (
-                      <img
+                      <Image
                         src={pick.default_thumbnail_url}
                         alt={pick.title}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 100vw, 33vw"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { getTranslation, similarPerformerMapTranslations } from '../../lib/translations';
 
@@ -291,7 +292,7 @@ export function SimilarPerformerMap({
                       >
                         <div className="relative aspect-3/4 overflow-hidden">
                           {imageUrl ? (
-                            <img src={imageUrl} alt={sim.name} className="h-full w-full object-cover" />
+                            <Image src={imageUrl} alt={sim.name} fill className="object-cover" sizes="128px" />
                           ) : (
                             <div
                               className={`flex h-full w-full items-center justify-center ${

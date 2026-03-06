@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Vote, Trophy, Star, ThumbsUp, Loader2, Crown, Medal, Flame } from 'lucide-react';
 import { useFirebaseAuth } from '@adult-v/shared/contexts';
@@ -362,11 +363,12 @@ export default function VotePage() {
                   {/* サムネイル */}
                   <div className="h-28 w-20 flex-shrink-0 overflow-hidden bg-gray-700">
                     {product.imageUrl ? (
-                      <img
+                      <Image
                         src={product.imageUrl}
                         alt={product.title}
+                        width={80}
+                        height={112}
                         className="h-full w-full object-cover"
-                        loading="lazy"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-gray-500">No Image</div>

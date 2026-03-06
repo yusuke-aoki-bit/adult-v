@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { getTranslation, alsoViewedTranslations } from '../../lib/translations';
 
@@ -137,11 +138,12 @@ export function AlsoViewed({
             {/* サムネイル */}
             <div className="relative aspect-3/4 overflow-hidden">
               {product.imageUrl ? (
-                <img
+                <Image
                   src={product.imageUrl}
                   alt={product['title']}
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  loading="lazy"
+                  fill
+                  className="object-cover transition-transform group-hover:scale-105"
+                  sizes="(max-width: 640px) 33vw, 16vw"
                 />
               ) : (
                 <div

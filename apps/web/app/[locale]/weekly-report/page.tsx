@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -499,11 +500,12 @@ export default async function WeeklyReportPage({ params }: { params: Promise<{ l
                   <Link key={product.id} href={localizedHref(`/products/${product.id}`, locale)} className="group">
                     <div className="mb-2 aspect-[2/3] overflow-hidden rounded-lg bg-gray-700">
                       {product.imageUrl ? (
-                        <img
+                        <Image
                           src={product.imageUrl}
                           alt={product.title}
-                          className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                          loading="lazy"
+                          fill
+                          className="object-cover transition-transform group-hover:scale-105"
+                          sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-gray-500">No Image</div>

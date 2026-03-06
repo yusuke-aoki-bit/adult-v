@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Heart, Eye, ArrowLeft, Globe, Lock, Loader2, Share2, Trash2 } from 'lucide-react';
 
 interface ListItem {
@@ -265,13 +266,18 @@ export function PublicListDetail({
               key={item['productId']}
               className="group relative overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
             >
-              <button onClick={() => onProductClick(item['productId'])} className="w-full">
+              <button
+                onClick={() => onProductClick(item['productId'])}
+                className="relative w-full"
+                style={{ aspectRatio: '3/4' }}
+              >
                 {item.product['thumbnailUrl'] ? (
-                  <img
+                  <Image
                     src={item.product['thumbnailUrl']}
                     alt={item.product['title']}
-                    className="w-full object-cover"
-                    style={{ aspectRatio: '3/4' }}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                   />
                 ) : (
                   <div

@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -337,11 +338,12 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
         <div className="relative">
           <div className="aspect-[3/4] overflow-hidden bg-gray-700">
             {performer.imageUrl ? (
-              <img
+              <Image
                 src={performer.imageUrl}
                 alt={performer.name}
-                className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                loading="lazy"
+                fill
+                className="object-cover transition-transform group-hover:scale-105"
+                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
               />
             ) : (
               <div className="flex h-full w-full items-center justify-center text-4xl text-gray-500">👤</div>
@@ -513,9 +515,11 @@ export default async function RookiesPage({ params }: { params: Promise<{ locale
                           className="inline-flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2 ring-1 ring-white/10 transition-colors hover:bg-white/10"
                         >
                           {performer.imageUrl ? (
-                            <img
+                            <Image
                               src={performer.imageUrl}
                               alt={performer.name}
+                              width={32}
+                              height={32}
                               className="h-8 w-8 rounded-full object-cover"
                             />
                           ) : (

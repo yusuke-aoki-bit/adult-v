@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { getTranslation, similarProductMapTranslations } from '../../lib/translations';
 
@@ -286,7 +287,7 @@ export function SimilarProductMap({ productId, locale, theme: themeProp, onProdu
                       >
                         <div className="relative aspect-2/3 overflow-hidden">
                           {sim.thumbnailUrl ? (
-                            <img src={sim.thumbnailUrl} alt={sim.title} className="h-full w-full object-cover" />
+                            <Image src={sim.thumbnailUrl} alt={sim.title} fill className="object-cover" sizes="128px" />
                           ) : (
                             <div
                               className={`flex h-full w-full items-center justify-center ${

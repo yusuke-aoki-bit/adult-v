@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { getDb } from '@/lib/db';
 import { sql } from 'drizzle-orm';
+import Image from 'next/image';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Cake, Calendar, Gift, Star, ChevronRight } from 'lucide-react';
@@ -262,11 +263,12 @@ export default async function BirthdaysPage({ params }: Props) {
                 >
                   <div className="relative aspect-[3/4] bg-gray-800">
                     {actress.profile_image_url ? (
-                      <img
+                      <Image
                         src={actress.profile_image_url}
                         alt={actress.name}
-                        className="h-full w-full object-cover"
-                        loading="lazy"
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>
@@ -311,11 +313,12 @@ export default async function BirthdaysPage({ params }: Props) {
                 >
                   <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-full bg-gray-800">
                     {actress.profile_image_url ? (
-                      <img
+                      <Image
                         src={actress.profile_image_url}
                         alt={actress.name}
+                        width={48}
+                        height={48}
                         className="h-full w-full object-cover"
-                        loading="lazy"
                       />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-xs text-gray-600">N/A</div>

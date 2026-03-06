@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import { usePerformerCompareList } from '../hooks/usePerformerCompareList';
 import Link from 'next/link';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
@@ -108,9 +109,11 @@ export function PerformerCompareFloatingBar({
             {items.map((item, index) => (
               <div key={item['id']} className="relative" style={{ zIndex: items.length - index }}>
                 {item.imageUrl ? (
-                  <img
+                  <Image
                     src={item.imageUrl}
                     alt={item['name']}
+                    width={40}
+                    height={40}
                     className={`h-10 w-10 rounded-full border-2 object-cover ${
                       isDark ? 'border-gray-800' : 'border-white'
                     }`}

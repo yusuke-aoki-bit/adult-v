@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Search, Loader2, Sparkles, ToggleLeft, ToggleRight } from 'lucide-react';
@@ -176,11 +177,12 @@ export function SemanticSearchClient({ locale, initialQuery, translations, isCon
                     {/* サムネイル */}
                     <div className="relative aspect-video bg-gray-800">
                       {result.thumbnailUrl ? (
-                        <img
+                        <Image
                           src={result.thumbnailUrl}
                           alt={result.title}
-                          className="h-full w-full object-cover"
-                          loading="lazy"
+                          fill
+                          className="object-cover"
+                          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-gray-600">No Image</div>

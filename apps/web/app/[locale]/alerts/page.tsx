@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, use } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { usePriceAlerts, type PriceAlert } from '@adult-v/shared/hooks';
 import { HomeSectionManager } from '@adult-v/shared/components';
@@ -208,9 +209,11 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
                     onClick={() => handleProductClick(alert.productId)}
                   >
                     {alert.thumbnailUrl ? (
-                      <img
+                      <Image
                         src={alert.thumbnailUrl}
                         alt={alert.title}
+                        width={96}
+                        height={128}
                         className="aspect-3/4 w-full rounded object-cover"
                       />
                     ) : (

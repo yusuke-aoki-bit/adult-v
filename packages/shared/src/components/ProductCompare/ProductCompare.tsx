@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { getTranslation, productCompareTranslations } from '../../lib/translations';
 
@@ -339,10 +340,12 @@ export function ProductCompare({
                 onClick={() => onProductClick?.(product.normalizedProductId)}
               >
                 {product.imageUrl ? (
-                  <img
+                  <Image
                     src={product.imageUrl}
                     alt={product['title']}
-                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 ) : (
                   <div

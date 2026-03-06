@@ -1,4 +1,10 @@
+import { Metadata } from 'next';
 import Link from 'next/link';
+
+export const metadata: Metadata = {
+  title: '404 Not Found',
+  robots: { index: false, follow: false },
+};
 
 // headers()を呼ぶと全ページがforce-dynamicになるためデフォルト言語を使用
 // 404ページはSEO的に重要でなく、多くのユーザーはデフォルト言語(ja)で問題ない

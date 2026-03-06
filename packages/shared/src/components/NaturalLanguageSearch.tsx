@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { Search, Sparkles, X, Loader2, MessageSquare, ChevronRight } from 'lucide-react';
 import { localizedHref } from '../i18n';
@@ -182,7 +183,13 @@ export default function NaturalLanguageSearch({ locale, className = '' }: Natura
                       className={`h-14 w-10 shrink-0 overflow-hidden rounded ${isDark ? 'bg-gray-700' : 'bg-gray-200'}`}
                     >
                       {result.imageUrl ? (
-                        <img src={result.imageUrl} alt="" className="h-full w-full object-cover" />
+                        <Image
+                          src={result.imageUrl}
+                          alt={result.title || ''}
+                          width={40}
+                          height={56}
+                          className="h-full w-full object-cover"
+                        />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center">
                           <Search className={`h-4 w-4 ${isDark ? 'text-gray-600' : 'text-gray-400'}`} />

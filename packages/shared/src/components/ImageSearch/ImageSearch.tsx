@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { getTranslation, imageSearchTranslations } from '../../lib/translations';
 
@@ -265,7 +266,13 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
         /* プレビュー */
         <div className="space-y-4">
           <div className="relative">
-            <img src={previewUrl} alt="Preview" className="max-h-64 w-full rounded-lg object-contain" />
+            <Image
+              src={previewUrl}
+              alt="Preview"
+              width={640}
+              height={256}
+              className="max-h-64 w-full rounded-lg object-contain"
+            />
             <button
               onClick={handleClear}
               className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white transition-colors hover:bg-black/70"
@@ -355,7 +362,13 @@ export function ImageSearch({ locale = 'ja', theme: themeProp, onProductClick }:
               >
                 <div className="relative aspect-3/4">
                   {result.imageUrl ? (
-                    <img src={result.imageUrl} alt={result['title']} className="h-full w-full object-cover" />
+                    <Image
+                      src={result.imageUrl}
+                      alt={result['title']}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 50vw, 25vw"
+                    />
                   ) : (
                     <div className={`flex h-full w-full items-center justify-center ${themeClasses.textMuted}`}>
                       <svg className="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">

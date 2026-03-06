@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Image from 'next/image';
 import Link from 'next/link';
 import { generateBaseMetadata } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
@@ -332,12 +333,13 @@ export default async function ListRankingPage({ params }: { params: Promise<{ lo
             {list.previewImages.length > 0 ? (
               <div className="grid h-full w-full grid-cols-2 grid-rows-2 gap-0.5">
                 {list.previewImages.slice(0, 4).map((img, i) => (
-                  <div key={i} className="overflow-hidden bg-gray-800">
-                    <img
+                  <div key={i} className="relative overflow-hidden bg-gray-800">
+                    <Image
                       src={img}
                       alt=""
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="48px"
                     />
                   </div>
                 ))}

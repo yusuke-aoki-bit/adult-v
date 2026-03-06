@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import Image from 'next/image';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
 import { getTranslation, performerCompareTranslations } from '../../lib/translations';
 
@@ -309,10 +310,12 @@ export function PerformerCompare({
                 onClick={() => onPerformerClick?.(String(performer['id']))}
               >
                 {performer['thumbnail'] || performer['heroImage'] ? (
-                  <img
+                  <Image
                     src={performer['thumbnail'] || performer['heroImage'] || ''}
                     alt={performer['name']}
-                    className="h-full w-full object-cover transition-transform duration-300 hover:scale-105"
+                    fill
+                    className="object-cover transition-transform duration-300 hover:scale-105"
+                    sizes="(max-width: 768px) 50vw, 25vw"
                   />
                 ) : (
                   <div

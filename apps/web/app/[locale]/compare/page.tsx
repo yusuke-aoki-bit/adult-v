@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, Suspense, use } from 'react';
+import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ProductCompare } from '@adult-v/shared/components';
 import { useCompareList } from '@adult-v/shared/hooks';
@@ -156,9 +157,11 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
                         }`}
                       >
                         {result.imageUrl ? (
-                          <img
+                          <Image
                             src={result.imageUrl}
                             alt={result.title}
+                            width={128}
+                            height={170}
                             className="mb-1 aspect-3/4 w-full rounded object-cover"
                           />
                         ) : (
