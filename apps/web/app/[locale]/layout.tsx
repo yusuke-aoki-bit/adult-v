@@ -17,6 +17,7 @@ import { JsonLD } from '@/components/JsonLD';
 import { generateWebSiteSchema, generateOrganizationSchema } from '@/lib/seo';
 import { Metadata } from 'next';
 import ChatBotWrapper from '@/components/ChatBotWrapper';
+import HlCookieSync from '@/components/HlCookieSync';
 
 // ロケール別のデフォルトメタデータ（PageSpeed対策）
 const localeDescriptions: Record<string, string> = {
@@ -80,6 +81,7 @@ export default async function LocaleLayout({
               <FirebaseProvider>
                 <Suspense fallback={null}>
                   <NavigationProgress />
+                  <HlCookieSync />
                 </Suspense>
                 <JsonLD data={webSiteSchema} />
                 <JsonLD data={organizationSchema} />

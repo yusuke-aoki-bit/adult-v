@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import { generateBaseMetadata } from '@/lib/seo';
 import SaleCalendarContent from './SaleCalendarContent';
 
 interface PageProps {
@@ -33,10 +34,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations['ja'];
 
-  return {
-    title: t.title,
-    description: t.description,
-  };
+  return generateBaseMetadata(t.title, t.description, undefined, '/sale-calendar', undefined, locale);
 }
 
 export default async function SaleCalendarPage({ params }: PageProps) {

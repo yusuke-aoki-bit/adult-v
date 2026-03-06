@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Cake, Calendar, Gift, Star, ChevronRight } from 'lucide-react';
+import { generateBaseMetadata } from '@/lib/seo';
 
 // ISR: getTranslations未使用 → パブリックキャッシュ有効
 export const revalidate = 60;
@@ -37,9 +38,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const monthDay = `${today.getMonth() + 1}/${today.getDate()}`;
 
   return {
-    title: mt.metaTitle(monthDay),
-    description: mt.metaDescription,
-    keywords: mt.metaKeywords,
+    ...generateBaseMetadata(
+      mt.metaTitle(monthDay),
+      mt.metaDescription,
+      undefined,
+      '/birthdays',
+      mt.metaKeywords,
+      locale,
+    ),
     openGraph: {
       title: mt.ogTitle,
       description: mt.ogDescription,

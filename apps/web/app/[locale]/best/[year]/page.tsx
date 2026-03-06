@@ -5,6 +5,7 @@ import { sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Trophy, Star, TrendingUp, Calendar, Users, ChevronRight } from 'lucide-react';
+import { generateBaseMetadata } from '@/lib/seo';
 
 // ISR: getTranslations未使用 → パブリックキャッシュ有効
 export const revalidate = 60;
@@ -37,9 +38,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
 
   return {
-    title: mt.metaTitle(year),
-    description: mt.metaDescription(year),
-    keywords: mt.metaKeywords(year),
+    ...generateBaseMetadata(
+      mt.metaTitle(year),
+      mt.metaDescription(year),
+      undefined,
+      `/best/${year}`,
+      mt.metaKeywords(year),
+      locale,
+    ),
     openGraph: {
       title: mt.ogTitle(year),
       description: mt.ogDescription(year),

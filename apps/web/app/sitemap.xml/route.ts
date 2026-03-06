@@ -37,26 +37,44 @@ export async function GET() {
     // DB接続失敗時はフォールバック
   }
 
-  const sitemaps = [
-    `${BASE_URL}/sitemap-static.xml`,
+  // DB最新更新日を取得（動的コンテンツのlastmodに使用）
+  let lastProductUpdate = new Date().toISOString();
+  try {
+    const db = getDb();
+    const lastUpdate = await db.select({ maxDate: sql<string>`MAX(updated_at)` }).from(products);
+    if (lastUpdate[0]?.maxDate) {
+      lastProductUpdate = new Date(lastUpdate[0].maxDate).toISOString();
+    }
+  } catch {
+    // DB接続失敗時はフォールバック
+  }
+
+  const sitemaps: { url: string; lastmod: string }[] = [
+    { url: `${BASE_URL}/sitemap-static.xml`, lastmod: lastProductUpdate },
     // 商品チャンク（動的に算出）
-    ...Array.from({ length: productChunkCount }, (_, i) => `${BASE_URL}/sitemap-products-${i}.xml`),
+    ...Array.from({ length: productChunkCount }, (_, i) => ({
+      url: `${BASE_URL}/sitemap-products-${i}.xml`,
+      lastmod: lastProductUpdate,
+    })),
     // 女優チャンク（sitemap-actresses-0.xml ~ sitemap-actresses-7.xml）
-    ...Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) => `${BASE_URL}/sitemap-actresses-${i}.xml`),
-    `${BASE_URL}/sitemap-tags.xml`,
-    `${BASE_URL}/sitemap-series.xml`,
-    `${BASE_URL}/sitemap-makers.xml`,
-    `${BASE_URL}/sitemap-news.xml`,
-    `${BASE_URL}/sitemap-videos.xml`,
+    ...Array.from({ length: ACTRESS_CHUNK_COUNT }, (_, i) => ({
+      url: `${BASE_URL}/sitemap-actresses-${i}.xml`,
+      lastmod: lastProductUpdate,
+    })),
+    { url: `${BASE_URL}/sitemap-tags.xml`, lastmod: lastProductUpdate },
+    { url: `${BASE_URL}/sitemap-series.xml`, lastmod: lastProductUpdate },
+    { url: `${BASE_URL}/sitemap-makers.xml`, lastmod: lastProductUpdate },
+    { url: `${BASE_URL}/sitemap-news.xml`, lastmod: lastProductUpdate },
+    { url: `${BASE_URL}/sitemap-videos.xml`, lastmod: lastProductUpdate },
   ];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${sitemaps
   .map(
-    (url) => `  <sitemap>
+    ({ url, lastmod }) => `  <sitemap>
     <loc>${url}</loc>
-    <lastmod>${new Date().toISOString()}</lastmod>
+    <lastmod>${lastmod}</lastmod>
   </sitemap>`,
   )
   .join('\n')}

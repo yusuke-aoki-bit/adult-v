@@ -112,18 +112,12 @@ export default function proxy(request: NextRequest) {
     return NextResponse.redirect(newUrl, 301);
   }
 
-  // 7. ?hl= パラメータで言語切り替え（クッキーに保存）
+  // 7. ?hl= パラメータで言語切り替え
+  // Set-Cookieはクライアント側(HlCookieSync)で設定 → Cache-Control: publicを維持
+  // ミドルウェアでSet-Cookieを返すとNext.jsがCache-Control: privateを強制するため
   const hlLocale = getLocaleFromHlParam(request.nextUrl.searchParams);
   if (hlLocale) {
-    // hlパラメータがある場合、その言語をクッキーに設定してintlMiddlewareに渡す
-    const response = intlMiddleware(request);
-    // NEXT_LOCALEクッキーを設定（next-intlが使用）
-    response.cookies.set('NEXT_LOCALE', hlLocale, {
-      maxAge: 365 * 24 * 60 * 60, // 1年
-      path: '/',
-      sameSite: 'lax',
-    });
-    return response;
+    return intlMiddleware(request);
   }
 
   // 8. クッキーから言語を取得（?hl=がない場合の継続セッション用）

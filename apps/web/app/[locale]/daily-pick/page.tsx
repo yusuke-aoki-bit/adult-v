@@ -4,6 +4,7 @@ import { sql } from 'drizzle-orm';
 import Link from 'next/link';
 import { localizedHref } from '@adult-v/shared/i18n';
 import { Sparkles, Calendar, TrendingUp, Star, Clock, ExternalLink } from 'lucide-react';
+import { generateBaseMetadata } from '@/lib/seo';
 
 // ISR: getTranslations未使用 → パブリックキャッシュ有効
 export const revalidate = 60;
@@ -39,14 +40,15 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const dateStr = `${today.getFullYear()}/${today.getMonth() + 1}/${today.getDate()}`;
 
   return {
-    title: `${mt.title} - ${dateStr}`,
-    description: mt.description,
-    keywords: mt.keywords as unknown as string[],
+    ...generateBaseMetadata(
+      `${mt.title} - ${dateStr}`,
+      mt.description,
+      undefined,
+      '/daily-pick',
+      mt.keywords as unknown as string[],
+      locale,
+    ),
     robots: { index: false, follow: true },
-    openGraph: {
-      title: `${mt.title} - ${dateStr}`,
-      description: mt.ogDescription,
-    },
   };
 }
 

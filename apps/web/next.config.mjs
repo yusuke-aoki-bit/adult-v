@@ -111,7 +111,7 @@ const securityHeaders = [
 const nextConfig = {
   images: {
     remotePatterns,
-    minimumCacheTTL: 86400,
+    minimumCacheTTL: 2592000, // 30日（商品画像はほぼ変わらない）
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [375, 425, 768, 1024, 1280, 1536],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -155,17 +155,20 @@ const nextConfig = {
         headers: [{ key: 'Cache-Control', value: 'public, max-age=604800, stale-while-revalidate=2592000' }],
       },
       { source: '/fonts/:path*', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
-      // SEO重要ページ: パブリックキャッシュ + CDNキャッシュヘッダー
+      // SEO重要ページ: パブリックキャッシュ + CDNキャッシュ + X-Robots-Tag
+      // X-Robots-Tagはnoindexページとの矛盾を防ぐためSEOページのみに設定
       // localePrefix:'never' のため、実際のURLにはロケールプレフィックスなし
-      // middlewareが内部で /ja/ 等にリライトするが、公開URLは / 直下
       ...[
         '/',
         '/actress/:id*',
         '/actresses',
         '/products',
         '/products/:id*',
+        '/tags',
         '/tags/:id*',
+        '/series',
         '/series/:id*',
+        '/makers',
         '/makers/:id*',
         '/sales',
         '/categories',
@@ -176,18 +179,18 @@ const nextConfig = {
         '/hidden-gems',
         '/reviewers',
         '/birthdays',
+        '/lists',
+        '/lists/:id*',
+        '/sale-calendar',
+        '/best/:year*',
       ].map((source) => ({
         source,
         headers: [
           { key: 'Cache-Control', value: 'public, s-maxage=60, stale-while-revalidate=600' },
           { key: 'CDN-Cache-Control', value: 'public, max-age=60, stale-while-revalidate=600' },
+          { key: 'X-Robots-Tag', value: 'index, follow' },
         ],
       })),
-      // SEO: 全ページにX-Robots-Tagを明示（Googlebotへのインデックス許可シグナル）
-      {
-        source: '/:path*',
-        headers: [{ key: 'X-Robots-Tag', value: 'index, follow' }],
-      },
     ];
   },
   async rewrites() {

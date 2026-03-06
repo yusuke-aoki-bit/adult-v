@@ -177,20 +177,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { locale } = await params;
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
 
-  return {
-    ...generateBaseMetadata(mt.metaTitle, mt.metaDescription, undefined, '/actresses', undefined, locale),
-    alternates: {
-      canonical: 'https://www.adult-v.com/actresses',
-      languages: {
-        ja: 'https://www.adult-v.com/actresses',
-        en: 'https://www.adult-v.com/actresses?hl=en',
-        zh: 'https://www.adult-v.com/actresses?hl=zh',
-        'zh-TW': 'https://www.adult-v.com/actresses?hl=zh-TW',
-        ko: 'https://www.adult-v.com/actresses?hl=ko',
-        'x-default': 'https://www.adult-v.com/actresses',
-      },
-    },
-  };
+  // generateBaseMetadataが自動でcanonical/hreflangを生成（ハードコードドメイン除去）
+  return generateBaseMetadata(mt.metaTitle, mt.metaDescription, undefined, '/actresses', undefined, locale);
 }
 
 const translations = {

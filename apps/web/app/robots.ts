@@ -25,7 +25,7 @@ export default function robots(): MetadataRoute.Robots {
       // Specific rules for well-behaved bots (Google)
       {
         userAgent: ['Googlebot', 'Googlebot-Image'],
-        allow: ['/', '/*.js', '/*.css', '/*.png', '/*.jpg', '/*.webp'],
+        allow: ['/', '/*.js', '/*.css', '/*.png', '/*.jpg', '/*.webp', '/_next/static/'],
         disallow: [
           '/api/',
           '/admin/',

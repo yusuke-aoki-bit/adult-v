@@ -106,19 +106,19 @@ export async function requestBatchIndexing(
 
 /**
  * 新規商品のURLをインデックス登録
- * URLは /ja/products/... 形式（日本語をデフォルトとして）
+ * URLは /products/... 形式（localePrefix: 'never'）
  */
 export async function indexNewProducts(productSlugs: string[], siteUrl: string): Promise<IndexingResult[]> {
-  const urls = productSlugs.map((slug) => `${siteUrl}/ja/products/${slug}`);
+  const urls = productSlugs.map((slug) => `${siteUrl}/products/${slug}`);
   return requestBatchIndexing(urls, 'URL_UPDATED');
 }
 
 /**
  * 新規演者のURLをインデックス登録
- * URLは /ja/actress/... 形式（日本語をデフォルトとして）
+ * URLは /actress/... 形式（localePrefix: 'never'）
  */
 export async function indexNewPerformers(performerSlugs: string[], siteUrl: string): Promise<IndexingResult[]> {
-  const urls = performerSlugs.map((slug) => `${siteUrl}/ja/actress/${slug}`);
+  const urls = performerSlugs.map((slug) => `${siteUrl}/actress/${slug}`);
   return requestBatchIndexing(urls, 'URL_UPDATED');
 }
 

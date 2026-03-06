@@ -39,9 +39,14 @@ export async function GET() {
     { path: '/hidden-gems', priority: '0.7', changefreq: 'daily' },
     { path: '/daily-pick', priority: '0.7', changefreq: 'daily' },
     { path: '/discover', priority: '0.6', changefreq: 'weekly' },
+    { path: '/lists', priority: '0.6', changefreq: 'daily' },
+    { path: '/lists/ranking', priority: '0.6', changefreq: 'daily' },
     { path: '/news', priority: '0.7', changefreq: 'daily' },
     { path: '/birthdays', priority: '0.6', changefreq: 'daily' },
     { path: '/calendar', priority: '0.6', changefreq: 'daily' },
+    { path: '/sale-calendar', priority: '0.6', changefreq: 'weekly' },
+    { path: '/reviewers', priority: '0.6', changefreq: 'weekly' },
+    { path: '/weekly-report', priority: '0.6', changefreq: 'weekly' },
     { path: `/best/${new Date().getFullYear() - 1}`, priority: '0.6', changefreq: 'monthly' },
     { path: '/privacy', priority: '0.3', changefreq: 'yearly', noHreflang: true },
     { path: '/terms', priority: '0.3', changefreq: 'yearly', noHreflang: true },
@@ -49,6 +54,14 @@ export async function GET() {
   ];
 
   const today = new Date().toISOString();
+
+  // 静的ページ（privacy, terms等）は実際の更新日を使用
+  // 頻繁に更新されるページはtodayを使用（ISR 1時間キャッシュ）
+  const staticLastmod: Record<string, string> = {
+    '/privacy': '2025-01-01T00:00:00.000Z',
+    '/terms': '2025-01-01T00:00:00.000Z',
+    '/legal-compliance': '2025-01-01T00:00:00.000Z',
+  };
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -58,7 +71,7 @@ ${staticPages
     (page) => `  <url>
     <loc>${BASE_URL}${page.path}</loc>
 ${page.noHreflang ? '' : getHreflangLinks(page.path)}
-    <lastmod>${today}</lastmod>
+    <lastmod>${staticLastmod[page.path] || today}</lastmod>
     <changefreq>${page.changefreq}</changefreq>
     <priority>${page.priority}</priority>
   </url>`,
