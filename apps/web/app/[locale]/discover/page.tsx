@@ -3,6 +3,7 @@ import { setRequestLocale } from 'next-intl/server';
 import { generateBaseMetadata, generateBreadcrumbSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { getRandomProducts } from '@/lib/db/discover-queries';
 import DiscoverPageClient from './DiscoverPageClient';
 
 export const revalidate = 60;
@@ -42,6 +43,18 @@ export default async function DiscoverPage({ params }: { params: Promise<{ local
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
   const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
+  let initialProducts: Awaited<ReturnType<typeof getRandomProducts>> = [];
+  try {
+    initialProducts = await getRandomProducts({
+      excludeIds: [],
+      locale,
+      filters: {},
+      limit: 12,
+    });
+  } catch {
+    // SSR fetch failure is non-critical; client will fetch on mount
+  }
+
   return (
     <>
       <JsonLD
@@ -50,7 +63,7 @@ export default async function DiscoverPage({ params }: { params: Promise<{ local
           { name: mt.title, url: `${BASE_URL}${localizedHref('/discover', locale)}` },
         ])}
       />
-      <DiscoverPageClient />
+      <DiscoverPageClient initialProducts={initialProducts} />
     </>
   );
 }

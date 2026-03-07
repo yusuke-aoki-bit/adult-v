@@ -222,7 +222,25 @@ const translations = {
   },
 } as const;
 
-export default function ListsPageClient() {
+interface PublicListData {
+  id: number;
+  userId: string;
+  title: string;
+  description: string | null;
+  isPublic: boolean;
+  viewCount: number;
+  likeCount: number;
+  itemCount?: number;
+  userLiked?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+interface ListsPageClientProps {
+  initialPublicLists?: PublicListData[];
+}
+
+export default function ListsPageClient({ initialPublicLists }: ListsPageClientProps) {
   const params = useParams();
   const router = useRouter();
   const locale = (params?.['locale'] as string) || 'ja';
@@ -242,7 +260,7 @@ export default function ListsPageClient() {
     updateList,
     deleteList,
     toggleLike,
-  } = usePublicLists({ userId, autoFetch: false });
+  } = usePublicLists({ userId, autoFetch: false, initialLists: initialPublicLists });
 
   const [activeTab, setActiveTab] = useState<'public' | 'my'>('public');
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -252,11 +270,6 @@ export default function ListsPageClient() {
     description: string;
     isPublic: boolean;
   } | null>(null);
-
-  // 初期データ取得
-  useEffect(() => {
-    fetchPublicLists();
-  }, [fetchPublicLists]);
 
   useEffect(() => {
     if (userId) {

@@ -192,14 +192,18 @@ const translations = {
 
 type TranslationKey = keyof typeof translations;
 
-export default function DiscoverPageClient() {
+interface DiscoverPageClientProps {
+  initialProducts?: DiscoverProduct[];
+}
+
+export default function DiscoverPageClient({ initialProducts = [] }: DiscoverPageClientProps) {
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as TranslationKey] || translations['ja'];
 
   const { addFavorite, isFavorite } = useFavorites();
-  const [products, setProducts] = useState<DiscoverProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [products, setProducts] = useState<DiscoverProduct[]>(initialProducts);
+  const [isLoading, setIsLoading] = useState(initialProducts.length === 0);
   const [excludeIds, setExcludeIds] = useState<number[]>([]);
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [actionFeedback, setActionFeedback] = useState<Record<number, 'like' | 'pass'>>({});
@@ -251,7 +255,9 @@ export default function DiscoverPageClient() {
   );
 
   useEffect(() => {
-    fetchProducts([], filters);
+    if (initialProducts.length === 0) {
+      fetchProducts([], filters);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

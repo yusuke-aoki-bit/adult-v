@@ -1,11 +1,19 @@
 import { Metadata } from 'next';
 import { setRequestLocale } from 'next-intl/server';
+import { unstable_cache } from 'next/cache';
 import { generateBaseMetadata, generateBreadcrumbSchema, generateCollectionPageSchema } from '@/lib/seo';
 import { JsonLD } from '@/components/JsonLD';
 import { localizedHref } from '@adult-v/shared/i18n';
+import { getPopularMakers } from '@/lib/db/queries';
 import MakersPageClient from './MakersPageClient';
 
-export const revalidate = 60;
+export const revalidate = 3600;
+
+const getCachedMakers = unstable_cache(
+  async (locale: string) => getPopularMakers({ category: 'both', limit: 100, locale }),
+  ['makers-page'],
+  { revalidate: 3600 },
+);
 
 const metaTranslations = {
   ja: {
@@ -43,6 +51,8 @@ export default async function MakersPage({ params }: { params: Promise<{ locale:
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
   const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
+  const makers = await getCachedMakers(locale);
+
   return (
     <>
       <JsonLD
@@ -54,7 +64,7 @@ export default async function MakersPage({ params }: { params: Promise<{ locale:
           generateCollectionPageSchema(mt.title, mt.description, `${BASE_URL}/makers`, locale),
         ]}
       />
-      <MakersPageClient />
+      <MakersPageClient initialMakers={makers} />
     </>
   );
 }

@@ -42,21 +42,30 @@ export function createGoogleIndexingSubmitHandler(deps: GoogleIndexingSubmitDeps
         `${SITE_URL}/news`,
       ];
 
-      // 最近更新された商品（24時間以内、最大80件）
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+      // 新着商品（7日以内リリース、最大30件）— 最優先
+      const newProducts = await db
+        .select({ id: products.id })
+        .from(products)
+        .where(gt(products.releaseDate, sevenDaysAgo))
+        .orderBy(desc(products.releaseDate))
+        .limit(30);
+
+      // 最近更新された商品（7日以内、最大50件）
       const recentProducts = await db
         .select({ id: products.id })
         .from(products)
-        .where(gt(products.updatedAt, oneDayAgo))
+        .where(gt(products.updatedAt, sevenDaysAgo))
         .orderBy(desc(products.updatedAt))
-        .limit(80);
+        .limit(50);
 
-      // 人気女優TOP50（release_countはperformersテーブルに直接存在）
+      // 人気女優TOP50（最近アクティブな女優を優先）
       const topPerformers = await db
         .select({ id: performers.id })
         .from(performers)
         .where(gt(performers.releaseCount, 5))
-        .orderBy(desc(performers.releaseCount))
+        .orderBy(desc(performers.latestReleaseDate))
         .limit(50);
 
       // 人気商品TOP50（レビュー数順）
@@ -66,8 +75,11 @@ export function createGoogleIndexingSubmitHandler(deps: GoogleIndexingSubmitDeps
         .orderBy(desc(products.totalReviews))
         .limit(50);
 
-      // URL構築（重複除去、200件制限）
+      // URL構築（重複除去、200件制限）— 優先度順に追加
       const urlSet = new Set<string>(staticUrls);
+      for (const p of newProducts) {
+        urlSet.add(`${SITE_URL}/products/${p.id}`);
+      }
       for (const p of recentProducts) {
         urlSet.add(`${SITE_URL}/products/${p.id}`);
       }
@@ -107,6 +119,7 @@ export function createGoogleIndexingSubmitHandler(deps: GoogleIndexingSubmitDeps
       return NextResponse.json({
         success: true,
         totalUrls: urls.length,
+        newProducts: newProducts.length,
         recentProducts: recentProducts.length,
         topPerformers: topPerformers.length,
         topProducts: topProducts.length,
@@ -126,16 +139,22 @@ export function createGoogleIndexingSubmitHandler(deps: GoogleIndexingSubmitDeps
 
     try {
       const db = getDb();
-      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
       const recentCount = await db
         .select({ count: sqlOp<number>`count(*)` })
         .from(products)
-        .where(gt(products.updatedAt, oneDayAgo));
+        .where(gt(products.updatedAt, sevenDaysAgo));
+
+      const newCount = await db
+        .select({ count: sqlOp<number>`count(*)` })
+        .from(products)
+        .where(gt(products.releaseDate, sevenDaysAgo));
 
       return NextResponse.json({
         status: 'ready',
-        recentProductUpdates24h: Number(recentCount[0]?.count || 0),
+        newProductReleases7d: Number(newCount[0]?.count || 0),
+        recentProductUpdates7d: Number(recentCount[0]?.count || 0),
         dailyQuota: 200,
       });
     } catch (error) {

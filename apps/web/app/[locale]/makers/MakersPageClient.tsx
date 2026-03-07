@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { Building2, Tag, TrendingUp } from 'lucide-react';
@@ -11,6 +11,10 @@ interface Maker {
   name: string;
   category: string;
   productCount: number;
+}
+
+interface MakersPageClientProps {
+  initialMakers: Maker[];
 }
 
 const translations = {
@@ -68,31 +72,17 @@ const translations = {
 
 type TranslationKey = keyof typeof translations;
 
-export default function MakersPageClient() {
+export default function MakersPageClient({ initialMakers }: MakersPageClientProps) {
   const params = useParams();
   const locale = (params?.['locale'] as string) || 'ja';
   const t = translations[locale as TranslationKey] || translations['ja'];
 
-  const [makers, setMakers] = useState<Maker[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [filter, setFilter] = useState<'both' | 'maker' | 'label'>('both');
 
-  useEffect(() => {
-    async function fetchMakers() {
-      setIsLoading(true);
-      try {
-        const res = await fetch(`/api/makers?category=${filter}&locale=${locale}&limit=100`);
-        const data = await res.json();
-        setMakers(data.makers || []);
-      } catch (error) {
-        console.error('Error fetching makers:', error);
-        setMakers([]);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchMakers();
-  }, [filter, locale]);
+  const makers = useMemo(() => {
+    if (filter === 'both') return initialMakers;
+    return initialMakers.filter((m) => m.category === filter);
+  }, [initialMakers, filter]);
 
   return (
     <div className="theme-body min-h-screen">
@@ -137,12 +127,7 @@ export default function MakersPageClient() {
         </div>
 
         {/* Makers List */}
-        {isLoading ? (
-          <div className="py-12 text-center">
-            <div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
-            <p className="mt-4 text-gray-400">{t.loading}</p>
-          </div>
-        ) : makers.length === 0 ? (
+        {makers.length === 0 ? (
           <div className="py-12 text-center">
             <Building2 className="mx-auto h-12 w-12 text-gray-600" />
             <p className="mt-4 text-gray-400">{t.noMakers}</p>

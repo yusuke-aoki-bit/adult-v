@@ -42,6 +42,19 @@ export default async function ListsPage({ params }: { params: Promise<{ locale: 
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
   const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
+  let initialPublicLists = [];
+  try {
+    const res = await fetch(`${BASE_URL}/api/favorite-lists?page=1&limit=20`, {
+      next: { revalidate: 60 },
+    });
+    if (res.ok) {
+      const data = await res.json();
+      initialPublicLists = data.lists || [];
+    }
+  } catch {
+    // SSR fetch failure is non-critical; client will fetch on mount
+  }
+
   return (
     <>
       <JsonLD
@@ -53,7 +66,7 @@ export default async function ListsPage({ params }: { params: Promise<{ locale: 
           generateCollectionPageSchema(mt.title, mt.description, `${BASE_URL}/lists`, locale),
         ]}
       />
-      <ListsPageClient />
+      <ListsPageClient initialPublicLists={initialPublicLists} />
     </>
   );
 }

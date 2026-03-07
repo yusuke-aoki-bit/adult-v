@@ -44,11 +44,12 @@ export interface UpdateListParams {
 interface UsePublicListsOptions {
   userId?: string | null;
   autoFetch?: boolean;
+  initialLists?: PublicList[];
 }
 
 export function usePublicLists(options: UsePublicListsOptions = {}) {
-  const { userId, autoFetch = true } = options;
-  const [lists, setLists] = useState<PublicList[]>([]);
+  const { userId, autoFetch = true, initialLists } = options;
+  const [lists, setLists] = useState<PublicList[]>(initialLists || []);
   const [myLists, setMyLists] = useState<PublicList[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
