@@ -8,6 +8,7 @@ import { Heart, Trash2, Film, User, ChevronDown, ChevronUp, CheckSquare } from '
 import { useFavorites, useBulkSelection } from '@adult-v/shared/hooks';
 import { useWatchlistAnalysis } from '@/hooks';
 import { WatchlistAnalysis, BulkActionBar, SelectableCard } from '@adult-v/shared/components';
+import { localizedHref } from '@adult-v/shared/i18n';
 import FavoriteButton from '@/components/FavoriteButton';
 import ActressRecommendations from '@/components/ActressRecommendations';
 
@@ -365,7 +366,10 @@ export default function FavoritesPage() {
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
             {filteredFavorites.map((item) => {
-              const href = item.type === 'product' ? `/${locale}/products/${item.id}` : `/${locale}/actress/${item.id}`;
+              const href =
+                item.type === 'product'
+                  ? localizedHref(`/products/${item.id}`, locale)
+                  : localizedHref(`/actress/${item.id}`, locale);
               const itemKey = `${item.type}-${item.id}`;
 
               return (

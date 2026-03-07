@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ProductCompare, HomeSectionManager } from '@adult-v/shared/components';
 import { useCompareList } from '@adult-v/shared/hooks';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface SaleProduct {
   productId: number;
@@ -94,14 +95,14 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
   // URLを更新
   useEffect(() => {
     if (productIds.length > 0) {
-      const newUrl = `/${locale}/compare?ids=${productIds.join(',')}`;
+      const newUrl = localizedHref(`/compare?ids=${productIds.join(',')}`, locale);
       window.history.replaceState({}, '', newUrl);
     }
   }, [productIds, locale]);
 
   const handleProductClick = useCallback(
     (productId: string) => {
-      router.push(`/${locale}/products/${productId}`);
+      router.push(localizedHref(`/products/${productId}`, locale));
     },
     [router, locale],
   );

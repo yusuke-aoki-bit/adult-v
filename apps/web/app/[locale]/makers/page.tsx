@@ -49,7 +49,6 @@ export default async function MakersPage({ params }: { params: Promise<{ locale:
   const { locale } = await params;
   setRequestLocale(locale);
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
-  const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const makers = await getCachedMakers(locale);
 
@@ -58,8 +57,8 @@ export default async function MakersPage({ params }: { params: Promise<{ locale:
       <JsonLD
         data={[
           generateBreadcrumbSchema([
-            { name: 'Home', url: BASE_URL },
-            { name: mt.title, url: `${BASE_URL}${localizedHref('/makers', locale)}` },
+            { name: 'Home', url: '/' },
+            { name: mt.title, url: localizedHref('/makers', locale) },
           ]),
           generateCollectionPageSchema(mt.title, mt.description, localizedHref('/makers', locale), locale),
         ]}

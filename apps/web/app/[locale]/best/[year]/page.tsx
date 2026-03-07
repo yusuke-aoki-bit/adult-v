@@ -268,15 +268,14 @@ export default async function YearBestPage({ params }: Props) {
   // 利用可能な年のリストを生成
   const availableYears = Array.from({ length: currentYear - 2009 }, (_, i) => currentYear - i);
 
-  const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
   const breadcrumbSchema = generateBreadcrumbSchema([
-    { name: 'Home', url: BASE_URL },
-    { name: `Best of ${year}`, url: `${BASE_URL}/best/${year}` },
+    { name: 'Home', url: '/' },
+    { name: `Best of ${year}`, url: localizedHref(`/best/${year}`, locale) },
   ]);
   const itemListSchema = generateItemListSchema(
     bestProducts.slice(0, 20).map((p) => ({
       name: p.title,
-      url: `${BASE_URL}${localizedHref(`/products/${p.normalized_product_id || p.id}`, locale)}`,
+      url: localizedHref(`/products/${p.normalized_product_id || p.id}`, locale),
     })),
     `Best of ${year}`,
   );

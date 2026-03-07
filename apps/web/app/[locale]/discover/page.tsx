@@ -41,7 +41,6 @@ export default async function DiscoverPage({ params }: { params: Promise<{ local
   const { locale } = await params;
   setRequestLocale(locale);
   const mt = metaTranslations[locale as keyof typeof metaTranslations] || metaTranslations.ja;
-  const BASE_URL = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   let initialProducts: Awaited<ReturnType<typeof getRandomProducts>> = [];
   try {
@@ -59,8 +58,8 @@ export default async function DiscoverPage({ params }: { params: Promise<{ local
     <>
       <JsonLD
         data={generateBreadcrumbSchema([
-          { name: 'Home', url: BASE_URL },
-          { name: mt.title, url: `${BASE_URL}${localizedHref('/discover', locale)}` },
+          { name: 'Home', url: '/' },
+          { name: mt.title, url: localizedHref('/discover', locale) },
         ])}
       />
       <DiscoverPageClient initialProducts={initialProducts} />

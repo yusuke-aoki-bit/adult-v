@@ -3,6 +3,7 @@
 import { useCallback } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { UnifiedSearchBar } from '@adult-v/shared/components';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 /**
  * SearchBar for adult-v (dark theme)
@@ -15,7 +16,7 @@ export default function SearchBar() {
 
   const handleActressSearch = useCallback(
     (query: string) => {
-      router.push(`/${locale}/?q=${encodeURIComponent(query)}`);
+      router.push(localizedHref(`/?q=${encodeURIComponent(query)}`, locale));
     },
     [router, locale],
   );
@@ -29,16 +30,16 @@ export default function SearchBar() {
         if (response.ok) {
           const data = await response.json();
           if (data.product) {
-            router.push(`/${locale}/products/${data.product.id}`);
+            router.push(localizedHref(`/products/${data.product.id}`, locale));
             return;
           }
         }
 
         // If not found by ID, search by title
-        router.push(`/${locale}/search?q=${encodeURIComponent(query)}&type=products`);
+        router.push(localizedHref(`/search?q=${encodeURIComponent(query)}&type=products`, locale));
       } catch (error) {
         console.error('Search error:', error);
-        router.push(`/${locale}/search?q=${encodeURIComponent(query)}&type=products`);
+        router.push(localizedHref(`/search?q=${encodeURIComponent(query)}&type=products`, locale));
       }
     },
     [router, locale],

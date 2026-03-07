@@ -3,6 +3,7 @@
 import { SearchSuggestions } from './';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { localizedHref } from '../i18n';
 
 interface SearchSuggestionsWrapperProps {
   query: string;
@@ -14,21 +15,21 @@ export default function SearchSuggestionsWrapper({ query, locale }: SearchSugges
 
   const handleTermClick = useCallback(
     (term: string) => {
-      router.push(`/${locale}/products?q=${encodeURIComponent(term)}`);
+      router.push(localizedHref(`/products?q=${encodeURIComponent(term)}`, locale));
     },
     [router, locale],
   );
 
   const handleGenreClick = useCallback(
     (genre: string) => {
-      router.push(`/${locale}/products?include=${encodeURIComponent(genre)}`);
+      router.push(localizedHref(`/products?include=${encodeURIComponent(genre)}`, locale));
     },
     [router, locale],
   );
 
   const handlePerformerClick = useCallback(
     (performer: string) => {
-      router.push(`/${locale}/?q=${encodeURIComponent(performer)}`);
+      router.push(localizedHref(`/?q=${encodeURIComponent(performer)}`, locale));
     },
     [router, locale],
   );

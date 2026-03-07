@@ -3,6 +3,7 @@
 import { AlsoViewed } from './';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { localizedHref } from '../i18n';
 
 interface AlsoViewedWrapperProps {
   productId: string;
@@ -14,7 +15,7 @@ export default function AlsoViewedWrapper({ productId, locale }: AlsoViewedWrapp
 
   const handleProductClick = useCallback(
     (id: string) => {
-      router.push(`/${locale}/products/${id}`);
+      router.push(localizedHref(`/products/${id}`, locale));
     },
     [router, locale],
   );

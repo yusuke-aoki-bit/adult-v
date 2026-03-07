@@ -3,6 +3,7 @@
 import { ChatBot } from './';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { localizedHref } from '../i18n';
 
 interface ChatBotWrapperProps {
   locale: string;
@@ -26,7 +27,7 @@ export default function ChatBotWrapper({ locale }: ChatBotWrapperProps) {
       }
 
       const queryString = searchParams.toString();
-      router.push(`/${locale}/products${queryString ? `?${queryString}` : ''}`);
+      router.push(localizedHref(`/products${queryString ? `?${queryString}` : ''}`, locale));
     },
     [router, locale],
   );

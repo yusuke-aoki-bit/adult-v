@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useWatchLater } from '@adult-v/shared/hooks';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
 import { PageSectionNav } from '@adult-v/shared/components';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const watchlistTexts = {
   ja: {
@@ -108,7 +109,7 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
 
   const handleProductClick = useCallback(
     (id: string | number) => {
-      router.push(`/${locale}/products/${id}`);
+      router.push(localizedHref(`/products/${id}`, locale));
     },
     [router, locale],
   );

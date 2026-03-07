@@ -40,6 +40,11 @@ export async function GET(_request: NextRequest) {
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
           AND ps.asp_name = 'DTI'
+        )
+        AND EXISTS (
+          SELECT 1 FROM ${productSources} ps2
+          WHERE ps2.product_id = ${products.id}
+          AND ps2.asp_name != 'FANZA'
         )`,
       )
       .orderBy(desc(products.releaseDate))
@@ -91,7 +96,7 @@ export async function GET(_request: NextRequest) {
     </image>
 ${productsWithPerformers
   .map((product) => {
-    const link = `${BASE_URL}/ja/products/${product.id}`;
+    const link = `${BASE_URL}/products/${product.id}`;
     const pubDate = product.releaseDate
       ? new Date(product.releaseDate).toUTCString()
       : new Date(product.createdAt).toUTCString();

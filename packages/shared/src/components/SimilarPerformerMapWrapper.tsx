@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { SimilarPerformerMap } from './';
+import { localizedHref } from '../i18n';
 
 interface SimilarPerformerMapWrapperProps {
   performerId: number;
@@ -12,7 +13,7 @@ export default function SimilarPerformerMapWrapper({ performerId, locale }: Simi
   const router = useRouter();
 
   const handlePerformerClick = (id: number) => {
-    router.push(`/${locale}/actress/${id}`);
+    router.push(localizedHref(`/actress/${id}`, locale));
   };
 
   return <SimilarPerformerMap performerId={performerId} locale={locale} onPerformerClick={handlePerformerClick} />;

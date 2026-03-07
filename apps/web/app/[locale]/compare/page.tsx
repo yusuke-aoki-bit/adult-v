@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ProductCompare } from '@adult-v/shared/components';
 import { useCompareList } from '@adult-v/shared/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   title: { ja: '作品を比較', en: 'Compare Products' },
@@ -54,14 +55,14 @@ function ComparePageClient({ locale }: ComparePageClientProps) {
   // URLを更新（productIds が変わったときのみ）
   useEffect(() => {
     if (productIds.length > 0) {
-      const newUrl = `/${locale}/compare?ids=${productIds.join(',')}`;
+      const newUrl = localizedHref(`/compare?ids=${productIds.join(',')}`, locale);
       window.history.replaceState({}, '', newUrl);
     }
   }, [productIds, locale]);
 
   const handleProductClick = useCallback(
     (productId: string) => {
-      router.push(`/${locale}/products/${productId}`);
+      router.push(localizedHref(`/products/${productId}`, locale));
     },
     [router, locale],
   );

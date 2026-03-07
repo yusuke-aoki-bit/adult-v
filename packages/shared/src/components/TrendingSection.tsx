@@ -2,6 +2,7 @@
 
 import { TrendAnalysis } from './';
 import { useRouter } from 'next/navigation';
+import { localizedHref } from '../i18n';
 
 interface TrendingSectionProps {
   locale: string;
@@ -11,11 +12,11 @@ export default function TrendingSection({ locale }: TrendingSectionProps) {
   const router = useRouter();
 
   const handleTagClick = (tag: string) => {
-    router.push(`/${locale}/products?include=${encodeURIComponent(tag)}`);
+    router.push(localizedHref(`/products?include=${encodeURIComponent(tag)}`, locale));
   };
 
   const handlePerformerClick = (performer: string) => {
-    router.push(`/${locale}?q=${encodeURIComponent(performer)}`);
+    router.push(localizedHref(`/?q=${encodeURIComponent(performer)}`, locale));
   };
 
   return (

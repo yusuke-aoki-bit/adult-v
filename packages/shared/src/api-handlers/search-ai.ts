@@ -99,7 +99,7 @@ export function createSearchAiHandler(deps: SearchAiHandlerDeps) {
         if (performerResult.length > 0) {
           return NextResponse.json({
             success: true,
-            redirect: `/${locale}/actress/${performerResult[0].id}`,
+            redirect: `/actress/${performerResult[0].id}${locale !== 'ja' ? `?hl=${locale}` : ''}`,
             analysis,
             message: `「${performerName}」さんのページへ移動します`,
           });

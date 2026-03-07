@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { usePerformerCompareList } from '@adult-v/shared/hooks';
 import { PerformerCompare, HomeSectionManager } from '@adult-v/shared/components';
 import { TopPageUpperSections, TopPageLowerSections } from '@/components/TopPageSections';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface SaleProduct {
   productId: number;
@@ -87,7 +88,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
   // URLを更新
   useEffect(() => {
     if (performerIds.length > 0) {
-      const newUrl = `/${locale}/compare/performers?ids=${performerIds.join(',')}`;
+      const newUrl = localizedHref(`/compare/performers?ids=${performerIds.join(',')}`, locale);
       window.history.replaceState({}, '', newUrl);
     }
   }, [performerIds, locale]);
@@ -141,7 +142,7 @@ function PerformerComparePageClient({ locale }: { locale: string }) {
 
   const handlePerformerClick = useCallback(
     (performerId: string) => {
-      router.push(`/${locale}/actress/${performerId}`);
+      router.push(localizedHref(`/actress/${performerId}`, locale));
     },
     [router, locale],
   );

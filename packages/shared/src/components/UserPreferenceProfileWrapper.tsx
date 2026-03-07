@@ -3,6 +3,7 @@
 import { UserPreferenceProfile } from './';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { localizedHref } from '../i18n';
 
 interface UserPreferenceProfileWrapperProps {
   locale: string;
@@ -13,7 +14,7 @@ export default function UserPreferenceProfileWrapper({ locale }: UserPreferenceP
 
   const handleTagClick = useCallback(
     (tag: string) => {
-      router.push(`/${locale}/products?q=${encodeURIComponent(tag)}`);
+      router.push(localizedHref(`/products?q=${encodeURIComponent(tag)}`, locale));
     },
     [router, locale],
   );

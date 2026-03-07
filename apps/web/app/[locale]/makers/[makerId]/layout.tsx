@@ -2,6 +2,7 @@ import { Metadata } from 'next';
 import { getMakerById } from '@/lib/db/queries';
 import { JsonLD } from '@/components/JsonLD';
 import { generateBreadcrumbSchema } from '@/lib/seo';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface MakerLayoutProps {
   children: React.ReactNode;
@@ -141,15 +142,14 @@ export async function generateMetadata({
 export default async function MakerDetailLayout({ children, params }: MakerLayoutProps) {
   const { locale, makerId } = await params;
   const t = getT(locale);
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const makerIdNum = parseInt(makerId, 10);
   const maker = !isNaN(makerIdNum) ? await getMakerById(makerIdNum, locale) : null;
 
   const breadcrumbItems = [
-    { name: 'Home', url: `${baseUrl}/` },
-    { name: t.makersList, url: `${baseUrl}/${locale}/makers` },
-    ...(maker ? [{ name: maker.name, url: `${baseUrl}/${locale}/makers/${makerId}` }] : []),
+    { name: 'Home', url: '/' },
+    { name: t.makersList, url: localizedHref('/makers', locale) },
+    ...(maker ? [{ name: maker.name, url: localizedHref(`/makers/${makerId}`, locale) }] : []),
   ];
 
   const breadcrumbSchema = generateBreadcrumbSchema(breadcrumbItems);

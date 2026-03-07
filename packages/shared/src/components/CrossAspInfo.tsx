@@ -146,7 +146,7 @@ export default function CrossAspInfo({
                 // 演者詳細ページに asp パラメータでフィルターするリンクを生成
                 const aspLinkHref = isFanza
                   ? `${fanzaSiteUrl}/actress/${performerId}?hl=${locale}`
-                  : `/${locale}/actress/${performerId}?asp=${asp.aspName.toLowerCase()}`;
+                  : `/actress/${performerId}?asp=${asp.aspName.toLowerCase()}${locale !== 'ja' ? `&hl=${locale}` : ''}`;
 
                 const linkContent = (
                   <>

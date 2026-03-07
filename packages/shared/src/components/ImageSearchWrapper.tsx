@@ -3,6 +3,7 @@
 import { ImageSearch } from './';
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
+import { localizedHref } from '../i18n';
 
 interface ImageSearchWrapperProps {
   locale: string;
@@ -13,7 +14,7 @@ export default function ImageSearchWrapper({ locale }: ImageSearchWrapperProps) 
 
   const handleProductClick = useCallback(
     (productId: string) => {
-      router.push(`/${locale}/products/${productId}`);
+      router.push(localizedHref(`/products/${productId}`, locale));
     },
     [router, locale],
   );

@@ -6,6 +6,7 @@ import { List, Plus, Loader2 } from 'lucide-react';
 import { usePublicLists } from '@adult-v/shared/hooks';
 import { PublicListCard, CreateListModal, HomeSectionManager } from '@adult-v/shared/components';
 import { useFirebaseAuth } from '@adult-v/shared/contexts';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -383,7 +384,7 @@ export default function ListsPageClient({ initialPublicLists }: ListsPageClientP
                 key={list.id}
                 list={list}
                 currentUserId={userId}
-                onView={(listId) => router.push(`/${locale}/lists/${listId}`)}
+                onView={(listId) => router.push(localizedHref(`/lists/${listId}`, locale))}
                 onLike={(id, action) => toggleLike(id, action === 'like')}
                 onEdit={() => handleEditList(list)}
                 onDelete={handleDeleteList}

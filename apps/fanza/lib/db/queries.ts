@@ -81,7 +81,7 @@ const appQueries = createAppQueries<ProductType, ActressType>({
   productVideos,
   productSales,
   productRatingSummary,
-  siteMode: 'all',
+  siteMode: 'fanza-only',
   enableActressFeatureFilter: true,
   isValidPerformerName,
   getDtiServiceFromUrl,

@@ -3,6 +3,7 @@
 import { useParams, useRouter } from 'next/navigation';
 import { PublicListDetail } from '@adult-v/shared/components';
 import { useFirebaseAuth } from '@adult-v/shared/contexts';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const translations = {
   ja: {
@@ -78,11 +79,11 @@ export default function ListDetailPage() {
   const userId = user?.uid ?? null;
 
   const handleBack = () => {
-    router.push(`/${locale}/lists`);
+    router.push(localizedHref('/lists', locale));
   };
 
   const handleProductClick = (productId: number) => {
-    router.push(`/${locale}/products/${productId}`);
+    router.push(localizedHref(`/products/${productId}`, locale));
   };
 
   if (isNaN(listId)) {

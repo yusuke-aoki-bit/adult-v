@@ -60,8 +60,8 @@ export default async function ListsPage({ params }: { params: Promise<{ locale: 
       <JsonLD
         data={[
           generateBreadcrumbSchema([
-            { name: 'Home', url: BASE_URL },
-            { name: mt.title, url: `${BASE_URL}${localizedHref('/lists', locale)}` },
+            { name: 'Home', url: '/' },
+            { name: mt.title, url: localizedHref('/lists', locale) },
           ]),
           generateCollectionPageSchema(mt.title, mt.description, localizedHref('/lists', locale), locale),
         ]}

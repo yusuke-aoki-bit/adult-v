@@ -4,6 +4,7 @@ import { useState, useCallback, use } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useWatchLater } from '@adult-v/shared/hooks';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const watchlistTexts = {
   ja: {
@@ -67,7 +68,7 @@ function WatchlistPageClient({ locale }: WatchlistPageClientProps) {
 
   const handleProductClick = useCallback(
     (id: string | number) => {
-      router.push(`/${locale}/products/${id}`);
+      router.push(localizedHref(`/products/${id}`, locale));
     },
     [router, locale],
   );

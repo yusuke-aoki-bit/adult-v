@@ -4,6 +4,7 @@ import { useRouter, useSearchParams, useParams } from 'next/navigation';
 import { useCallback, memo } from 'react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
 import { getTranslation, sortDropdownTranslations } from '../lib/translations';
+import { localizedHref } from '../i18n';
 
 export type SortDropdownTheme = 'dark' | 'light';
 
@@ -43,7 +44,7 @@ function SortDropdownComponent({ sortBy, theme: themeProp }: SortDropdownProps) 
       const urlParams = new URLSearchParams(searchParams.toString());
       urlParams.set('sort', newSort);
       urlParams.delete('page'); // Reset to page 1 when sorting changes
-      router.push(`/${locale}/?${urlParams.toString()}`);
+      router.push(localizedHref(`/?${urlParams.toString()}`, locale));
     },
     [searchParams, router, locale],
   );

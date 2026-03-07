@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { usePriceAlerts, type PriceAlert } from '@adult-v/shared/hooks';
 import { HomeSectionManager } from '@adult-v/shared/components';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 const alertPageTexts = {
   ja: {
@@ -101,7 +102,7 @@ function AlertsPageClient({ locale }: AlertsPageClientProps) {
 
   const handleProductClick = useCallback(
     (id: string | number) => {
-      router.push(`/${locale}/products/${id}`);
+      router.push(localizedHref(`/products/${id}`, locale));
     },
     [router, locale],
   );
