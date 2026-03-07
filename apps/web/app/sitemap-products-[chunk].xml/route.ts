@@ -34,7 +34,7 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ chun
   try {
     const db = getDb();
 
-    // DTI以外の商品を取得（優先度順: 新しい商品を優先）
+    // DTI商品を除外 + FANZA専用商品を除外（非FANZA配信元がある商品は含む）
     const productList = await db
       .select({
         id: products.id,
@@ -47,6 +47,11 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ chun
           SELECT 1 FROM ${productSources} ps
           WHERE ps.product_id = ${products.id}
           AND ps.asp_name = 'DTI'
+        )
+        AND EXISTS (
+          SELECT 1 FROM ${productSources} ps2
+          WHERE ps2.product_id = ${products.id}
+          AND ps2.asp_name != 'FANZA'
         )`,
       )
       .orderBy(desc(products.releaseDate))

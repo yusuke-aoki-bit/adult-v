@@ -1014,7 +1014,7 @@ export function generateProductItemListSchema(
       item: {
         '@type': 'Product',
         name: product['title'],
-        url: `${siteUrl}/${locale}/products/${product['id']}`,
+        url: `${siteUrl}/products/${product['id']}`,
         ...(product['imageUrl'] && { image: product['imageUrl'] }),
         ...((product['price'] || product['salePrice']) && {
           offers: {
@@ -1054,7 +1054,7 @@ export function generatePerformerItemListSchema(
       item: {
         '@type': 'Person',
         name: performer['name'],
-        url: `${siteUrl}/${locale}/actress/${performer['id']}`,
+        url: `${siteUrl}/actress/${performer['id']}`,
         ...(performer['imageUrl'] && { image: performer['imageUrl'] }),
         jobTitle: 'AV女優',
         ...(performer['productCount'] && { knowsAbout: `${performer['productCount']}作品以上に出演` }),
