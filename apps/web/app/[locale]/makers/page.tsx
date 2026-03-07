@@ -61,7 +61,7 @@ export default async function MakersPage({ params }: { params: Promise<{ locale:
             { name: 'Home', url: BASE_URL },
             { name: mt.title, url: `${BASE_URL}${localizedHref('/makers', locale)}` },
           ]),
-          generateCollectionPageSchema(mt.title, mt.description, `${BASE_URL}/makers`, locale),
+          generateCollectionPageSchema(mt.title, mt.description, localizedHref('/makers', locale), locale),
         ]}
       />
       <MakersPageClient initialMakers={makers} />

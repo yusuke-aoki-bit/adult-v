@@ -63,7 +63,7 @@ export default async function ListsPage({ params }: { params: Promise<{ locale: 
             { name: 'Home', url: BASE_URL },
             { name: mt.title, url: `${BASE_URL}${localizedHref('/lists', locale)}` },
           ]),
-          generateCollectionPageSchema(mt.title, mt.description, `${BASE_URL}/lists`, locale),
+          generateCollectionPageSchema(mt.title, mt.description, localizedHref('/lists', locale), locale),
         ]}
       />
       <ListsPageClient initialPublicLists={initialPublicLists} />
