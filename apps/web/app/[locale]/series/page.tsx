@@ -66,7 +66,7 @@ const translations = {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const t = translations[locale as keyof typeof translations] || translations['ja'];
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   return {
     ...generateBaseMetadata(t.title, t.description, undefined, localizedHref('/series', locale), undefined, locale),

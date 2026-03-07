@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Calendar, TrendingUp, Star, Clock, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
 import { getTranslation, actressCareerTimelineTranslations } from '../lib/translations';
+import { localizedHref } from '../i18n';
 
 interface CareerProduct {
   id: number;
@@ -170,7 +171,7 @@ export function ActressCareerTimeline({
 
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
         {career.debutProduct && (
-          <Link href={`/${locale}/products/${career.debutProduct.id}`} className={s.productCard}>
+          <Link href={localizedHref(`/products/${career.debutProduct.id}`, locale)} className={s.productCard}>
             <div className={s.debutIcon}>
               <Star className="h-5 w-5 text-white" />
             </div>
@@ -185,7 +186,7 @@ export function ActressCareerTimeline({
         )}
 
         {career.latestProduct && (
-          <Link href={`/${locale}/products/${career.latestProduct.id}`} className={s.productCard}>
+          <Link href={localizedHref(`/products/${career.latestProduct.id}`, locale)} className={s.productCard}>
             <div className={s.latestIcon}>
               <Clock className="h-5 w-5 text-white" />
             </div>
@@ -230,7 +231,11 @@ export function ActressCareerTimeline({
                 {isPeakYear && yearData.products.length > 0 && (
                   <div className="mt-1 ml-16 flex flex-wrap gap-1">
                     {yearData.products.slice(0, 3).map((product) => (
-                      <Link key={product['id']} href={`/${locale}/products/${product['id']}`} className={s.productLink}>
+                      <Link
+                        key={product['id']}
+                        href={localizedHref(`/products/${product['id']}`, locale)}
+                        className={s.productLink}
+                      >
                         {product['title']}
                       </Link>
                     ))}

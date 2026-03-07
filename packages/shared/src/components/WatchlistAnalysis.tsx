@@ -16,6 +16,7 @@ import {
 import type { FavoriteItem } from '../hooks/useFavorites';
 import { normalizeImageUrl } from '../lib/image-utils';
 import { getTranslation, watchlistAnalysisTranslations } from '../lib/translations';
+import { localizedHref } from '../i18n';
 
 interface ProductWithPrice extends FavoriteItem {
   price?: number | null;
@@ -191,7 +192,7 @@ export default function WatchlistAnalysis({ products, locale }: WatchlistAnalysi
         {analysis.prioritizedProducts.slice(0, 6).map((product) => (
           <Link
             key={`${product.type}-${product['id']}`}
-            href={`/${locale}/products/${product['id']}`}
+            href={localizedHref(`/products/${product['id']}`, locale)}
             className="bg-gray-750 group flex items-center gap-3 rounded-lg p-2 transition-colors hover:bg-gray-700"
           >
             {/* Thumbnail */}

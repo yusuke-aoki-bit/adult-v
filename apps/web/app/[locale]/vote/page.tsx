@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Vote, Trophy, Star, ThumbsUp, Loader2, Crown, Medal, Flame } from 'lucide-react';
 import { useFirebaseAuth } from '@adult-v/shared/contexts';
+import { localizedHref } from '@adult-v/shared/i18n';
 
 interface VotableProduct {
   id: number;
@@ -378,7 +379,7 @@ export default function VotePage() {
                   {/* コンテンツ */}
                   <div className="min-w-0 flex-1 p-4">
                     <Link
-                      href={`/${locale}/products/${product.id}`}
+                      href={localizedHref(`/products/${product.id}`, locale)}
                       className="theme-text mb-1 line-clamp-2 font-bold transition-colors hover:text-fuchsia-400"
                     >
                       {product.title}

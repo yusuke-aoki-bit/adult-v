@@ -250,28 +250,28 @@ export default async function StatisticsPage({ params }: { params: Promise<{ loc
               <div>
                 <p className="theme-text mb-2 text-sm font-medium">概要統計（作品数・女優数）:</p>
                 <code className="block overflow-x-auto rounded bg-gray-800 p-3 text-xs text-green-400">
-                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=overview" width="320" height="180" frameborder="0"></iframe>`}
+                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com'}/embed/stats?type=overview" width="320" height="180" frameborder="0"></iframe>`}
                 </code>
               </div>
 
               <div>
                 <p className="theme-text mb-2 text-sm font-medium">人気女優ランキング:</p>
                 <code className="block overflow-x-auto rounded bg-gray-800 p-3 text-xs text-green-400">
-                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=performers&limit=5" width="320" height="280" frameborder="0"></iframe>`}
+                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com'}/embed/stats?type=performers&limit=5" width="320" height="280" frameborder="0"></iframe>`}
                 </code>
               </div>
 
               <div>
                 <p className="theme-text mb-2 text-sm font-medium">人気ジャンル:</p>
                 <code className="block overflow-x-auto rounded bg-gray-800 p-3 text-xs text-green-400">
-                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=genres&limit=5" width="320" height="280" frameborder="0"></iframe>`}
+                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com'}/embed/stats?type=genres&limit=5" width="320" height="280" frameborder="0"></iframe>`}
                 </code>
               </div>
 
               <div>
                 <p className="theme-text mb-2 text-sm font-medium">月別リリース推移:</p>
                 <code className="block overflow-x-auto rounded bg-gray-800 p-3 text-xs text-green-400">
-                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com'}/embed/stats?type=releases" width="320" height="200" frameborder="0"></iframe>`}
+                  {`<iframe src="${process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com'}/embed/stats?type=releases" width="320" height="200" frameborder="0"></iframe>`}
                 </code>
               </div>
             </div>

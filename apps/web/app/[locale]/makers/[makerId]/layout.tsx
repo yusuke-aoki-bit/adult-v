@@ -105,7 +105,7 @@ export async function generateMetadata({
   const ratingStr = maker.averageRating ? t.avgRating(maker.averageRating.toFixed(1)) : '';
   const description = t.descriptionTemplate(maker.name, maker.productCount, ratingStr);
 
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   // hreflang/canonical設定（localePrefix: 'never'のため?hl=パラメータ方式）
   const makerPath = `/makers/${makerId}`;
@@ -141,7 +141,7 @@ export async function generateMetadata({
 export default async function MakerDetailLayout({ children, params }: MakerLayoutProps) {
   const { locale, makerId } = await params;
   const t = getT(locale);
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const makerIdNum = parseInt(makerId, 10);
   const maker = !isNaN(makerIdNum) ? await getMakerById(makerIdNum, locale) : null;

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Script from 'next/script';
 import { getTranslation, cookieConsentTranslations } from '../lib/translations';
+import { localizedHref } from '../i18n';
 
 const COOKIE_CONSENT_KEY = 'cookie_consent';
 
@@ -142,7 +143,7 @@ export default function CookieConsent({ gaId, locale = 'ja' }: CookieConsentProp
           <div className="container mx-auto flex max-w-4xl flex-col items-center justify-between gap-4 sm:flex-row">
             <p className="text-center text-sm text-gray-300 sm:text-left">
               {t.message}{' '}
-              <a href={`/${locale}/privacy`} className="text-fuchsia-400 underline hover:text-fuchsia-300">
+              <a href={localizedHref('/privacy', locale)} className="text-fuchsia-400 underline hover:text-fuchsia-300">
                 {t.learnMore}
               </a>
             </p>

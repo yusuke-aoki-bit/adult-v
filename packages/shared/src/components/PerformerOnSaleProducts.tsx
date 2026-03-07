@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '../lib/image-utils';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { localizedHref } from '../i18n';
 
 interface OnSaleProduct {
   id: number;
@@ -111,7 +112,7 @@ export default function PerformerOnSaleProducts({
                 isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-white hover:shadow-md'
               }`}
             >
-              <Link href={`/${locale}/products/${product['id']}`} className="block">
+              <Link href={localizedHref(`/products/${product['id']}`, locale)} className="block">
                 {/* サムネイル */}
                 <div className="relative aspect-video">
                   <Image

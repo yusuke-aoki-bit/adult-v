@@ -22,7 +22,7 @@ export function getSeoConfig() {
   return { ...siteConfig };
 }
 
-const siteUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+const siteUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
 /**
  * SEO最適化されたメタディスクリプションを生成（150-160文字に制限）
@@ -607,6 +607,7 @@ export function generateBaseMetadata(
     },
     other: {
       'google-site-verification': process.env['NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION'] || '',
+      rating: 'RTA-5042-1996-1400-1577-RTA',
     },
   };
 }

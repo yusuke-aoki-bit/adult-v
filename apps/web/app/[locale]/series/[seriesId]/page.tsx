@@ -171,7 +171,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
             ? seriesInfo.nameKo
             : seriesInfo.name;
 
-    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
     return {
       ...generateBaseMetadata(

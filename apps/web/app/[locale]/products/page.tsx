@@ -48,7 +48,7 @@ export async function generateMetadata({
   // ソートパラメータは許可（重複はcanonicalで制御）
   // const hasNonDefaultSort は削除 - ソート結果もインデックス可能に
 
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const metadata = generateBaseMetadata(
     t('title'),

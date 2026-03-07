@@ -36,7 +36,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
   const { locale } = await params;
   const resolvedSearchParams = await searchParams;
   const t = await getTranslations({ locale, namespace: 'categories' });
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   // カテゴリフィルターがある場合はnoindex（重複ページ対策）
   if (resolvedSearchParams.category) {

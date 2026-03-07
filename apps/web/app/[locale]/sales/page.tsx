@@ -81,7 +81,7 @@ interface PageProps {
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { locale } = await params;
   const pt = getPageText(locale);
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   const title = pt.metaTitle;
   const description = pt.metaDescription;

@@ -13,6 +13,7 @@ import React, {
   type ComponentType,
 } from 'react';
 import { useParams } from 'next/navigation';
+import { localizedHref } from '../../i18n';
 import type { Actress, ProviderId } from '../../types/product';
 import { providerMeta } from '../../lib/providers';
 import { normalizeImageUrl, isUncensoredThumbnail } from '../../lib/image-utils';
@@ -161,7 +162,7 @@ function ActressCardBaseComponent({
   if (resolvedSize === 'mini') {
     return (
       <Link
-        href={`/${locale}/actress/${actress['id']}`}
+        href={localizedHref(`/actress/${actress['id']}`, locale)}
         className={`group ${resolvedTheme === 'dark' ? 'border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'border border-gray-200 bg-white'} overflow-hidden rounded-xl transition-all duration-200 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/8 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'}`}
       >
         <div className={`relative aspect-square ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
@@ -288,7 +289,7 @@ function ActressCardBaseComponent({
             {/* Name - link to detail page with copy button */}
             <div className="flex items-center gap-1">
               <Link
-                href={`/${locale}/actress/${actress['id']}`}
+                href={localizedHref(`/actress/${actress['id']}`, locale)}
                 className={`truncate text-sm leading-tight font-semibold sm:text-base ${themeConfig.hoverColor} flex-1 transition-colors`}
               >
                 {actress['name']}
@@ -402,7 +403,7 @@ function ActressCardBaseComponent({
           {/* Name - link to detail page */}
           <div className="flex items-center gap-2">
             <Link
-              href={`/${locale}/actress/${actress['id']}`}
+              href={localizedHref(`/actress/${actress['id']}`, locale)}
               className={`truncate text-xl leading-tight font-bold sm:text-2xl ${themeConfig.hoverColor} flex-1 transition-colors`}
             >
               {actress['name']}

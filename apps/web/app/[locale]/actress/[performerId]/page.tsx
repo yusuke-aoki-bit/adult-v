@@ -80,7 +80,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
     if (!actress) return {};
 
     const t = await getTranslations({ locale, namespace: 'actress' });
-    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
     // フィルター・ページネーションがある場合はnoindex
     const hasFilters = !!(

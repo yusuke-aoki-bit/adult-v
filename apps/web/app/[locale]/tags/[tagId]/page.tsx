@@ -49,7 +49,7 @@ export async function generateMetadata({ params, searchParams }: PageProps): Pro
             ? tag.nameKo
             : tag.name;
 
-    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
     const title = `${tagName}の動画一覧 | Adult Viewer Lab`;
     const description = `${tagName}ジャンルの人気作品を厳選。高評価・セール中の作品も多数掲載。${tagName}好きにおすすめの動画を探すならAdult Viewer Lab。`;
 

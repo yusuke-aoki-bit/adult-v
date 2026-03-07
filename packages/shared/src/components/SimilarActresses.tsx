@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '../lib/image-utils';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { localizedHref } from '../i18n';
 
 interface SimilarActress {
   id: number;
@@ -83,7 +84,11 @@ export default function SimilarActresses({
       <p className={`mb-4 text-sm ${isDark ? 'text-purple-300' : 'text-purple-700'}`}>{translations.description}</p>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6">
         {actresses.map((actress) => (
-          <Link key={actress['id']} href={`/${locale}/actress/${actress['id']}`} className="group text-center">
+          <Link
+            key={actress['id']}
+            href={localizedHref(`/actress/${actress['id']}`, locale)}
+            className="group text-center"
+          >
             <div
               className={`relative mb-2 aspect-square overflow-hidden rounded-lg ring-2 ring-transparent transition-all ${
                 isDark ? 'bg-gray-700 group-hover:ring-purple-500' : 'bg-gray-200 group-hover:ring-purple-400'

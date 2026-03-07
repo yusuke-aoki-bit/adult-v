@@ -95,7 +95,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const product = await getCachedProductByIdOrCode(id, locale);
     if (!product) return {};
 
-    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+    const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
     // SEO最適化されたメタディスクリプション生成（セール・レーティング情報含む）
     // 表示用品番を優先（SSIS-865 > ssis865）→ Google検索で品番ヒット改善

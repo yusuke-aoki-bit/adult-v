@@ -30,7 +30,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const title = t.title;
   const description = t.description;
 
-  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://example.com';
+  const baseUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://www.adult-v.com';
 
   // hreflang/canonical設定（localePrefix: 'never'のため?hl=パラメータ方式）
   const alternates = {

@@ -11,6 +11,7 @@ import { getThemeConfig, type ProductCardTheme } from './themes';
 import { getAffiliateUrl, type GetAffiliateUrlOptions } from './helpers';
 import { CopyButton } from '../CopyButton';
 import { useSiteTheme } from '../../contexts/SiteThemeContext';
+import { localizedHref } from '../../i18n';
 
 // Default translations (Japanese) for ProductCard
 const DEFAULT_TRANSLATIONS: Record<string, string> = {
@@ -256,7 +257,7 @@ function ProductCardBase({
       if (isActressPage) {
         return `${pathname}?${params.toString()}`;
       }
-      return `/${locale}/products?${params.toString()}`;
+      return localizedHref(`/products?${params.toString()}`, locale);
     },
     [isActressPage, pathname, searchParams, locale],
   );
@@ -362,7 +363,7 @@ function ProductCardBase({
       <div
         className={`group relative ${resolvedTheme === 'dark' ? 'bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]' : 'bg-white'} overflow-hidden rounded-xl border ${resolvedTheme === 'dark' ? 'border-white/10' : 'border-gray-200'} transition-shadow duration-150 hover:shadow-lg hover:ring-1 ${resolvedTheme === 'dark' ? 'hover:bg-white/8 hover:ring-fuchsia-400/20' : 'hover:ring-gray-300'} active:scale-[0.98]`}
       >
-        <Link href={`/${locale}/products/${product['id']}`}>
+        <Link href={localizedHref(`/products/${product['id']}`, locale)}>
           <div
             className={`relative ${resolvedTheme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}
             style={{ aspectRatio: '2/3' }}
@@ -463,7 +464,7 @@ function ProductCardBase({
           </a>
         ) : (
           <Link
-            href={`/${locale}/products/${product['id']}`}
+            href={localizedHref(`/products/${product['id']}`, locale)}
             className={`absolute right-0 bottom-0 left-0 py-1.5 text-center text-[10px] font-bold transition-colors duration-200 ${
               resolvedTheme === 'dark'
                 ? 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -487,7 +488,7 @@ function ProductCardBase({
         <div
           className={`relative block ${themeConfig.cardBg} overflow-hidden rounded-xl border ${themeConfig.cardBorder} hover:ring-1 ${themeConfig.cardHoverRing} group shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] transition-shadow duration-150 hover:shadow-lg ${resolvedTheme === 'dark' ? 'hover:bg-white/5 hover:shadow-fuchsia-500/10' : 'hover:shadow-pink-500/10'} active:scale-[0.98]`}
         >
-          <Link href={`/${locale}/products/${product['id']}`}>
+          <Link href={localizedHref(`/products/${product['id']}`, locale)}>
             <div className={`relative bg-linear-to-br ${themeConfig.gradient}`} style={{ aspectRatio: '2/3' }}>
               <Image
                 src={imgSrc}
@@ -582,7 +583,7 @@ function ProductCardBase({
               {product.performers && product.performers.length > 0 && product.performers[0] && (
                 <div className="mt-1 truncate">
                   <Link
-                    href={`/${locale}/actress/${product.performers[0]['id']}`}
+                    href={localizedHref(`/actress/${product.performers[0]['id']}`, locale)}
                     className={`text-[10px] ${themeConfig.accentColor} font-medium hover:underline`}
                     onClick={(e) => e.stopPropagation()}
                   >
@@ -662,7 +663,7 @@ function ProductCardBase({
             </a>
           ) : (
             <Link
-              href={`/${locale}/products/${product['id']}`}
+              href={localizedHref(`/products/${product['id']}`, locale)}
               className={`absolute right-0 bottom-0 left-0 z-30 py-2.5 text-center text-xs font-bold shadow-[0_-2px_8px_rgba(0,0,0,0.2)] transition-colors duration-100 ${
                 resolvedTheme === 'dark'
                   ? 'bg-gray-800/90 text-gray-300 hover:bg-gray-700 hover:text-white'
@@ -966,7 +967,7 @@ function ProductCardBase({
           <div className={`text-[10px] sm:text-xs ${themeConfig.textSecondary} flex items-center gap-1 truncate`}>
             {product.actressId ? (
               <Link
-                href={`/${locale}/actress/${product.actressId}`}
+                href={localizedHref(`/actress/${product.actressId}`, locale)}
                 className={`inline-flex items-center gap-0.5 ${themeConfig.accentColor} ${themeConfig.accentHover} truncate font-medium underline-offset-2 transition-colors hover:underline`}
                 onClick={(e) => e.stopPropagation()}
               >
@@ -993,7 +994,7 @@ function ProductCardBase({
                 {product.performers.slice(0, 2).map((performer, index) => (
                   <span key={performer['id']}>
                     <Link
-                      href={`/${locale}/actress/${performer['id']}`}
+                      href={localizedHref(`/actress/${performer['id']}`, locale)}
                       className={`${themeConfig.accentColor} ${themeConfig.accentHover} font-medium underline-offset-2 transition-colors hover:underline`}
                       onClick={(e) => e.stopPropagation()}
                     >
@@ -1012,7 +1013,7 @@ function ProductCardBase({
             <span className={`${themeConfig.textMuted} shrink-0`}>{product['releaseDate'] ?? t('releaseDateTbd')}</span>
           </div>
           <div className="mt-0.5 flex items-center gap-1">
-            <Link href={`/${locale}/products/${product['id']}`}>
+            <Link href={localizedHref(`/products/${product['id']}`, locale)}>
               <p className={`text-[10px] sm:text-xs ${themeConfig.textMuted} truncate`}>
                 {product.normalizedProductId || product['id']}
               </p>
@@ -1028,7 +1029,7 @@ function ProductCardBase({
               />
             </span>
           </div>
-          <Link href={`/${locale}/products/${product['id']}`}>
+          <Link href={localizedHref(`/products/${product['id']}`, locale)}>
             <p
               className={`mt-0.5 line-clamp-2 text-sm leading-tight font-semibold sm:text-base ${themeConfig.textPrimary} hover:opacity-80`}
             >
@@ -1110,7 +1111,7 @@ function ProductCardBase({
               // Fallback: detail page CTA when affiliate link unavailable or hidden
               return (
                 <Link
-                  href={`/${locale}/products/${product['id']}`}
+                  href={localizedHref(`/products/${product['id']}`, locale)}
                   className={`inline-flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2.5 text-sm font-bold transition-colors duration-100 active:scale-[0.98] ${
                     resolvedTheme === 'dark'
                       ? 'bg-gray-700 text-gray-200 hover:bg-gray-600 hover:text-white'
@@ -1191,7 +1192,7 @@ function ProductCardBase({
                   const isFanza = source.aspName.toUpperCase() === 'FANZA';
                   // FANZA compliance: hide external FANZA links when hideFanzaPurchaseLinks is true
                   if (isFanza && hideFanzaPurchaseLinks) return null;
-                  const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
+                  const href = isFanza ? source.affiliateUrl : localizedHref(`/products/${source.productId}`, locale);
                   return (
                     <a
                       key={idx}
@@ -1219,7 +1220,9 @@ function ProductCardBase({
                           {product.alternativeSources.slice(2).map((source, idx) => {
                             const isFanza = source.aspName.toUpperCase() === 'FANZA';
                             if (isFanza && hideFanzaPurchaseLinks) return null;
-                            const href = isFanza ? source.affiliateUrl : `/${locale}/products/${source.productId}`;
+                            const href = isFanza
+                              ? source.affiliateUrl
+                              : localizedHref(`/products/${source.productId}`, locale);
                             return (
                               <a
                                 key={idx}
@@ -1250,7 +1253,7 @@ function ProductCardBase({
           isOpen={showModal}
           onClose={handleCloseModal}
           alt={altText}
-          detailsUrl={`/${locale}/products/${product['id']}`}
+          detailsUrl={localizedHref(`/products/${product['id']}`, locale)}
         />
       )}
 

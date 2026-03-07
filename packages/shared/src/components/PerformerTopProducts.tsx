@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { normalizeImageUrl } from '../lib/image-utils';
 import { useSiteTheme } from '../contexts/SiteThemeContext';
+import { localizedHref } from '../i18n';
 
 interface TopRatedProduct {
   id: number;
@@ -105,7 +106,7 @@ export default function PerformerTopProducts({
           return (
             <Link
               key={product['id']}
-              href={`/${locale}/products/${product['id']}`}
+              href={localizedHref(`/products/${product['id']}`, locale)}
               className={`group flex gap-4 rounded-lg p-3 transition-all ${
                 isDark ? 'bg-gray-800/50 hover:bg-gray-800' : 'bg-white shadow-sm hover:bg-gray-50'
               }`}

@@ -7,6 +7,7 @@ import AccordionSection from '../AccordionSection';
 import ProductSkeleton from '../ProductSkeleton';
 import { getThemeConfig, type SectionTheme } from './theme';
 import { salesTranslations, getTranslation } from '../../lib/translations';
+import { localizedHref } from '../../i18n';
 
 // Generic product type that works with both apps
 interface BaseProduct {
@@ -281,7 +282,7 @@ export function SalesSectionBase<T extends BaseProduct, A extends BaseActress = 
 
         {/* View all sales link */}
         <Link
-          href={`/${locale}/sales`}
+          href={localizedHref('/sales', locale)}
           className={`mt-2 flex items-center justify-center gap-2 py-2 ${themeConfig.salesSection.linkColorClass} text-sm font-medium transition-colors`}
         >
           {t.viewAll}
